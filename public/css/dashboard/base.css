@@ -1,0 +1,21 @@
+:root {
+    --bg-main: #f8fafc;
+    --primary-blue: #002366;
+    --sidebar-text: #64748b;
+    --accent-blue: #2563eb;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    display: flex;
+}
+
+/* Colores de texto y estados globales */
+.text-orange { color: #f08c00 !important; }
+.text-green { color: #0ca678 !important; }
+.text-red { color: #fa5252 !important; }
+.text-blue-accent { color: #1e3a8a; font-weight: 800; }

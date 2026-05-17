@@ -1,0 +1,85 @@
+/* Layout Base */
+body {
+    display: flex;
+    min-height: 100vh;
+    background: #f8fafc;
+    margin: 0;
+}
+
+/* SIDEBAR - Ajustada */
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    position: fixed; /* Se queda fija mientras haces scroll */
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+/* MAIN CONTENT - El secreto es el margen y el ancho calculado */
+.main-content {
+    flex: 1;
+    margin-left: 260px; /* Igual al ancho de la sidebar */
+    width: calc(100% - 260px); 
+    min-height: 100vh;
+    padding: 0 30px 30px;
+    transition: all 0.3s ease;
+}
+
+/* TOP BAR - Ahora es flexible */
+.top-bar {
+    height: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    padding: 10px 0;
+}
+
+/* CONTENEDOR DE BÚSQUEDA - Responsivo */
+.search-container {
+    display: flex;
+    align-items: center;
+    background: #f1f5f9;
+    padding: 10px 20px;
+    border-radius: 30px;
+    width: 100%;
+    max-width: 400px; /* No crece más de esto en PC */
+}
+
+.search-container input {
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    margin-left: 10px;
+}
+
+/* --- ADAPTACIÓN PARA MÓVILES (Media Queries) --- */
+
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%); /* Oculta el menú a la izquierda */
+        position: fixed;
+    }
+
+    .main-content {
+        margin-left: 0; /* Ocupa toda la pantalla en móvil */
+        width: 100%;
+        padding: 0 15px 15px;
+    }
+
+    .top-bar {
+        flex-direction: column-reverse; /* Apila buscador y usuario */
+        height: auto;
+        gap: 15px;
+        padding: 20px 0;
+    }
+
+    .search-container {
+        max-width: 100%; /* El buscador ocupa todo el ancho en móvil */
+    }
+}

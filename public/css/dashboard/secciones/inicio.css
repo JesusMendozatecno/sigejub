@@ -1,0 +1,5 @@
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 30px; }
+.stat-card { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
+.chart-container { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
+.bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; }
+.recent-activity { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }

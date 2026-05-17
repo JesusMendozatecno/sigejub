@@ -1,0 +1,157 @@
+/* =========================
+   CONFIGURACIÓN GLOBAL
+========================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    /* Fondo con gradiente sutil como en unnamed(1).png */
+    background: radial-gradient(circle at center, #ffffff 0%, #e9eff5 100%);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* =========================
+   CONTENEDORES PRINCIPALES
+========================= */
+.login-container, .register-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Títulos fuera de la tarjeta (estilo Gestión Retiro) */
+h2 {
+    color: #002366; /* Azul marino institucional */
+    margin-bottom: 5px;
+    font-size: 22px;
+    text-align: center;
+}
+
+p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* =========================
+   TARJETA (CARD)
+========================= */
+/* En el login ya tienes el div .card, en el registro lo aplicaremos al form */
+.card, .register-container form {
+    background: white;
+    padding: 40px;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* =========================
+   INPUTS Y GRUPOS
+========================= */
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    color: #444;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: #f4f7fa; /* Gris muy claro de la imagen */
+    border: 1px solid #e1e5ee;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #002366;
+    background-color: #fff;
+}
+
+/* Estilo para los inputs del registro que no tienen .input-group */
+.register-container input, .register-container select {
+    margin-bottom: 15px;
+}
+
+/* =========================
+   BOTONES
+========================= */
+.btn, .register-container button {
+    width: 100%;
+    padding: 14px;
+    background: #002366; /* Azul oscuro de la imagen */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 10px;
+}
+
+.btn:hover, .register-container button:hover {
+    background: #001a4d;
+}
+
+/* Enlaces inferiores */
+a {
+    color: #002366;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Estilo para el botón de volver */
+.btn-back {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #64748b; /* Gris suave de tu paleta */
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #f1f5f9; /* Fondo muy claro */
+}
+
+.btn-back:hover {
+    color: #002366; /* El azul marino de tu proyecto */
+    background: #e2e8f0;
+    transform: translateX(-3px); /* Efecto sutil de retroceso */
+}
+
+/* Asegúrate de que la tarjeta (.card o .register-container) tenga position: relative */
+.card, .register-container {
+    position: relative;
+    padding-top: 50px; /* Espacio extra para que la flecha no tape el título */
+}

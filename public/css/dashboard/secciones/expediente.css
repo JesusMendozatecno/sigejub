@@ -1,0 +1,228 @@
+/* Contenedor de la rejilla */
+.expedientes-grid-cards {
+    display: grid;
+    /* Esto define el ancho mínimo de cada tarjeta (280px) */
+    /* y hace que se pongan una al lado de la otra automáticamente */
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
+    gap: 20px; /* Espacio entre tarjetas */
+    padding: 20px;
+}
+
+/* La Tarjeta Cuadrada */
+.expediente-mini-card {
+    width: 100%; /* Ocupa el ancho que le asigne el grid */
+    max-width: 300px; /* EVITA que se estire demasiado como en tu captura */
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column; /* Imagen arriba, datos abajo */
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.expediente-mini-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* Contenedor de la Imagen (Parte Superior) */
+.card-image-top {
+    width: 100px;
+    height: 100px; /* Altura fija para que todas sean iguales */
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.card-image-top img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ajusta la imagen sin deformarla */
+}
+
+/* Bloque de Datos (Parte Inferior) */
+.card-info-bottom {
+    padding: 15px;
+    background: white;
+}
+
+.card-info-bottom strong {
+    display: block;
+    font-size: 16px;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.card-info-bottom span {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.card-status-pill {
+    margin-top: 10px;
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+
+/* Layout Principal */
+.gestion-container {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 25px;
+    padding: 20px;
+    background: #f8fafc;
+}
+
+/* Header Estilo Imagen */
+.expediente-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    align-items: center;
+}
+
+.breadcrumb { font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+.expediente-header h1 { font-size: 24px; color: #1e293b; }
+
+/* Card de Estado Global (Top Right) */
+.global-status-card {
+    background: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: flex;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Sidebar: Perfil */
+.profile-summary-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.user-main-info { display: flex; gap: 15px; margin-bottom: 20px; }
+.img-profile-sm { width: 70px; height: 70px; border-radius: 12px; }
+.facultad-badge { 
+    background: #e0e7ff; color: #4338ca; 
+    font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: bold;
+}
+
+.user-details-list .detail-item {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+}
+
+/* Asistente de Carga (Azul) */
+.asistente-carga-card {
+    background: #1e3a8a;
+    color: white;
+    padding: 20px;
+    border-radius: 20px;
+}
+
+.drop-zone-blue {
+    background: rgba(255,255,255,0.1);
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Listado de Documentos */
+.docs-card-container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+}
+
+.doc-item-row {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.doc-icon {
+    width: 45px; height: 45px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.doc-icon.success { background: #dcfce7; color: #16a34a; }
+.doc-icon.danger { background: #fee2e2; color: #dc2626; }
+.doc-icon.gray { background: #f1f5f9; color: #64748b; }
+
+.status-tag { font-size: 12px; font-weight: bold; }
+.status-tag.success { color: #16a34a; }
+.status-tag.danger { color: #dc2626; }
+
+/* Botones de acción del documento */
+.btn-action-primary {
+    background: #0f172a; color: white;
+    border: none; padding: 10px 20px; border-radius: 8px;
+    font-size: 12px; font-weight: bold; cursor: pointer;
+}
+
+.btn-action-outline {
+    background: #f1f5f9; color: #475569;
+    border: none; padding: 10px 20px; border-radius: 8px;
+    font-size: 12px; font-weight: bold;
+}
+
+/* Estilo del Botón Volver */
+.btn-back-minimal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: 25px;
+    width: fit-content;
+    transition: all 0.3s ease;
+}
+
+/* El círculo del icono */
+.btn-back-minimal .icon-circle {
+    width: 32px;
+    height: 32px;
+    background: #f1f5f9; /* Gris muy claro */
+    color: #475569;     /* Gris azulado */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+/* El texto del botón */
+.btn-back-minimal span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Efectos al pasar el ratón (Hover) */
+.btn-back-minimal:hover .icon-circle {
+    background: #1e3a8a; /* Azul oscuro como tu asistente de carga */
+    color: white;
+    transform: translateX(-3px); /* Pequeño movimiento a la izquierda */
+}
+
+.btn-back-minimal:hover span {
+    color: #1e3a8a;
+}

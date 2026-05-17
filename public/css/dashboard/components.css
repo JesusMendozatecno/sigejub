@@ -1,0 +1,15 @@
+/* Botones Genéricos */
+.btn-primary { background: var(--primary-blue); color: white; padding: 12px 20px; border-radius: 8px; border: none; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+.btn-logout { background: #fee2e2; color: #ef4444; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.btn-outline { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; color: #475569; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+/* Badges y Estatus */
+.badge-status { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
+.badge-status.pending { background: #fff7ed; color: #c2410c; }
+.badge-status.approved { background: #f0fdf4; color: #15803d; }
+.badge-status.rejected { background: #fef2f2; color: #b91c1c; }
+
+/* Tablas */
+.custom-table { width: 100%; border-collapse: collapse; }
+.custom-table th { text-align: left; padding: 20px 15px; font-size: 11px; color: #64748b; border-bottom: 1px solid #f1f5f9; }
+.custom-table td { padding: 15px; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f8fafc; }
