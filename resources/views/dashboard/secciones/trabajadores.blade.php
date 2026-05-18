@@ -3,32 +3,195 @@
         <h1>Directorio de Trabajadores</h1>
         <p>Gestione la información laboral y el estatus institucional de los miembros activos y jubilados.</p>
     </div>
-    <button class="btn-primary-dark">
-        <i data-lucide="user-plus"></i> Agregar Trabajador
-    </button>
-</header>
+</div>
 
-<section class="filters-row">
-    <div class="filter-group">
-        <label>FILTRAR POR CARGO</label>
-        <select><option>Todos los cargos</option></select>
-    </div>
+{{-- ======================================================
+     SCRIPTS — Eventos de tabla y formulario trabajador
+====================================================== --}}
+<script>
+// ── EDITAR: cargar datos en el modal ──────────────────
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-editar');
+    if (!btn) return;
+
+    const f = document.getElementById('formTrabajador');
+    f.setAttribute('data-action', `/trabajadores/${btn.dataset.id}`);
+    f.setAttribute('data-method', 'PUT');
+    document.getElementById('btnSubmitTrabajador').textContent = 'Guardar Cambios';
+
+    f.querySelector('[name="cedula"]').value                   = btn.dataset.cedula;
+    f.querySelector('[name="nombres"]').value                  = btn.dataset.nombres;
+    f.querySelector('[name="apellidos"]').value                 = btn.dataset.apellidos;
+    f.querySelector('[name="cargo"]').value                     = btn.dataset.cargo;
+    f.querySelector('[name="unidad_departamento"]').value       = btn.dataset.unidad;
+    f.querySelector('[name="grado_nivel"]').value               = btn.dataset.grado;
+    f.querySelector('[name="fecha_ingreso"]').value             = btn.dataset['fecha-ingreso'];
+    f.querySelector('[name="fecha_nacimiento"]').value          = btn.dataset['fecha-nacimiento'];
+    f.querySelector('[name="genero"]').value                    = btn.dataset.genero;
+    f.querySelector('[name="nivel_instruccion"]').value         = btn.dataset.nivel;
+    f.querySelector('[name="anos_servicio_externo"]').value     = btn.dataset.externo;
+    f.querySelector('[name="porcentaje_antiguedad"]').value     = btn.dataset.porcAntig;
+    f.querySelector('[name="cuenta_bancaria"]').value           = btn.dataset.cuenta;
+
+    document.getElementById('modalTrabajador').style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+
+// ── ELIMINAR: confirmar y borrar ──────────────────────
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-eliminar');
+    if (!btn) return;
+
+    const nombre = btn.dataset.nombre;
+    const id     = btn.dataset.id;
+
+    if (!confirm(`¿Eliminar a "${nombre}"?\nEsta acción se puede deshacer (soft delete).`)) return;
+
+    fetch(`/trabajadores/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const fila = btn.closest('tr');
+            fila.style.transition = 'opacity 0.3s';
+            fila.style.opacity = '0';
+            setTimeout(() => fila.remove(), 300);
+            document.getElementById('totalTrabajadores').textContent =
+                parseInt(document.getElementById('totalTrabajadores').textContent || '0') - 1;
+            alert(data.message);
+        } else {
+            alert(data.message || 'Error al eliminar');
+        }
+    })
+    .catch(err => alert('Error de conexión.'));
+});
+
+// ── ENVÍO FORMULARIO: crear o editar según method ───────
+const formTrabajador = document.getElementById('formTrabajador');
+if (formTrabajador) {
+    formTrabajador.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const url        = this.getAttribute('data-action');
+        const method     = this.getAttribute('data-method') || 'POST';
+        const formData   = new FormData(this);
+        const btnSubmit  = this.querySelector('.btn-submit');
+
+        if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Guardando...'; }
+
+        try {
+            const resp = await fetch(url, {
+                method : method,
+                body   : formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                }
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw data;
+
+            alert(data.message || 'Operación exitosa.');
+            formTrabajador.reset();
+            document.getElementById('closeModal')?.click();
+
+            // Reiniciar modal a modo CREAR
+            formTrabajador.setAttribute('data-action',  '/trabajadores');
+            formTrabajador.setAttribute('data-method',  'POST');
+            btnSubmit.textContent = 'Registrar Trabajador';
+
+            // Recargar tabla
+            location.reload();
+
+        } catch (err) {
+            if (err.errors) {
+                alert(Object.values(err.errors).flat().join('\n'));
+            } else {
+                alert(err.message || 'Error interno.');
+            }
+        } finally {
+            if (btnSubmit) { btnSubmit.disabled = false; }
+        }
+    });
+}
+
+// ── FILTRO POR ESTATUS ────────────────────────────────
+const selEstatus = document.getElementById('filtroEstatus');
+if (selEstatus) {
+    selEstatus.addEventListener('change', () => {
+        cargarTrabajadores(selEstatus.value);
+    });
+}
+
+// ── LIMPIAR ESTADO AL CERRAR MODAL ────────────────────
+const btnCancelar = document.getElementById('btnCancelar');
+if (btnCancelar) {
+    btnCancelar.addEventListener('click', () => {
+        const f = document.getElementById('formTrabajador');
+        setTimeout(() => {
+            f.reset();
+            f.setAttribute('data-action', '/trabajadores');
+            f.setAttribute('data-method', 'POST');
+            const btn = document.getElementById('btnSubmitTrabajador');
+            if (btn) btn.textContent = 'Registrar Trabajador';
+        }, 100);
+    });
+}
+</script>
+
     <div class="filter-group">
         <label>FILTRAR POR ESTATUS</label>
-        <select><option>Cualquier estatus</option></select>
+        <select id="filtroEstatus">
+            <option value="">Cualquier estatus</option>
+            <option value="activo">Activo</option>
+            <option value="jubilado">Jubilado</option>
+        </select>
     </div>
     <div class="filter-group">
         <label>TIPO DE NÓMINA</label>
-        <select><option>Todas</option></select>
+        <select id="filtroNomina">
+            <option>Todas</option>
+            <option>Docente</option>
+            <option>Administrativo</option>
+            <option>Obrero</option>
+        </select>
     </div>
     <div class="total-badge-card">
         <div>
             <p>TOTAL REGISTRADOS</p>
-            <h2>1,248</h2>
+            <h2 id="totalTrabajadores">0</h2>
         </div>
         <i data-lucide="users" class="icon-bg"></i>
     </div>
 </section>
+
+{{-- Botón de apertura del modal — onclick nativo para delegar a JS --}}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const btnAbrirModal = document.querySelector('.btn-primary-dark');
+    const modal = document.getElementById('modalTrabajador');
+    const btnCerrar  = document.getElementById('closeModal');
+    const btnCancelar = document.getElementById('btnCancelar');
+
+    function abrirModal() {
+        modal.style.display = 'flex';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    function cerrarModal() {
+        modal.style.display = 'none';
+    }
+
+    if (btnAbrirModal) btnAbrirModal.addEventListener('click', (e) => { e.preventDefault(); abrirModal(); });
+    if (btnCerrar)    btnCerrar.addEventListener('click', cerrarModal);
+    if (btnCancelar)  btnCancelar.addEventListener('click', cerrarModal);
+    window.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
+});
+</script>
 
 <div class="data-table-container">
     <table class="custom-table">
@@ -43,43 +206,8 @@
                 <th>ACCIONES</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>TR-8821</td>
-                <td>
-                    <div class="user-cell">
-                        <span class="avatar blue">AG</span>
-                        <strong>Ana García</strong>
-                    </div>
-                </td>
-                <td>12.345.678</td>
-                <td>Profesora Titular</td>
-                <td><span class="badge-type docente">DOCENTE</span></td>
-                <td><span class="dot active"></span> Activo</td>
-                <td class="actions">
-                    <i data-lucide="folder-open"></i>
-                    <i data-lucide="edit-3"></i>
-                    <i data-lucide="trash-2"></i>
-                </td>
-            </tr>
-            <tr>
-                <td>TR-8822</td>
-                <td>
-                    <div class="user-cell">
-                        <span class="avatar purple">RM</span>
-                        <strong>Ricardo Mendoza</strong>
-                    </div>
-                </td>
-                <td>10.122.334</td>
-                <td>Analista de Sistemas</td>
-                <td><span class="badge-type admin">ADMINISTRATIVO</span></td>
-                <td><span class="dot jubilado"></span> Jubilado</td>
-                <td class="actions">
-                    <i data-lucide="folder-open"></i>
-                    <i data-lucide="edit-3"></i>
-                    <i data-lucide="trash-2"></i>
-                </td>
-            </tr>
+        <tbody id="tbodyTrabajadores">
+            <!-- Las filas se cargan dinámicamente por JS desde la BD -->
         </tbody>
     </table>
     
@@ -229,9 +357,79 @@
 
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" id="btnCancelar">Descartar</button>
-                    <button type="submit" class="btn-submit">Registrar Trabajador</button>
+                    <button type="submit" class="btn-submit" id="btnSubmitTrabajador">Registrar Trabajador</button>
                 </div>
             </form>
         </main>
     </div>
 </div>
+
+{{-- ======================================================
+     SCRIPTS — Lógica de Trabajadores (BD en vivo)
+====================================================== --}}
+<script>
+async function cargarTrabajadores(estatus = '') {
+    const params = estatus ? `?estatus=${estatus}` : '';
+    try {
+        const resp = await fetch('/trabajadores' + params);
+        const data = await resp.json();
+        const tbody = document.getElementById('tbodyTrabajadores');
+
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        if (data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #888;">No hay trabajadores registrados</td></tr>';
+            document.getElementById('totalTrabajadores').textContent = '0';
+            return;
+        }
+
+        data.data.forEach(t => {
+            const esJubilado = (t.total_anos_servicio >= 25 || t.edad >= 60);
+            const estatusTxt = esJubilado ? 'jubilado' : 'activo';
+            const iniciales = t.nombres.charAt(0) + t.apellidos.charAt(0);
+            const colores = ['blue', 'purple', 'green', 'orange', 'red', 'teal', 'indigo', 'pink', 'amber', 'cyan'];
+            const color = colores[t.id % colores.length];
+
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>TR-${String(t.id).padStart(4, '0')}</td>
+                <td>
+                    <div class="user-cell">
+                        <span class="avatar ${color}">${iniciales.toUpperCase()}</span>
+                        <strong>${t.nombres} ${t.apellidos}</strong>
+                    </div>
+                </td>
+                <td>${t.cedula}</td>
+                <td>${t.cargo}</td>
+                <td><span class="badge-type doc">INSTITUCIONAL</span></td>
+                <td><span class="dot ${estatusTxt}"></span> ${estatusTxt.charAt(0).toUpperCase() + estatusTxt.slice(1)}</td>
+                <td class="actions">
+                    <i data-lucide="folder-open" class="btn-icon btn-ver" title="Ver Expediente" data-id="${t.id}"></i>
+                    <i data-lucide="edit-3"   class="btn-icon btn-editar" title="Editar" data-id="${t.id}" data-nombres="${t.nombres}" data-apellidos="${t.apellidos}" data-cedula="${t.cedula}" data-cargo="${t.cargo}" data-unidad="${t.unidad_departamento}" data-grado="${t.grado_nivel}" data-fecha-ingreso="${t.fecha_ingreso}" data-fecha-nacimiento="${t.fecha_nacimiento}" data-genero="${t.genero}" data-nivel="${t.nivel_instruccion}" data-externo="${t.anos_servicio_externo}" data-porc-antig="${t.porcentaje_antiguedad}" data-cuenta="${t.cuenta_bancaria || ''}"></i>
+                    <i data-lucide="trash-2"   class="btn-icon btn-eliminar" title="Eliminar" data-id="${t.id}" data-nombre="${t.nombres} ${t.apellidos}"></i>
+                </td>
+            `;
+            tbody.appendChild(fila);
+        });
+
+        document.getElementById('totalTrabajadores').textContent = data.total || data.data.length;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    } catch (err) {
+        console.error('Error al cargar trabajadores:', err);
+    }
+}
+
+// Cargar al entrar en la sección de trabajadores
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach(m => {
+        if (m.target.id === 'trabajadores' && m.target.classList.contains('active')) {
+            cargarTrabajadores();
+        }
+    });
+});
+const seccion = document.getElementById('trabajadores');
+if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
+</script>

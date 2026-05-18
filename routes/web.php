@@ -54,9 +54,14 @@ Route::put('/perfil/actualizar', [UserController::class, 'update'])->name('usuar
 
 /*
 |-----------------------------
-| Trabajador
+| TRABAJADORES (CRUD + API)
 |-----------------------------
 */
-// Ruta para ver la lista o el control de datos del usuario
+// Rutas API JSON para AJAX (tabla del directorio)
+Route::get('/trabajadores', [TrabajadorController::class, 'index'])->name('trabajadores.index');
+Route::get('/trabajadores/{id}', [TrabajadorController::class, 'show'])->name('trabajadores.show');
+Route::put('/trabajadores/{id}', [TrabajadorController::class, 'update'])->name('trabajadores.update');
+Route::delete('/trabajadores/{id}', [TrabajadorController::class, 'destroy'])->name('trabajadores.destroy');
 
+// El store se mantiene igual
 Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trabajador');

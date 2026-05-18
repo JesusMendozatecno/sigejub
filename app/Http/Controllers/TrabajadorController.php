@@ -8,11 +8,86 @@ use Carbon\Carbon;
 
 class TrabajadorController extends Controller
 {
- public function store(Request $request)
-{
-    try {
-        // 1. Validamos los datos que vienen del formulario
-                $validated = $request->validate([
+    /**
+     * LISTAR trabajadorES (JSON para AJAX)
+     * Con paginación y filtro opcional por búsqueda
+     */
+    public function index(Request $request)
+    {
+        $query = Trabajador::query();
+
+        // Búsqueda por nombre, apellido o cédula
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nombres', 'like', "%{$search}%")
+                  ->orWhere('apellidos', 'like', "%{$search}%")
+                  ->orWhere('cedula', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtro por estatus (activo / jubilado)
+        if ($estatus = $request->get('estatus')) {
+            if ($estatus === 'jubilado') {
+                $query->where(function ($q) {
+                    $q->where('total_anos_servicio', '>=', 25)
+                      ->orWhere('edad', '>=', 60);
+                });
+            } elseif ($estatus === 'activo') {
+                $query->where(function ($q) {
+                    $q->where('total_anos_servicio', '<', 25)
+                      ->where('edad', '<', 60);
+                });
+            }
+        }
+
+        $trabajadores = $query->orderBy('apellidos', 'asc')
+                              ->orderBy('nombres', 'asc')
+                              ->paginate($request->get('per_page', 10));
+
+        return response()->json($trabajadores);
+    }
+
+    /**
+     * VER detalle de un trabajador individual
+     */
+    public function show($id)
+    {
+        $trabajador = Trabajador::findOrFail($id);
+
+        return response()->json([
+            'id' => $trabajador->id,
+            'cedula' => $trabajador->cedula,
+            'nombres' => $trabajador->nombres,
+            'apellidos' => $trabajador->apellidos,
+            'nombre_completo' => $trabajador->nombres . ' ' . $trabajador->apellidos,
+            'genero' => $trabajador->genero,
+            'cargo' => $trabajador->cargo,
+            'unidad_departamento' => $trabajador->unidad_departamento,
+            'grado_nivel' => $trabajador->grado_nivel,
+            'fecha_nacimiento' => $trabajador->fecha_nacimiento,
+            'edad' => $trabajador->edad,
+            'fecha_ingreso' => $trabajador->fecha_ingreso,
+            'anos_servicio_inst' => $trabajador->anos_servicio_inst,
+            'anos_servicio_externo' => $trabajador->anos_servicio_externo,
+            'total_anos_servicio' => $trabajador->total_anos_servicio,
+            'nivel_instruccion' => $trabajador->nivel_instruccion,
+            'numero_hijos' => $trabajador->numero_hijos,
+            'hijos_discapacidad' => $trabajador->hijos_discapacidad,
+            'cuenta_bancaria' => $trabajador->cuenta_bancaria,
+            'porcentaje_antiguedad' => $trabajador->porcentaje_antiguedad,
+            'porcentaje_caja_ahorro' => $trabajador->porcentaje_caja_ahorro,
+            'created_at' => $trabajador->created_at,
+            'updated_at' => $trabajador->updated_at,
+        ]);
+    }
+
+    /**
+     * CREAR nuevo trabajador
+     */
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
                 'cedula' => 'required|unique:trabajadores,cedula',
                 'nombres' => 'required|string|max:100',
                 'apellidos' => 'required|string|max:100',
@@ -20,54 +95,119 @@ class TrabajadorController extends Controller
                 'cargo' => 'required|string',
                 'unidad_departamento' => 'required|string',
                 'grado_nivel' => 'required|string|max:50',
-
                 'fecha_ingreso' => 'required|date',
                 'fecha_nacimiento' => 'required|date',
-
                 'anos_servicio_externo' => 'nullable|integer',
                 'nivel_instruccion' => 'nullable|integer',
-
                 'cuenta_bancaria' => 'nullable|string|max:20',
-
                 'numero_hijos' => 'nullable|integer',
                 'hijos_discapacidad' => 'nullable|integer',
-
                 'porcentaje_antiguedad' => 'nullable|numeric',
                 'porcentaje_caja_ahorro' => 'nullable|numeric',
             ]);
 
-        // 2. Preparamos el array completo para la DB
-        $datos = $validated;
+            $datos = $validated;
 
-        // --- CÁLCULOS AUTOMÁTICOS ---
-        // Edad
-        $datos['edad'] = \Carbon\Carbon::parse($request->fecha_nacimiento)->age;
+            // --- CÁLCULOS AUTOMÁTICOS ---
+            $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
+            $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
+            $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
 
-        // Años en la institución (inst)
-        $datos['anos_servicio_inst'] = \Carbon\Carbon::parse($request->fecha_ingreso)->diffInYears(now());
+            Trabajador::create($datos);
 
-        // Total años (Inst + Externo)
-        $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Trabajador registrado exitosamente en Sigejub.'
+            ]);
 
-        // 3. Creamos el registro usando $datos (que ya tiene los cálculos)
-        \App\Models\Trabajador::create($datos);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Trabajador registrado exitosamente en Sigejub.'
-        ]);
-
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json([
-            'status' => 'error',
-            'errors' => $e->errors()
-        ], 422);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Error en la base de datos: ' . $e->getMessage()
-        ], 500);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error en la base de datos: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
+
+    /**
+     * EDITAR trabajador existente
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $trabajador = Trabajador::findOrFail($id);
+
+            $validated = $request->validate([
+                'cedula' => 'required|unique:trabajadores,cedula,' . $trabajador->id,
+                'nombres' => 'required|string|max:100',
+                'apellidos' => 'required|string|max:100',
+                'genero' => 'required|in:M,F',
+                'cargo' => 'required|string',
+                'unidad_departamento' => 'required|string',
+                'grado_nivel' => 'required|string|max:50',
+                'fecha_ingreso' => 'required|date',
+                'fecha_nacimiento' => 'required|date',
+                'anos_servicio_externo' => 'nullable|integer',
+                'nivel_instruccion' => 'nullable|integer',
+                'cuenta_bancaria' => 'nullable|string|max:20',
+                'numero_hijos' => 'nullable|integer',
+                'hijos_discapacidad' => 'nullable|integer',
+                'porcentaje_antiguedad' => 'nullable|numeric',
+                'porcentaje_caja_ahorro' => 'nullable|numeric',
+            ]);
+
+            $datos = $validated;
+
+            // Recalcular si cambió fecha de nacimiento o ingreso
+            $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
+            $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
+            $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
+
+            $trabajador->update($datos);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Datos del trabajador actualizados correctamente.',
+                'trabajador' => $datos
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al actualizar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ELIMINAR trabajador (soft delete)
+     */
+    public function destroy($id)
+    {
+        try {
+            $trabajador = Trabajador::findOrFail($id);
+            $trabajador->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Trabajador eliminado correctamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al eliminar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 }
