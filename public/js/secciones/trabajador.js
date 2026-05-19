@@ -158,24 +158,46 @@
             items.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.dataset.id = t.id;
-                tr.innerHTML = `
-                    <td>${t.id}</td>
-                    <td><strong>${t.nombres} ${t.apellidos}</strong></td>
-                    <td>${t.cedula}</td>
-                    <td>${t.cargo}</td>
-                    <td><span class="type-tag">${t.unidad_departamento}</span></td>
-                    <td><span class="status-pill ${t.estatus === 'activo' ? 'active' : 'retired'}">${(t.estatus || 'SIN ESTATUS').toUpperCase()}</span></td>
-                    <td>
-                        <div class="acciones-cell">
-                            <button class="btn-icon btn-ver" onclick="window.sigejubVerTrabajador(${t.id}, this)" title="Ver Expediente"><i data-lucide="eye"></i></button>
-                            <button class="btn-icon btn-eliminar" onclick="window.sigejubEliminarTrabajador(${t.id}, '${t.nombres} ${t.apellidos}', this)" title="Dar de Baja"><i data-lucide="trash-2"></i></button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
 
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+                const tdId = document.createElement('td'); tdId.textContent = t.id;
+                const tdNombre = document.createElement('td');
+                const strong = document.createElement('strong'); strong.textContent = `${t.nombres} ${t.apellidos}`;
+                tdNombre.appendChild(strong);
+                const tdCedula = document.createElement('td'); tdCedula.textContent = t.cedula;
+                const tdCargo = document.createElement('td'); tdCargo.textContent = t.cargo;
+                const tdTipo = document.createElement('td');
+                const typeTag = document.createElement('span'); typeTag.className = 'type-tag'; typeTag.textContent = t.unidad_departamento;
+                tdTipo.appendChild(typeTag);
+                const tdEstatus = document.createElement('td');
+                const statusPill = document.createElement('span');
+                const esActivo = t.estatus === 'activo';
+                statusPill.className = `status-pill ${esActivo ? 'active' : 'retired'}`;
+                statusPill.textContent = (t.estatus || 'SIN ESTATUS').toUpperCase();
+                tdEstatus.appendChild(statusPill);
+
+                const tdAcciones = document.createElement('td');
+                const div = document.createElement('div'); div.className = 'acciones-cell';
+                const btnVer = document.createElement('button');
+                btnVer.className = 'btn-icon btn-ver';
+                btnVer.title = 'Ver Expediente';
+                btnVer.onclick = () => window.sigejubVerTrabajador(t.id, btnVer);
+                const iconEye = document.createElement('i'); iconEye.setAttribute('data-lucide', 'eye');
+                btnVer.appendChild(iconEye);
+                const btnEliminar = document.createElement('button');
+                btnEliminar.className = 'btn-icon btn-eliminar';
+                btnEliminar.title = 'Dar de Baja';
+                btnEliminar.onclick = () => window.sigejubEliminarTrabajador(t.id, `${t.nombres} ${t.apellidos}`, btnEliminar);
+                const iconTrash = document.createElement('i'); iconTrash.setAttribute('data-lucide', 'trash-2');
+                btnEliminar.appendChild(iconTrash);
+                div.appendChild(btnVer);
+                div.appendChild(btnEliminar);
+                tdAcciones.appendChild(div);
+
+                tr.append(tdId, tdNombre, tdCedula, tdCargo, tdTipo, tdEstatus, tdAcciones);
+                tbody.appendChild(tr);
+
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
 
         } catch (err) {
             console.error('Error render-table:', err);

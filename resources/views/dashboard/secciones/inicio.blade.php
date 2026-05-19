@@ -68,22 +68,11 @@
 <div class="content-layout">
     <section class="recent-activity">
         <h3 class="section-title"><i data-lucide="history"></i> Actividad Reciente</h3>
-        <div class="activity-list">
+        <div class="activity-list" id="activityList">
             <div class="activity-item">
-                <div class="activity-icon blue"><i data-lucide="file-up"></i></div>
-                <div class="activity-text">
-                    <p>Juan Pérez subió su cédula</p>
-                    <span>Expediente #9923 • Hace 15 min</span>
+                <div class="activity-text" style="text-align:center;color:#94a3b8;padding:20px;">
+                    <p>Cargando actividades...</p>
                 </div>
-                <a href="#">Ver</a>
-            </div>
-            <div class="activity-item">
-                <div class="activity-icon green"><i data-lucide="check-circle"></i></div>
-                <div class="activity-text">
-                    <p>Solicitud #452 aprobada</p>
-                    <span>Admin. Maria • Hace 2 horas</span>
-                </div>
-                <a href="#">Detalle</a>
             </div>
         </div>
     </section>
@@ -114,6 +103,59 @@
 
 <script>
 (function() {
+    const ICON_MAP = {
+        created: { 'trabajador': ['users', 'green'], 'solicitud': ['file-text', 'blue'], 'usuario': ['user-plus', 'purple'] },
+        updated: { 'trabajador': ['edit-3', 'orange'], 'solicitud': ['edit', 'orange'] },
+        deleted: { 'trabajador': ['trash-2', 'red'], 'solicitud': ['x-circle', 'red'] },
+    };
+
+    function getActivityIcon(action, subjectType) {
+        const fallback = ['circle', 'blue'];
+        return (ICON_MAP[action] && ICON_MAP[action][subjectType]) || fallback;
+    }
+
+    function timeAgo(dateStr) {
+        const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
+        if (seconds < 60) return 'Ahora';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `Hace ${minutes} min`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `Hace ${hours} h`;
+        const days = Math.floor(hours / 24);
+        return `Hace ${days} día${days > 1 ? 's' : ''}`;
+    }
+
+    async function cargarActividades() {
+        const container = document.getElementById('activityList');
+        if (!container) return;
+        try {
+            const resp = await fetch('/actividades');
+            const actividades = await resp.json();
+            container.innerHTML = '';
+            if (!actividades.length) {
+                container.innerHTML = '<div class="activity-item"><div class="activity-text" style="text-align:center;color:#94a3b8;padding:20px;"><p>Sin actividades recientes</p></div></div>';
+                return;
+            }
+            actividades.forEach(a => {
+                const [icon, color] = getActivityIcon(a.action, a.subject_type);
+                const user = a.user ? a.user.name : 'Sistema';
+                const div = document.createElement('div');
+                div.className = 'activity-item';
+                div.innerHTML = `
+                    <div class="activity-icon ${color}"><i data-lucide="${icon}"></i></div>
+                    <div class="activity-text">
+                        <p>${a.description}</p>
+                        <span>${user} • ${timeAgo(a.created_at)}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        } catch (err) {
+            console.error('Error al cargar actividades:', err);
+        }
+    }
+
     async function cargarEstadisticasInicio() {
         try {
             const [respTrab, respPend, respAprob, respRech] = await Promise.all([
@@ -137,6 +179,11 @@
             console.error('Error al cargar estadísticas de inicio:', err);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarEstadisticasInicio();
+        cargarActividades();
+    });
 
     document.addEventListener('DOMContentLoaded', cargarEstadisticasInicio);
 
