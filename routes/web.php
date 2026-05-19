@@ -7,6 +7,7 @@ use App\Http\Controllers\TrabajadorController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\AdminController;
 
 
 /*
@@ -93,6 +94,27 @@ Route::get('/actividades', [ActivityController::class, 'index']);
 | EXPEDIENTES (CRUD + API)
 |-----------------------------
 */
+/*
+|-----------------------------
+| ADMIN (solo admin)
+|-----------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/usuarios', [AdminController::class, 'usuarios']);
+    Route::get('/usuarios/{id}', [AdminController::class, 'showUsuario']);
+    Route::put('/usuarios/{id}', [AdminController::class, 'updateUsuario']);
+    Route::get('/actividades-detalle', [AdminController::class, 'actividades']);
+    Route::get('/actividades-resumen', [AdminController::class, 'actividadResumen']);
+    Route::post('/notificaciones', [AdminController::class, 'enviarNotificacion']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/notificaciones', [AdminController::class, 'misNotificaciones']);
+    Route::get('/notificaciones/no-leidas', [AdminController::class, 'notificacionesNoLeidas']);
+    Route::put('/notificaciones/{id}/leer', [AdminController::class, 'marcarLeida']);
+    Route::put('/notificaciones/leer-todas', [AdminController::class, 'marcarTodasLeidas']);
+});
+
 Route::get('/expedientes', [ExpedienteController::class, 'index']);
 Route::get('/expedientes/buscar-trabajador', [ExpedienteController::class, 'buscarTrabajador']);
 Route::post('/expedientes', [ExpedienteController::class, 'store']);

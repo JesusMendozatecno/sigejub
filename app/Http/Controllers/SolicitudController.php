@@ -116,12 +116,23 @@ class SolicitudController extends Controller
 
             $validated = $request->validate($rules);
 
+            $oldEstado = $solicitud->estado;
             $solicitud->update($validated);
 
             $t = $solicitud->load('trabajador')->trabajador;
             $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$solicitud->trabajador_id}";
-            Activity::log('updated', 'solicitud', $solicitud->id,
-                "Se actualizó la solicitud de {$nombre}");
+
+            $desc = "Se actualizó la solicitud de {$nombre}";
+            if ($request->has('estado') && $request->estado !== $oldEstado) {
+                $accion = match ($request->estado) {
+                    'aprobado' => 'Aprobó',
+                    'rechazado' => 'Rechazó',
+                    'revision' => 'Puso en revisión',
+                    default => 'Cambió estado a'
+                };
+                $desc = "{$accion} la solicitud de {$nombre}";
+            }
+            Activity::log('updated', 'solicitud', $solicitud->id, $desc);
 
             return response()->json([
                 'status' => 'success',

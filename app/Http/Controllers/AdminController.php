@@ -1,0 +1,174 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\Activity;
+use App\Models\UserNotification;
+use Illuminate\Http\Request;
+
+class AdminController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (auth()->user()?->role !== 'admin' &&
+                !in_array($request->route()->getActionMethod(), ['misNotificaciones', 'notificacionesNoLeidas', 'marcarLeida', 'marcarTodasLeidas'])) {
+                abort(403, 'Acceso no autorizado');
+            }
+            return $next($request);
+        });
+    }
+
+    public function usuarios(Request $request)
+    {
+        $role = $request->get('role', '');
+        $search = $request->get('search', '');
+
+        $query = User::query();
+
+        if ($role) {
+            $query->where('role', $role);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return response()->json($users);
+    }
+
+    public function showUsuario($id)
+    {
+        $user = User::findOrFail($id);
+        return response()->json($user);
+    }
+
+    public function updateUsuario(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'role' => 'required|in:analista,admin',
+        ]);
+
+        $oldRole = $user->role;
+        $user->role = $request->role;
+        $user->save();
+
+        Activity::log('updated', 'usuario', $user->id,
+            "Rol de {$user->name} cambiado de {$oldRole} a {$request->role}"
+        );
+
+        return response()->json(['message' => 'Permisos actualizados correctamente.']);
+    }
+
+    public function actividades(Request $request)
+    {
+        $type = $request->get('type', '');
+        $days = $request->get('days', 7);
+
+        $query = Activity::query();
+
+        if ($type) {
+            $query->where('subject_type', $type);
+        }
+
+        if ($days > 0) {
+            $query->where('created_at', '>=', now()->subDays($days));
+        }
+
+        $activities = $query->with('user')->latest()->take(100)->get();
+
+        return response()->json($activities);
+    }
+
+    public function actividadResumen(Request $request)
+    {
+        $days = $request->get('days', 7);
+        $type = $request->get('type', '');
+        $since = now()->subDays($days);
+
+        $query = Activity::where('created_at', '>=', $since);
+
+        if ($type) {
+            $query->where('subject_type', $type);
+        }
+
+        $resumen = $query->selectRaw('DATE(created_at) as fecha, subject_type, COUNT(*) as total')
+            ->groupBy('fecha', 'subject_type')
+            ->orderBy('fecha')
+            ->get();
+
+        return response()->json($resumen);
+    }
+
+    public function enviarNotificacion(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'type' => 'nullable|string|max:50',
+        ]);
+
+        $notif = UserNotification::create([
+            'user_id' => $request->user_id,
+            'from_user_id' => auth()->id(),
+            'title' => $request->title,
+            'message' => $request->message,
+            'type' => $request->type ?? 'info',
+        ]);
+
+        Activity::log('created', 'notificacion', $notif->id,
+            auth()->user()->name . " envió notificación a {$notif->user->name}"
+        );
+
+        return response()->json(['message' => 'Notificación enviada correctamente.']);
+    }
+
+    public function misNotificaciones()
+    {
+        $notifs = UserNotification::where('user_id', auth()->id())
+            ->with('fromUser')
+            ->latest()
+            ->take(20)
+            ->get();
+
+        return response()->json($notifs);
+    }
+
+    public function notificacionesNoLeidas()
+    {
+        $count = UserNotification::where('user_id', auth()->id())
+            ->where('is_read', false)
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+    public function marcarLeida($id)
+    {
+        $notif = UserNotification::where('user_id', auth()->id())
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $notif->update(['is_read' => true]);
+
+        return response()->json(['message' => 'Notificación marcada como leída.']);
+    }
+
+    public function marcarTodasLeidas()
+    {
+        UserNotification::where('user_id', auth()->id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        return response()->json(['message' => 'Todas las notificaciones marcadas como leídas.']);
+    }
+}
