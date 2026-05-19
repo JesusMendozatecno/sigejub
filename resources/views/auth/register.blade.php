@@ -20,7 +20,7 @@
     <h2>Registro de Usuario</h2>
 
     <!-- Formulario de registro -->
-    <form method="POST" action="/register">
+    <form method="POST" action="/register" onsubmit="mostrarCargando('Creando cuenta...')">
         @csrf
 
         <!-- Nombre -->
@@ -52,6 +52,13 @@
 
 </div>
 <script src="https://unpkg.com/lucide@latest"></script>
-<script>lucide.createIcons();</script>
+    <script>lucide.createIcons();</script>
+    @include('partials.toast')
+    @if(session('success'))
+        <script>mostrarToast('{{ session('success') }}', 'success');</script>
+    @endif
+    @if($errors->any())
+        <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
+    @endif
 </body>
 </html>

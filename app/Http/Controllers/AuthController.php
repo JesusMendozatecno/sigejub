@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Activity;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -22,7 +23,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect('dashboard');
+            return redirect('dashboard')->with('success', 'Bienvenido al sistema SIGEJUB');
         }
 
         return back()->withErrors([
@@ -47,13 +48,15 @@ class AuthController extends Controller
         'role' => 'required' // Asegura que el rol sea obligatorio
     ]);*/
 
-    User::create([
+    $user = User::create([
         'name' => $request->name,
         'email' => $request->email,
         'password' => Hash::make($request->password),
-        // Eliminamos el ?? 'analista' para que use lo que viene del formulario
         'role' => $request->role 
     ]);
+
+    Activity::log('created', 'usuario', $user->id,
+        "Se registró el usuario {$user->name}");
 
     return redirect('login')->with('success', 'Usuario registrado correctamente');
 }

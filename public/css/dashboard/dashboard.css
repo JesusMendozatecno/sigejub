@@ -293,4 +293,7 @@ body {
 /* Ajuste de Iconos de Actividad */
 .activity-icon.blue { background: #eff6ff; color: #3b82f6; }
 .activity-icon.green { background: #f0fdf4; color: #22c55e; }
+.activity-icon.orange { background: #fff7ed; color: #d97706; }
+.activity-icon.purple { background: #f3e8ff; color: #7c3aed; }
+.activity-icon.red { background: #fef2f2; color: #dc2626; }
 

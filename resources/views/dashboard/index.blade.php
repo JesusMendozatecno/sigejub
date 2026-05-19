@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/prestaciones.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/reportes.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     
@@ -62,7 +63,7 @@
 
                 <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 4px 0;">
 
-                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                <form method="POST" action="{{ route('logout') }}" onsubmit="mostrarCargando('Cerrando sesión...')" style="margin: 0;">
                     @csrf
                     <button type="submit" class="dropdown-item text-danger">
                         <i data-lucide="log-out" size="16"></i> Cerrar sesión
@@ -140,5 +141,13 @@
 <script src="{{ asset('js/tabla1.js') }}"></script>
 <script src="{{ asset('js/expedientelevel1.js') }}"></script>
 
+@include('partials.toast')
+
+@if(session('success'))
+    <script>mostrarToast('{{ session('success') }}', 'success');</script>
+@endif
+@if($errors->any())
+    <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
+@endif
 </body>
 </html>

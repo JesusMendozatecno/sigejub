@@ -118,8 +118,8 @@ class SolicitudController extends Controller
 
             $solicitud = Solicitud::create($validated);
 
-            $trabajador = $solicitud->trabajador;
-            $nombre = $trabajador ? "{$trabajador->nombres} {$trabajador->apellidos}" : "ID {$validated['trabajador_id']}";
+            $t = $solicitud->load('trabajador')->trabajador;
+            $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$validated['trabajador_id']}";
             Activity::log('created', 'solicitud', $solicitud->id,
                 "Se registró una solicitud de jubilación para {$nombre}");
 
@@ -164,6 +164,11 @@ class SolicitudController extends Controller
 
             $solicitud->update($validated);
 
+            $t = $solicitud->load('trabajador')->trabajador;
+            $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$solicitud->trabajador_id}";
+            Activity::log('updated', 'solicitud', $solicitud->id,
+                "Se actualizó la solicitud de {$nombre}");
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Solicitud actualizada correctamente.',
@@ -184,8 +189,13 @@ class SolicitudController extends Controller
     public function destroy($id)
     {
         try {
-            $solicitud = Solicitud::findOrFail($id);
+            $solicitud = Solicitud::with('trabajador')->findOrFail($id);
+            $t = $solicitud->trabajador;
+            $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$solicitud->trabajador_id}";
             $solicitud->delete();
+
+            Activity::log('deleted', 'solicitud', $id,
+                "Se eliminó la solicitud de {$nombre}");
 
             return response()->json([
                 'status' => 'success',
