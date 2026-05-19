@@ -108,6 +108,11 @@ class TrabajadorController extends Controller
 
             $datos = $validated;
 
+            // --- VALORES POR DEFECTO PARA CAMPOS OPCIONALES ---
+            $datos['numero_hijos'] = $datos['numero_hijos'] ?? 0;
+            $datos['hijos_discapacidad'] = $datos['hijos_discapacidad'] ?? 0;
+            $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
+
             // --- CÁLCULOS AUTOMÁTICOS ---
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
             $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
@@ -161,6 +166,11 @@ class TrabajadorController extends Controller
             ]);
 
             $datos = $validated;
+
+            // --- VALORES POR DEFECTO PARA CAMPOS OPCIONALES ---
+            $datos['numero_hijos'] = $datos['numero_hijos'] ?? 0;
+            $datos['hijos_discapacidad'] = $datos['hijos_discapacidad'] ?? 0;
+            $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
 
             // Recalcular si cambió fecha de nacimiento o ingreso
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
