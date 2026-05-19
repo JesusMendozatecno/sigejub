@@ -70,7 +70,12 @@ class SolicitudController extends Controller
 
             $validated['estado'] = 'pendiente';
 
-            Solicitud::create($validated);
+            $solicitud = Solicitud::create($validated);
+
+            $trabajador = $solicitud->trabajador;
+            $nombre = $trabajador ? "{$trabajador->nombres} {$trabajador->apellidos}" : "ID {$validated['trabajador_id']}";
+            Activity::log('created', 'solicitud', $solicitud->id,
+                "Se registró una solicitud de jubilación para {$nombre}");
 
             return response()->json([
                 'status' => 'success',

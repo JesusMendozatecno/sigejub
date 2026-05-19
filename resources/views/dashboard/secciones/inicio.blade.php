@@ -63,29 +63,6 @@
             <div class="bar-group"><div class="bar" style="height: 50%;"></div><span>JUN</span></div>
         </div>
     </section>
-
-    <section class="quick-access-dark">
-        <h3>Accesos Rápidos</h3>
-        <p>Gestione los procesos fundamentales de forma directa.</p>
-        <div class="access-grid">
-            <div class="access-box" onclick="switchTab('trabajadores')">
-                <i data-lucide="users"></i>
-                <p>TRABAJADORES</p>
-            </div>
-            <div class="access-box" onclick="switchTab('prestaciones')">
-                <i data-lucide="wallet"></i>
-                <p>PRESTACIONES</p>
-            </div>
-            <div class="access-box" onclick="switchTab('reportes')">
-                <i data-lucide="bar-chart-3"></i>
-                <p>REPORTES</p>
-            </div>
-            <div class="access-box">
-                <i data-lucide="help-circle"></i>
-                <p>GUÍAS</p>
-            </div>
-        </div>
-    </section>
 </div>
 
 <div class="content-layout">

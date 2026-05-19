@@ -35,19 +35,14 @@
         <tr>
             <th>FOLIO</th>
             <th>TRABAJADOR</th>
-            <th>FECHA SOLICITUD</th>
-            <th>PERÍODO</th>
+            <th>TIPO DE RETIRO</th>
+            <th>FECHA APERTURA</th>
             <th>ESTATUS</th>
             <th>ACCIONES</th>
         </tr>
     </thead>
     <tbody id="tbodySolicitudes">
-        <tr>
-            <td colspan="6" style="text-align:center; padding: 2rem; color: #888;">
-                Cargando solicitudes...
-            </td>
-        </tr>
-    </tbody>
+        </tbody>
 </table>
 
 <div class="table-footer">
@@ -661,7 +656,6 @@
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {
             if (m.target.id === 'solicitudes' && m.target.classList.contains('active')) {
-                cargarSelectTrabajadores();
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
             }

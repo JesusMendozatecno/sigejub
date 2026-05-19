@@ -136,7 +136,7 @@
 /* Acciones Finales */
 .modal-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 12px;
     margin-top: 20px;
 }
@@ -162,4 +162,72 @@
     transition: all 0.2s;
 }
 
-.btn-submit:hover { background: #1e293b; transform: translateY(-1px); } 
+.btn-submit:hover { background: #1e293b; transform: translateY(-1px); }
+
+/* Botones en la barra lateral del modal */
+.sidebar-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-sidebar-edit {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+.btn-sidebar-edit:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.btn-sidebar-cancel {
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #334155;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-sidebar-cancel:hover {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+/* Status pills y type tags para la tabla de trabajadores */
+.status-pill {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+}
+.status-pill.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+.status-pill.retired {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.type-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+} 

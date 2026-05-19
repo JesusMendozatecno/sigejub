@@ -11,6 +11,16 @@ class Trabajador extends Model
 
     protected $table = 'trabajadores';
 
+    protected $appends = ['estatus'];
+
+    public function getEstatusAttribute()
+    {
+        if ($this->total_anos_servicio >= 25 || $this->edad >= 60) {
+            return 'jubilado';
+        }
+        return 'activo';
+    }
+
     protected $fillable = [
         'cedula',
         'nombres',
