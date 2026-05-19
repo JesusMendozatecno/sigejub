@@ -1,85 +1,250 @@
-/* Layout Base */
-body {
-    display: flex;
-    min-height: 100vh;
-    background: #f8fafc;
-    margin: 0;
-}
 
-/* SIDEBAR - Ajustada */
-.sidebar {
-    width: 260px;
-    height: 100vh;
-    background: white;
-    border-right: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    position: fixed; /* Se queda fija mientras haces scroll */
-    z-index: 1000;
-    transition: all 0.3s ease;
-}
+  /* Funcionalidad de cambio de pestañas dinámicas */
+        .content-section { display: none; animation: fadeIn 0.3s ease; }
+        .content-section.active { display: block; }
+        .menu-item { cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Ajustes estéticos de badges y utilidades */
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .status-activo { background: #e6fcf5; color: #0ca678; }
+        .status-jubilado { background: #e7f5ff; color: #1c7ed6; }
+        .status-suspension { background: #fff5f5; color: #fa5252; }
+        .data-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-/* MAIN CONTENT - El secreto es el margen y el ancho calculado */
-.main-content {
-    flex: 1;
-    margin-left: 260px; /* Igual al ancho de la sidebar */
-    width: calc(100% - 260px); 
-    min-height: 100vh;
-    padding: 0 30px 30px;
-    transition: all 0.3s ease;
-}
+        /* --- ARQUITECTURA GENERAL --- */
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
 
-/* TOP BAR - Ahora es flexible */
-.top-bar {
-    height: 80px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: transparent;
-    padding: 10px 0;
-}
+        /* Header Superior Superior con búsqueda centrada */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            height: 65px;
+            box-sizing: border-box;
+            z-index: 100;
+            position: relative; /* Clave para el centrado del buscador */
+        }
 
-/* CONTENEDOR DE BÚSQUEDA - Responsivo */
-.search-container {
-    display: flex;
-    align-items: center;
-    background: #f1f5f9;
-    padding: 10px 20px;
-    border-radius: 30px;
-    width: 100%;
-    max-width: 400px; /* No crece más de esto en PC */
-}
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
 
-.search-container input {
-    background: transparent;
-    border: none;
-    outline: none;
-    width: 100%;
-    margin-left: 10px;
-}
+        /* Centrado matemático absoluto del contenedor de búsqueda */
+        .search-wrapper-centered {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px; /* Ancho cómodo y estándar para barras de búsqueda */
+            max-width: 35%;
+            z-index: 5;
+        }
 
-/* --- ADAPTACIÓN PARA MÓVILES (Media Queries) --- */
+        .search-wrapper-centered .search-container {
+            margin: 0;
+            position: relative;
+            width: 100%;
+        }
 
-@media (max-width: 1024px) {
-    .sidebar {
-        transform: translateX(-100%); /* Oculta el menú a la izquierda */
-        position: fixed;
-    }
+        .search-wrapper-centered input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border-radius: 24px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.85rem;
+            background-color: #f8fafc;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
 
-    .main-content {
-        margin-left: 0; /* Ocupa toda la pantalla en móvil */
-        width: 100%;
-        padding: 0 15px 15px;
-    }
+        .search-wrapper-centered input:focus {
+            outline: none;
+            border-color: #1a365d;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+        }
 
-    .top-bar {
-        flex-direction: column-reverse; /* Apila buscador y usuario */
-        height: auto;
-        gap: 15px;
-        padding: 20px 0;
-    }
+        .search-wrapper-centered i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+        }
 
-    .search-container {
-        max-width: 100%; /* El buscador ocupa todo el ancho en móvil */
-    }
-}
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        /* Contenedor de la parte inferior (Sidebar + Contenido) */
+        .app-container {
+            display: flex;
+            flex-grow: 1;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+        }
+
+        /* Sidebar lateral izquierdo */
+        .sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 20px 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-menu .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #475569;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu .menu-item:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .sidebar-menu .menu-item.active {
+            background-color: #e2e8f0;
+            color: #1a365d;
+            font-weight: bold;
+        }
+
+        /* Dropdown de Usuario */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+
+        .dropdown-trigger:hover {
+            background-color: #f1f5f9;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 115%;
+            background: white;
+            min-width: 220px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            padding: 8px 0;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .user-dropdown.open .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 4px;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: #334155;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        .dropdown-item.text-danger {
+            color: #ef4444;
+        }
+
+        .dropdown-item.text-danger:hover {
+            background-color: #fef2f2;
+        }
+
+        /* Contenido Principal con Scrollable independiente */
+        .main-content {
+            flex-grow: 1;
+            padding: 24px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }

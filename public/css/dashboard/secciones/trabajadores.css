@@ -208,3 +208,143 @@
 
 
 
+
+
+/* --- NUEVAS REGLAS PARA EL MODAL DE CONFIRMACIÓN DE ELIMINACIÓN --- */
+.modal-delete-box {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 420px;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    animation: modalScaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.delete-icon-warn {
+    width: 56px;
+    height: 56px;
+    background-color: #fef2f2;
+    color: #dc2626;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+    font-size: 24px;
+}
+
+.modal-delete-box h3 {
+    font-size: 1.25rem;
+    color: #0f172a;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.modal-delete-box p {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 24px;
+    line-height: 1.4;
+}
+
+.delete-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-delete-cancel {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-delete-cancel:hover {
+    background-color: #e2e8f0;
+}
+
+.btn-delete-confirm {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-delete-confirm:hover {
+    background-color: #b91c1c;
+}
+
+/* Efecto físico al pulsar botones */
+.btn-delete-cancel:active, .btn-delete-confirm:active {
+    transform: scale(0.96);
+}
+
+@keyframes modalScaleUp {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Ajustes globales de celdas y botones base */
+.acciones-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-start;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+}
+
+.btn-icon:active {
+    transform: scale(0.90);
+}
+
+.btn-ver {
+    color: #2563eb;
+    background-color: #eff6ff;
+}
+.btn-ver:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(37, 99, 214, 0.25);
+}
+
+.btn-editar {
+    color: #d97706;
+    background-color: #fffbeb;
+}
+.btn-editar:hover {
+    background-color: #d97706;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+}
+
+.btn-eliminar {
+    color: #dc2626;
+    background-color: #fef2f2;
+}
+.btn-eliminar:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
+}
