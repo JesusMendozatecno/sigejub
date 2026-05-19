@@ -52,5 +52,6 @@
     </footer>
 
     <script>lucide.createIcons();</script>
+    @include('partials.toast')
 </body>
 </html>

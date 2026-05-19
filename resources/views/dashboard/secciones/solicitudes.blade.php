@@ -464,6 +464,7 @@
             if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Guardando...'; }
 
             try {
+                mostrarCargando('Registrando solicitud...');
                 const resp = await fetch(url, {
                     method: 'POST',
                     body: formData,
@@ -475,7 +476,7 @@
                 const data = await resp.json();
                 if (!resp.ok) throw data;
 
-                alert(data.message || 'Solicitud registrada exitosamente.');
+                mostrarToast(data.message || 'Solicitud registrada exitosamente.', 'success');
                 this.reset();
                 cerrarModalSolicitud();
                 cargarSolicitudes(currentStatus);
@@ -483,20 +484,16 @@
 
             } catch (err) {
                 if (err.errors) {
-                    alert(Object.values(err.errors).flat().join('\n'));
+                    mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
                 } else {
-                    alert(err.message || 'Error en el sistema.');
+                    mostrarToast(err.message || 'Error en el sistema.', 'error');
                 }
             } finally {
+                ocultarCargando();
                 if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Registrar Solicitud'; }
             }
         });
     });
-
-    window.exportarSolicitudesPDF = function() {
-        const params = currentStatus !== 'all' ? `?estado=${currentStatus}` : '';
-        window.open(`/solicitudes/exportar${params}`, '_blank');
-    };
 
     // === 8. INICIALIZAR AL ENTRAR A LA PESTAÑA ===
     document.addEventListener('DOMContentLoaded', function() {
@@ -513,9 +510,11 @@
         const id = btn.dataset.id;
         const folio = `#SOL-${String(id).padStart(4, '0')}`;
 
+        mostrarCargando('Cargando detalle...');
         fetch(`/solicitudes/${id}`)
             .then(r => r.json())
             .then(s => {
+                ocultarCargando();
                 const t = s.trabajador || {};
                 const badgeClass = s.estado === 'pendiente' ? 'pending' : (s.estado === 'aprobado' ? 'approved' : 'rejected');
                 const badgeText = s.estado.charAt(0).toUpperCase() + s.estado.slice(1);
@@ -541,8 +540,9 @@
                 }
             })
             .catch(err => {
+                ocultarCargando();
                 console.error('Error al cargar detalle:', err);
-                alert('Error al cargar el detalle de la solicitud.');
+                mostrarToast('Error al cargar el detalle de la solicitud.', 'error');
             });
     });
 
@@ -571,9 +571,11 @@
         const id = btn.dataset.id;
         const folio = `#SOL-${String(id).padStart(4, '0')}`;
 
+        mostrarCargando('Cargando solicitud...');
         fetch(`/solicitudes/${id}`)
             .then(r => r.json())
             .then(s => {
+                ocultarCargando();
                 document.getElementById('editSolicitudId').value = s.id;
                 document.getElementById('editFolio').textContent = folio;
                 const t = s.trabajador || {};
@@ -588,8 +590,9 @@
                 }
             })
             .catch(err => {
+                ocultarCargando();
                 console.error('Error al cargar solicitud:', err);
-                alert('Error al cargar los datos de la solicitud.');
+                mostrarToast('Error al cargar los datos de la solicitud.', 'error');
             });
     });
 
@@ -625,6 +628,7 @@
             if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Guardando...'; }
 
             try {
+                mostrarCargando('Actualizando estatus...');
                 const resp = await fetch(`/solicitudes/${id}`, {
                     method: 'POST',
                     body: formData,
@@ -636,18 +640,19 @@
                 const data = await resp.json();
                 if (!resp.ok) throw data;
 
-                alert(data.message || 'Estatus actualizado correctamente.');
+                mostrarToast(data.message || 'Estatus actualizado correctamente.', 'success');
                 cerrarModalEditar();
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
 
             } catch (err) {
                 if (err.errors) {
-                    alert(Object.values(err.errors).flat().join('\n'));
+                    mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
                 } else {
-                    alert(err.message || 'Error en el sistema.');
+                    mostrarToast(err.message || 'Error en el sistema.', 'error');
                 }
             } finally {
+                ocultarCargando();
                 if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Guardar Cambios'; }
             }
         });

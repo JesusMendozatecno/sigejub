@@ -26,7 +26,7 @@
         <p>Accede a tu cuenta</p>
 
         <!-- Formulario de autenticación -->
-        <form method="POST" action="/login">
+        <form method="POST" action="/login" onsubmit="mostrarCargando('Iniciando sesión...')">
             @csrf <!-- Seguridad Laravel (evita ataques CSRF) -->
 
             <!-- Campo email -->
@@ -53,7 +53,14 @@
 
     </div>
 </div>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script>lucide.createIcons();</script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
+    @include('partials.toast')
+    @if(session('success'))
+        <script>mostrarToast('{{ session('success') }}', 'success');</script>
+    @endif
+    @if($errors->any())
+        <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
+    @endif
 </body>
 </html>

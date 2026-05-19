@@ -260,6 +260,7 @@
     async function abrirDetalle(id) {
         expedienteActualId = id;
         try {
+            mostrarCargando('Cargando expediente...');
             const resp = await fetch(`/expedientes/${id}`);
             const exp = await resp.json();
             const t = exp.trabajador || {};
@@ -296,6 +297,8 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al abrir detalle:', err);
+        } finally {
+            ocultarCargando();
         }
     }
 
@@ -386,6 +389,7 @@
             const resultado = document.getElementById('resultadoBusqueda');
             errorDiv.classList.add('hidden');
             try {
+                mostrarCargando('Buscando trabajador...');
                 const resp = await fetch(`/expedientes/buscar-trabajador?cedula=${encodeURIComponent(cedula)}`);
                 const data = await resp.json();
                 if (!resp.ok) {
@@ -405,6 +409,8 @@
             } catch (err) {
                 errorDiv.textContent = 'Error de conexión';
                 errorDiv.classList.remove('hidden');
+            } finally {
+                ocultarCargando();
             }
         });
 
@@ -470,6 +476,7 @@
             const btn = document.getElementById('btnSubmitExpediente');
             btn.disabled = true; btn.textContent = 'Creando...';
             try {
+                mostrarCargando('Creando expediente...');
                 const resp = await fetch('/expedientes', {
                     method: 'POST', body: formData,
                     headers: { 'Accept': 'application/json',
@@ -478,12 +485,13 @@
                 });
                 const data = await resp.json();
                 if (!resp.ok) throw data;
-                alert(data.message);
+                mostrarToast(data.message, 'success');
                 document.getElementById('modalCrearExpediente').style.display = 'none';
                 cargarExpedientes();
             } catch (err) {
-                alert(err.message || 'Error al crear expediente');
+                mostrarToast(err.message || 'Error al crear expediente', 'error');
             } finally {
+                ocultarCargando();
                 btn.disabled = false; btn.textContent = 'Crear Expediente';
             }
         });
@@ -504,6 +512,7 @@
             const btn = e.target.querySelector('.btn-submit');
             btn.disabled = true; btn.textContent = 'Subiendo...';
             try {
+                mostrarCargando('Subiendo documento...');
                 const resp = await fetch(`/expedientes/${expedienteActualId}/documentos`, {
                     method: 'POST', body: formData,
                     headers: { 'Accept': 'application/json',
@@ -512,12 +521,13 @@
                 });
                 const data = await resp.json();
                 if (!resp.ok) throw data;
-                alert(data.message);
+                mostrarToast(data.message, 'success');
                 document.getElementById('modalSubirDocumento').style.display = 'none';
                 abrirDetalle(expedienteActualId);
             } catch (err) {
-                alert(err.message || 'Error al subir');
+                mostrarToast(err.message || 'Error al subir', 'error');
             } finally {
+                ocultarCargando();
                 btn.disabled = false; btn.textContent = 'Subir';
             }
         });
@@ -527,6 +537,7 @@
             if (!expedienteActualId) return;
             const notas = document.getElementById('notasAdminInput').value;
             try {
+                mostrarCargando('Guardando notas...');
                 const resp = await fetch(`/expedientes/${expedienteActualId}/notas`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
@@ -536,9 +547,11 @@
                 });
                 const data = await resp.json();
                 if (!resp.ok) throw data;
-                alert(data.message);
+                mostrarToast(data.message, 'success');
             } catch (err) {
-                alert(err.message || 'Error al guardar notas');
+                mostrarToast(err.message || 'Error al guardar notas', 'error');
+            } finally {
+                ocultarCargando();
             }
         });
 
@@ -551,6 +564,7 @@
             if (btnAprobar) {
                 const id = btnAprobar.dataset.id;
                 try {
+                    mostrarCargando('Aprobando documento...');
                     const resp = await fetch(`/documentos/${id}/estado`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
@@ -560,9 +574,12 @@
                     });
                     const data = await resp.json();
                     if (!resp.ok) throw data;
+                    mostrarToast('Documento aprobado', 'success');
                     abrirDetalle(expedienteActualId);
                 } catch (err) {
-                    alert(err.message || 'Error');
+                    mostrarToast(err.message || 'Error', 'error');
+                } finally {
+                    ocultarCargando();
                 }
             }
 
@@ -571,6 +588,7 @@
                 const razon = prompt('Motivo del rechazo:');
                 if (!razon) return;
                 try {
+                    mostrarCargando('Rechazando documento...');
                     const resp = await fetch(`/documentos/${id}/estado`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
@@ -580,9 +598,12 @@
                     });
                     const data = await resp.json();
                     if (!resp.ok) throw data;
+                    mostrarToast('Documento rechazado', 'warning');
                     abrirDetalle(expedienteActualId);
                 } catch (err) {
-                    alert(err.message || 'Error');
+                    mostrarToast(err.message || 'Error', 'error');
+                } finally {
+                    ocultarCargando();
                 }
             }
 
@@ -597,6 +618,7 @@
                     const formData = new FormData();
                     formData.append('archivo', file);
                     try {
+                        mostrarCargando('Reemplazando documento...');
                         const resp = await fetch(`/documentos/${id}/reemplazar`, {
                             method: 'POST', body: formData,
                             headers: { 'Accept': 'application/json',
@@ -605,10 +627,12 @@
                         });
                         const data = await resp.json();
                         if (!resp.ok) throw data;
-                        alert(data.message);
+                        mostrarToast(data.message, 'success');
                         abrirDetalle(expedienteActualId);
                     } catch (err) {
-                        alert(err.message || 'Error al reemplazar');
+                        mostrarToast(err.message || 'Error al reemplazar', 'error');
+                    } finally {
+                        ocultarCargando();
                     }
                 };
                 input.click();

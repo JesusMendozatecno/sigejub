@@ -94,6 +94,7 @@
                 }
 
                 try {
+                    mostrarCargando(modoEdicionActivo ? 'Guardando cambios...' : 'Registrando trabajador...');
                     const tokenElement = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="_token"]');
                     const response = await fetch(url, {
                         method: 'POST',
@@ -107,7 +108,7 @@
                     const data = await response.json();
                     if (!response.ok) throw data;
 
-                    alert(data.message || 'Operación completada con éxito.');
+                    mostrarToast(data.message || 'Operación completada con éxito.', 'success');
                     form.reset();
                     cerrarTodoModal();
                     cargarTrabajadores();
@@ -115,11 +116,12 @@
                 } catch (err) {
                     console.error(err);
                     if (err.errors) {
-                        alert(Object.values(err.errors).flat().join('\n'));
+                        mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
                     } else {
-                        alert(err.message || 'Error interno de comunicación.');
+                        mostrarToast(err.message || 'Error interno de comunicación.', 'error');
                     }
                 } finally {
+                    ocultarCargando();
                     if (btnSubmit) {
                         btnSubmit.disabled = false;
                         btnSubmit.textContent = modoEdicionActivo ? 'Guardar Cambios' : 'Registrar Trabajador';
@@ -211,6 +213,7 @@
         modoEdicionActivo = false;
 
         try {
+            mostrarCargando('Cargando expediente...');
             const res = await fetch(`/trabajadores/${id}`);
             if (!res.ok) throw new Error('No se pudo obtener la información del trabajador');
             const t = await res.json();
@@ -244,7 +247,9 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
         } catch (err) {
-            alert(err.message);
+            mostrarToast(err.message, 'error');
+        } finally {
+            ocultarCargando();
         }
     };
 
@@ -259,6 +264,7 @@
     async function ejecutarBajaTrabajador() {
         if (!trabajadorSeleccionadoId) return;
         try {
+            mostrarCargando('Procesando baja...');
             const tokenElement = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="_token"]');
             const res = await fetch(`/trabajadores/${trabajadorSeleccionadoId}`, {
                 method: 'DELETE',
@@ -279,12 +285,14 @@
                         if (badgeTotal) badgeTotal.textContent = Math.max(0, parseInt(badgeTotal.textContent) - 1);
                     }, 300);
                 }
-                alert(data.message || 'Baja procesada.');
+                mostrarToast(data.message || 'Baja procesada.', 'success');
             } else {
-                alert(data.message || 'Error al procesar la baja.');
+                mostrarToast(data.message || 'Error al procesar la baja.', 'error');
             }
         } catch (err) {
-            alert('Error de red al intentar conectar.');
+            mostrarToast('Error de red al intentar conectar.', 'error');
+        } finally {
+            ocultarCargando();
         }
     }
 
