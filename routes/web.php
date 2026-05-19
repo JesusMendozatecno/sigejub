@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrabajadorController;
+use App\Http\Controllers\SolicitudController;
 
 
 /*
@@ -65,3 +66,14 @@ Route::delete('/trabajadores/{id}', [TrabajadorController::class, 'destroy'])->n
 
 // El store se mantiene igual
 Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trabajador');
+
+/*
+|-----------------------------
+| SOLICITUDES (CRUD + API)
+|-----------------------------
+*/
+Route::get('/solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
+Route::get('/solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
+Route::post('/solicitudes', [SolicitudController::class, 'store'])->name('solicitudes.store');
+Route::put('/solicitudes/{id}', [SolicitudController::class, 'update'])->name('solicitudes.update');
+Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy'])->name('solicitudes.destroy');
