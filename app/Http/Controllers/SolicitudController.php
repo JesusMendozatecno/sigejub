@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\Trabajador;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller
 {
@@ -34,6 +35,26 @@ class SolicitudController extends Controller
                              ->paginate($request->get('per_page', 10));
 
         return response()->json($solicitudes);
+    }
+
+    public function exportarPDF(Request $request)
+    {
+        $query = Solicitud::with('trabajador');
+
+        if ($estado = $request->get('estado')) {
+            if ($estado === 'pending') {
+                $query->where('estado', 'pendiente');
+            } elseif ($estado === 'approved') {
+                $query->where('estado', 'aprobado');
+            } elseif ($estado === 'rejected') {
+                $query->where('estado', 'rechazado');
+            }
+        }
+
+        $solicitudes = $query->orderBy('created_at', 'desc')->get();
+
+        $pdf = Pdf::loadView('pdf.solicitudes', compact('solicitudes'));
+        return $pdf->download('solicitudes-' . now()->format('Y-m-d') . '.pdf');
     }
 
     public function store(Request $request)

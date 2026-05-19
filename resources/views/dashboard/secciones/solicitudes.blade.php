@@ -24,11 +24,8 @@
         </div>
     </div>
     <div class="list-actions">
-        <button class="btn-outline">
-            <i data-lucide="sliders-horizontal" size="16"></i> Filtros Avanzados
-        </button>
-        <button class="btn-outline">
-            <i data-lucide="download" size="16"></i> Exportar
+        <button class="btn-outline" onclick="exportarSolicitudesPDF()">
+            <i data-lucide="download" size="16"></i> Exportar PDF
         </button>
     </div>
 </div>
@@ -500,6 +497,11 @@
             }
         });
     });
+
+    window.exportarSolicitudesPDF = function() {
+        const params = currentStatus !== 'all' ? `?estado=${currentStatus}` : '';
+        window.open(`/solicitudes/exportar${params}`, '_blank');
+    };
 
     // === 8. INICIALIZAR AL ENTRAR A LA PESTAÑA ===
     document.addEventListener('DOMContentLoaded', function() {
