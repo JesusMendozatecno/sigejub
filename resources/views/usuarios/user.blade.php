@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil — SIGEJUB</title>
+    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
+    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/base.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/layout.css') }}">
@@ -554,31 +556,38 @@ function cerrarCrop() {
 async function confirmarCrop() {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+    if (!canvas) { mostrarToast('Error al procesar la imagen', 'error'); return; }
     canvas.toBlob(async (blob) => {
         const fd = new FormData();
         fd.append('avatar', blob, 'avatar.jpg');
+        fd.append('_token', csrfToken());
         try {
-            const r = await api('/perfil/avatar', { method: 'POST', body: fd });
-            const d = await r.json();
+            const r = await fetch('/perfil/avatar', {
+                method: 'POST',
+                body: fd,
+            });
+            const text = await r.text();
+            let d;
+            try { d = JSON.parse(text); } catch (e) { console.error('Respuesta no JSON:', text.substring(0,200)); mostrarToast('Error del servidor', 'error'); return; }
             if (!r.ok) { mostrarToast(d.message || 'Error al subir', 'error'); return; }
             document.getElementById('profileAvatarImg').src = d.avatar + '?t=' + Date.now();
             mostrarToast(d.message, 'success');
             cerrarCrop();
-        } catch (err) { mostrarToast('Error de conexión', 'error'); }
+        } catch (err) { console.error('Error avatar:', err); mostrarToast('Error de conexión', 'error'); }
     }, 'image/jpeg', 0.9);
 }
 
 async function eliminarAvatar() {
     if (!confirm('¿Eliminar foto de perfil?')) return;
     try {
-        const r = await api('/perfil/avatar', { method: 'DELETE' });
+        const r = await fetch('/perfil/avatar', {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+        });
         const d = await r.json();
         if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        const img = document.getElementById('profileAvatarImg');
-        img.style.display = 'none';
-        img.src = '';
         location.reload();
-    } catch (err) { mostrarToast('Error', 'error'); }
+    } catch (err) { console.error('Error eliminar avatar:', err); mostrarToast('Error de conexión', 'error'); }
 }
 
 // === TAB: SEGURIDAD ===

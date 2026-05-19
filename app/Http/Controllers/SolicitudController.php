@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\Trabajador;
-use Barryvdh\DomPDF\Facade\Pdf;
+// use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller
 {
@@ -99,8 +99,7 @@ class SolicitudController extends Controller
 
         $solicitudes = $query->orderBy('created_at', 'desc')->get();
 
-        $pdf = Pdf::loadView('pdf.solicitudes', compact('solicitudes'));
-        return $pdf->download('solicitudes-' . now()->format('Y-m-d') . '.pdf');
+        return view('pdf.solicitudes', compact('solicitudes'));
     }
 
     public function store(Request $request)

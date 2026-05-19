@@ -698,6 +698,12 @@
         });
     });
 
+    // === EXPORTAR PDF ===
+    window.exportarSolicitudesPDF = function() {
+        const params = currentStatus !== 'all' ? `?estado=${currentStatus}` : '';
+        window.open('/solicitudes/exportar' + params, '_blank', 'width=1000,height=700');
+    };
+
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {
             if (m.target.id === 'solicitudes' && m.target.classList.contains('active')) {

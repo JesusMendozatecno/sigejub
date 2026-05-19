@@ -2,7 +2,8 @@
 <html>
 <head>
     <title>Registro SIGEJUB</title>
-
+    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
+    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <!-- CSS exclusivo del registro -->
     <link rel="stylesheet" href="{{ asset('css/register.css') }}">
 </head>

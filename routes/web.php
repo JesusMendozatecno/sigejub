@@ -8,6 +8,7 @@ use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CajaNegraController;
 
 
 /*
@@ -133,6 +134,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/notificaciones/no-leidas', [AdminController::class, 'notificacionesNoLeidas']);
     Route::put('/notificaciones/{id}/leer', [AdminController::class, 'marcarLeida']);
     Route::put('/notificaciones/leer-todas', [AdminController::class, 'marcarTodasLeidas']);
+});
+
+/*
+|-----------------------------
+| CAJA NEGRA (admin only)
+|-----------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/caja-negra', [CajaNegraController::class, 'index']);
+    Route::get('/caja-negra/exportar', [CajaNegraController::class, 'exportar']);
+    Route::get('/caja-negra/{id}', [CajaNegraController::class, 'show']);
+    Route::get('/caja-negra-data/estadisticas', [CajaNegraController::class, 'stats']);
+    Route::get('/caja-negra-data/usuarios', [CajaNegraController::class, 'usuarios']);
 });
 
 Route::get('/expedientes', [ExpedienteController::class, 'index']);

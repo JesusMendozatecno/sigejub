@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIGEJUB - Sistema de Jubilaciones</title>
+
+    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('img/favicon-32.png') }}" sizes="32x32" type="image/png">
+    <link rel="icon" href="{{ asset('img/favicon-16.png') }}" sizes="16x16" type="image/png">
+    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
+    
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/base.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/layout.css') }}">
@@ -18,6 +24,8 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/reportes.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
+    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     
@@ -101,6 +109,7 @@
                 <li class="menu-item" data-target="reportes"><i data-lucide="bar-chart-3" size="18"></i> Reportes</li>
                 @if(Auth::user()->role === 'admin')
                 <li class="menu-item" data-target="administrar"><i data-lucide="shield" size="18"></i> Administrar</li>
+                <li class="menu-item" data-target="caja-negra"><i data-lucide="hard-drive" size="18"></i> Historial</li>
                 @endif
 
             </ul>
@@ -137,6 +146,9 @@
             @if(Auth::user()->role === 'admin')
             <div id="administrar" class="content-section">
                 @include('dashboard.secciones.administrar')
+            </div>
+            <div id="caja-negra" class="content-section">
+                @include('dashboard.secciones.caja-negra')
             </div>
             @endif
 
