@@ -79,14 +79,16 @@ class SolicitudController extends Controller
         try {
             $solicitud = Solicitud::findOrFail($id);
 
-            $validated = $request->validate([
-                'trabajador_id' => 'required|exists:trabajadores,id',
-                'fecha_solicitud' => 'required|date',
+            $rules = [
+                'trabajador_id' => 'sometimes|required|exists:trabajadores,id',
+                'fecha_solicitud' => 'sometimes|required|date',
                 'periodo' => 'nullable|string|max:20',
                 'tipo_jubilacion' => 'nullable|string|max:100',
                 'observaciones' => 'nullable|string',
                 'estado' => 'nullable|in:pendiente,revision,aprobado,rechazado',
-            ]);
+            ];
+
+            $validated = $request->validate($rules);
 
             $solicitud->update($validated);
 
