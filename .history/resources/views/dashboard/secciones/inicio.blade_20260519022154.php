@@ -42,30 +42,51 @@
     </div>
 </section>
 
-<div class="content-layout" style="align-items: start; grid-template-columns: 1.3fr 1fr;">
-    <div style="display: flex; flex-direction: column; gap: 20px;">
-        <section class="chart-container">
-            <div class="chart-header">
-                <div>
-                    <h3>Solicitudes por Mes</h3>
-                    <p class="chart-subtitle">Volumen de tramitación - {{ date('Y') }}</p>
+<div class="content-layout">
+    <section class="chart-container">
+        <div class="chart-header">
+            <div>
+                <h3>Solicitudes por Mes</h3>
+                <p class="chart-subtitle">Volumen de tramitación - Año Actual</p>
+            </div>
+            <div class="chart-toggle">
+                <button class="active" type="button">Mensual</button>
+                <button type="button">Anual</button>
+            </div>
+        </div>
+        <div class="bar-chart">
+            <div class="bar-group"><div class="bar" style="height: 40%;"></div><span>ENE</span></div>
+            <div class="bar-group"><div class="bar" style="height: 60%;"></div><span>FEB</span></div>
+            <div class="bar-group active"><div class="bar" style="height: 90%;"><span class="val">32</span></div><span>MAR</span></div>
+            <div class="bar-group"><div class="bar" style="height: 70%;"></div><span>ABR</span></div>
+            <div class="bar-group"><div class="bar" style="height: 80%;"></div><span>MAY</span></div>
+            <div class="bar-group"><div class="bar" style="height: 50%;"></div><span>JUN</span></div>
+        </div>
+    </section>
+</div>
+
+<div class="content-layout">
+    <section class="recent-activity">
+        <h3 class="section-title"><i data-lucide="history"></i> Actividad Reciente</h3>
+        <div class="activity-list">
+            <div class="activity-item">
+                <div class="activity-icon blue"><i data-lucide="file-up"></i></div>
+                <div class="activity-text">
+                    <p>Juan Pérez subió su cédula</p>
+                    <span>Expediente #9923 • Hace 15 min</span>
                 </div>
+                <a href="#">Ver</a>
             </div>
-            <div class="bar-chart" id="barChartSolicitudes">
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>ENE</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>FEB</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>MAR</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>ABR</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>MAY</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>JUN</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>JUL</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>AGO</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>SEP</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>OCT</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>NOV</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>DIC</span></div>
+            <div class="activity-item">
+                <div class="activity-icon green"><i data-lucide="check-circle"></i></div>
+                <div class="activity-text">
+                    <p>Solicitud #452 aprobada</p>
+                    <span>Admin. Maria • Hace 2 horas</span>
+                </div>
+                <a href="#">Detalle</a>
             </div>
-        </section>
+        </div>
+    </section>
 
         <div class="deadlines-card">
             <h3>Próximos Vencimientos</h3>

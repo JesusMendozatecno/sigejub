@@ -76,6 +76,8 @@ Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trab
 |-----------------------------
 */
 Route::get('/solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
+Route::get('/solicitudes/por-mes', [SolicitudController::class, 'porMes'])->name('solicitudes.por-mes');
+Route::get('/solicitudes/vencimientos', [SolicitudController::class, 'vencimientos'])->name('solicitudes.vencimientos');
 Route::get('/solicitudes/exportar', [SolicitudController::class, 'exportarPDF'])->name('solicitudes.exportar');
 Route::get('/solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
 Route::post('/solicitudes', [SolicitudController::class, 'store'])->name('solicitudes.store');

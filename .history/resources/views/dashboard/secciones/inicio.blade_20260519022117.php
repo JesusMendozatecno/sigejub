@@ -42,6 +42,7 @@
     </div>
 </section>
 
+<<<<<<< HEAD
 <div class="content-layout" style="align-items: start; grid-template-columns: 1.3fr 1fr;">
     <div style="display: flex; flex-direction: column; gap: 20px;">
         <section class="chart-container">
@@ -64,6 +65,39 @@
                 <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>OCT</span></div>
                 <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>NOV</span></div>
                 <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>DIC</span></div>
+=======
+<div class="content-layout">
+    <section class="chart-container">
+        <div class="chart-header">
+            <div>
+                <h3>Solicitudes por Mes</h3>
+                <p class="chart-subtitle">Volumen de tramitación - Año Actual</p>
+            </div>
+            <div class="chart-toggle">
+                <button class="active" type="button">Mensual</button>
+                <button type="button">Anual</button>
+            </div>
+        </div>
+        <div class="bar-chart">
+            <div class="bar-group"><div class="bar" style="height: 40%;"></div><span>ENE</span></div>
+            <div class="bar-group"><div class="bar" style="height: 60%;"></div><span>FEB</span></div>
+            <div class="bar-group active"><div class="bar" style="height: 90%;"><span class="val">32</span></div><span>MAR</span></div>
+            <div class="bar-group"><div class="bar" style="height: 70%;"></div><span>ABR</span></div>
+            <div class="bar-group"><div class="bar" style="height: 80%;"></div><span>MAY</span></div>
+            <div class="bar-group"><div class="bar" style="height: 50%;"></div><span>JUN</span></div>
+        </div>
+    </section>
+</div>
+
+<div class="content-layout">
+    <section class="recent-activity">
+        <h3 class="section-title"><i data-lucide="history"></i> Actividad Reciente</h3>
+        <div class="activity-list" id="activityList">
+            <div class="activity-item">
+                <div class="activity-text" style="text-align:center;color:#94a3b8;padding:20px;">
+                    <p>Cargando actividades...</p>
+                </div>
+>>>>>>> b02581aec47c57b5adb441ae555fcd9149192e9c
             </div>
         </section>
 
