@@ -3,147 +3,14 @@
         <h1>Directorio de Trabajadores</h1>
         <p>Gestione la información laboral y el estatus institucional de los miembros activos y jubilados.</p>
     </div>
-</div>
+    <div class="header-actions">
+        <button type="button" class="btn-primary-dark">
+            <i data-lucide="plus-circle" size="20"></i> Registrar Trabajador
+        </button>
+    </div>
+</header>
 
-{{-- ======================================================
-     SCRIPTS — Eventos de tabla y formulario trabajador
-====================================================== --}}
-<script>
-// ── EDITAR: cargar datos en el modal ──────────────────
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-editar');
-    if (!btn) return;
-
-    const f = document.getElementById('formTrabajador');
-    f.setAttribute('data-action', `/trabajadores/${btn.dataset.id}`);
-    f.setAttribute('data-method', 'PUT');
-    document.getElementById('btnSubmitTrabajador').textContent = 'Guardar Cambios';
-
-    f.querySelector('[name="cedula"]').value                   = btn.dataset.cedula;
-    f.querySelector('[name="nombres"]').value                  = btn.dataset.nombres;
-    f.querySelector('[name="apellidos"]').value                 = btn.dataset.apellidos;
-    f.querySelector('[name="cargo"]').value                     = btn.dataset.cargo;
-    f.querySelector('[name="unidad_departamento"]').value       = btn.dataset.unidad;
-    f.querySelector('[name="grado_nivel"]').value               = btn.dataset.grado;
-    f.querySelector('[name="fecha_ingreso"]').value             = btn.dataset['fecha-ingreso'];
-    f.querySelector('[name="fecha_nacimiento"]').value          = btn.dataset['fecha-nacimiento'];
-    f.querySelector('[name="genero"]').value                    = btn.dataset.genero;
-    f.querySelector('[name="nivel_instruccion"]').value         = btn.dataset.nivel;
-    f.querySelector('[name="anos_servicio_externo"]').value     = btn.dataset.externo;
-    f.querySelector('[name="porcentaje_antiguedad"]').value     = btn.dataset.porcAntig;
-    f.querySelector('[name="cuenta_bancaria"]').value           = btn.dataset.cuenta;
-
-    document.getElementById('modalTrabajador').style.display = 'flex';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-});
-
-// ── ELIMINAR: confirmar y borrar ──────────────────────
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-eliminar');
-    if (!btn) return;
-
-    const nombre = btn.dataset.nombre;
-    const id     = btn.dataset.id;
-
-    if (!confirm(`¿Eliminar a "${nombre}"?\nEsta acción se puede deshacer (soft delete).`)) return;
-
-    fetch(`/trabajadores/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
-            'Accept': 'application/json'
-        }
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const fila = btn.closest('tr');
-            fila.style.transition = 'opacity 0.3s';
-            fila.style.opacity = '0';
-            setTimeout(() => fila.remove(), 300);
-            document.getElementById('totalTrabajadores').textContent =
-                parseInt(document.getElementById('totalTrabajadores').textContent || '0') - 1;
-            alert(data.message);
-        } else {
-            alert(data.message || 'Error al eliminar');
-        }
-    })
-    .catch(err => alert('Error de conexión.'));
-});
-
-// ── ENVÍO FORMULARIO: crear o editar según method ───────
-const formTrabajador = document.getElementById('formTrabajador');
-if (formTrabajador) {
-    formTrabajador.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const url        = this.getAttribute('data-action');
-        const method     = this.getAttribute('data-method') || 'POST';
-        const formData   = new FormData(this);
-        const btnSubmit  = this.querySelector('.btn-submit');
-
-        if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Guardando...'; }
-
-        try {
-            const resp = await fetch(url, {
-                method : method,
-                body   : formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                    'Accept': 'application/json'
-                }
-            });
-            const data = await resp.json();
-            if (!resp.ok) throw data;
-
-            alert(data.message || 'Operación exitosa.');
-            formTrabajador.reset();
-            document.getElementById('closeModal')?.click();
-
-            // Reiniciar modal a modo CREAR
-            formTrabajador.setAttribute('data-action',  '/trabajadores');
-            formTrabajador.setAttribute('data-method',  'POST');
-            btnSubmit.textContent = 'Registrar Trabajador';
-
-            // Recargar tabla
-            location.reload();
-
-        } catch (err) {
-            if (err.errors) {
-                alert(Object.values(err.errors).flat().join('\n'));
-            } else {
-                alert(err.message || 'Error interno.');
-            }
-        } finally {
-            if (btnSubmit) { btnSubmit.disabled = false; }
-        }
-    });
-}
-
-// ── FILTRO POR ESTATUS ────────────────────────────────
-const selEstatus = document.getElementById('filtroEstatus');
-if (selEstatus) {
-    selEstatus.addEventListener('change', () => {
-        cargarTrabajadores(selEstatus.value);
-    });
-}
-
-// ── LIMPIAR ESTADO AL CERRAR MODAL ────────────────────
-const btnCancelar = document.getElementById('btnCancelar');
-if (btnCancelar) {
-    btnCancelar.addEventListener('click', () => {
-        const f = document.getElementById('formTrabajador');
-        setTimeout(() => {
-            f.reset();
-            f.setAttribute('data-action', '/trabajadores');
-            f.setAttribute('data-method', 'POST');
-            const btn = document.getElementById('btnSubmitTrabajador');
-            if (btn) btn.textContent = 'Registrar Trabajador';
-        }, 100);
-    });
-}
-</script>
-
+<section class="filters-bar-card" style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
     <div class="filter-group">
         <label>FILTRAR POR ESTATUS</label>
         <select id="filtroEstatus">
@@ -161,7 +28,7 @@ if (btnCancelar) {
             <option>Obrero</option>
         </select>
     </div>
-    <div class="total-badge-card">
+    <div class="total-badge-card" style="margin-left: auto;">
         <div>
             <p>TOTAL REGISTRADOS</p>
             <h2 id="totalTrabajadores">0</h2>
@@ -170,30 +37,7 @@ if (btnCancelar) {
     </div>
 </section>
 
-{{-- Botón de apertura del modal — onclick nativo para delegar a JS --}}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const btnAbrirModal = document.querySelector('.btn-primary-dark');
-    const modal = document.getElementById('modalTrabajador');
-    const btnCerrar  = document.getElementById('closeModal');
-    const btnCancelar = document.getElementById('btnCancelar');
-
-    function abrirModal() {
-        modal.style.display = 'flex';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-    function cerrarModal() {
-        modal.style.display = 'none';
-    }
-
-    if (btnAbrirModal) btnAbrirModal.addEventListener('click', (e) => { e.preventDefault(); abrirModal(); });
-    if (btnCerrar)    btnCerrar.addEventListener('click', cerrarModal);
-    if (btnCancelar)  btnCancelar.addEventListener('click', cerrarModal);
-    window.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
-});
-</script>
-
-<div class="data-table-container">
+<div class="data-table-container" style="margin-top: 20px;">
     <table class="custom-table">
         <thead>
             <tr>
@@ -207,30 +51,26 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>
         </thead>
         <tbody id="tbodyTrabajadores">
-            <!-- Las filas se cargan dinámicamente por JS desde la BD -->
-        </tbody>
+            </tbody>
     </table>
     
     <div class="table-footer">
-        <span>Mostrando 1 - 10 de 1,248 trabajadores</span>
+        <span>Mostrando registros en tiempo real</span>
         <div class="pagination">
-            <button>&lt;</button>
-            <button class="active">1</button>
-            <button>2</button>
-            <button>3</button>
-            <span>...</span>
-            <button>125</button>
-            <button>&gt;</button>
+            <button type="button">&lt;</button>
+            <button type="button" class="active">1</button>
+            <button type="button">2</button>
+            <button type="button">&gt;</button>
         </div>
     </div>
 </div>
 
-<div class="content-layout">
+<div class="content-layout" style="margin-top: 20px;">
     <div class="promo-card-blue">
         <div class="promo-content">
             <h3>Próximas Jubilaciones</h3>
             <p>Hay 14 docentes que cumplen los requisitos de años de servicio este trimestre. Inicie el proceso de revisión de expedientes.</p>
-            <button class="btn-white">Ver Calendario</button>
+            <button class="btn-white" type="button">Ver Calendario</button>
         </div>
         <div class="promo-icon-watermark">
             <i data-lucide="scroll"></i>
@@ -296,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>FECHA DE NACIMIENTO</label>
-                            <input type="date" name="fecha_nacimiento" required title="Necesario para calcular la edad automáticamente">
+                            <input type="date" name="fecha_nacimiento" required>
                         </div>
                     </div>
                 </section>
@@ -320,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="input-group">
                             <label>FECHA DE INGRESO</label>
-                            <input type="date" name="fecha_ingreso" required title="Necesario para calcular antigüedad institucional">
+                            <input type="date" name="fecha_ingreso" required>
                         </div>
                     </div>
                     <div class="form-row-2">
@@ -350,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="input-group">
                             <label>NÚMERO DE CUENTA (BDV)</label>
-                            <input type="text" name="cuenta_bancaria" placeholder="0102..." pattern="\d{20}" title="Deben ser 20 dígitos">
+                            <input type="text" name="cuenta_bancaria" placeholder="0102..." pattern="\d{20}">
                         </div>
                     </div>
                 </section>
@@ -365,71 +205,229 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 {{-- ======================================================
-     SCRIPTS — Lógica de Trabajadores (BD en vivo)
+     CONTROL JAVASCRIPT — Eventos, Modales y Cargas AJAX
 ====================================================== --}}
 <script>
-async function cargarTrabajadores(estatus = '') {
-    const params = estatus ? `?estatus=${estatus}` : '';
-    try {
-        const resp = await fetch('/trabajadores' + params);
-        const data = await resp.json();
-        const tbody = document.getElementById('tbodyTrabajadores');
+// Asegurar que el script se inicialice de manera aislada y correcta
+(function() {
+    // 1. GESTIÓN DEL MODAL
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnAbrirModal = document.querySelector('.btn-primary-dark');
+        const modal = document.getElementById('modalTrabajador');
+        const btnCerrar  = document.getElementById('closeModal');
+        const btnCancelar = document.getElementById('btnCancelar');
 
-        if (!tbody) return;
-
-        tbody.innerHTML = '';
-
-        if (data.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #888;">No hay trabajadores registrados</td></tr>';
-            document.getElementById('totalTrabajadores').textContent = '0';
-            return;
+        function abrirModal() {
+            if(modal) modal.style.display = 'flex';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+        function cerrarModal() {
+            if(modal) modal.style.display = 'none';
         }
 
-        data.data.forEach(t => {
-            const esJubilado = (t.total_anos_servicio >= 25 || t.edad >= 60);
-            const estatusTxt = esJubilado ? 'jubilado' : 'activo';
-            const iniciales = t.nombres.charAt(0) + t.apellidos.charAt(0);
-            const colores = ['blue', 'purple', 'green', 'orange', 'red', 'teal', 'indigo', 'pink', 'amber', 'cyan'];
-            const color = colores[t.id % colores.length];
+        if (btnAbrirModal) btnAbrirModal.addEventListener('click', (e) => { e.preventDefault(); abrirModal(); });
+        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModal);
+        if (btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
+        
+        window.addEventListener('click', (e) => { 
+            if (e.target === modal) cerrarModal(); 
+        });
+    });
 
-            const fila = document.createElement('tr');
-            fila.innerHTML = `
-                <td>TR-${String(t.id).padStart(4, '0')}</td>
-                <td>
-                    <div class="user-cell">
-                        <span class="avatar ${color}">${iniciales.toUpperCase()}</span>
-                        <strong>${t.nombres} ${t.apellidos}</strong>
-                    </div>
-                </td>
-                <td>${t.cedula}</td>
-                <td>${t.cargo}</td>
-                <td><span class="badge-type doc">INSTITUCIONAL</span></td>
-                <td><span class="dot ${estatusTxt}"></span> ${estatusTxt.charAt(0).toUpperCase() + estatusTxt.slice(1)}</td>
-                <td class="actions">
-                    <i data-lucide="folder-open" class="btn-icon btn-ver" title="Ver Expediente" data-id="${t.id}"></i>
-                    <i data-lucide="edit-3"   class="btn-icon btn-editar" title="Editar" data-id="${t.id}" data-nombres="${t.nombres}" data-apellidos="${t.apellidos}" data-cedula="${t.cedula}" data-cargo="${t.cargo}" data-unidad="${t.unidad_departamento}" data-grado="${t.grado_nivel}" data-fecha-ingreso="${t.fecha_ingreso}" data-fecha-nacimiento="${t.fecha_nacimiento}" data-genero="${t.genero}" data-nivel="${t.nivel_instruccion}" data-externo="${t.anos_servicio_externo}" data-porc-antig="${t.porcentaje_antiguedad}" data-cuenta="${t.cuenta_bancaria || ''}"></i>
-                    <i data-lucide="trash-2"   class="btn-icon btn-eliminar" title="Eliminar" data-id="${t.id}" data-nombre="${t.nombres} ${t.apellidos}"></i>
-                </td>
-            `;
-            tbody.appendChild(fila);
+    // 2. CARGA ASÍNCRONA DE TRABAJADORES desde Laravel
+    async function cargarTrabajadores(estatus = '') {
+        const params = estatus ? `?estatus=${estatus}` : '';
+        try {
+            const resp = await fetch('/trabajadores' + params);
+            const data = await resp.json();
+            const tbody = document.getElementById('tbodyTrabajadores');
+            const badgetTotal = document.getElementById('totalTrabajadores');
+
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #888;">No hay trabajadores registrados</td></tr>';
+                if(badgetTotal) badgetTotal.textContent = '0';
+                return;
+            }
+
+            data.data.forEach(t => {
+                const esJubilado = (t.total_anos_servicio >= 25 || t.edad >= 60);
+                const estatusTxt = esJubilado ? 'jubilado' : 'activo';
+                const iniciales = (t.nombres.charAt(0) + t.apellidos.charAt(0)).toUpperCase();
+                const colores = ['blue', 'purple', 'green', 'orange', 'red', 'teal', 'indigo', 'pink', 'amber', 'cyan'];
+                const color = colores[t.id % colores.length];
+
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>TR-${String(t.id).padStart(4, '0')}</td>
+                    <td>
+                        <div class="user-cell">
+                            <span class="avatar ${color}">${iniciales}</span>
+                            <strong>${t.nombres} ${t.apellidos}</strong>
+                        </div>
+                    </td>
+                    <td>${t.cedula}</td>
+                    <td>${t.cargo}</td>
+                    <td><span class="badge-type doc">INSTITUCIONAL</span></td>
+                    <td><span class="dot ${estatusTxt}"></span> ${estatusTxt.charAt(0).toUpperCase() + estatusTxt.slice(1)}</td>
+                    <td class="actions">
+                        <i data-lucide="folder-open" class="btn-icon btn-ver" title="Ver Expediente" data-id="${t.id}"></i>
+                        <i data-lucide="edit-3" class="btn-icon btn-editar" title="Editar" 
+                           data-id="${t.id}" data-nombres="${t.nombres}" data-apellidos="${t.apellidos}" 
+                           data-cedula="${t.cedula}" data-cargo="${t.cargo}" data-unidad="${t.unidad_departamento}" 
+                           data-grado="${t.grado_nivel}" data-fecha-ingreso="${t.fecha_ingreso}" 
+                           data-fecha-nacimiento="${t.fecha_nacimiento}" data-genero="${t.genero}" 
+                           data-nivel="${t.nivel_instruccion}" data-externo="${t.anos_servicio_externo}" 
+                           data-porc-antig="${t.porcentaje_antiguedad}" data-cuenta="${t.cuenta_bancaria || ''}"></i>
+                        <i data-lucide="trash-2" class="btn-icon btn-eliminar" title="Eliminar" data-id="${t.id}" data-nombre="${t.nombres} ${t.apellidos}"></i>
+                    </td>
+                `;
+                tbody.appendChild(fila);
+            });
+
+            if(badgetTotal) badgetTotal.textContent = data.total || data.data.length;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        } catch (err) {
+            console.error('Error al cargar trabajadores:', err);
+        }
+    }
+
+    // 3. EDITAR TRABAJADOR (Delegación de eventos)
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-editar');
+        if (!btn) return;
+
+        const f = document.getElementById('formTrabajador');
+        if(!f) return;
+
+        f.setAttribute('data-action', `/trabajadores/${btn.dataset.id}`);
+        f.setAttribute('data-method', 'PUT');
+        
+        const btnSubmit = document.getElementById('btnSubmitTrabajador');
+        if(btnSubmit) btnSubmit.textContent = 'Guardar Cambios';
+
+        f.querySelector('[name="cedula"]').value                   = btn.dataset.cedula;
+        f.querySelector('[name="nombres"]').value                  = btn.dataset.nombres;
+        f.querySelector('[name="apellidos"]').value                 = btn.dataset.apellidos;
+        f.querySelector('[name="cargo"]').value                     = btn.dataset.cargo;
+        f.querySelector('[name="unidad_departamento"]').value       = btn.dataset.unidad;
+        f.querySelector('[name="grado_nivel"]').value               = btn.dataset.grado;
+        f.querySelector('[name="fecha_ingreso"]').value             = btn.dataset['fecha-ingreso'];
+        f.querySelector('[name="fecha_nacimiento"]').value          = btn.dataset['fecha-nacimiento'];
+        f.querySelector('[name="genero"]').value                    = btn.dataset.genero;
+        f.querySelector('[name="nivel_instruccion"]').value         = btn.dataset.nivel;
+        f.querySelector('[name="anos_servicio_externo"]').value     = btn.dataset.externo;
+        f.querySelector('[name="porcentaje_antiguedad"]').value     = btn.dataset.porcAntig;
+        f.querySelector('[name="cuenta_bancaria"]').value           = btn.dataset.cuenta;
+
+        const modal = document.getElementById('modalTrabajador');
+        if(modal) modal.style.display = 'flex';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+
+    // 4. ELIMINAR TRABAJADOR
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-eliminar');
+        if (!btn) return;
+
+        const nombre = btn.dataset.nombre;
+        const id     = btn.dataset.id;
+
+        if (!confirm(`¿Eliminar a "${nombre}"?\nEsta acción ejecutará un soft-delete institucional.`)) return;
+
+        fetch(`/trabajadores/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                'Accept': 'application/json'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const fila = btn.closest('tr');
+                if(fila) {
+                    fila.style.transition = 'opacity 0.3s';
+                    fila.style.opacity = '0';
+                    setTimeout(() => fila.remove(), 300);
+                }
+                const badgetTotal = document.getElementById('totalTrabajadores');
+                if(badgetTotal) {
+                    badgetTotal.textContent = parseInt(badgetTotal.textContent || '0') - 1;
+                }
+                alert(data.message);
+            } else {
+                alert(data.message || 'Error al procesar la baja.');
+            }
+        })
+        .catch(() => alert('Error de red al intentar conectar con el servidor.'));
+    });
+
+    // 5. ENVÍO DEL FORMULARIO VIA AJAX (Creación / Edición)
+    document.addEventListener('DOMContentLoaded', () => {
+        const f = document.getElementById('formTrabajador');
+        if (!f) return;
+
+        f.addEventListener('submit', async function(ev) {
+            ev.preventDefault();
+            const url = this.getAttribute('data-action');
+            const method = this.getAttribute('data-method') || 'POST';
+            const formData = new FormData(this);
+            const btnSubmit = this.querySelector('.btn-submit');
+
+            if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Procesando...'; }
+
+            try {
+                const resp = await fetch(url, {
+                    method : method,
+                    body   : formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw data;
+
+                alert(data.message || 'Datos guardados en la auditoría digital.');
+                this.reset();
+                document.getElementById('closeModal')?.click();
+
+                location.reload();
+
+            } catch (err) {
+                if (err.errors) {
+                    alert(Object.values(err.errors).flat().join('\n'));
+                } else {
+                    alert(err.message || 'Error en el sistema.');
+                }
+            } finally {
+                if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Registrar Trabajador'; }
+            }
         });
 
-        document.getElementById('totalTrabajadores').textContent = data.total || data.data.length;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-
-    } catch (err) {
-        console.error('Error al cargar trabajadores:', err);
-    }
-}
-
-// Cargar al entrar en la sección de trabajadores
-const observer = new MutationObserver((mutations) => {
-    mutations.forEach(m => {
-        if (m.target.id === 'trabajadores' && m.target.classList.contains('active')) {
-            cargarTrabajadores();
+        // Evento de cambio de filtros de estatus
+        const selEstatus = document.getElementById('filtroEstatus');
+        if (selEstatus) {
+            selEstatus.addEventListener('change', () => {
+                cargarTrabajadores(selEstatus.value);
+            });
         }
     });
-});
-const seccion = document.getElementById('trabajadores');
-if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
+
+    // 6. OBSERVAR CAMBIO DE PESTAÑAS (Evita que se quede colgado)
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+            if (m.target.id === 'trabajadores' && m.target.classList.contains('active')) {
+                cargarTrabajadores();
+            }
+        });
+    });
+    const seccion = document.getElementById('trabajadores');
+    if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
+
+})();
 </script>
