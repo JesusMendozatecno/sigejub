@@ -75,6 +75,7 @@ Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trab
 |-----------------------------
 */
 Route::get('/solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
+Route::get('/solicitudes/exportar', [SolicitudController::class, 'exportarPDF'])->name('solicitudes.exportar');
 Route::get('/solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
 Route::post('/solicitudes', [SolicitudController::class, 'store'])->name('solicitudes.store');
 Route::put('/solicitudes/{id}', [SolicitudController::class, 'update'])->name('solicitudes.update');

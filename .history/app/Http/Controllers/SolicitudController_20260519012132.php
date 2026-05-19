@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\Trabajador;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller
 {
@@ -72,8 +71,8 @@ class SolicitudController extends Controller
 
             $solicitud = Solicitud::create($validated);
 
-            $t = $solicitud->load('trabajador')->trabajador;
-            $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$validated['trabajador_id']}";
+            $trabajador = $solicitud->trabajador;
+            $nombre = $trabajador ? "{$trabajador->nombres} {$trabajador->apellidos}" : "ID {$validated['trabajador_id']}";
             Activity::log('created', 'solicitud', $solicitud->id,
                 "Se registró una solicitud de jubilación para {$nombre}");
 
@@ -118,11 +117,6 @@ class SolicitudController extends Controller
 
             $solicitud->update($validated);
 
-            $t = $solicitud->load('trabajador')->trabajador;
-            $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$solicitud->trabajador_id}";
-            Activity::log('updated', 'solicitud', $solicitud->id,
-                "Se actualizó la solicitud de {$nombre}");
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Solicitud actualizada correctamente.',
@@ -143,13 +137,8 @@ class SolicitudController extends Controller
     public function destroy($id)
     {
         try {
-            $solicitud = Solicitud::with('trabajador')->findOrFail($id);
-            $t = $solicitud->trabajador;
-            $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$solicitud->trabajador_id}";
+            $solicitud = Solicitud::findOrFail($id);
             $solicitud->delete();
-
-            Activity::log('deleted', 'solicitud', $id,
-                "Se eliminó la solicitud de {$nombre}");
 
             return response()->json([
                 'status' => 'success',

@@ -24,8 +24,16 @@
         </div>
     </div>
     <div class="list-actions">
+<<<<<<< HEAD
         <button class="btn-outline" onclick="exportarSolicitudesPDF()">
             <i data-lucide="download" size="16"></i> Exportar PDF
+=======
+        <button class="btn-outline">
+            <i data-lucide="sliders-horizontal" size=\"16\"></i> Filtros Avanzados
+        </button>
+        <button class="btn-outline">
+            <i data-lucide="download" size=\"16\"></i> Exportar
+>>>>>>> 04b562dd24c2aacfe40576785d204041ca0218e7
         </button>
     </div>
 </div>
