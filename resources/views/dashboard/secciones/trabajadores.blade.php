@@ -22,10 +22,10 @@
     <div class="filter-group">
         <label>TIPO DE NÓMINA</label>
         <select id="filtroNomina">
-            <option>Todas</option>
-            <option>Docente</option>
-            <option>Administrativo</option>
-            <option>Obrero</option>
+            <option value="">Todas</option>
+            <option value="Docente">Docente</option>
+            <option value="Administrativo">Administrativo</option>
+            <option value="Obrero">Obrero</option>
         </select>
     </div>
     <div class="total-badge-card" style="margin-left: auto;">
@@ -59,7 +59,6 @@
         <div class="pagination">
             <button type="button">&lt;</button>
             <button type="button" class="active">1</button>
-            <button type="button">2</button>
             <button type="button">&gt;</button>
         </div>
     </div>
@@ -105,18 +104,17 @@
         <main class="modal-form-content">
             <button class="btn-close-absolute" id="closeModal" type="button">&times;</button>
             
-            <form id="formTrabajador" data-action="{{ route('trabajador') }}">
-                @csrf 
+            <form id="formTrabajador">
                 <section class="form-section">
                     <h3><i data-lucide="user"></i> Datos Personales</h3>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>CÉDULA DE IDENTIDAD</label>
-                            <input type="text" name="cedula" required placeholder="V-00000000">
+                            <input type="text" name="cedula" id="inputCedula" required placeholder="V-00000000">
                         </div>
                         <div class="input-group">
                             <label>GÉNERO</label>
-                            <select name="genero" required>
+                            <select name="genero" id="selectGenero" required>
                                 <option value="" disabled selected>Seleccione...</option>
                                 <option value="M">Masculino</option>
                                 <option value="F">Femenino</option>
@@ -126,17 +124,17 @@
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>NOMBRES</label>
-                            <input type="text" name="nombres" required>
+                            <input type="text" name="nombres" id="inputNombres" required>
                         </div>
                         <div class="input-group">
                             <label>APELLIDOS</label>
-                            <input type="text" name="apellidos" required>
+                            <input type="text" name="apellidos" id="inputApellidos" required>
                         </div>
                     </div>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>FECHA DE NACIMIENTO</label>
-                            <input type="date" name="fecha_nacimiento" required>
+                            <input type="date" name="fecha_nacimiento" id="inputFechaNacimiento" required>
                         </div>
                     </div>
                 </section>
@@ -146,31 +144,31 @@
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>CARGO ACTUAL</label>
-                            <input type="text" name="cargo" required>
+                            <input type="text" name="cargo" id="inputCargo" required>
                         </div>
                         <div class="input-group">
                             <label>UNIDAD O DEPARTAMENTO</label>
-                            <input type="text" name="unidad_departamento" required>
+                            <input type="text" name="unidad_departamento" id="inputUnidadDepartamento" required>
                         </div>
                     </div>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>GRADO / NIVEL</label>
-                            <input type="text" name="grado_nivel" placeholder="Ej: P1, B1..." required>
+                            <input type="text" name="grado_nivel" id="inputGradoNivel" placeholder="Ej: P1, B1..." required>
                         </div>
                         <div class="input-group">
                             <label>FECHA DE INGRESO</label>
-                            <input type="date" name="fecha_ingreso" required>
+                            <input type="date" name="fecha_ingreso" id="inputFechaIngreso" required>
                         </div>
                     </div>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>AÑOS ADM. PÚBLICA (EXTERNO)</label>
-                            <input type="number" name="anos_servicio_externo" value="0" min="0">
+                            <input type="number" name="anos_servicio_externo" id="inputAnosExterno" value="0" min="0">
                         </div>
                         <div class="input-group">
                             <label>% ANTIGÜEDAD (OPCIONAL)</label>
-                            <input type="number" step="0.01" name="porcentaje_antiguedad" value="0">
+                            <input type="number" step="0.01" name="porcentaje_antiguedad" id="inputPorcentajeAntiguedad" value="0">
                         </div>
                     </div>
                 </section>
@@ -180,7 +178,7 @@
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>NIVEL DE INSTRUCCIÓN</label>
-                            <select name="nivel_instruccion">
+                            <select name="nivel_instruccion" id="selectNivelInstruccion">
                                 <option value="1">TSU</option>
                                 <option value="2">Licenciado / Ingeniero</option>
                                 <option value="3">Especialista</option>
@@ -190,14 +188,14 @@
                         </div>
                         <div class="input-group">
                             <label>NÚMERO DE CUENTA (BDV)</label>
-                            <input type="text" name="cuenta_bancaria" placeholder="0102..." pattern="\d{20}">
+                            <input type="text" name="cuenta_bancaria" id="inputCuentaBancaria" placeholder="0102..." pattern="\d{20}">
                         </div>
                     </div>
                 </section>
 
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" id="btnCancelar">Descartar</button>
-                    <button type="button" class="btn-icon btn-editar" id="btnHabilitarEdicion" style="display: none; width: auto; padding: 0 20px; gap: 8px;">
+                    <button type="button" class="btn-icon" id="btnHabilitarEdicion" style="display: none; width: auto; padding: 0 20px; gap: 8px;">
                         <i data-lucide="edit-3"></i> Editar Expediente
                     </button>
                     <button type="submit" class="btn-submit" id="btnSubmitTrabajador">Registrar Trabajador</button>
