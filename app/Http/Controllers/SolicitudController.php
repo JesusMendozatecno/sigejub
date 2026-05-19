@@ -39,7 +39,7 @@ class SolicitudController extends Controller
 
     public function porMes()
     {
-        $meses = Solicitud::selectRaw('strftime("%m", fecha_solicitud) as mes, count(*) as total')
+        $meses = Solicitud::selectRaw('MONTH(fecha_solicitud) as mes, count(*) as total')
             ->whereYear('fecha_solicitud', now()->year)
             ->groupBy('mes')
             ->orderBy('mes')
@@ -47,7 +47,7 @@ class SolicitudController extends Controller
 
         $datos = [];
         foreach (range(1, 12) as $m) {
-            $datos[] = $meses->get(str_pad($m, 2, '0', STR_PAD_LEFT), 0);
+            $datos[] = $meses->get($m, 0);
         }
 
         return response()->json($datos);

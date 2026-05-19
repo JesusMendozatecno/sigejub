@@ -48,13 +48,31 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |-----------------------------
-| USER
+| USER / PERFIL
 |-----------------------------
 */
-// Ruta para ver la lista o el control de datos del usuario
+Route::middleware('auth')->group(function () {
+    Route::get('/perfil', [UserController::class, 'index'])->name('usuarios.user');
+    Route::put('/perfil/actualizar', [UserController::class, 'updateProfile'])->name('usuarios.update');
+    Route::post('/perfil/avatar', [UserController::class, 'uploadAvatar'])->name('usuarios.avatar');
+    Route::delete('/perfil/avatar', [UserController::class, 'deleteAvatar'])->name('usuarios.avatar-delete');
+    Route::put('/perfil/password', [UserController::class, 'updatePassword'])->name('usuarios.password');
+    Route::put('/perfil/configuracion', [UserController::class, 'updateSettings'])->name('usuarios.settings');
+    Route::put('/perfil/notificaciones', [UserController::class, 'updateNotifications'])->name('usuarios.notifications');
+    Route::put('/perfil/2fa', [UserController::class, 'toggle2FA'])->name('usuarios.2fa');
+    Route::get('/perfil/sesiones', [UserController::class, 'getSessions'])->name('usuarios.sessions');
+    Route::delete('/perfil/sesiones/{sessionId}', [UserController::class, 'destroySession'])->name('usuarios.session-delete');
+    Route::post('/perfil/sesiones/cerrar-otras', [UserController::class, 'destroyOtherSessions'])->name('usuarios.session-kill');
+    Route::get('/perfil/actividad', [UserController::class, 'getActivity'])->name('usuarios.activity');
+    Route::get('/perfil/estadisticas', [UserController::class, 'getStats'])->name('usuarios.stats');
 
-Route::get('/perfil', [UserController::class, 'index'])->name('usuarios.user');
-Route::put('/perfil/actualizar', [UserController::class, 'update'])->name('usuarios.update');
+    // Admin-only dentro del perfil
+    Route::get('/perfil/admin/usuarios', [UserController::class, 'adminUsers'])->name('usuarios.admin.users');
+    Route::put('/perfil/admin/usuarios/{id}', [UserController::class, 'adminUpdateUser'])->name('usuarios.admin.update-user');
+    Route::delete('/perfil/admin/usuarios/{id}', [UserController::class, 'adminDeleteUser'])->name('usuarios.admin.delete-user');
+    Route::get('/perfil/admin/actividad', [UserController::class, 'adminActivity'])->name('usuarios.admin.activity');
+    Route::post('/perfil/admin/config-global', [UserController::class, 'adminGlobalConfig'])->name('usuarios.admin.config');
+});
 
 /*
 |-----------------------------

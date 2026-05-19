@@ -223,6 +223,7 @@
             document.getElementById('usuariosCounter').textContent = `Mostrando ${data.data.length} de ${total} usuarios`;
         } catch (err) {
             console.error('Error al cargar usuarios:', err);
+            mostrarToast('Error al cargar usuarios: ' + (err.message || 'desconocido'), 'error');
         }
     }
 

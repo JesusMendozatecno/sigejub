@@ -9,19 +9,9 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (auth()->user()?->role !== 'admin' &&
-                !in_array($request->route()->getActionMethod(), ['misNotificaciones', 'notificacionesNoLeidas', 'marcarLeida', 'marcarTodasLeidas'])) {
-                abort(403, 'Acceso no autorizado');
-            }
-            return $next($request);
-        });
-    }
-
     public function usuarios(Request $request)
     {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
         $role = $request->get('role', '');
         $search = $request->get('search', '');
 
@@ -45,12 +35,14 @@ class AdminController extends Controller
 
     public function showUsuario($id)
     {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
         $user = User::findOrFail($id);
         return response()->json($user);
     }
 
     public function updateUsuario(Request $request, $id)
     {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
         $user = User::findOrFail($id);
 
         $request->validate([
@@ -70,6 +62,7 @@ class AdminController extends Controller
 
     public function actividades(Request $request)
     {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
         $type = $request->get('type', '');
         $days = $request->get('days', 7);
 
@@ -90,6 +83,7 @@ class AdminController extends Controller
 
     public function actividadResumen(Request $request)
     {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
         $days = $request->get('days', 7);
         $type = $request->get('type', '');
         $since = now()->subDays($days);
@@ -110,6 +104,7 @@ class AdminController extends Controller
 
     public function enviarNotificacion(Request $request)
     {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',

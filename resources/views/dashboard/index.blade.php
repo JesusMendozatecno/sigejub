@@ -102,6 +102,7 @@
                 @if(Auth::user()->role === 'admin')
                 <li class="menu-item" data-target="administrar"><i data-lucide="shield" size="18"></i> Administrar</li>
                 @endif
+
             </ul>
         </nav>
     </aside>
@@ -185,6 +186,12 @@
         if (!list) return;
         try {
             const resp = await fetch('/notificaciones');
+            if (!resp.ok) {
+                const text = await resp.text();
+                console.error('Error en notificaciones:', resp.status, text.substring(0, 200));
+                list.innerHTML = '<p style="text-align:center;color:#ef4444;padding:20px;font-size:0.85rem;">Error al cargar</p>';
+                return;
+            }
             const data = await resp.json();
             if (!data.length) {
                 list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;font-size:0.85rem;">Sin notificaciones</p>';
@@ -212,6 +219,11 @@
     async function cargarContadorNoLeidas() {
         try {
             const resp = await fetch('/notificaciones/no-leidas');
+            if (!resp.ok) {
+                const text = await resp.text();
+                console.error('Error en notificaciones/no-leidas:', resp.status, text.substring(0, 200));
+                return;
+            }
             const data = await resp.json();
             const badge = document.getElementById('notifBadge');
             if (badge) {
@@ -266,8 +278,6 @@
 
 <script src="{{ asset('js/secciones/trabajador.js') }}"></script>
 <script src="{{ asset('js/sesion2.js') }}"></script>
-<script src="{{ asset('js/tabla1.js') }}"></script>
-<script src="{{ asset('js/expedientelevel1.js') }}"></script>
 
 @include('partials.toast')
 
