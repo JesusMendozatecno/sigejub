@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrabajadorController;
 use App\Http\Controllers\SolicitudController;
+use App\Http\Controllers\ActivityController;
 
 
 /*
@@ -77,3 +78,10 @@ Route::get('/solicitudes/{id}', [SolicitudController::class, 'show'])->name('sol
 Route::post('/solicitudes', [SolicitudController::class, 'store'])->name('solicitudes.store');
 Route::put('/solicitudes/{id}', [SolicitudController::class, 'update'])->name('solicitudes.update');
 Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy'])->name('solicitudes.destroy');
+
+/*
+|-----------------------------
+| ACTIVIDADES (historial)
+|-----------------------------
+*/
+Route::get('/actividades', [ActivityController::class, 'index']);

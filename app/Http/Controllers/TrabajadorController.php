@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Trabajador;
+use App\Models\Activity;
 use Carbon\Carbon;
 
 class TrabajadorController extends Controller
@@ -119,7 +120,10 @@ class TrabajadorController extends Controller
             $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
             $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
 
-            Trabajador::create($datos);
+            $trabajador = Trabajador::create($datos);
+
+            Activity::log('created', 'trabajador', $trabajador->id,
+                "Se registró al trabajador {$trabajador->nombres} {$trabajador->apellidos}");
 
             return response()->json([
                 'status' => 'success',
@@ -180,6 +184,9 @@ class TrabajadorController extends Controller
 
             $trabajador->update($datos);
 
+            Activity::log('updated', 'trabajador', $trabajador->id,
+                "Se actualizó el expediente de {$trabajador->nombres} {$trabajador->apellidos}");
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Datos del trabajador actualizados correctamente.',
@@ -207,6 +214,9 @@ class TrabajadorController extends Controller
         try {
             $trabajador = Trabajador::findOrFail($id);
             $trabajador->delete();
+
+            Activity::log('deleted', 'trabajador', $id,
+                "Se dio de baja al trabajador {$trabajador->nombres} {$trabajador->apellidos}");
 
             return response()->json([
                 'status' => 'success',
