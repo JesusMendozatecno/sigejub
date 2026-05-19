@@ -111,7 +111,6 @@
                 <li class="menu-item" data-target="prestaciones"><i data-lucide="wallet" size="18"></i> Prestaciones</li>
                 <li class="menu-item" data-target="reportes"><i data-lucide="bar-chart-3" size="18"></i> Reportes</li>
                 @if(Auth::user()->role === 'admin')
-                <li class="menu-item" data-target="administrar"><i data-lucide="shield" size="18"></i> Administrar</li>
                 <li class="menu-item" data-target="caja-negra"><i data-lucide="hard-drive" size="18"></i> Historial</li>
                 @endif
 
@@ -147,9 +146,7 @@
             </div>
 
             @if(Auth::user()->role === 'admin')
-            <div id="administrar" class="content-section">
-                @include('dashboard.secciones.administrar')
-            </div>
+    
             <div id="caja-negra" class="content-section">
                 @include('dashboard.secciones.caja-negra')
             </div>

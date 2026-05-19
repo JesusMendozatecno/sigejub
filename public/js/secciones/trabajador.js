@@ -95,12 +95,12 @@
 
                 try {
                     mostrarCargando(modoEdicionActivo ? 'Guardando cambios...' : 'Registrando trabajador...');
-                    const tokenElement = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="_token"]');
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value || '';
                     const response = await fetch(url, {
                         method: 'POST',
                         body: formData,
                         headers: {
-                            'X-CSRF-TOKEN': tokenElement ? tokenElement.value : '',
+                            'X-CSRF-TOKEN': token,
                             'Accept': 'application/json'
                         }
                     });
@@ -265,11 +265,11 @@
         if (!trabajadorSeleccionadoId) return;
         try {
             mostrarCargando('Procesando baja...');
-            const tokenElement = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="_token"]');
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value || '';
             const res = await fetch(`/trabajadores/${trabajadorSeleccionadoId}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': tokenElement ? tokenElement.value : '',
+                    'X-CSRF-TOKEN': token,
                     'Accept': 'application/json'
                 }
             });

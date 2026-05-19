@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`/trabajadores/${id}`, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value || '',
                 'Accept': 'application/json'
             }
         })

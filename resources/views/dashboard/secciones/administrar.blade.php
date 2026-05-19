@@ -266,8 +266,9 @@
 
         try {
             mostrarCargando('Actualizando permisos...');
+            formData.append('_method', 'PUT');
             const resp = await fetch(`/usuarios/${id}`, {
-                method: 'PUT',
+                method: 'POST',
                 body: formData,
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.content,
@@ -280,7 +281,8 @@
             cerrarModalEditarUsuario();
             cargarUsuarios();
         } catch (err) {
-            mostrarToast(err.message || 'Error al actualizar', 'error');
+            const msg = err.errors ? Object.values(err.errors).flat().join('\n') : (err.message || 'Error al actualizar');
+            mostrarToast(msg, 'error');
         } finally {
             ocultarCargando();
             btn.disabled = false; btn.textContent = 'Guardar Cambios';
