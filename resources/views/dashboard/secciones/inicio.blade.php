@@ -12,37 +12,33 @@
     <div class="stat-card">
         <div class="card-head">
             <div class="icon-wrap blue"><i data-lucide="users"></i></div>
-            <span class="trend positive">+4%</span>
         </div>
         <p>TOTAL TRABAJADORES</p>
-        <h2>1,240</h2>
+        <h2 id="inicioTotalTrabajadores">—</h2>
     </div>
 
     <div class="stat-card">
         <div class="card-head">
             <div class="icon-wrap orange"><i data-lucide="clock"></i></div>
-            <span class="trend neutral">Actual</span>
         </div>
         <p>PENDIENTES</p>
-        <h2 class="text-orange">45</h2>
+        <h2 id="inicioPendientes" class="text-orange">—</h2>
     </div>
 
     <div class="stat-card">
         <div class="card-head">
             <div class="icon-wrap green"><i data-lucide="check-circle"></i></div>
-            <span class="trend positive">+12</span>
         </div>
         <p>APROBADAS</p>
-        <h2 class="text-green">82</h2>
+        <h2 id="inicioAprobadas" class="text-green">—</h2>
     </div>
 
     <div class="stat-card">
         <div class="card-head">
             <div class="icon-wrap red"><i data-lucide="x-circle"></i></div>
-            <span class="trend negative">-2</span>
         </div>
         <p>RECHAZADAS</p>
-        <h2 class="text-red">12</h2>
+        <h2 id="inicioRechazadas" class="text-red">—</h2>
     </div>
 </section>
 
@@ -138,3 +134,43 @@
         </div>
     </section>
 </div>
+
+<script>
+(function() {
+    async function cargarEstadisticasInicio() {
+        try {
+            const [respTrab, respPend, respAprob, respRech] = await Promise.all([
+                fetch('/trabajadores?per_page=1'),
+                fetch('/solicitudes?estado=pending&per_page=1'),
+                fetch('/solicitudes?estado=approved&per_page=1'),
+                fetch('/solicitudes?estado=rejected&per_page=1'),
+            ]);
+
+            const dataTrab = await respTrab.json();
+            const dataPend = await respPend.json();
+            const dataAprob = await respAprob.json();
+            const dataRech = await respRech.json();
+
+            const el = id => document.getElementById(id);
+            if (el('inicioTotalTrabajadores')) el('inicioTotalTrabajadores').textContent = dataTrab.total || 0;
+            if (el('inicioPendientes')) el('inicioPendientes').textContent = dataPend.total || 0;
+            if (el('inicioAprobadas')) el('inicioAprobadas').textContent = dataAprob.total || 0;
+            if (el('inicioRechazadas')) el('inicioRechazadas').textContent = dataRech.total || 0;
+        } catch (err) {
+            console.error('Error al cargar estadísticas de inicio:', err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarEstadisticasInicio);
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+            if (m.target.id === 'inicio' && m.target.classList.contains('active')) {
+                cargarEstadisticasInicio();
+            }
+        });
+    });
+    const seccion = document.getElementById('inicio');
+    if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>

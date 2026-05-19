@@ -78,6 +78,13 @@
             <p>TOTAL SOLICITUDES</p>
         </div>
     </div>
+    <div class="metric-card">
+        <div class="metric-icon red"><i data-lucide="x-circle"></i></div>
+        <div class="metric-data">
+            <h3 id="metricRechazadas">0</h3>
+            <p>TOTAL RECHAZADAS</p>
+        </div>
+    </div>
 </section>
 
 <div id="modalSolicitud" class="modal-overlay">
@@ -164,6 +171,89 @@
                     <button type="submit" class="btn-submit">Registrar Solicitud</button>
                 </div>
             </form>
+        </main>
+    </div>
+</div>
+
+<div id="modalEditarSolicitud" class="modal-overlay">
+    <div class="modal-container" style="max-width: 480px;">
+        <aside class="modal-sidebar" style="max-width: 160px;">
+            <span class="badge-new">ACTUALIZAR</span>
+            <h1>Cambiar<br>Estatus</h1>
+            <p>Actualice el estado de la solicitud de jubilación.</p>
+        </aside>
+        <main class="modal-form-content">
+            <button class="btn-close-absolute" id="closeModalEditar" type="button">&times;</button>
+            <form id="formEditarSolicitud">
+                @csrf
+                <input type="hidden" name="_method" value="PUT">
+                <input type="hidden" name="solicitud_id" id="editSolicitudId">
+                <section class="form-section">
+                    <h3><i data-lucide="file-text"></i> Solicitud</h3>
+                    <p style="margin: 8px 0; font-size: 0.9rem; color: #475569;">
+                        <strong id="editFolio">—</strong> —
+                        <span id="editTrabajadorNombre">—</span>
+                    </p>
+                    <div class="input-group">
+                        <label>NUEVO ESTATUS</label>
+                        <select name="estado" id="editEstado" required>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="revision">En Revisión</option>
+                            <option value="aprobado">Aprobado</option>
+                            <option value="rechazado">Rechazado</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin-top: 12px;">
+                        <label>OBSERVACIONES</label>
+                        <textarea class="form-textarea" name="observaciones" placeholder="Motivo del cambio de estatus..."></textarea>
+                    </div>
+                </section>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="btnCancelarEditar">Cancelar</button>
+                    <button type="submit" class="btn-submit">Guardar Cambios</button>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+
+<div id="modalVerSolicitud" class="modal-overlay">
+    <div class="modal-container" style="max-width: 560px;">
+        <aside class="modal-sidebar">
+            <span class="badge-new">DETALLE</span>
+            <h1>Solicitud<br>de Jubilación</h1>
+            <p>Información completa de la solicitud seleccionada.</p>
+        </aside>
+        <main class="modal-form-content">
+            <button class="btn-close-absolute" id="closeModalVer" type="button">&times;</button>
+            <section class="form-section">
+                <h3><i data-lucide="file-text"></i> Información General</h3>
+                <div class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="detail-item"><span>Folio</span> <strong id="verFolio">—</strong></div>
+                    <div class="detail-item"><span>Estatus</span> <strong id="verEstatus">—</strong></div>
+                    <div class="detail-item"><span>Fecha Solicitud</span> <strong id="verFecha">—</strong></div>
+                    <div class="detail-item"><span>Período</span> <strong id="verPeriodo">—</strong></div>
+                    <div class="detail-item"><span>Tipo Jubilación</span> <strong id="verTipo">—</strong></div>
+                </div>
+            </section>
+            <section class="form-section" style="margin-top: 16px;">
+                <h3><i data-lucide="user"></i> Datos del Trabajador</h3>
+                <div class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="detail-item"><span>Nombre</span> <strong id="verNombre">—</strong></div>
+                    <div class="detail-item"><span>Cédula</span> <strong id="verCedula">—</strong></div>
+                    <div class="detail-item"><span>Cargo</span> <strong id="verCargo">—</strong></div>
+                    <div class="detail-item"><span>Unidad/Depto</span> <strong id="verUnidad">—</strong></div>
+                    <div class="detail-item"><span>Edad</span> <strong id="verEdad">—</strong></div>
+                    <div class="detail-item"><span>Años Servicio</span> <strong id="verAnosServicio">—</strong></div>
+                </div>
+            </section>
+            <section class="form-section" style="margin-top: 16px;">
+                <h3><i data-lucide="align-left"></i> Observaciones</h3>
+                <p id="verObservaciones" style="color: #475569; font-size: 0.9rem; line-height: 1.5; background: #f8fafc; padding: 12px; border-radius: 8px;">—</p>
+            </section>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="btnCerrarVer">Cerrar</button>
+            </div>
         </main>
     </div>
 </div>
@@ -283,6 +373,10 @@
             const respAprob = await fetch('/solicitudes?estado=approved&per_page=1');
             const dataAprob = await respAprob.json();
             document.getElementById('metricAprobadas').textContent = dataAprob.total || 0;
+
+            const respRech = await fetch('/solicitudes?estado=rejected&per_page=1');
+            const dataRech = await respRech.json();
+            document.getElementById('metricRechazadas').textContent = dataRech.total || 0;
         } catch (err) {
             console.error('Error al cargar métricas:', err);
         }
@@ -374,6 +468,154 @@
         cargarSelectTrabajadores();
         cargarSolicitudes('all');
         cargarMetricas();
+    });
+
+    // === 8.5 VER DETALLE DE SOLICITUD ===
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-ver-solicitud');
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        const folio = `#SOL-${String(id).padStart(4, '0')}`;
+
+        fetch(`/solicitudes/${id}`)
+            .then(r => r.json())
+            .then(s => {
+                const t = s.trabajador || {};
+                const badgeClass = s.estado === 'pendiente' ? 'pending' : (s.estado === 'aprobado' ? 'approved' : 'rejected');
+                const badgeText = s.estado.charAt(0).toUpperCase() + s.estado.slice(1);
+                const fecha = s.fecha_solicitud ? new Date(s.fecha_solicitud + 'T12:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+
+                document.getElementById('verFolio').textContent = folio;
+                document.getElementById('verEstatus').innerHTML = `<span class="badge-status ${badgeClass}">${badgeText}</span>`;
+                document.getElementById('verFecha').textContent = fecha;
+                document.getElementById('verPeriodo').textContent = s.periodo || '—';
+                document.getElementById('verTipo').textContent = s.tipo_jubilacion || '—';
+                document.getElementById('verNombre').textContent = [t.nombres, t.apellidos].filter(Boolean).join(' ') || '—';
+                document.getElementById('verCedula').textContent = t.cedula || '—';
+                document.getElementById('verCargo').textContent = t.cargo || '—';
+                document.getElementById('verUnidad').textContent = t.unidad_departamento || '—';
+                document.getElementById('verEdad').textContent = t.edad != null ? `${t.edad} años` : '—';
+                document.getElementById('verAnosServicio').textContent = t.total_anos_servicio != null ? `${t.total_anos_servicio} años` : '—';
+                document.getElementById('verObservaciones').textContent = s.observaciones || 'Sin observaciones.';
+
+                const modal = document.getElementById('modalVerSolicitud');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            })
+            .catch(err => {
+                console.error('Error al cargar detalle:', err);
+                alert('Error al cargar el detalle de la solicitud.');
+            });
+    });
+
+    function cerrarModalVer() {
+        const modal = document.getElementById('modalVerSolicitud');
+        if (modal) modal.style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnCerrar = document.getElementById('closeModalVer');
+        const btnCancelar = document.getElementById('btnCerrarVer');
+        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModalVer);
+        if (btnCancelar) btnCancelar.addEventListener('click', cerrarModalVer);
+
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modalVerSolicitud');
+            if (e.target === modal) cerrarModalVer();
+        });
+    });
+
+    // === 9. EDITAR SOLICITUD (Cambiar estatus) ===
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-editar-solicitud');
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        const folio = `#SOL-${String(id).padStart(4, '0')}`;
+
+        fetch(`/solicitudes/${id}`)
+            .then(r => r.json())
+            .then(s => {
+                document.getElementById('editSolicitudId').value = s.id;
+                document.getElementById('editFolio').textContent = folio;
+                const t = s.trabajador || {};
+                document.getElementById('editTrabajadorNombre').textContent = [t.nombres, t.apellidos].filter(Boolean).join(' ') || '—';
+                document.getElementById('editEstado').value = s.estado;
+                document.getElementById('formEditarSolicitud').querySelector('[name="observaciones"]').value = s.observaciones || '';
+
+                const modal = document.getElementById('modalEditarSolicitud');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            })
+            .catch(err => {
+                console.error('Error al cargar solicitud:', err);
+                alert('Error al cargar los datos de la solicitud.');
+            });
+    });
+
+    function cerrarModalEditar() {
+        const modal = document.getElementById('modalEditarSolicitud');
+        if (modal) modal.style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnCerrar = document.getElementById('closeModalEditar');
+        const btnCancelar = document.getElementById('btnCancelarEditar');
+        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModalEditar);
+        if (btnCancelar) btnCancelar.addEventListener('click', cerrarModalEditar);
+
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modalEditarSolicitud');
+            if (e.target === modal) cerrarModalEditar();
+        });
+    });
+
+    // === 10. ENVÍO DEL FORMULARIO DE EDICIÓN ===
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('formEditarSolicitud');
+        if (!form) return;
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editSolicitudId').value;
+            const formData = new FormData(this);
+            const btnSubmit = this.querySelector('.btn-submit');
+
+            if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Guardando...'; }
+
+            try {
+                const resp = await fetch(`/solicitudes/${id}`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw data;
+
+                alert(data.message || 'Estatus actualizado correctamente.');
+                cerrarModalEditar();
+                cargarSolicitudes(currentStatus);
+                cargarMetricas();
+
+            } catch (err) {
+                if (err.errors) {
+                    alert(Object.values(err.errors).flat().join('\n'));
+                } else {
+                    alert(err.message || 'Error en el sistema.');
+                }
+            } finally {
+                if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Guardar Cambios'; }
+            }
+        });
     });
 
     const observer = new MutationObserver((mutations) => {
