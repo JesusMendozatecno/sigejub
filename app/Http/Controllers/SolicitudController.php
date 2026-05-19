@@ -37,6 +37,52 @@ class SolicitudController extends Controller
         return response()->json($solicitudes);
     }
 
+    public function porMes()
+    {
+        $meses = Solicitud::selectRaw('strftime("%m", fecha_solicitud) as mes, count(*) as total')
+            ->whereYear('fecha_solicitud', now()->year)
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $datos = [];
+        foreach (range(1, 12) as $m) {
+            $datos[] = $meses->get(str_pad($m, 2, '0', STR_PAD_LEFT), 0);
+        }
+
+        return response()->json($datos);
+    }
+
+    public function vencimientos()
+    {
+        $proximosJubilacion = Trabajador::where(function ($q) {
+            $q->whereBetween('edad', [55, 59])
+              ->orWhereBetween('total_anos_servicio', [20, 24]);
+        })->orderBy('edad', 'desc')->orderBy('total_anos_servicio', 'desc')
+          ->limit(3)->get();
+
+        $pendientesAntiguas = Solicitud::with('trabajador')
+            ->where('estado', 'pendiente')
+            ->orderBy('created_at', 'asc')
+            ->limit(3)->get();
+
+        $total = Solicitud::count();
+        $aprobadas = Solicitud::where('estado', 'aprobado')->count();
+        $tasaAprobacion = $total > 0 ? round(($aprobadas / $total) * 100) : 0;
+
+        $recientes = Solicitud::with('trabajador')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)->get();
+
+        return response()->json([
+            'proximos' => $proximosJubilacion,
+            'pendientes' => $pendientesAntiguas,
+            'tasa_aprobacion' => $tasaAprobacion,
+            'total_solicitudes' => $total,
+            'recientes' => $recientes,
+        ]);
+    }
+
     public function exportarPDF(Request $request)
     {
         $query = Solicitud::with('trabajador');

@@ -32,13 +32,6 @@
         </div>
     </div>
 
-    <div class="search-wrapper-centered">
-        <div class="search-container">
-            <input type="text" placeholder="Buscar por nombre o cédula...">
-            <i data-lucide="search" size="16"></i>
-        </div>
-    </div>
-
     <div class="header-actions">
         <button style="background: none; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center;"><i data-lucide="bell" size="20"></i></button>
 
