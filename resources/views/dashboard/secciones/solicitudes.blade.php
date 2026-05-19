@@ -1,3 +1,6 @@
+<style>
+    #displayCedula:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+</style>
 <header class="section-header">
     <div class="header-info">
         <h1>Gestión de <span class="text-blue-accent">Solicitudes</span></h1>
@@ -156,7 +159,7 @@
                         </div>
                         <div class="input-group">
                             <label>CÉDULA</label>
-                            <input type="text" id="displayCedula" readonly placeholder="—">
+                            <input type="text" id="displayCedula" placeholder="Escriba la cédula y presione Enter o TAB">
                         </div>
                     </div>
                 </section>
@@ -284,15 +287,50 @@
         }
     }
 
-    // === 2. MOSTRAR DATOS DEL TRABAJADOR SELECCIONADO ===
+    // === 2. BUSCAR POR CÉDULA AL ESCRIBIR ===
+    let timeoutCedula = null;
+    document.addEventListener('input', function(e) {
+        if (e.target.id !== 'displayCedula') return;
+        clearTimeout(timeoutCedula);
+
+        const cedula = e.target.value.trim();
+        if (cedula.length < 3) return;
+
+        timeoutCedula = setTimeout(async () => {
+            try {
+                const resp = await fetch(`/trabajadores?search=${encodeURIComponent(cedula)}&per_page=1`);
+                const data = await resp.json();
+                if (!data.data || data.data.length === 0) return;
+
+                const t = data.data[0];
+                if (!t.cedula.toLowerCase().includes(cedula.toLowerCase())) return;
+
+                const select = document.getElementById('selectTrabajador');
+                const nombreInput = document.getElementById('displayNombreCompleto');
+
+                Array.from(select.options).forEach(opt => {
+                    if (opt.value == t.id) opt.selected = true;
+                });
+
+                nombreInput.value = (t.nombres || '') + ' ' + (t.apellidos || '');
+                e.target.value = t.cedula;
+            } catch (err) {
+                console.error('Error al buscar cédula:', err);
+            }
+        }, 400);
+    });
+
+    // === 3. MOSTRAR DATOS DEL TRABAJADOR SELECCIONADO (dropdown) ===
     document.addEventListener('change', function(e) {
         if (e.target.id === 'selectTrabajador') {
             const selected = e.target.selectedOptions[0];
             const nombreInput = document.getElementById('displayNombreCompleto');
             const cedulaInput = document.getElementById('displayCedula');
+            const busquedaInput = document.getElementById('inputBusquedaTrabajador');
             if (selected && selected.value) {
                 nombreInput.value = (selected.dataset.nombres || '') + ' ' + (selected.dataset.apellidos || '');
                 cedulaInput.value = selected.dataset.cedula || '';
+                if (busquedaInput) busquedaInput.value = '';
             } else {
                 nombreInput.value = '';
                 cedulaInput.value = '';
