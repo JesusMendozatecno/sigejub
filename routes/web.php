@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrabajadorController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\ExpedienteController;
 
 
 /*
@@ -85,3 +86,17 @@ Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy'])->nam
 |-----------------------------
 */
 Route::get('/actividades', [ActivityController::class, 'index']);
+
+/*
+|-----------------------------
+| EXPEDIENTES (CRUD + API)
+|-----------------------------
+*/
+Route::get('/expedientes', [ExpedienteController::class, 'index']);
+Route::get('/expedientes/buscar-trabajador', [ExpedienteController::class, 'buscarTrabajador']);
+Route::post('/expedientes', [ExpedienteController::class, 'store']);
+Route::get('/expedientes/{id}', [ExpedienteController::class, 'show']);
+Route::put('/expedientes/{id}/notas', [ExpedienteController::class, 'updateNotas']);
+Route::post('/expedientes/{id}/documentos', [ExpedienteController::class, 'subirDocumento']);
+Route::put('/documentos/{id}/estado', [ExpedienteController::class, 'updateDocumentoStatus']);
+Route::post('/documentos/{id}/reemplazar', [ExpedienteController::class, 'reemplazarDocumento']);
