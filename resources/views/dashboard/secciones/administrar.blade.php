@@ -98,7 +98,7 @@
                 <input type="hidden" name="user_id" id="editUserId">
                 <section class="form-section">
                     <h3><i data-lucide="user"></i> Datos del Usuario</h3>
-                    <p style="margin:8px 0;font-size:0.9rem;color:#475569;">
+                    <p style="margin:8px 0;font-size:0.9rem;">
                         <strong id="editUserName">—</strong><br>
                         <span id="editUserEmail">—</span>
                     </p>
@@ -136,7 +136,7 @@
                 <input type="hidden" name="user_id" id="notifUserId">
                 <section class="form-section">
                     <h3><i data-lucide="user"></i> Para:</h3>
-                    <p style="margin:8px 0;font-size:0.9rem;color:#475569;">
+                    <p style="margin:8px 0;font-size:0.9rem;">
                         <strong id="notifUserName">—</strong>
                     </p>
                 </section>

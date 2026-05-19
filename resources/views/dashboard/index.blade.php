@@ -23,12 +23,15 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/prestaciones.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/reportes.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    
+    <style>
+        :root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }
+    </style>
 </head>
 <body>
 
@@ -290,6 +293,45 @@
 
 <script src="{{ asset('js/secciones/trabajador.js') }}"></script>
 <script src="{{ asset('js/sesion2.js') }}"></script>
+
+<script>
+    // === GLOBAL THEME CONFIG ===
+    window.cambiarTema = async function(tema) {
+        document.body.classList.toggle('dark-mode', tema === 'dark');
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        const token = meta?.content;
+        try {
+            await fetch('/perfil/configuracion', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                body: JSON.stringify({ theme: tema }),
+            });
+        } catch (err) {}
+    };
+
+    window.cambiarColor = async function(color) {
+        document.documentElement.style.setProperty('--accent', color);
+        document.querySelectorAll('.color-preset').forEach(el => el.classList.remove('selected'));
+        const preset = document.querySelector(`.color-preset[data-color="${color}"]`);
+        if (preset) preset.classList.add('selected');
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        const token = meta?.content;
+        try {
+            await fetch('/perfil/configuracion', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                body: JSON.stringify({ accent_color: color }),
+            });
+        } catch (err) {}
+    };
+
+    // Apply saved theme on load
+    document.addEventListener('DOMContentLoaded', function() {
+        if ('{{ auth()->user()->theme }}' === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    });
+</script>
 
 @include('partials.toast')
 

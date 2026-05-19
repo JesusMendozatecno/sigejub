@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/base.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/layout.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/components.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">

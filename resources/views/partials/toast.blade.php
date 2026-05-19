@@ -206,7 +206,7 @@ window.mostrarCargando = function(texto) {
 
 window.ocultarCargando = function() {
     const transcurrido = Date.now() - _inicioCarga;
-    const restante = 3000 - transcurrido;
+    const restante = 1500 - transcurrido;
     const overlay = document.getElementById('loading-overlay');
     if (!overlay) return;
     if (restante > 0) {
