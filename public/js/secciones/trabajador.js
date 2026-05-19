@@ -1,4 +1,4 @@
-=/**
+/**
  * SIGEJUB - Sistema de Gestión de Jubilaciones
  * Módulo Único Integrado: Directorio de Trabajadores, Modales Dinámicos y AJAX seguro
  */
@@ -63,16 +63,19 @@
 
         // Alternar modo visualización a edición dentro del modal
         if (btnHabilitarEdicion) {
-            btnHabilitarEdicion.addEventListener('click', (e) => {
+            btnHabilitarEdicion.addEventListener('click', async function(e) {
                 e.preventDefault();
+                if (modoEdicionActivo) {
+                    // Ya estamos en edición → este clic envía el formulario
+                    form.requestSubmit();
+                    return;
+                }
                 modoEdicionActivo = true;
                 habilitarCamposFormulario(true);
                 modalTitle.innerHTML = "Modificar<br>Expediente";
-                btnHabilitarEdicion.style.display = 'none';
-                if (btnSubmit) {
-                    btnSubmit.style.display = 'block';
-                    btnSubmit.textContent = 'Guardar Cambios';
-                }
+                btnHabilitarEdicion.innerHTML = '<i data-lucide="save"></i> Guardar Cambios';
+                if (btnSubmit) btnSubmit.style.display = 'none';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             });
         }
 
@@ -86,7 +89,7 @@
                 let url = '/trabajadores'; // Ruta de creación
                 
                 if (modoEdicionActivo && trabajadorSeleccionadoId) {
-                    url = `/trabajadores/${trabajadorSeleccionadoId}/update`;
+                    url = `/trabajadores/${trabajadorSeleccionadoId}`;
                     formData.append('_method', 'PUT');
                 }
 
@@ -143,15 +146,16 @@
         if (!tbody) return;
 
         try {
-            const url = `/api/trabajadores?estatus=${estatus}&nomina=${nomina}`;
+            const url = `/trabajadores?estatus=${estatus}&nomina=${nomina}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error('Error al consultar servidores');
             const data = await response.json();
 
+            const items = data.data || [];
             tbody.innerHTML = '';
-            document.getElementById('totalTrabajadores').textContent = data.length || 0;
+            document.getElementById('totalTrabajadores').textContent = data.total || items.length || 0;
 
-            data.forEach(t => {
+            items.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.dataset.id = t.id;
                 tr.innerHTML = `
@@ -160,11 +164,11 @@
                     <td>${t.cedula}</td>
                     <td>${t.cargo}</td>
                     <td><span class="type-tag">${t.unidad_departamento}</span></td>
-                    <td><span class="status-pill ${t.estatus === 'activo' ? 'active' : 'retired'}">${t.estatus.toUpperCase()}</span></td>
+                    <td><span class="status-pill ${t.estatus === 'activo' ? 'active' : 'retired'}">${(t.estatus || 'SIN ESTATUS').toUpperCase()}</span></td>
                     <td>
-                        <div class="actions-cell-group">
-                            <button class="btn-action view" onclick="window.sigejubVerTrabajador(${t.id}, this)" title="Ver Expediente"><i data-lucide="folder"></i></button>
-                            <button class="btn-action delete" onclick="window.sigejubEliminarTrabajador(${t.id}, '${t.nombres} ${t.apellidos}', this)" title="Dar de Baja"><i data-lucide="trash-2"></i></button>
+                        <div class="acciones-cell">
+                            <button class="btn-icon btn-ver" onclick="window.sigejubVerTrabajador(${t.id}, this)" title="Ver Expediente"><i data-lucide="eye"></i></button>
+                            <button class="btn-icon btn-eliminar" onclick="window.sigejubEliminarTrabajador(${t.id}, '${t.nombres} ${t.apellidos}', this)" title="Dar de Baja"><i data-lucide="trash-2"></i></button>
                         </div>
                     </td>
                 `;
@@ -208,7 +212,10 @@
 
             modalTitle.innerHTML = "Expediente<br>Laboral";
             modalDescription.textContent = "Modo de lectura institucional. Use el botón inferior para editar.";
-            if (btnHabilitarEdicion) btnHabilitarEdicion.style.display = 'inline-flex';
+            if (btnHabilitarEdicion) {
+                btnHabilitarEdicion.innerHTML = '<i data-lucide="edit-3"></i> Editar Expediente';
+                btnHabilitarEdicion.style.display = 'flex';
+            }
             if (btnSubmit) btnSubmit.style.display = 'none';
 
             modal.style.display = 'flex';

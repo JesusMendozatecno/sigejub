@@ -95,9 +95,11 @@
             <span class="badge-new">Sigejub v1.0</span>
             <h1 id="modalTitle">Registrar<br>Nuevo<br>Trabajador</h1>
             <p id="modalDescription">Complete el expediente institucional para iniciar el cálculo de antigüedad y estatus jubilatorio.</p>
-            <div style="margin-top: auto; font-size: 0.75rem; color: #64748b;">
-                <i data-lucide="info" style="width: 14px; vertical-align: middle;"></i> 
-                Asegúrese de que la cédula sea exacta para evitar duplicados.
+            <div class="sidebar-actions">
+                <button type="button" class="btn-sidebar-edit" id="btnHabilitarEdicion" style="display: none;">
+                    <i data-lucide="edit-3"></i> Editar Expediente
+                </button>
+                <button type="button" class="btn-sidebar-cancel" id="btnCancelar">Descartar</button>
             </div>
         </aside>
 
@@ -194,10 +196,6 @@
                 </section>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" id="btnCancelar">Descartar</button>
-                    <button type="button" class="btn-icon" id="btnHabilitarEdicion" style="display: none; width: auto; padding: 0 20px; gap: 8px;">
-                        <i data-lucide="edit-3"></i> Editar Expediente
-                    </button>
                     <button type="submit" class="btn-submit" id="btnSubmitTrabajador">Registrar Trabajador</button>
                 </div>
             </form>

@@ -74,6 +74,7 @@ class TrabajadorController extends Controller
             'numero_hijos' => $trabajador->numero_hijos,
             'hijos_discapacidad' => $trabajador->hijos_discapacidad,
             'cuenta_bancaria' => $trabajador->cuenta_bancaria,
+            'estatus' => $trabajador->estatus,
             'porcentaje_antiguedad' => $trabajador->porcentaje_antiguedad,
             'porcentaje_caja_ahorro' => $trabajador->porcentaje_caja_ahorro,
             'created_at' => $trabajador->created_at,
