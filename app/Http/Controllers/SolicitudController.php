@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\Trabajador;
+use App\Models\Activity;
 // use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller

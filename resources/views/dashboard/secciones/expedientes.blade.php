@@ -470,8 +470,6 @@
             const formData = new FormData(e.target);
             const fotoInput = document.getElementById('inputFotoCarnet');
             if (fotoInput.files[0]) formData.append('foto_carnet', fotoInput.files[0]);
-            const docsInput = document.getElementById('inputDocumentos');
-            Array.from(docsInput.files).forEach(f => formData.append('documentos[]', f));
 
             const btn = document.getElementById('btnSubmitExpediente');
             btn.disabled = true; btn.textContent = 'Creando...';
