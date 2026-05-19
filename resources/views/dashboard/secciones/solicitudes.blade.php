@@ -379,6 +379,7 @@
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {
             if (m.target.id === 'solicitudes' && m.target.classList.contains('active')) {
+                cargarSelectTrabajadores();
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
             }
