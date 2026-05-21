@@ -15,7 +15,7 @@
 
 <div class="list-header">
     <div class="list-title-area">
-        <h2 style="font-size: 1.5rem; color: #0f172a;">Listado de Solicitudes</h2>
+        <h2>Listado de Solicitudes</h2>
         <div class="tab-filters" id="statusFilters">
             <button class="active" data-status="all">Todas</button>
             <button data-status="pending">Pendientes</button>
@@ -185,7 +185,7 @@
                 <input type="hidden" name="solicitud_id" id="editSolicitudId">
                 <section class="form-section">
                     <h3><i data-lucide="file-text"></i> Solicitud</h3>
-                    <p style="margin: 8px 0; font-size: 0.9rem; color: #475569;">
+                    <p style="margin: 8px 0; font-size: 0.9rem;">
                         <strong id="editFolio">—</strong> —
                         <span id="editTrabajadorNombre">—</span>
                     </p>
@@ -697,6 +697,12 @@
             }
         });
     });
+
+    // === EXPORTAR PDF ===
+    window.exportarSolicitudesPDF = function() {
+        const params = currentStatus !== 'all' ? `?estado=${currentStatus}` : '';
+        window.open('/solicitudes/exportar' + params, '_blank', 'width=1000,height=700');
+    };
 
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {

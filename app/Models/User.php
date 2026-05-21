@@ -19,11 +19,22 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'role', // <-- ASEGÚRATE DE QUE ESTO ESTÉ AQUÍ
-];
+        'name',
+        'email',
+        'password',
+        'role',
+        'avatar',
+        'theme',
+        'language',
+        'accent_color',
+        'two_factor_enabled',
+        'two_factor_secret',
+        'notification_email',
+        'notification_system',
+        'profile_public',
+        'last_login_at',
+        'last_login_ip',
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,6 +56,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_enabled' => 'boolean',
+            'profile_public' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 }

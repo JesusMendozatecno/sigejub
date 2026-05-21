@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\Trabajador;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Activity;
+// use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller
 {
@@ -39,7 +40,7 @@ class SolicitudController extends Controller
 
     public function porMes()
     {
-        $meses = Solicitud::selectRaw('strftime("%m", fecha_solicitud) as mes, count(*) as total')
+        $meses = Solicitud::selectRaw('MONTH(fecha_solicitud) as mes, count(*) as total')
             ->whereYear('fecha_solicitud', now()->year)
             ->groupBy('mes')
             ->orderBy('mes')
@@ -47,7 +48,7 @@ class SolicitudController extends Controller
 
         $datos = [];
         foreach (range(1, 12) as $m) {
-            $datos[] = $meses->get(str_pad($m, 2, '0', STR_PAD_LEFT), 0);
+            $datos[] = $meses->get($m, 0);
         }
 
         return response()->json($datos);
@@ -99,8 +100,7 @@ class SolicitudController extends Controller
 
         $solicitudes = $query->orderBy('created_at', 'desc')->get();
 
-        $pdf = Pdf::loadView('pdf.solicitudes', compact('solicitudes'));
-        return $pdf->download('solicitudes-' . now()->format('Y-m-d') . '.pdf');
+        return view('pdf.solicitudes', compact('solicitudes'));
     }
 
     public function store(Request $request)
@@ -162,12 +162,23 @@ class SolicitudController extends Controller
 
             $validated = $request->validate($rules);
 
+            $oldEstado = $solicitud->estado;
             $solicitud->update($validated);
 
             $t = $solicitud->load('trabajador')->trabajador;
             $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$solicitud->trabajador_id}";
-            Activity::log('updated', 'solicitud', $solicitud->id,
-                "Se actualizó la solicitud de {$nombre}");
+
+            $desc = "Se actualizó la solicitud de {$nombre}";
+            if ($request->has('estado') && $request->estado !== $oldEstado) {
+                $accion = match ($request->estado) {
+                    'aprobado' => 'Aprobó',
+                    'rechazado' => 'Rechazó',
+                    'revision' => 'Puso en revisión',
+                    default => 'Cambió estado a'
+                };
+                $desc = "{$accion} la solicitud de {$nombre}";
+            }
+            Activity::log('updated', 'solicitud', $solicitud->id, $desc);
 
             return response()->json([
                 'status' => 'success',

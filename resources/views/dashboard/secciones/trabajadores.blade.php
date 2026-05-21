@@ -107,6 +107,7 @@
             <button class="btn-close-absolute" id="closeModal" type="button">&times;</button>
             
             <form id="formTrabajador">
+                @csrf
                 <section class="form-section">
                     <h3><i data-lucide="user"></i> Datos Personales</h3>
                     <div class="form-row-2">

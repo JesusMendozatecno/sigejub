@@ -120,7 +120,7 @@
     }
 
     async function cargarActividades() {
-        const container = document.getElementById('activityList');
+        const container = document.getElementById('actividadRecienteLista');
         if (!container) return;
         try {
             const resp = await fetch('/actividades');
@@ -237,31 +237,7 @@
                 }
             }
 
-            const listaActividad = document.getElementById('actividadRecienteLista');
-            if (listaActividad && dataVenc && dataVenc.recientes) {
-                const items = dataVenc.recientes;
-                if (items.length === 0) {
-                    listaActividad.innerHTML = '<div class="activity-item" style="padding: 16px; color: #94a3b8; text-align: center; font-size: 0.85rem;">Sin actividad reciente</div>';
-                } else {
-                    listaActividad.innerHTML = items.map(s => {
-                        const nombre = s.trabajador ? [s.trabajador.nombres, s.trabajador.apellidos].filter(Boolean).join(' ') : '—';
-                        const badge = s.estado === 'aprobado' ? 'green' : (s.estado === 'rechazado' ? 'red' : 'blue');
-                        const icono = s.estado === 'aprobado' ? 'check-circle' : (s.estado === 'rechazado' ? 'x-circle' : 'file-up');
-                        const hace = Math.ceil((new Date() - new Date(s.created_at)) / (1000 * 60));
-                        const tiempo = hace < 60 ? `Hace ${hace} min` : `Hace ${Math.floor(hace / 60)} horas`;
-                        return `
-                            <div class="activity-item">
-                                <div class="activity-icon ${badge}"><i data-lucide="${icono}"></i></div>
-                                <div class="activity-text">
-                                    <p>Solicitud de ${nombre}</p>
-                                    <span>#SOL-${String(s.id).padStart(4, '0')} · ${tiempo}</span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
-                }
-            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al cargar estadísticas de inicio:', err);
         }
@@ -271,8 +247,6 @@
         cargarEstadisticasInicio();
         cargarActividades();
     });
-
-    document.addEventListener('DOMContentLoaded', cargarEstadisticasInicio);
 
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {

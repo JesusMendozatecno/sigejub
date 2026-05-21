@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienvenido | SIGEJUB</title>
+    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
+    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <!-- Vinculamos al CSS unificado de presentación -->
     <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
     <!-- Iconos para mantener la coherencia con el Dashboard -->

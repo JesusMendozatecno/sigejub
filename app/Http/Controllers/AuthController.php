@@ -23,6 +23,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            $user = Auth::user();
+            $user->last_login_at = now();
+            $user->last_login_ip = $request->ip();
+            $user->save();
             return redirect('dashboard')->with('success', 'Bienvenido al sistema SIGEJUB');
         }
 
