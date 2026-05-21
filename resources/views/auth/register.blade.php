@@ -10,14 +10,14 @@
 <body>
 
 <div class="register-container">
-    <a href="{{ url('/') }}" class="btn-back" title="Volver al inicio">
-        <i data-lucide="arrow-left"></i>
-    </a>
-
-    <h2>Registro de Usuario</h2>
-
     <form method="POST" action="/register" onsubmit="return validarFormulario(event)">
         @csrf
+
+        <a href="{{ url('/') }}" class="btn-back" title="Volver al inicio">
+            <i data-lucide="arrow-left"></i>
+        </a>
+
+        <h2 style="margin:0 0 16px;text-align:center;">Registro de Usuario</h2>
 
         <div class="form-grid">
 
