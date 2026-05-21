@@ -2,4 +2,8 @@
 .stat-card { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
 .chart-container { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
 .bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; }
-.recent-activity { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
+.recent-activity { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; }
+.recent-activity .activity-list { flex: 1; overflow-y: auto; max-height: 400px; }
+.recent-activity .activity-list::-webkit-scrollbar { width: 4px; }
+.recent-activity .activity-list::-webkit-scrollbar-track { background: transparent; }
+.recent-activity .activity-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }

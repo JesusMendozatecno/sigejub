@@ -301,6 +301,44 @@
         inputs.forEach(i => i.disabled = !condicion);
     }
 
+    // Cargar estadísticas del dashboard de trabajadores
+    async function cargarTrabajadoresStats() {
+        try {
+            const resp = await fetch('/trabajadores-stats/dashboard');
+            const data = await resp.json();
+
+            // Próximas jubilaciones
+            const lista = document.getElementById('proximasJubilacionesList');
+            if (lista && data.proximas) {
+                if (!data.proximas.length) {
+                    lista.innerHTML = '<p style="color:rgba(255,255,255,0.7);font-size:0.85rem;">No hay trabajadores próximos a jubilarse.</p>';
+                } else {
+                    lista.innerHTML = '<p style="color:rgba(255,255,255,0.85);font-size:0.85rem;margin-bottom:10px;">' +
+                        data.proximas.length + ' trabajadores próximos a cumplir requisitos:</p>' +
+                        data.proximas.slice(0, 5).map(t =>
+                            `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);font-size:0.82rem;">
+                                <span>${t.nombres} ${t.apellidos}</span>
+                                <span style="color:rgba(255,255,255,0.6);font-size:0.75rem;">${t.edad || '—'} años · ${t.total_anos_servicio || 0} años serv.</span>
+                            </div>`
+                        ).join('');
+                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            // Estatus de datos
+            const texto = document.getElementById('estatusDatosTexto');
+            const barra = document.getElementById('estatusDatosBarra');
+            const pct = document.getElementById('estatusDatosPorcentaje');
+            if (texto) {
+                texto.textContent = `${data.porcentaje_expedientes}% de los trabajadores cuentan con expediente digital (${data.total_expedientes} de ${data.total_trabajadores}).`;
+            }
+            if (barra) barra.style.width = data.porcentaje_expedientes + '%';
+            if (pct) pct.textContent = data.porcentaje_expedientes + '%';
+        } catch (err) {
+            console.error('Error al cargar stats de trabajadores:', err);
+        }
+    }
+
     // Observer para la inicialización al cambiar de pestaña
     let estabaActivo = false;
     const observer = new MutationObserver((mutations) => {
@@ -309,6 +347,7 @@
                 const actualmenteActivo = m.target.classList.contains('active');
                 if (actualmenteActivo && !estabaActivo) {
                     cargarTrabajadores();
+                    cargarTrabajadoresStats();
                 }
                 estabaActivo = actualmenteActivo;
             }
@@ -318,6 +357,7 @@
     const seccion = document.getElementById('trabajadores');
     if (seccion) {
         estabaActivo = seccion.classList.contains('active');
+        if (estabaActivo) cargarTrabajadoresStats();
         observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
     }
 })();
