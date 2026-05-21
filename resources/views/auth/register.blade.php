@@ -20,32 +20,64 @@
 
     <h2>Registro de Usuario</h2>
 
-    <!-- Formulario de registro -->
     <form method="POST" action="/register" onsubmit="mostrarCargando('Creando cuenta...')">
         @csrf
 
-        <!-- Nombre -->
-        <input type="text" name="name" placeholder="Nombre">
+        <div class="form-grid">
 
-        <!-- Email -->
-        <input type="email" name="email" placeholder="Email">
+            <div class="input-group full-width">
+                <label>CORREO ELECTRÓNICO</label>
+                <input type="email" name="email" placeholder="correo@ejemplo.com" value="{{ old('email') }}" required>
+            </div>
 
-        <!-- Contraseña -->
-        <input type="password" name="password" placeholder="Contraseña">
+            <div class="input-group">
+                <label>NOMBRE</label>
+                <input type="text" name="name" placeholder="Nombre" value="{{ old('name') }}" required>
+            </div>
 
-        <!-- Rol del usuario -->
-        <select name="role">
-            <option value="analista">Analista</option>
-            <option value="admin">Admin</option>
-        </select>
+            <div class="input-group">
+                <label>APELLIDO</label>
+                <input type="text" name="surname" placeholder="Apellido" value="{{ old('surname') }}" required>
+            </div>
 
-        <!-- Botón -->
-        <button>Registrar</button>
-         <!-- Enlace a registro -->
-        <p style="margin-top: 10px;">
-            ¿Deseas Iniciar Seccion?
-            <a href="{{ route('login') }}">Inicio</a>
-        </p>
+            <div class="input-group">
+                <label>FECHA DE NACIMIENTO</label>
+                <input type="date" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}" required>
+            </div>
+
+            <div class="input-group">
+                <label>TELÉFONO</label>
+                <input type="tel" name="phone" placeholder="0412-0000000" value="{{ old('phone') }}" required>
+            </div>
+
+            <div class="input-group">
+                <label>CONTRASEÑA</label>
+                <input type="password" name="password" placeholder="Mínimo 6 caracteres" required>
+            </div>
+
+            <div class="input-group">
+                <label>CONFIRMAR CONTRASEÑA</label>
+                <input type="password" name="password_confirmation" placeholder="Repita la contraseña" required>
+            </div>
+
+            <div class="input-group full-width">
+                <label>ROL DEL USUARIO</label>
+                <select name="role" required>
+                    <option value="" disabled selected>Seleccione un rol...</option>
+                    <option value="analista">Analista</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <div class="full-width">
+                <button type="submit">Registrar</button>
+            </div>
+
+            <p class="full-width" style="margin: 0; text-align: center;">
+                ¿Ya tienes cuenta? <a href="{{ route('login') }}">Inicia sesión</a>
+            </p>
+
+        </div>
 
     </form>
 
