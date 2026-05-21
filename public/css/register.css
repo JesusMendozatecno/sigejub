@@ -140,6 +140,65 @@ a:hover {
     padding-top: 50px;
 }
 
+/* === PHONE WRAPPER === */
+.phone-wrapper {
+    display: flex;
+    gap: 6px;
+}
+
+.country-code-select {
+    width: 90px;
+    flex-shrink: 0;
+    padding: 10px 6px;
+    font-size: 12px;
+}
+
+.phone-wrapper input {
+    flex: 1;
+}
+
+/* === PASSWORD STRENGTH === */
+.password-strength {
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* === VALIDATION MESSAGES === */
+.validation-msg {
+    display: block;
+    font-size: 11px;
+    margin-top: 3px;
+    min-height: 16px;
+}
+
+.valid-msg {
+    color: #16a34a;
+}
+
+.error-msg {
+    color: #dc2626;
+}
+
+input.valid {
+    border-color: #16a34a;
+    background-color: #f0fdf4;
+}
+
+input.invalid {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+
 @media (max-width: 500px) {
     .form-grid {
         grid-template-columns: 1fr;
@@ -150,5 +209,11 @@ a:hover {
     }
     .register-container {
         max-width: 100%;
+    }
+    .phone-wrapper {
+        flex-direction: column;
+    }
+    .country-code-select {
+        width: 100%;
     }
 }

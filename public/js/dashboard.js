@@ -1,0 +1,157 @@
+// === DASHBOARD.JS - SIGEJUB ===
+
+function inicializarDashboard() {
+    if (window.SIGEJUB_THEME === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Notification counter
+    cargarContadorNoLeidas();
+    setInterval(cargarContadorNoLeidas, 30000);
+
+    // Sidebar toggle
+    var sidebar = document.querySelector('.sidebar');
+    var toggle = document.getElementById('sidebarToggle');
+    var overlay = document.getElementById('sidebarOverlay');
+    function closeSidebar() { if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('show'); }
+    if (toggle) {
+        toggle.addEventListener('click', function(e) { e.stopPropagation(); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('show'); });
+    }
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+    document.querySelectorAll('.sidebar-menu .menu-item').forEach(function(item) {
+        item.addEventListener('click', function() { if (window.innerWidth < 768) closeSidebar(); });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', inicializarDashboard);
+
+window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+        window.location.reload();
+    }
+});
+
+// === USER DROPDOWN ===
+function toggleDropdown() {
+    document.getElementById('userDropdown')?.classList.toggle('open');
+}
+
+window.addEventListener('click', function(e) {
+    var dropdown = document.getElementById('userDropdown');
+    if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove('open');
+});
+
+// === NOTIFICACIONES ===
+var notifAbierto = false;
+
+function toggleNotifDropdown() {
+    var menu = document.getElementById('notifMenu');
+    if (!menu) return;
+    notifAbierto = !notifAbierto;
+    menu.style.display = notifAbierto ? 'block' : 'none';
+    if (notifAbierto) cargarNotificaciones();
+}
+
+async function cargarNotificaciones() {
+    var list = document.getElementById('notifList');
+    if (!list) return;
+    try {
+        var resp = await fetch('/notificaciones');
+        if (!resp.ok) {
+            list.innerHTML = '<p style="text-align:center;color:#ef4444;padding:20px;font-size:0.85rem;">Error al cargar</p>';
+            return;
+        }
+        var data = await resp.json();
+        if (!data.length) {
+            list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;font-size:0.85rem;">Sin notificaciones</p>';
+            return;
+        }
+        list.innerHTML = '';
+        data.forEach(function(n) {
+            var de = n.from_user ? n.from_user.name : 'Sistema';
+            var fecha = new Date(n.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            var div = document.createElement('div');
+            div.className = 'notif-item' + (n.is_read ? '' : ' unread');
+            div.onclick = function() { marcarLeida(n.id); };
+            div.innerHTML = '<div class="notif-title">' + n.title + '</div><div class="notif-msg">' + n.message + '</div><div class="notif-time">' + de + ' — ' + fecha + '</div>';
+            list.appendChild(div);
+        });
+    } catch (err) { console.error('Error al cargar notificaciones:', err); }
+}
+
+async function cargarContadorNoLeidas() {
+    try {
+        var resp = await fetch('/notificaciones/no-leidas');
+        if (!resp.ok) return;
+        var data = await resp.json();
+        var badge = document.getElementById('notifBadge');
+        if (badge) {
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+        }
+    } catch (err) { console.error('Error al cargar contador:', err); }
+}
+
+async function marcarLeida(id) {
+    try {
+        await fetch('/notificaciones/' + id + '/leer', { method: 'PUT', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content } });
+        cargarNotificaciones();
+        cargarContadorNoLeidas();
+    } catch (err) { console.error('Error al marcar leída:', err); }
+}
+
+async function marcarTodasLeidas() {
+    try {
+        await fetch('/notificaciones/leer-todas', { method: 'PUT', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content } });
+        cargarNotificaciones();
+        cargarContadorNoLeidas();
+        if (typeof mostrarToast !== 'undefined') mostrarToast('Todas las notificaciones marcadas como leídas.', 'info');
+    } catch (err) { console.error('Error al marcar todas:', err); }
+}
+
+// Cerrar menú de notificaciones al hacer clic fuera
+window.addEventListener('click', function(e) {
+    var notif = document.getElementById('notifDropdown');
+    if (notif && !notif.contains(e.target) && notifAbierto) {
+        notifAbierto = false;
+        var menu = document.getElementById('notifMenu');
+        if (menu) menu.style.display = 'none';
+    }
+});
+
+// === GLOBAL THEME CONFIG ===
+window.cambiarTema = async function(tema) {
+    document.body.classList.toggle('dark-mode', tema === 'dark');
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var token = meta?.content;
+    try {
+        await fetch('/perfil/configuracion', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+            body: JSON.stringify({ theme: tema }),
+        });
+    } catch (err) {}
+};
+
+window.cambiarColor = async function(color) {
+    document.documentElement.style.setProperty('--accent', color);
+    document.querySelectorAll('.color-preset').forEach(function(el) { el.classList.remove('selected'); });
+    var preset = document.querySelector('.color-preset[data-color="' + color + '"]');
+    if (preset) preset.classList.add('selected');
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var token = meta?.content;
+    try {
+        await fetch('/perfil/configuracion', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+            body: JSON.stringify({ accent_color: color }),
+        });
+    } catch (err) {}
+};

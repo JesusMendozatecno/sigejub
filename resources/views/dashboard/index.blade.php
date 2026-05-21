@@ -10,28 +10,22 @@
     <link rel="icon" href="{{ asset('img/favicon-16.png') }}" sizes="16x16" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
-    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/base.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/layout.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/components.css') }}">
-
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/inicio.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/solicitud.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/expediente.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/trabajadores.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/trabajadores2.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/prestaciones.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/reportes.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/responsive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
-    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@1.16.0/dist/umd/lucide.min.js"></script>
     
     <style>
         :root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }
+        .notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
+        .notif-trigger:hover { background: #f1f5f9; }
+        .notif-badge { display: none; }
+        .notif-badge.show { display: flex !important; }
+        .notif-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; margin-bottom: 2px; }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background: #eff6ff; border-left: 3px solid #2563eb; }
+        .notif-item .notif-time { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
+        .notif-item .notif-title { font-size: 0.8rem; font-weight: 600; color: #0f172a; }
+        .notif-item .notif-msg { font-size: 0.78rem; color: #475569; margin-top: 2px; line-height: 1.3; }
     </style>
 </head>
 <body>
@@ -164,190 +158,11 @@
 
 </div>
 
-<style>
-.notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
-.notif-trigger:hover { background: #f1f5f9; }
-.notif-badge { display: none; }
-.notif-badge.show { display: flex !important; }
-.notif-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; margin-bottom: 2px; }
-.notif-item:hover { background: #f8fafc; }
-.notif-item.unread { background: #eff6ff; border-left: 3px solid #2563eb; }
-.notif-item .notif-time { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
-.notif-item .notif-title { font-size: 0.8rem; font-weight: 600; color: #0f172a; }
-.notif-item .notif-msg { font-size: 0.78rem; color: #475569; margin-top: 2px; line-height: 1.3; }
-</style>
-<script>
-    function toggleDropdown() {
-        const dropdown = document.getElementById('userDropdown');
-        dropdown.classList.toggle('open');
-    }
+<script>window.SIGEJUB_THEME='{{ auth()->user()->theme }}';</script>
+<script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
-    window.addEventListener('click', function(e) {
-        const dropdown = document.getElementById('userDropdown');
-        if (dropdown && !dropdown.contains(e.target)) {
-            dropdown.classList.remove('open');
-        }
-    });
-
-    // === NOTIFICACIONES ===
-    let notifAbierto = false;
-
-    function toggleNotifDropdown() {
-        const menu = document.getElementById('notifMenu');
-        if (!menu) return;
-        notifAbierto = !notifAbierto;
-        menu.style.display = notifAbierto ? 'block' : 'none';
-        if (notifAbierto) cargarNotificaciones();
-    }
-
-    async function cargarNotificaciones() {
-        const list = document.getElementById('notifList');
-        if (!list) return;
-        try {
-            const resp = await fetch('/notificaciones');
-            if (!resp.ok) {
-                const text = await resp.text();
-                console.error('Error en notificaciones:', resp.status, text.substring(0, 200));
-                list.innerHTML = '<p style="text-align:center;color:#ef4444;padding:20px;font-size:0.85rem;">Error al cargar</p>';
-                return;
-            }
-            const data = await resp.json();
-            if (!data.length) {
-                list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;font-size:0.85rem;">Sin notificaciones</p>';
-                return;
-            }
-            list.innerHTML = '';
-            data.forEach(n => {
-                const de = n.from_user ? n.from_user.name : 'Sistema';
-                const fecha = new Date(n.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                const div = document.createElement('div');
-                div.className = 'notif-item' + (n.is_read ? '' : ' unread');
-                div.onclick = () => marcarLeida(n.id);
-                div.innerHTML = `
-                    <div class="notif-title">${n.title}</div>
-                    <div class="notif-msg">${n.message}</div>
-                    <div class="notif-time">${de} — ${fecha}</div>
-                `;
-                list.appendChild(div);
-            });
-        } catch (err) {
-            console.error('Error al cargar notificaciones:', err);
-        }
-    }
-
-    async function cargarContadorNoLeidas() {
-        try {
-            const resp = await fetch('/notificaciones/no-leidas');
-            if (!resp.ok) {
-                const text = await resp.text();
-                console.error('Error en notificaciones/no-leidas:', resp.status, text.substring(0, 200));
-                return;
-            }
-            const data = await resp.json();
-            const badge = document.getElementById('notifBadge');
-            if (badge) {
-                if (data.count > 0) {
-                    badge.textContent = data.count;
-                    badge.classList.add('show');
-                } else {
-                    badge.classList.remove('show');
-                }
-            }
-        } catch (err) {
-            console.error('Error al cargar contador:', err);
-        }
-    }
-
-    async function marcarLeida(id) {
-        try {
-            await fetch(`/notificaciones/${id}/leer`, { method: 'PUT', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content } });
-            cargarNotificaciones();
-            cargarContadorNoLeidas();
-        } catch (err) {
-            console.error('Error al marcar leída:', err);
-        }
-    }
-
-    async function marcarTodasLeidas() {
-        try {
-            await fetch('/notificaciones/leer-todas', { method: 'PUT', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content } });
-            cargarNotificaciones();
-            cargarContadorNoLeidas();
-            mostrarToast('Todas las notificaciones marcadas como leídas.', 'info');
-        } catch (err) {
-            console.error('Error al marcar todas:', err);
-        }
-    }
-
-    // Cerrar menú de notificaciones al hacer clic fuera
-    window.addEventListener('click', function(e) {
-        const notif = document.getElementById('notifDropdown');
-        if (notif && !notif.contains(e.target) && notifAbierto) {
-            notifAbierto = false;
-            document.getElementById('notifMenu').style.display = 'none';
-        }
-    });
-
-    // Cargar contador al inicio y cada 30 segundos
-    document.addEventListener('DOMContentLoaded', () => {
-        cargarContadorNoLeidas();
-        setInterval(cargarContadorNoLeidas, 30000);
-
-        // Sidebar toggle
-        const sidebar = document.querySelector('.sidebar');
-        const toggle = document.getElementById('sidebarToggle');
-        const overlay = document.getElementById('sidebarOverlay');
-        function closeSidebar() { sidebar?.classList.remove('open'); overlay?.classList.remove('show'); }
-        toggle?.addEventListener('click', (e) => { e.stopPropagation(); sidebar?.classList.toggle('open'); overlay?.classList.toggle('show'); });
-        overlay?.addEventListener('click', closeSidebar);
-        // Close sidebar on menu item click (mobile)
-        document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
-            item.addEventListener('click', () => { if (window.innerWidth < 768) closeSidebar(); });
-        });
-    });
-</script>
-
-<script src="{{ asset('js/secciones/trabajador.js') }}"></script>
-<script src="{{ asset('js/sesion2.js') }}"></script>
-
-<script>
-    // === GLOBAL THEME CONFIG ===
-    window.cambiarTema = async function(tema) {
-        document.body.classList.toggle('dark-mode', tema === 'dark');
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        const token = meta?.content;
-        try {
-            await fetch('/perfil/configuracion', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
-                body: JSON.stringify({ theme: tema }),
-            });
-        } catch (err) {}
-    };
-
-    window.cambiarColor = async function(color) {
-        document.documentElement.style.setProperty('--accent', color);
-        document.querySelectorAll('.color-preset').forEach(el => el.classList.remove('selected'));
-        const preset = document.querySelector(`.color-preset[data-color="${color}"]`);
-        if (preset) preset.classList.add('selected');
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        const token = meta?.content;
-        try {
-            await fetch('/perfil/configuracion', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
-                body: JSON.stringify({ accent_color: color }),
-            });
-        } catch (err) {}
-    };
-
-    // Apply saved theme on load
-    document.addEventListener('DOMContentLoaded', function() {
-        if ('{{ auth()->user()->theme }}' === 'dark') {
-            document.body.classList.add('dark-mode');
-        }
-    });
-</script>
+<script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>
+<script defer src="{{ asset('js/sesion2.js') }}?v={{ filemtime(public_path('js/sesion2.js')) }}"></script>
 
 @include('partials.toast')
 
