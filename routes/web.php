@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrabajadorController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\PrestacionesController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CajaNegraController;
@@ -149,6 +150,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/caja-negra-data/estadisticas', [CajaNegraController::class, 'stats']);
     Route::get('/caja-negra-data/usuarios', [CajaNegraController::class, 'usuarios']);
 });
+
+Route::get('/prestaciones', [PrestacionesController::class, 'index']);
+Route::get('/prestaciones/{id}', [PrestacionesController::class, 'show']);
+Route::post('/prestaciones', [PrestacionesController::class, 'store']);
 
 Route::get('/expedientes', [ExpedienteController::class, 'index']);
 Route::get('/expedientes/buscar-trabajador', [ExpedienteController::class, 'buscarTrabajador']);

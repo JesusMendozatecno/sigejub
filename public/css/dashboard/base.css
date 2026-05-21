@@ -19,3 +19,26 @@ body {
 .text-green { color: #0ca678 !important; }
 .text-red { color: #fa5252 !important; }
 .text-blue-accent { color: #1e3a8a; font-weight: 800; }
+
+/* === GLOBAL SCROLLBAR === */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: rgba(100,116,139,0.25);
+    border-radius: 3px;
+    transition: all 0.25s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100,116,139,0.5);
+}
+::-webkit-scrollbar-corner { background: transparent; }
+
+* { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,0.25) transparent; }
+
+body.dark-mode::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.2);
+}
+body.dark-mode::-webkit-scrollbar-thumb:hover {
+    background: rgba(148,163,184,0.4);
+}
+body.dark-mode { scrollbar-color: rgba(148,163,184,0.2) transparent; }

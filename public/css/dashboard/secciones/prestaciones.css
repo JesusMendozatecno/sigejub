@@ -1,5 +1,126 @@
 /* EXTENSIÓN SECCIÓN 5: PRESTACIONES */
 
+/* === GRID DE TARJETAS === */
+.prestaciones-grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.prestacion-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+}
+
+.prestacion-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,35,102,0.1);
+    border-color: #dbeafe;
+}
+
+.prestacion-card .pc-foto {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.prestacion-card .pc-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.prestacion-card .pc-avatar {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.prestacion-card .pc-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.prestacion-card .pc-info strong {
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.prestacion-card .pc-info span {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.prestacion-card .pc-anios {
+    font-weight: 600;
+    color: #1e3a8a !important;
+    font-size: 0.78rem !important;
+}
+
+.prestacion-card .pc-badge {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 3px 10px;
+    background: #eff6ff;
+    color: #1e40af;
+    border-radius: 12px;
+    font-size: 0.7rem !important;
+    font-weight: 700;
+}
+
+/* === DETALLE === */
+#prestacion-detalle .prestaciones-grid {
+    margin-top: 20px;
+}
+
+#prestacion-detalle .btn-primary {
+    background: var(--primary-blue);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#prestacion-detalle .btn-primary:hover {
+    background: #001a4d;
+}
+
+#resultadosCalculo {
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 767px) {
+    .prestaciones-grid-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
 .prestaciones-grid {
     display: grid;
     grid-template-columns: 1fr 320px;
