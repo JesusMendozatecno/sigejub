@@ -4,40 +4,37 @@
     <title>Registro SIGEJUB</title>
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
-    <!-- CSS exclusivo del registro -->
     <link rel="stylesheet" href="{{ asset('css/register.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
-<!-- Contenedor del registro -->
 <div class="register-container">
-
-    
-        <!-- Botón Volver -->
-        <a href="{{ url('/') }}" class="btn-back" title="Volver al inicio">
-            <i data-lucide="arrow-left"></i>
-        </a>
+    <a href="{{ url('/') }}" class="btn-back" title="Volver al inicio">
+        <i data-lucide="arrow-left"></i>
+    </a>
 
     <h2>Registro de Usuario</h2>
 
-    <form method="POST" action="/register" onsubmit="mostrarCargando('Creando cuenta...')">
+    <form method="POST" action="/register" onsubmit="return validarFormulario(event)">
         @csrf
 
         <div class="form-grid">
 
             <div class="input-group full-width">
                 <label>CORREO ELECTRÓNICO</label>
-                <input type="email" name="email" placeholder="correo@ejemplo.com" value="{{ old('email') }}" required>
+                <input type="email" name="email" id="regEmail" placeholder="correo@ejemplo.com" value="{{ old('email') }}" required oninput="validarEmail()">
+                <span class="validation-msg" id="emailMsg"></span>
             </div>
 
             <div class="input-group">
                 <label>NOMBRE</label>
-                <input type="text" name="name" placeholder="Nombre" value="{{ old('name') }}" required>
+                <input type="text" name="name" id="regName" placeholder="Nombre" value="{{ old('name') }}" required oninput="capitalizar(this)">
             </div>
 
             <div class="input-group">
                 <label>APELLIDO</label>
-                <input type="text" name="surname" placeholder="Apellido" value="{{ old('surname') }}" required>
+                <input type="text" name="surname" id="regSurname" placeholder="Apellido" value="{{ old('surname') }}" required oninput="capitalizar(this)">
             </div>
 
             <div class="input-group">
@@ -47,17 +44,45 @@
 
             <div class="input-group">
                 <label>TELÉFONO</label>
-                <input type="tel" name="phone" placeholder="0412-0000000" value="{{ old('phone') }}" required>
+                <div class="phone-wrapper">
+                    <select id="countryCode" class="country-code-select">
+                        <option value="+58">🇻🇪 +58</option>
+                        <option value="+56">🇨🇱 +56</option>
+                        <option value="+54">🇦🇷 +54</option>
+                        <option value="+57">🇨🇴 +57</option>
+                        <option value="+52">🇲🇽 +52</option>
+                        <option value="+51">🇵🇪 +51</option>
+                        <option value="+593">🇪🇨 +593</option>
+                        <option value="+591">🇧🇴 +591</option>
+                        <option value="+55">🇧🇷 +55</option>
+                        <option value="+598">🇺🇾 +598</option>
+                        <option value="+595">🇵🇾 +595</option>
+                        <option value="+507">🇵🇦 +507</option>
+                        <option value="+506">🇨🇷 +506</option>
+                        <option value="+502">🇬🇹 +502</option>
+                        <option value="+504">🇭🇳 +504</option>
+                        <option value="+503">🇸🇻 +503</option>
+                        <option value="+505">🇳🇮 +505</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+34">🇪🇸 +34</option>
+                    </select>
+                    <input type="tel" name="phone" id="regPhone" placeholder="412-0000000" value="{{ old('phone') }}" required oninput="this.value=this.value.replace(/[^0-9-]/g,'')">
+                </div>
             </div>
 
             <div class="input-group">
                 <label>CONTRASEÑA</label>
-                <input type="password" name="password" placeholder="Mínimo 6 caracteres" required>
+                <input type="password" name="password" id="regPassword" placeholder="Mínimo 6 caracteres" required oninput="medirFortaleza()">
+                <div class="password-strength" id="passwordStrength">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <span class="validation-msg" id="passwordMsg"></span>
             </div>
 
             <div class="input-group">
                 <label>CONFIRMAR CONTRASEÑA</label>
-                <input type="password" name="password_confirmation" placeholder="Repita la contraseña" required>
+                <input type="password" name="password_confirmation" id="regPasswordConfirm" placeholder="Repita la contraseña" required oninput="validarConfirmacion()">
+                <span class="validation-msg" id="confirmMsg"></span>
             </div>
 
             <div class="input-group full-width">
@@ -70,7 +95,7 @@
             </div>
 
             <div class="full-width">
-                <button type="submit">Registrar</button>
+                <button type="submit" id="regBtn">Registrar</button>
             </div>
 
             <p class="full-width" style="margin: 0; text-align: center;">
@@ -81,17 +106,114 @@
 
     </form>
 
-   
-
 </div>
-<script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
-    @include('partials.toast')
-    @if(session('success'))
-        <script>mostrarToast('{{ session('success') }}', 'success');</script>
-    @endif
-    @if($errors->any())
-        <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
-    @endif
+
+<script src="https://unpkg.com/lucide@1.16.0"></script>
+<script>
+lucide.createIcons();
+
+function capitalizar(input) {
+    input.value = input.value.replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+}
+
+function validarEmail() {
+    var input = document.getElementById('regEmail');
+    var msg = document.getElementById('emailMsg');
+    var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (input.value.length === 0) {
+        msg.textContent = '';
+        input.classList.remove('valid', 'invalid');
+        return;
+    }
+    if (regex.test(input.value)) {
+        msg.textContent = '✓ Correo válido';
+        msg.className = 'validation-msg valid-msg';
+        input.classList.add('valid');
+        input.classList.remove('invalid');
+    } else {
+        msg.textContent = '✗ Formato de correo inválido';
+        msg.className = 'validation-msg error-msg';
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+    }
+}
+
+function medirFortaleza() {
+    var pwd = document.getElementById('regPassword').value;
+    var bar = document.getElementById('strengthBar');
+    var msg = document.getElementById('passwordMsg');
+    var fuerza = 0;
+
+    if (pwd.length >= 6) fuerza += 1;
+    if (pwd.length >= 10) fuerza += 1;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) fuerza += 1;
+    if (/\d/.test(pwd)) fuerza += 1;
+    if (/[^a-zA-Z0-9]/.test(pwd)) fuerza += 1;
+
+    var niveles = [
+        { min: 0, color: '#e2e8f0', ancho: '0%', texto: '' },
+        { min: 1, color: '#ef4444', ancho: '25%', texto: 'Muy poco segura' },
+        { min: 2, color: '#f59e0b', ancho: '50%', texto: 'Poco segura' },
+        { min: 3, color: '#3b82f6', ancho: '75%', texto: 'Segura' },
+        { min: 4, color: '#22c55e', ancho: '100%', texto: 'Muy segura' },
+    ];
+
+    var nivel = niveles[0];
+    for (var i = niveles.length - 1; i >= 0; i--) {
+        if (fuerza >= niveles[i].min) { nivel = niveles[i]; break; }
+    }
+
+    bar.style.width = nivel.ancho;
+    bar.style.background = nivel.color;
+    msg.textContent = nivel.texto;
+    msg.className = 'validation-msg ' + (fuerza < 2 ? 'error-msg' : fuerza < 3 ? '' : 'valid-msg');
+
+    validarConfirmacion();
+}
+
+function validarConfirmacion() {
+    var pwd = document.getElementById('regPassword').value;
+    var confirm = document.getElementById('regPasswordConfirm').value;
+    var msg = document.getElementById('confirmMsg');
+
+    if (confirm.length === 0) {
+        msg.textContent = '';
+        return;
+    }
+    if (pwd === confirm) {
+        msg.textContent = '✓ Coinciden';
+        msg.className = 'validation-msg valid-msg';
+    } else {
+        msg.textContent = '✗ No coinciden';
+        msg.className = 'validation-msg error-msg';
+    }
+}
+
+function validarFormulario(e) {
+    var pwd = document.getElementById('regPassword').value;
+    var confirm = document.getElementById('regPasswordConfirm').value;
+
+    if (pwd.length < 6) {
+        e.preventDefault();
+        mostrarToast('La contraseña debe tener al menos 6 caracteres', 'error');
+        return false;
+    }
+    if (pwd !== confirm) {
+        e.preventDefault();
+        mostrarToast('Las contraseñas no coinciden', 'error');
+        return false;
+    }
+
+    mostrarCargando('Creando cuenta...');
+    return true;
+}
+</script>
+@include('partials.toast')
+@if(session('success'))
+    <script>mostrarToast('{{ session('success') }}', 'success');</script>
+@endif
+@if($errors->any())
+    <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
+@endif
 </body>
 </html>
