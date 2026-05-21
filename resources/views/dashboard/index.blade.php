@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/reportes.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/responsive.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
@@ -36,6 +37,11 @@
 <body>
 
 <header class="top-bar">
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+    </button>
     <div class="header-brand">
         <div class="logo-box" style="background: #1a365d; color: white; padding: 8px; border-radius: 8px; font-size: 1.2rem;">🏛️</div>
         <div>
@@ -117,6 +123,7 @@
             </ul>
         </nav>
     </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <main class="main-content">
         <div class="dashboard-render-zone">
@@ -285,6 +292,18 @@
     document.addEventListener('DOMContentLoaded', () => {
         cargarContadorNoLeidas();
         setInterval(cargarContadorNoLeidas, 30000);
+
+        // Sidebar toggle
+        const sidebar = document.querySelector('.sidebar');
+        const toggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+        function closeSidebar() { sidebar?.classList.remove('open'); overlay?.classList.remove('show'); }
+        toggle?.addEventListener('click', (e) => { e.stopPropagation(); sidebar?.classList.toggle('open'); overlay?.classList.toggle('show'); });
+        overlay?.addEventListener('click', closeSidebar);
+        // Close sidebar on menu item click (mobile)
+        document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+            item.addEventListener('click', () => { if (window.innerWidth < 768) closeSidebar(); });
+        });
     });
 </script>
 
