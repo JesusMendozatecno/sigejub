@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Activity;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
@@ -112,6 +113,8 @@ class AdminController extends Controller
             'type' => 'nullable|string|max:50',
         ]);
 
+        $receptor = User::findOrFail($request->user_id);
+
         $notif = UserNotification::create([
             'user_id' => $request->user_id,
             'from_user_id' => auth()->id(),
@@ -121,8 +124,23 @@ class AdminController extends Controller
         ]);
 
         Activity::log('created', 'notificacion', $notif->id,
-            auth()->user()->name . " envió notificación a {$notif->user->name}"
+            auth()->user()->name . " envió notificación a {$receptor->name}"
         );
+
+        try {
+            Mail::raw(
+                "Has recibido un mensaje de " . auth()->user()->name . ":\n\n" .
+                "Asunto: {$request->title}\n\n" .
+                "{$request->message}\n\n" .
+                "---\nSistema SIGEJUB - Arquitectura de Confianza",
+                function ($message) use ($receptor, $request) {
+                    $message->to($receptor->email, $receptor->name)
+                        ->subject('SIGEJUB - ' . $request->title);
+                }
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Error al enviar email de notificación: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Notificación enviada correctamente.']);
     }
