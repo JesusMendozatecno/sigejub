@@ -88,6 +88,7 @@ Route::delete('/trabajadores/{id}', [TrabajadorController::class, 'destroy'])->n
 
 // El store se mantiene igual
 Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trabajador');
+Route::get('/trabajadores-stats/dashboard', [TrabajadorController::class, 'dashboardStats']);
 
 /*
 |-----------------------------

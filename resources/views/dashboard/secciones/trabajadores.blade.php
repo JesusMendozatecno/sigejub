@@ -68,8 +68,10 @@
     <div class="promo-card-blue">
         <div class="promo-content">
             <h3>Próximas Jubilaciones</h3>
-            <p>Hay 14 docentes que cumplen los requisitos de años de servicio este trimestre. Inicie el proceso de revisión de expedientes.</p>
-            <button class="btn-white" type="button">Ver Calendario</button>
+            <div id="proximasJubilacionesList">
+                <p style="color:rgba(255,255,255,0.7);font-size:0.85rem;">Cargando...</p>
+            </div>
+            <button class="btn-white" type="button" style="margin-top:12px;">Ver Calendario</button>
         </div>
         <div class="promo-icon-watermark">
             <i data-lucide="scroll"></i>
@@ -81,11 +83,11 @@
             <i data-lucide="check-circle-2"></i> AUDITORÍA AL DÍA
         </div>
         <h3>Estatus de Datos</h3>
-        <p>El 98.4% de los expedientes cuentan con documentación digitalizada completa.</p>
+        <p id="estatusDatosTexto">Cargando estadísticas...</p>
         <div class="progress-container">
-            <div class="progress-bar" style="width: 98%;"></div>
+            <div class="progress-bar" id="estatusDatosBarra" style="width: 0%;"></div>
         </div>
-        <span class="progress-val">98%</span>
+        <span class="progress-val" id="estatusDatosPorcentaje">0%</span>
     </div>
 </div>
 

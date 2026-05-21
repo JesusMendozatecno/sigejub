@@ -207,6 +207,40 @@ class TrabajadorController extends Controller
     }
 
     /**
+     * Estadísticas del dashboard de trabajadores
+     */
+    public function dashboardStats()
+    {
+        $totalTrabajadores = Trabajador::count();
+
+        // Próximas jubilaciones: ≥55 años o ≥20 años de servicio, pero aún no jubilables
+        $proximas = Trabajador::where(function ($q) {
+            $q->where('edad', '>=', 55)->where('edad', '<', 60)
+              ->orWhere('total_anos_servicio', '>=', 20)->where('total_anos_servicio', '<', 25);
+        })->where(function ($q) {
+            $q->where('total_anos_servicio', '<', 25)
+              ->where('edad', '<', 60);
+        })->take(10)->get(['id', 'nombres', 'apellidos', 'edad', 'total_anos_servicio']);
+
+        // Estatus de datos: expedientes vs total
+        $totalExpedientes = \App\Models\Expediente::count();
+        $porcentaje = $totalTrabajadores > 0 ? round(($totalExpedientes / $totalTrabajadores) * 100, 1) : 0;
+
+        // Expedientes completos (estado_global = 100)
+        $completos = \App\Models\Expediente::where('estado_global', 100)->count();
+        $porcentajeCompletos = $totalExpedientes > 0 ? round(($completos / $totalExpedientes) * 100, 1) : 0;
+
+        return response()->json([
+            'proximas' => $proximas,
+            'total_trabajadores' => $totalTrabajadores,
+            'total_expedientes' => $totalExpedientes,
+            'porcentaje_expedientes' => $porcentaje,
+            'expedientes_completos' => $completos,
+            'porcentaje_completos' => $porcentajeCompletos,
+        ]);
+    }
+
+    /**
      * ELIMINAR trabajador (soft delete)
      */
     public function destroy($id)
