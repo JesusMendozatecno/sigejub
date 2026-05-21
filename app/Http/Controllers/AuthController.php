@@ -44,23 +44,28 @@ class AuthController extends Controller
     // 👤 REGISTRAR USUARIO
  public function register(Request $request)
 {
-    // Es recomendable validar los datos antes de crear
-   /* $request->validate([
+    $request->validate([
         'name' => 'required|string|max:255',
+        'surname' => 'required|string|max:255',
         'email' => 'required|string|email|max:255|unique:users',
-        'password' => 'required|string|min:6',
-        'role' => 'required' // Asegura que el rol sea obligatorio
-    ]);*/
+        'phone' => 'required|string|max:20',
+        'fecha_nacimiento' => 'required|date',
+        'password' => 'required|string|min:6|confirmed',
+        'role' => 'required|in:analista,admin',
+    ]);
 
     $user = User::create([
         'name' => $request->name,
+        'surname' => $request->surname,
         'email' => $request->email,
+        'phone' => $request->phone,
+        'fecha_nacimiento' => $request->fecha_nacimiento,
         'password' => Hash::make($request->password),
-        'role' => $request->role 
+        'role' => $request->role,
     ]);
 
     Activity::log('created', 'usuario', $user->id,
-        "Se registró el usuario {$user->name}");
+        "Se registró el usuario {$user->name} {$user->surname}");
 
     return redirect('login')->with('success', 'Usuario registrado correctamente');
 }
