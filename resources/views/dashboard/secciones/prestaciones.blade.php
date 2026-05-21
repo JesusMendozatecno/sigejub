@@ -1,3 +1,75 @@
+<style>
+.prestaciones-grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+}
+.prestacion-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.prestacion-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,35,102,0.1);
+    border-color: #dbeafe;
+}
+.prestacion-card .pc-foto {
+    height: 120px;
+    background: linear-gradient(135deg, #f8fafc, #eef2f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+.prestacion-card .pc-foto::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, white);
+}
+.prestacion-card .pc-foto img { width: 100%; height: 100%; object-fit: cover; }
+.prestacion-card .pc-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.prestacion-card .pc-info { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; }
+.prestacion-card .pc-info strong { font-size: 0.92rem; color: #0f172a; line-height: 1.3; }
+.prestacion-card .pc-info .pc-cedula { font-size: 0.78rem; color: #64748b; }
+.prestacion-card .pc-info .pc-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.prestacion-card .pc-anios {
+    font-size: 0.75rem; font-weight: 700; color: #1e3a8a;
+    background: #eff6ff; padding: 3px 10px; border-radius: 10px;
+}
+.prestacion-card .pc-badge {
+    font-size: 0.68rem; font-weight: 700; color: #1e40af;
+    background: #dbeafe; padding: 3px 10px; border-radius: 10px;
+}
+@media (max-width: 767px) {
+    .prestaciones-grid-cards { grid-template-columns: 1fr; }
+}
+body.dark-mode .prestacion-card { background: #1e293b; border-color: #334155; }
+body.dark-mode .prestacion-card:hover { border-color: #3b82f6; }
+body.dark-mode .prestacion-card .pc-foto { background: linear-gradient(135deg, #1a2332, #1e293b); }
+body.dark-mode .prestacion-card .pc-foto::after { background: linear-gradient(transparent, #1e293b); }
+body.dark-mode .prestacion-card .pc-avatar { background: #334155; color: #64748b; }
+body.dark-mode .prestacion-card .pc-info strong { color: #f1f5f9; }
+body.dark-mode .prestacion-card .pc-cedula { color: #94a3b8; }
+body.dark-mode .prestacion-card .pc-anios { background: #1e3a5f; color: #93c5fd; }
+body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd; }
+</style>
+
 <header class="section-header">
     <div class="header-info">
         <h1>Cálculo de Prestaciones</h1>
@@ -172,9 +244,11 @@
                     </div>
                     <div class="pc-info">
                         <strong>${t.nombres} ${t.apellidos}</strong>
-                        <span>${t.cedula}</span>
-                        <span class="pc-anios">${t.total_anos_servicio || 0} años de servicio</span>
-                        <span class="pc-badge">${t.tipo_jubilacion}</span>
+                        <span class="pc-cedula">${t.cedula} · ${t.cargo || ''}</span>
+                        <div class="pc-row">
+                            <span class="pc-anios">${t.total_anos_servicio || 0} años</span>
+                            <span class="pc-badge">${t.tipo_jubilacion}</span>
+                        </div>
                     </div>
                 `;
                 grid.appendChild(card);

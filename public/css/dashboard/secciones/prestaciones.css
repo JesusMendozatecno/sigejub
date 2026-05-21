@@ -3,41 +3,44 @@
 /* === GRID DE TARJETAS === */
 .prestaciones-grid-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
 }
 
 .prestacion-card {
     background: white;
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    overflow: hidden;
     cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 10px;
+    transition: all 0.25s ease;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .prestacion-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,35,102,0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,35,102,0.1);
     border-color: #dbeafe;
 }
 
 .prestacion-card .pc-foto {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: #f1f5f9;
+    height: 120px;
+    background: linear-gradient(135deg, #f8fafc, #eef2f6);
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.prestacion-card .pc-foto::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, white);
 }
 
 .prestacion-card .pc-foto img {
@@ -47,45 +50,59 @@
 }
 
 .prestacion-card .pc-avatar {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #94a3b8;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
 }
 
 .prestacion-card .pc-info {
+    padding: 14px 16px 16px;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
 }
 
 .prestacion-card .pc-info strong {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     color: #0f172a;
+    line-height: 1.3;
 }
 
-.prestacion-card .pc-info span {
-    font-size: 0.8rem;
+.prestacion-card .pc-info .pc-cedula {
+    font-size: 0.78rem;
     color: #64748b;
 }
 
+.prestacion-card .pc-info .pc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
 .prestacion-card .pc-anios {
-    font-weight: 600;
-    color: #1e3a8a !important;
-    font-size: 0.78rem !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #eff6ff;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: inline-block;
 }
 
 .prestacion-card .pc-badge {
-    display: inline-block;
-    margin-top: 4px;
-    padding: 3px 10px;
-    background: #eff6ff;
-    color: #1e40af;
-    border-radius: 12px;
-    font-size: 0.7rem !important;
+    font-size: 0.68rem;
     font-weight: 700;
+    color: #1e40af;
+    background: #dbeafe;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: inline-block;
 }
 
 /* === DETALLE === */
