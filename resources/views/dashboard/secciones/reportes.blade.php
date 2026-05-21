@@ -6,12 +6,12 @@
     <div class="header-actions">
         <div class="actions-group">
             <button class="btn-export-excel" type="button">
-                <i data-lucide="file-spreadsheet"></i>
+                <i class="fas fa-file-excel"></i>
                 <span>Exportar a Excel</span>
             </button>
 
             <button class="btn-export-pdf" type="button">
-                <i data-lucide="file-text"></i>
+                <i class="fas fa-file-lines"></i>
                 <span>Exportar a PDF</span>
             </button>
         </div>
@@ -22,7 +22,7 @@
     <div class="filter-group">
         <label>RANGO DE FECHAS</label>
         <div class="filter-input">
-            <i data-lucide="calendar"></i>
+            <i class="fas fa-calendar"></i>
             <span>01/01/2023 - 31/12/2023</span>
         </div>
     </div>
@@ -34,31 +34,31 @@
         <label>DEPARTAMENTO</label>
         <select><option>Todas las facultades</option></select>
     </div>
-    <button class="btn-filter-apply" type="button"><i data-lucide="filter"></i> Aplicar Filtros</button>
+    <button class="btn-filter-apply" type="button"><i class="fas fa-filter"></i> Aplicar Filtros</button>
 </div>
 
 <div class="metrics-grid-3" style="margin-top: 20px;">
     <div class="metric-card-simple">
-        <div class="metric-icon-box blue-light"><i data-lucide="clock"></i></div>
+        <div class="metric-icon-box blue-light"><i class="fas fa-clock"></i></div>
         <span class="metric-label">TIEMPO PROMEDIO</span>
         <div class="metric-value-row">
             <h2>42 <span>días</span></h2>
         </div>
-        <span class="trend down"><i data-lucide="trending-down"></i> -5.2% respecto al mes anterior</span>
+        <span class="trend down"><i class="fas fa-arrow-trend-down"></i> -5.2% respecto al mes anterior</span>
     </div>
 
     <div class="metric-card-simple">
-        <div class="metric-icon-box green-light"><i data-lucide="check-square"></i></div>
+        <div class="metric-icon-box green-light"><i class="fas fa-square-check"></i></div>
         <span class="metric-label">TRÁMITES FINALIZADOS</span>
         <div class="metric-value-row">
             <h2>1,284</h2>
         </div>
-        <span class="trend up"><i data-lucide="trending-up"></i> +12% en el último trimestre</span>
+        <span class="trend up"><i class="fas fa-arrow-trend-up"></i> +12% en el último trimestre</span>
     </div>
 
     <div class="metric-card-wide">
         <div class="metric-content-left">
-            <div class="metric-icon-box indigo-light"><i data-lucide="bar-chart-3"></i></div>
+            <div class="metric-icon-box indigo-light"><i class="fas fa-chart-bar"></i></div>
             <span class="metric-label">TOTAL PRESTACIONES PAGADAS</span>
             <div class="metric-value-row">
                 <h2>$84,295,000 <span class="currency-tag">MXN</span></h2>
@@ -69,7 +69,7 @@
             </div>
         </div>
         <div class="metric-visual-right">
-            <i data-lucide="landmark" class="bg-icon-watermark"></i>
+            <i class="fas fa-landmark bg-icon-watermark"></i>
         </div>
     </div>
 </div>
@@ -113,7 +113,7 @@
 <div class="table-card-full" style="margin-top: 20px;">
     <div class="table-header">
         <h3>Resumen Estadístico por Departamento</h3>
-        <a href="#" class="view-all">Ver desglose completo <i data-lucide="arrow-right"></i></a>
+        <a href="#" class="view-all">Ver desglose completo <i class="fas fa-arrow-right"></i></a>
     </div>
     <table class="report-table">
         <thead>
@@ -129,7 +129,7 @@
             <tr>
                 <td>
                     <div class="dept-cell">
-                        <div class="dept-icon blue"><i data-lucide="microscope"></i></div>
+                        <div class="dept-icon blue"><i class="fas fa-microscope"></i></div>
                         <div><strong>Facultad de Ingeniería</strong><br><small>División de Ciencias Básicas</small></div>
                     </div>
                 </td>
@@ -141,7 +141,7 @@
             <tr>
                 <td>
                     <div class="dept-cell">
-                        <div class="dept-icon green"><i data-lucide="stethoscope"></i></div>
+                        <div class="dept-icon green"><i class="fas fa-stethoscope"></i></div>
                         <div><strong>Facultad de Medicina</strong><br><small>Unidad de Especialidades</small></div>
                     </div>
                 </td>
@@ -153,7 +153,7 @@
             <tr>
                 <td>
                     <div class="dept-cell">
-                        <div class="dept-icon orange"><i data-lucide="gavel"></i></div>
+                        <div class="dept-icon orange"><i class="fas fa-gavel"></i></div>
                         <div><strong>Facultad de Derecho</strong><br><small>Ciencias Sociales</small></div>
                     </div>
                 </td>

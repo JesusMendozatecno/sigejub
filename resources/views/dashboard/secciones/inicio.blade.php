@@ -4,14 +4,14 @@
         <h1>Panel de Gestión Integral</h1>
     </div>
     <button class="btn-primary" onclick="switchTab('solicitudes')" type="button">
-        <i data-lucide="plus-circle"></i> Nueva Solicitud
+        <i class="fas fa-circle-plus"></i> Nueva Solicitud
     </button>
 </header>
 
 <section class="stats-grid">
     <div class="stat-card">
         <div class="card-head">
-            <div class="icon-wrap blue"><i data-lucide="users"></i></div>
+            <div class="icon-wrap blue"><i class="fas fa-users"></i></div>
         </div>
         <p>TOTAL TRABAJADORES</p>
         <h2 id="inicioTotalTrabajadores">—</h2>
@@ -19,7 +19,7 @@
 
     <div class="stat-card">
         <div class="card-head">
-            <div class="icon-wrap orange"><i data-lucide="clock"></i></div>
+            <div class="icon-wrap orange"><i class="fas fa-clock"></i></div>
         </div>
         <p>PENDIENTES</p>
         <h2 id="inicioPendientes" class="text-orange">—</h2>
@@ -27,7 +27,7 @@
 
     <div class="stat-card">
         <div class="card-head">
-            <div class="icon-wrap green"><i data-lucide="check-circle"></i></div>
+            <div class="icon-wrap green"><i class="fas fa-circle-check"></i></div>
         </div>
         <p>APROBADAS</p>
         <h2 id="inicioAprobadas" class="text-green">—</h2>
@@ -35,7 +35,7 @@
 
     <div class="stat-card">
         <div class="card-head">
-            <div class="icon-wrap red"><i data-lucide="x-circle"></i></div>
+            <div class="icon-wrap red"><i class="fas fa-circle-xmark"></i></div>
         </div>
         <p>RECHAZADAS</p>
         <h2 id="inicioRechazadas" class="text-red">—</h2>
@@ -78,7 +78,7 @@
 
         <div class="info-banner-dark" id="datoInstitucional">
             <div class="info-head">
-                <i data-lucide="lightbulb"></i>
+                <i class="fas fa-lightbulb"></i>
                 <h4>Dato Institucional</h4>
             </div>
             <p id="datoInstitucionalTexto">Cargando estadísticas...</p>
@@ -86,7 +86,7 @@
     </div>
 
     <section class="recent-activity" style="height: 100%;">
-        <h3 class="section-title"><i data-lucide="history"></i> Actividad Reciente</h3>
+        <h3 class="section-title"><i class="fas fa-clock-rotate-left"></i> Actividad Reciente</h3>
         <div class="activity-list" id="actividadRecienteLista">
             <div class="activity-item" style="padding: 16px; color: #94a3b8; text-align: center; font-size: 0.85rem;">
                 Cargando...
@@ -98,13 +98,13 @@
 <script>
 (function() {
     const ICON_MAP = {
-        created: { 'trabajador': ['users', 'green'], 'solicitud': ['file-text', 'blue'], 'usuario': ['user-plus', 'purple'] },
-        updated: { 'trabajador': ['edit-3', 'orange'], 'solicitud': ['edit', 'orange'] },
-        deleted: { 'trabajador': ['trash-2', 'red'], 'solicitud': ['x-circle', 'red'] },
+        created: { 'trabajador': ['fa-users', 'green'], 'solicitud': ['fa-file-lines', 'blue'], 'usuario': ['fa-user-plus', 'purple'] },
+        updated: { 'trabajador': ['fa-pen', 'orange'], 'solicitud': ['fa-pen-to-square', 'orange'] },
+        deleted: { 'trabajador': ['fa-trash-can', 'red'], 'solicitud': ['fa-circle-xmark', 'red'] },
     };
 
     function getActivityIcon(action, subjectType) {
-        const fallback = ['circle', 'blue'];
+        const fallback = ['fa-circle', 'blue'];
         return (ICON_MAP[action] && ICON_MAP[action][subjectType]) || fallback;
     }
 
@@ -136,7 +136,7 @@
                 const div = document.createElement('div');
                 div.className = 'activity-item';
                 div.innerHTML = `
-                    <div class="activity-icon ${color}"><i data-lucide="${icon}"></i></div>
+                    <div class="activity-icon ${color}"><i class="fas ${icon}"></i></div>
                     <div class="activity-text">
                         <p>${a.description}</p>
                         <span>${user} • ${timeAgo(a.created_at)}</span>
@@ -144,7 +144,6 @@
                 `;
                 container.appendChild(div);
             });
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al cargar actividades:', err);
         }
@@ -237,7 +236,6 @@
                 }
             }
 
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al cargar estadísticas de inicio:', err);
         }

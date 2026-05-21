@@ -46,7 +46,6 @@
                 }
 
                 modal.style.display = 'flex';
-                if (typeof lucide !== 'undefined') lucide.createIcons();
             });
         }
 
@@ -73,9 +72,8 @@
                 modoEdicionActivo = true;
                 habilitarCamposFormulario(true);
                 modalTitle.innerHTML = "Modificar<br>Expediente";
-                btnHabilitarEdicion.innerHTML = '<i data-lucide="save"></i> Guardar Cambios';
+                btnHabilitarEdicion.innerHTML = '<i class="fas fa-floppy-disk"></i> Guardar Cambios';
                 if (btnSubmit) btnSubmit.style.display = 'none';
-                if (typeof lucide !== 'undefined') lucide.createIcons();
             });
         }
 
@@ -183,13 +181,13 @@
                 btnVer.className = 'btn-icon btn-ver';
                 btnVer.title = 'Ver Expediente';
                 btnVer.onclick = () => window.sigejubVerTrabajador(t.id, btnVer);
-                const iconEye = document.createElement('i'); iconEye.setAttribute('data-lucide', 'eye');
+                const iconEye = document.createElement('i'); iconEye.className = 'fas fa-eye';
                 btnVer.appendChild(iconEye);
                 const btnEliminar = document.createElement('button');
                 btnEliminar.className = 'btn-icon btn-eliminar';
                 btnEliminar.title = 'Dar de Baja';
                 btnEliminar.onclick = () => window.sigejubEliminarTrabajador(t.id, `${t.nombres} ${t.apellidos}`, btnEliminar);
-                const iconTrash = document.createElement('i'); iconTrash.setAttribute('data-lucide', 'trash-2');
+                const iconTrash = document.createElement('i'); iconTrash.className = 'fas fa-trash-can';
                 btnEliminar.appendChild(iconTrash);
                 div.appendChild(btnVer);
                 div.appendChild(btnEliminar);
@@ -198,7 +196,6 @@
                 tr.append(tdId, tdNombre, tdCedula, tdCargo, tdTipo, tdEstatus, tdAcciones);
                 tbody.appendChild(tr);
 
-                if (typeof lucide !== 'undefined') lucide.createIcons();
             });
 
         } catch (err) {
@@ -238,13 +235,12 @@
             modalTitle.innerHTML = "Expediente<br>Laboral";
             modalDescription.textContent = "Modo de lectura institucional. Use el botón inferior para editar.";
             if (btnHabilitarEdicion) {
-                btnHabilitarEdicion.innerHTML = '<i data-lucide="edit-3"></i> Editar Expediente';
+                btnHabilitarEdicion.innerHTML = '<i class="fas fa-pen"></i> Editar Expediente';
                 btnHabilitarEdicion.style.display = 'flex';
             }
             if (btnSubmit) btnSubmit.style.display = 'none';
 
             modal.style.display = 'flex';
-            if (typeof lucide !== 'undefined') lucide.createIcons();
 
         } catch (err) {
             mostrarToast(err.message, 'error');
@@ -258,7 +254,6 @@
         filaSeleccionadaDOM = elemento.closest('tr');
         if (deleteWorkerName) deleteWorkerName.textContent = nombre;
         if (modalEliminar) modalEliminar.style.display = 'flex';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
     async function ejecutarBajaTrabajador() {
@@ -322,7 +317,6 @@
                             </div>`
                         ).join('');
                 }
-                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
 
             // Estatus de datos

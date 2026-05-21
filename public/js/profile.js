@@ -6,7 +6,6 @@ function inicializarPerfil() {
     }
     document.documentElement.style.setProperty('--accent', window.SIGEJUB_ACCENT_COLOR || '#1a365d');
     if (document.getElementById('tab-actividad')?.classList.contains('active')) cargarActividad();
-    lucide.createIcons();
 }
 
 document.addEventListener('DOMContentLoaded', inicializarPerfil);
@@ -166,9 +165,8 @@ async function cargarSesiones() {
         var sessions = await r.json();
         if (!sessions.length) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Sin sesiones activas</p>'; return; }
         el.innerHTML = sessions.map(function(s) {
-            return '<div class="session-item' + (s.is_current ? ' current' : '') + '"><div class="session-device"><i data-lucide="' + (s.is_current ? 'smartphone' : 'laptop') + '" size="20"></i><div class="session-info"><p>' + (s.user_agent ? s.user_agent.substring(0, 60) + '...' : 'Dispositivo desconocido') + (s.is_current ? ' <span class="session-badge current">Actual</span>' : '') + '</p><span>' + s.ip_address + ' — ' + (s.last_activity_humans || 'desconocido') + '</span></div></div>' + (!s.is_current ? '<button class="btn btn-danger btn-sm" onclick="eliminarSesion(\'' + s.id + '\')">Cerrar</button>' : '') + '</div>';
+            return '<div class="session-item' + (s.is_current ? ' current' : '') + '"><div class="session-device"><i class="fas ' + (s.is_current ? 'fa-mobile-screen-button' : 'fa-laptop') + '"></i><div class="session-info"><p>' + (s.user_agent ? s.user_agent.substring(0, 60) + '...' : 'Dispositivo desconocido') + (s.is_current ? ' <span class="session-badge current">Actual</span>' : '') + '</p><span>' + s.ip_address + ' — ' + (s.last_activity_humans || 'desconocido') + '</span></div></div>' + (!s.is_current ? '<button class="btn btn-danger btn-sm" onclick="eliminarSesion(\'' + s.id + '\')">Cerrar</button>' : '') + '</div>';
         }).join('');
-        lucide.createIcons();
     } catch (err) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Error al cargar sesiones</p>'; }
 }
 
@@ -251,13 +249,12 @@ async function cargarActividad() {
         document.getElementById('statUltimaIP').textContent = stats.ultima_ip || '—';
         if (!acts.length) { list.innerHTML = '<p class="text-muted text-center" style="padding:20px;">No hay actividad registrada</p>'; return; }
         list.innerHTML = acts.map(function(a) {
-            var icons = { created: { trabajador: ['users','green'], solicitud: ['file-text','blue'], usuario: ['user-plus','purple'], documento: ['file','blue'], notificacion: ['bell','purple'] }, updated: { trabajador: ['edit-3','orange'], solicitud: ['edit','orange'], usuario: ['edit','orange'] }, deleted: { trabajador: ['trash-2','red'], solicitud: ['x-circle','red'] } };
+            var icons = { created: { trabajador: ['users','green'], solicitud: ['file-lines','blue'], usuario: ['user-plus','purple'], documento: ['file','blue'], notificacion: ['bell','purple'] }, updated: { trabajador: ['pen','orange'], solicitud: ['pen-to-square','orange'], usuario: ['pen-to-square','orange'] }, deleted: { trabajador: ['trash-can','red'], solicitud: ['circle-xmark','red'] } };
             var fallback = ['circle','blue'];
             var iconData = (icons[a.action] && icons[a.action][a.subject_type]) || fallback;
             var fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-            return '<div class="activity-item"><div class="activity-icon ' + iconData[1] + '"><i data-lucide="' + iconData[0] + '" size="16"></i></div><div class="activity-text"><p>' + (a.description || a.action + ' ' + a.subject_type) + '</p><span>' + fecha + '</span></div></div>';
+            return '<div class="activity-item"><div class="activity-icon ' + iconData[1] + '"><i class="fas fa-' + iconData[0] + '"></i></div><div class="activity-text"><p>' + (a.description || a.action + ' ' + a.subject_type) + '</p><span>' + fecha + '</span></div></div>';
         }).join('');
-        lucide.createIcons();
     } catch (err) { list.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Error al cargar actividad</p>'; }
 }
 
@@ -283,9 +280,8 @@ async function cargarAdminUsuarios() {
         var data = await r.json();
         if (!data.data || !data.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Sin usuarios</td></tr>'; return; }
         tbody.innerHTML = data.data.map(function(u) {
-            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.name.charAt(0).toUpperCase()) + '</div>' + u.name + '</div></td><td>' + u.email + '</td><td><select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(' + u.id + ', this.value)"><option value="analista"' + (u.role === 'analista' ? ' selected' : '') + '>Analista</option><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Admin</option></select></td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.name.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i data-lucide="message-square" size="14"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(' + u.id + ')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
+            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.name.charAt(0).toUpperCase()) + '</div>' + u.name + '</div></td><td>' + u.email + '</td><td><select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(' + u.id + ', this.value)"><option value="analista"' + (u.role === 'analista' ? ' selected' : '') + '>Analista</option><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Admin</option></select></td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.name.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i class="fas fa-message"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(' + u.id + ')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
         }).join('');
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Error al cargar</td></tr>'; }
 }
 

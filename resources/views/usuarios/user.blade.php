@@ -7,10 +7,10 @@
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="https://unpkg.com/lucide@1.16.0"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('css/cropperjs/cropper.min.css') }}">
+    <script defer src="{{ asset('js/cropperjs/cropper.min.js') }}"></script>
     <style>
         :root { --accent: {{ $user->accent_color ?? '#1a365d' }}; }
         body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; min-height: 100vh; }
@@ -169,7 +169,7 @@
     <div class="profile-header">
         <div class="flex-center gap-3">
             <a href="{{ route('dashboard') }}" class="btn-back" title="Volver al dashboard">
-                <i data-lucide="arrow-left" size="20"></i>
+                <i class="fas fa-arrow-left"></i>
             </a>
             <h1>Mi Perfil</h1>
         </div>
@@ -184,9 +184,9 @@
                     @if($user->avatar)
                         <img id="profileAvatarImg" src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar">
                     @else
-                        <i data-lucide="user" size="48" class="avatar-placeholder" id="profileAvatarPlaceholder"></i>
+                        <i class="fas fa-user fa-3x avatar-placeholder" id="profileAvatarPlaceholder"></i>
                     @endif
-                    <div class="avatar-overlay"><i data-lucide="camera" size="18"></i></div>
+                    <div class="avatar-overlay"><i class="fas fa-camera"></i></div>
                 </div>
                 <input type="file" id="avatarInput" hidden accept="image/*" onchange="onAvatarSelect(event)">
                 <h2 class="profile-name">{{ $user->name }}</h2>
@@ -197,28 +197,28 @@
             </div>
             <div class="profile-nav">
                 <button class="profile-nav-item active" data-tab="tab-perfil">
-                    <i data-lucide="user" size="18"></i> Mi Perfil
+                    <i class="fas fa-user"></i> Mi Perfil
                 </button>
                 <button class="profile-nav-item" data-tab="tab-seguridad">
-                    <i data-lucide="shield" size="18"></i> Seguridad
+                    <i class="fas fa-shield"></i> Seguridad
                 </button>
                 <button class="profile-nav-item" data-tab="tab-configuracion">
-                    <i data-lucide="settings" size="18"></i> Configuración
+                    <i class="fas fa-gear"></i> Configuración
                 </button>
                 <button class="profile-nav-item" data-tab="tab-actividad">
-                    <i data-lucide="activity" size="18"></i> Actividad
+                    <i class="fas fa-wave-square"></i> Actividad
                 </button>
                 @if($user->role === 'admin')
                 <div class="profile-nav-divider"></div>
                 <button class="profile-nav-item" data-tab="tab-admin">
-                    <i data-lucide="shield" size="18"></i> Administración
+                    <i class="fas fa-shield"></i> Administración
                 </button>
                 @endif
                 <div class="profile-nav-divider"></div>
                 <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                     @csrf
                     <button type="submit" class="profile-nav-item" style="color:#dc2626;">
-                        <i data-lucide="log-out" size="18"></i> Cerrar sesión
+                        <i class="fas fa-right-from-bracket"></i> Cerrar sesión
                     </button>
                 </form>
             </div>
@@ -304,11 +304,11 @@
                 <h4 style="font-size:0.9rem;color:#0f172a;margin:0 0 12px;">Tema</h4>
                 <div class="theme-toggle mb-4">
                     <div class="theme-option {{ $user->theme === 'light' ? 'selected' : '' }}" data-theme="light" onclick="cambiarTema('light')">
-                        <i data-lucide="sun" size="22"></i>
+                        <i class="fas fa-sun fa-fw"></i>
                         <span>Claro</span>
                     </div>
                     <div class="theme-option {{ $user->theme === 'dark' ? 'selected' : '' }}" data-theme="dark" onclick="cambiarTema('dark')">
-                        <i data-lucide="moon" size="22"></i>
+                        <i class="fas fa-moon fa-fw"></i>
                         <span>Oscuro</span>
                     </div>
                 </div>
@@ -382,13 +382,13 @@
 
                 <div style="display:flex;gap:12px;margin-bottom:16px;">
                     <button class="btn btn-secondary btn-sm active admin-tab-btn" data-admin-tab="admin-usuarios" onclick="cambiarAdminTab('admin-usuarios')">
-                        <i data-lucide="users" size="16"></i> Usuarios
+                        <i class="fas fa-users"></i> Usuarios
                     </button>
                     <button class="btn btn-secondary btn-sm admin-tab-btn" data-admin-tab="admin-actividad" onclick="cambiarAdminTab('admin-actividad')">
-                        <i data-lucide="activity" size="16"></i> Actividad global
+                        <i class="fas fa-wave-square"></i> Actividad global
                     </button>
                     <button class="btn btn-secondary btn-sm admin-tab-btn" data-admin-tab="admin-config" onclick="cambiarAdminTab('admin-config')">
-                        <i data-lucide="globe" size="16"></i> Config. global
+                        <i class="fas fa-globe"></i> Config. global
                     </button>
                 </div>
 
@@ -460,7 +460,7 @@
 <!-- Modal Enviar Notificación -->
 <div class="modal-overlay" id="modalEnviarNotificacion">
     <div class="modal-box" style="max-width:480px;">
-        <h3><i data-lucide="bell" size="18"></i> Enviar mensaje</h3>
+        <h3><i class="fas fa-bell"></i> Enviar mensaje</h3>
         <form id="formEnviarNotificacion">
             <input type="hidden" name="user_id" id="notifUserId">
             <div class="form-group">

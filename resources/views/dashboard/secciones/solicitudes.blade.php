@@ -8,7 +8,7 @@
     </div>
     <div class="header-actions">
         <button type="button" class="btn-primary-dark" onclick="abrirModalSolicitud()">
-            <i data-lucide="plus-circle" size="20"></i> Nueva Solicitud
+            <i class="fas fa-circle-plus" size="20"></i> Nueva Solicitud
         </button>
     </div>
 </header>
@@ -25,7 +25,7 @@
     </div>
     <div class="list-actions">
         <button class="btn-outline" onclick="exportarSolicitudesPDF()">
-            <i data-lucide="download" size="16"></i> Exportar PDF
+            <i class="fas fa-download" size="16"></i> Exportar PDF
         </button>
     </div>
 </div>
@@ -53,28 +53,28 @@
 
 <section class="metrics-row" style="margin-top: 20px;">
     <div class="metric-card">
-        <div class="metric-icon orange"><i data-lucide="hourglass"></i></div>
+        <div class="metric-icon orange"><i class="fas fa-hourglass"></i></div>
         <div class="metric-data">
             <h3 id="metricPendientes">0</h3>
             <p>ESPERANDO REVISIÓN</p>
         </div>
     </div>
     <div class="metric-card">
-        <div class="metric-icon green"><i data-lucide="check-circle-2"></i></div>
+        <div class="metric-icon green"><i class="fas fa-circle-check"></i></div>
         <div class="metric-data">
             <h3 id="metricAprobadas">0</h3>
             <p>TOTAL APROBADAS</p>
         </div>
     </div>
     <div class="metric-card">
-        <div class="metric-icon blue"><i data-lucide="timer"></i></div>
+        <div class="metric-icon blue"><i class="fas fa-stopwatch"></i></div>
         <div class="metric-data">
             <h3 id="metricTotal">0</h3>
             <p>TOTAL SOLICITUDES</p>
         </div>
     </div>
     <div class="metric-card">
-        <div class="metric-icon red"><i data-lucide="x-circle"></i></div>
+        <div class="metric-icon red"><i class="fas fa-circle-xmark"></i></div>
         <div class="metric-data">
             <h3 id="metricRechazadas">0</h3>
             <p>TOTAL RECHAZADAS</p>
@@ -90,11 +90,11 @@
             <p>Complete cuidadosamente todos los campos requeridos para iniciar el proceso de retiro administrativo del trabajador.</p>
             <div class="modal-info-list">
                 <div class="info-item">
-                    <i data-lucide="info"></i>
+                    <i class="fas fa-circle-info"></i>
                     <span>Los documentos PDF deben ser legibles y estar actualizados.</span>
                 </div>
                 <div class="info-item">
-                    <i data-lucide="shield-check"></i>
+                    <i class="fas fa-shield-check"></i>
                     <span>Este proceso cumple con la normativa de seguridad de datos institucionales.</span>
                 </div>
             </div>
@@ -105,7 +105,7 @@
             <form id="formSolicitud" data-action="{{ route('solicitudes.store') }}">
                 @csrf
                 <section class="form-section">
-                    <h3><i data-lucide="file-text"></i> Información General</h3>
+                    <h3><i class="fas fa-file-lines"></i> Información General</h3>
                     <div class="form-row-3">
                         <div class="input-group">
                             <label>TRABAJADOR</label>
@@ -143,7 +143,7 @@
                 </section>
 
                 <section class="form-section">
-                    <h3><i data-lucide="user"></i> Datos del Trabajador</h3>
+                    <h3><i class="fas fa-user"></i> Datos del Trabajador</h3>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>NOMBRE COMPLETO</label>
@@ -157,7 +157,7 @@
                 </section>
 
                 <section class="form-section">
-                    <h3><i data-lucide="align-left"></i> Observaciones</h3>
+                    <h3><i class="fas fa-align-left"></i> Observaciones</h3>
                     <textarea class="form-textarea" name="observaciones" placeholder="Indique cualquier detalle adicional relevante para el trámite..."></textarea>
                 </section>
 
@@ -184,7 +184,7 @@
                 <input type="hidden" name="_method" value="PUT">
                 <input type="hidden" name="solicitud_id" id="editSolicitudId">
                 <section class="form-section">
-                    <h3><i data-lucide="file-text"></i> Solicitud</h3>
+                    <h3><i class="fas fa-file-lines"></i> Solicitud</h3>
                     <p style="margin: 8px 0; font-size: 0.9rem;">
                         <strong id="editFolio">—</strong> —
                         <span id="editTrabajadorNombre">—</span>
@@ -224,7 +224,7 @@
         </aside>
         <main class="modal-form-content">
             <section class="form-section">
-                <h3><i data-lucide="file-text"></i> Información General</h3>
+                <h3><i class="fas fa-file-lines"></i> Información General</h3>
                 <div class="form-row-2">
                     <div class="input-group">
                         <label>FOLIO</label>
@@ -254,7 +254,7 @@
             </section>
 
             <section class="form-section">
-                <h3><i data-lucide="user"></i> Datos del Trabajador</h3>
+                <h3><i class="fas fa-user"></i> Datos del Trabajador</h3>
                 <div class="form-row-2">
                     <div class="input-group">
                         <label>NOMBRE COMPLETO</label>
@@ -288,7 +288,7 @@
             </section>
 
             <section class="form-section">
-                <h3><i data-lucide="align-left"></i> Observaciones</h3>
+                <h3><i class="fas fa-align-left"></i> Observaciones</h3>
                 <textarea class="form-textarea" id="verObservaciones" readonly style="resize: none;">—</textarea>
             </section>
         </main>
@@ -413,14 +413,12 @@
                     <td>${periodo}</td>
                     <td><span class="badge-status ${badgeClass}">${badgeText}</span></td>
                     <td class="actions">
-                        <i data-lucide="eye" class="btn-icon btn-ver-solicitud" title="Ver Detalle" data-id="${s.id}"></i>
-                        <i data-lucide="edit-2" class="btn-icon btn-editar-solicitud" title="Editar" data-id="${s.id}"></i>
+                        <i class="fas fa-eye btn-icon btn-ver-solicitud" title="Ver Detalle" data-id="${s.id}"></i>
+                        <i class="fas fa-pen btn-icon btn-editar-solicitud" title="Editar" data-id="${s.id}"></i>
                     </td>
                 `;
                 tbody.appendChild(fila);
             });
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
 
             const total = data.total || data.data.length;
             document.getElementById('solicitudesCounter').textContent = `Mostrando ${data.data.length} de ${total} solicitudes`;
@@ -469,116 +467,7 @@
     window.abrirModalSolicitud = function() {
         const modal = document.getElementById('modalSolicitud');
         if (modal) {
-            modal.style.display = 'flex';
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-    };
-
-    function cerrarModalSolicitud() {
-        const modal = document.getElementById('modalSolicitud');
-        if (modal) modal.style.display = 'none';
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnCerrar = document.getElementById('closeModalSolicitud');
-        const btnCancelar = document.getElementById('btnCancelarSolicitud');
-        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModalSolicitud);
-        if (btnCancelar) btnCancelar.addEventListener('click', cerrarModalSolicitud);
-
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('modalSolicitud');
-            if (e.target === modal) cerrarModalSolicitud();
-        });
-    });
-
-    // === 7. ENVÍO DEL FORMULARIO VIA AJAX ===
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('formSolicitud');
-        if (!form) return;
-
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const url = this.getAttribute('data-action');
-            const formData = new FormData(this);
-            const btnSubmit = this.querySelector('.btn-submit');
-
-            if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Guardando...'; }
-
-            try {
-                mostrarCargando('Registrando solicitud...');
-                const resp = await fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                        'Accept': 'application/json'
-                    }
-                });
-                const data = await resp.json();
-                if (!resp.ok) throw data;
-
-                mostrarToast(data.message || 'Solicitud registrada exitosamente.', 'success');
-                this.reset();
-                cerrarModalSolicitud();
-                cargarSolicitudes(currentStatus);
-                cargarMetricas();
-
-            } catch (err) {
-                if (err.errors) {
-                    mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
-                } else {
-                    mostrarToast(err.message || 'Error en el sistema.', 'error');
-                }
-            } finally {
-                ocultarCargando();
-                if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Registrar Solicitud'; }
-            }
-        });
-    });
-
-    // === 8. INICIALIZAR AL ENTRAR A LA PESTAÑA ===
-    document.addEventListener('DOMContentLoaded', function() {
-        cargarSelectTrabajadores();
-        cargarSolicitudes('all');
-        cargarMetricas();
-    });
-
-    // === 8.5 VER DETALLE DE SOLICITUD ===
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.btn-ver-solicitud');
-        if (!btn) return;
-
-        const id = btn.dataset.id;
-        const folio = `#SOL-${String(id).padStart(4, '0')}`;
-
-        mostrarCargando('Cargando detalle...');
-        fetch(`/solicitudes/${id}`)
-            .then(r => r.json())
-            .then(s => {
-                ocultarCargando();
-                const t = s.trabajador || {};
-                const badgeClass = s.estado === 'pendiente' ? 'pending' : (s.estado === 'aprobado' ? 'approved' : 'rejected');
-                const badgeText = s.estado.charAt(0).toUpperCase() + s.estado.slice(1);
-                const fecha = s.fecha_solicitud ? new Date(s.fecha_solicitud + 'T12:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
-
-                document.getElementById('verFolio').value = folio;
-                document.getElementById('verEstatus').value = badgeText;
-                document.getElementById('verFecha').value = fecha;
-                document.getElementById('verPeriodo').value = s.periodo || '—';
-                document.getElementById('verTipo').value = s.tipo_jubilacion || '—';
-                document.getElementById('verNombre').value = [t.nombres, t.apellidos].filter(Boolean).join(' ') || '—';
-                document.getElementById('verCedula').value = t.cedula || '—';
-                document.getElementById('verCargo').value = t.cargo || '—';
-                document.getElementById('verUnidad').value = t.unidad_departamento || '—';
-                document.getElementById('verEdad').value = t.edad != null ? `${t.edad} años` : '—';
-                document.getElementById('verAnosServicio').value = t.total_anos_servicio != null ? `${t.total_anos_servicio} años` : '—';
-                document.getElementById('verObservaciones').value = s.observaciones || 'Sin observaciones.';
-
-                const modal = document.getElementById('modalVerSolicitud');
-                if (modal) {
                     modal.style.display = 'flex';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             })
             .catch(err => {
@@ -626,7 +515,6 @@
                 const modal = document.getElementById('modalEditarSolicitud');
                 if (modal) {
                     modal.style.display = 'flex';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             })
             .catch(err => {

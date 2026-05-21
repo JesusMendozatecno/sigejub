@@ -6,14 +6,14 @@
         </div>
         <div class="header-actions">
             <button type="button" class="btn-primary-dark" id="btnCrearExpediente">
-                <i data-lucide="folder-plus" size="20"></i> Crear Expediente
+                <i class="fas fa-folder-plus" size="20"></i> Crear Expediente
             </button>
         </div>
     </header>
 
     <div class="search-filter-bar">
         <div class="search-wrapper">
-            <i data-lucide="search" size="16"></i>
+            <i class="fas fa-search" size="16"></i>
             <input type="text" id="buscadorExpedientes" placeholder="Buscar por nombre o cédula...">
         </div>
         <div class="filter-group-sm">
@@ -34,7 +34,7 @@
 <div id="expediente-detalle" class="hidden">
     <div class="detalle-header">
         <button class="btn-volver" onclick="volverALista()">
-            <i data-lucide="arrow-left"></i>
+            <i class="fas fa-arrow-left"></i>
             <span>Volver a Expedientes</span>
         </button>
         <div class="detalle-header-right">
@@ -54,7 +54,7 @@
                 <div class="foto-expediente" id="fotoExpediente">
                     <img src="" alt="Foto" id="imgFotoCarnet">
                     <div class="foto-placeholder" id="fotoPlaceholder">
-                        <i data-lucide="user" size="48"></i>
+                        <i class="fas fa-user" size="48"></i>
                     </div>
                 </div>
                 <h2 id="detalleNombre"></h2>
@@ -70,7 +70,7 @@
             </div>
 
             <div class="notas-admin-card">
-                <h4><i data-lucide="edit-3" size="14"></i> Notas del Admin</h4>
+                <h4><i class="fas fa-pen" size="14"></i> Notas del Admin</h4>
                 <textarea id="notasAdminInput" placeholder="Agregar nota..."></textarea>
                 <button class="btn-guardar-notas" id="btnGuardarNotas">Guardar</button>
             </div>
@@ -89,8 +89,8 @@
             </div>
 
             <div class="documentos-header">
-                <h3><i data-lucide="file-text" size="18"></i> Documentos</h3>
-                <button class="btn-subir-doc" id="btnSubirDoc"><i data-lucide="upload" size="16"></i> Subir Documento</button>
+                <h3><i class="fas fa-file-lines" size="18"></i> Documentos</h3>
+                <button class="btn-subir-doc" id="btnSubirDoc"><i class="fas fa-upload" size="16"></i> Subir Documento</button>
             </div>
 
             <div class="documentos-list" id="documentosList">
@@ -98,7 +98,7 @@
             </div>
 
             <div class="historial-card">
-                <h4><i data-lucide="activity" size="16"></i> Actividad del Expediente</h4>
+                <h4><i class="fas fa-wave-square" size="16"></i> Actividad del Expediente</h4>
                 <div id="expedienteActividad">
                     <p class="empty-state" style="padding:15px;text-align:center;color:#94a3b8;">Sin actividad registrada</p>
                 </div>
@@ -118,14 +118,14 @@
             <button class="btn-close-absolute" id="closeModalExpediente" type="button">&times;</button>
             <form id="formCrearExpediente">
                 <section class="form-section">
-                    <h3><i data-lucide="search"></i> Buscar Trabajador</h3>
+                    <h3><i class="fas fa-search"></i> Buscar Trabajador</h3>
                     <div class="busqueda-cedula-row">
                         <input type="text" id="inputBuscarCedula" placeholder="Ingrese la cédula (V-00000000)" required>
                         <button type="button" class="btn-submit" id="btnBuscarTrabajador">Buscar</button>
                     </div>
                     <div id="resultadoBusqueda" class="hidden">
                         <div class="trabajador-encontrado">
-                            <div class="te-avatar"><i data-lucide="user-check" size="32"></i></div>
+                            <div class="te-avatar"><i class="fas fa-user-check" size="32"></i></div>
                             <div class="te-info">
                                 <strong id="teNombre"></strong>
                                 <span id="teCedula"></span>
@@ -139,22 +139,22 @@
                 </section>
 
                 <section class="form-section">
-                    <h3><i data-lucide="camera"></i> Foto Carnet</h3>
+                    <h3><i class="fas fa-camera"></i> Foto Carnet</h3>
                     <div class="upload-photo-area">
                         <input type="file" name="foto_carnet" id="inputFotoCarnet" accept="image/*" class="hidden">
                         <div class="photo-preview" id="photoPreview">
-                            <i data-lucide="image" size="40"></i>
+                            <i class="fas fa-image" size="40"></i>
                             <p>Haga clic para subir la foto carnet del trabajador</p>
                         </div>
                     </div>
                 </section>
 
                 <section class="form-section">
-                    <h3><i data-lucide="upload"></i> Documentos</h3>
+                    <h3><i class="fas fa-upload"></i> Documentos</h3>
                     <p style="font-size:0.85rem;color:#64748b;margin-bottom:15px;">Seleccione los archivos PDF o imágenes para adjuntar al expediente.</p>
                     <input type="file" name="documentos[]" id="inputDocumentos" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden">
                     <div class="dropzone-docs" id="dropzoneDocs">
-                        <i data-lucide="upload-cloud" size="36"></i>
+                        <i class="fas fa-cloud-arrow-up" size="36"></i>
                         <p>Arrastre los archivos aquí o haga clic para seleccionar</p>
                         <span>PDF, DOC, JPG hasta 5MB</span>
                     </div>
@@ -204,16 +204,16 @@
     let expedienteActualId = null;
 
     const ICONOS_DOC = {
-        'Cédula de Identidad': 'user-check',
-        'Oficio de Solicitud': 'file-text',
-        'Punto de Cuenta': 'file-text',
-        'Constancia de Trabajo': 'clipboard',
-        'Recibo de Nómina': 'dollar-sign',
-        'Informe Médico': 'heart-pulse',
+        'Cédula de Identidad': 'fa-user-check',
+        'Oficio de Solicitud': 'fa-file-lines',
+        'Punto de Cuenta': 'fa-file-lines',
+        'Constancia de Trabajo': 'fa-clipboard',
+        'Recibo de Nómina': 'fa-dollar-sign',
+        'Informe Médico': 'fa-heart-pulse',
     };
 
     function getDocIcon(nombre) {
-        return ICONOS_DOC[nombre] || 'file';
+        return ICONOS_DOC[nombre] || 'fa-file';
     }
 
     // === CARGAR LISTA DE EXPEDIENTES ===
@@ -239,7 +239,7 @@
                 card.onclick = () => abrirDetalle(exp.id);
                 card.innerHTML = `
                     <div class="ec-foto">
-                        ${foto ? `<img src="${foto}" alt="">` : `<div class="ec-avatar"><i data-lucide="user" size="28"></i></div>`}
+                        ${foto ? `<img src="${foto}" alt="">` : `<div class="ec-avatar"><i class="fas fa-user" size="28"></i></div>`}
                     </div>
                     <div class="ec-info">
                         <strong>${t.nombres || ''} ${t.apellidos || ''}</strong>
@@ -249,7 +249,6 @@
                 `;
                 grid.appendChild(card);
             });
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al cargar expedientes:', err);
             grid.innerHTML = '<p class="empty-state">Error al cargar expedientes.</p>';
@@ -293,8 +292,6 @@
             actualizarProgresoGlobal(exp.estado_global || 0);
             renderDocumentos(exp.documentos || []);
             cargarActividadExpediente();
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al abrir detalle:', err);
         } finally {
@@ -328,26 +325,25 @@
             const div = document.createElement('div');
             div.className = `doc-item-row ${doc.estado === 'rechazado' ? 'error' : ''}`;
             div.innerHTML = `
-                <div class="doc-icon ${est.cls}"><i data-lucide="${icono}"></i></div>
+                <div class="doc-icon ${est.cls}"><i class="fas ${icono}"></i></div>
                 <div class="doc-info">
                     <h4>${doc.nombre}</h4>
                     <span class="status-tag ${est.cls}">● ${est.txt}</span>
                     ${doc.nota_rechazo ? `<p class="rechazo-nota">"${doc.nota_rechazo}"</p>` : ''}
                 </div>
                 <div class="doc-btns">
-                    <button class="btn-view" onclick="window.open('/storage/${doc.archivo}','_blank')" title="Ver"><i data-lucide="eye"></i></button>
-                    ${doc.estado === 'rechazado' ? `<button class="btn-action-primary btn-reupload" data-id="${doc.id}" title="Re-subir">${'<i data-lucide="refresh-cw"></i>'} Corregir</button>` : ''}
+                    <button class="btn-view" onclick="window.open('/storage/${doc.archivo}','_blank')" title="Ver"><i class="fas fa-eye"></i></button>
+                    ${doc.estado === 'rechazado' ? `<button class="btn-action-primary btn-reupload" data-id="${doc.id}" title="Re-subir">${'<i class="fas fa-rotate"></i>'} Corregir</button>` : ''}
                     ${doc.estado === 'en_revision' ? `
                         <div class="doc-actions-inline">
-                            <button class="btn-approve" data-id="${doc.id}" title="Aprobar"><i data-lucide="check"></i></button>
-                            <button class="btn-reject" data-id="${doc.id}" title="Rechazar"><i data-lucide="x"></i></button>
+                            <button class="btn-approve" data-id="${doc.id}" title="Aprobar"><i class="fas fa-check"></i></button>
+                            <button class="btn-reject" data-id="${doc.id}" title="Rechazar"><i class="fas fa-xmark"></i></button>
                         </div>
                     ` : ''}
                 </div>
             `;
             container.appendChild(div);
         });
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function cargarActividadExpediente() {
@@ -373,7 +369,6 @@
             document.getElementById('errorBusqueda').classList.add('hidden');
             document.getElementById('formCrearExpediente').reset();
             document.getElementById('filePreviewList').innerHTML = '';
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         });
 
         // Cerrar modal crear
@@ -436,8 +431,7 @@
                 };
                 reader.readAsDataURL(file);
             } else {
-                preview.innerHTML = `<i data-lucide="image" size="40"></i><p>Haga clic para subir la foto carnet del trabajador</p>`;
-                if (typeof lucide !== 'undefined') lucide.createIcons();
+                preview.innerHTML = `<i class="fas fa-image" size="40"></i><p>Haga clic para subir la foto carnet del trabajador</p>`;
             }
         });
 
@@ -458,10 +452,9 @@
             fileList.innerHTML = '';
             Array.from(inputDocs.files).forEach(f => {
                 const li = document.createElement('li');
-                li.innerHTML = `<i data-lucide="file"></i> ${f.name} <span>(${(f.size/1024).toFixed(1)} KB)</span>`;
+                li.innerHTML = `<i class="fas fa-file"></i> ${f.name} <span>(${(f.size/1024).toFixed(1)} KB)</span>`;
                 fileList.appendChild(li);
             });
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         });
 
         // Submit crear expediente

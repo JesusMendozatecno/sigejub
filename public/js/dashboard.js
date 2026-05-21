@@ -5,9 +5,6 @@ function inicializarDashboard() {
         document.body.classList.add('dark-mode');
     }
 
-    // Initialize Lucide icons
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-
     // Notification counter
     cargarContadorNoLeidas();
     setInterval(cargarContadorNoLeidas, 30000);

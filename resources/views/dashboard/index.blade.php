@@ -11,9 +11,9 @@
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="https://unpkg.com/lucide@1.16.0/dist/umd/lucide.min.js"></script>
-    
+
     <style>
         :root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }
         .notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
@@ -47,7 +47,7 @@
     <div class="header-actions">
         <div class="notif-dropdown" id="notifDropdown">
             <button class="notif-trigger" onclick="toggleNotifDropdown()" style="background:none;border:none;color:#64748b;cursor:pointer;display:flex;align-items:center;position:relative;">
-                <i data-lucide="bell" size="20"></i>
+                <i class="fas fa-bell" size="20"></i>
                 <span class="notif-badge" id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;">0</span>
             </button>
             <div class="notif-menu" id="notifMenu" style="display:none;position:absolute;top:100%;right:0;width:360px;background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.15);z-index:9999;margin-top:8px;max-height:400px;overflow-y:auto;">
@@ -67,13 +67,13 @@
                     @if(Auth::user()->avatar)
                         <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar">
                     @else
-                        <i data-lucide="user" size="20"></i>
+                        <i class="fas fa-user" size="20"></i>
                     @endif
                 </div>
                 <div style="text-align: left; display: block;">
                     <p style="margin:0; font-size: 0.85rem; font-weight: bold; line-height: 1; color: #1e293b;">{{ Auth::user()->name }}</p>
                 </div>
-                <i data-lucide="chevron-down" size="14" style="color: #64748b;"></i>
+                <i class="fas fa-chevron-down" size="14" style="color: #64748b;"></i>
             </div>
 
             <div class="dropdown-menu">
@@ -83,7 +83,7 @@
                 </div>
 
                 <a href="{{ route('usuarios.user') }}" class="dropdown-item">
-                    <i data-lucide="settings" size="16"></i> Gestionar cuenta
+                    <i class="fas fa-gear" size="16"></i> Gestionar cuenta
                 </a>
 
                 <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 4px 0;">
@@ -91,7 +91,7 @@
                 <form method="POST" action="{{ route('logout') }}" onsubmit="mostrarCargando('Cerrando sesión...')" style="margin: 0;">
                     @csrf
                     <button type="submit" class="dropdown-item text-danger">
-                        <i data-lucide="log-out" size="16"></i> Cerrar sesión
+                        <i class="fas fa-right-from-bracket" size="16"></i> Cerrar sesión
                     </button>
                 </form>
             </div>
@@ -104,14 +104,14 @@
     <aside class="sidebar">
         <nav class="sidebar-menu">
             <ul>
-                <li class="menu-item active" data-target="inicio"><i data-lucide="home" size="18"></i> Inicio</li>
-                <li class="menu-item" data-target="trabajadores"><i data-lucide="users" size="18"></i> Trabajadores</li>
-                <li class="menu-item" data-target="solicitudes"><i data-lucide="file-text" size="18"></i> Solicitudes</li>
-                <li class="menu-item" data-target="expedientes"><i data-lucide="folder" size="18"></i> Expedientes</li>
-                <li class="menu-item" data-target="prestaciones"><i data-lucide="wallet" size="18"></i> Prestaciones</li>
-                <li class="menu-item" data-target="reportes"><i data-lucide="bar-chart-3" size="18"></i> Reportes</li>
+                <li class="menu-item active" data-target="inicio"><i class="fas fa-house" size="18"></i> Inicio</li>
+                <li class="menu-item" data-target="trabajadores"><i class="fas fa-users" size="18"></i> Trabajadores</li>
+                <li class="menu-item" data-target="solicitudes"><i class="fas fa-file-lines" size="18"></i> Solicitudes</li>
+                <li class="menu-item" data-target="expedientes"><i class="fas fa-folder" size="18"></i> Expedientes</li>
+                <li class="menu-item" data-target="prestaciones"><i class="fas fa-wallet" size="18"></i> Prestaciones</li>
+                <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
                 @if(Auth::user()->role === 'admin')
-                <li class="menu-item" data-target="caja-negra"><i data-lucide="hard-drive" size="18"></i> Historial</li>
+                <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
                 @endif
 
             </ul>

@@ -19,10 +19,32 @@ function switchTab(id) {
         targetMenu.classList.add('active');
         targetSection.classList.add('active');
 
-        // Refrescar Lucide exclusivamente si la librería está mapeada en el objeto window
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        // CERRAR MODAL AL HACER CLIC FUERA
+        window.addEventListener('click', function(e) {
+            var modals = document.querySelectorAll('.modal-overlay');
+            for (var i = 0; i < modals.length; i++) {
+                if (e.target === modals[i]) {
+                    modals[i].style.display = 'none';
+                }
+            }
+        });
+
+        // TAMBIÉN AL PRESIONAR ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(function(m) {
+                    m.style.display = 'none';
+                });
+            }
+        });
+    }
+
+    // VALIDAR NÚMERO DE CÉDULA
+    function validarCedula(input) {
+        input.value = input.value.replace(/\D/g, '');
+    }
+
+    function initSelect2() {
     }
 }
 
@@ -30,8 +52,7 @@ function switchTab(id) {
 function abrirModal() {
     const modal = document.getElementById('modalSolicitud');
     if (modal) {
-        modal.style.display = 'flex'; // Cambiado a flex para mantener consistencia con los CSS modernos
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        modal.style.display = 'flex';
     }
 }
 
@@ -41,11 +62,6 @@ function cerrarModal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar íconos de forma segura tras asegurar la carga del DOM
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-
     // Escuchador único y limpio para el menú de navegación lateral
     const menuItems = document.querySelectorAll('.menu-item');
     menuItems.forEach(item => {

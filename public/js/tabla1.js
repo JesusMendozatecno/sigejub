@@ -39,16 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><span class="badge-type doc">DOCENTE</span></td>
                     <td><span class="dot ${estatus}"></span> ${estatus.charAt(0).toUpperCase() + estatus.slice(1)}</td>
                     <td class="actions">
-                        <i data-lucide="folder-open" class="btn-icon btn-ver" title="Ver Expediente" data-id="${t.id}"></i>
-                        <i data-lucide="edit-3" class="btn-icon btn-editar" title="Editar" data-id="${t.id}" data-nombres="${t.nombres}" data-apellidos="${t.apellidos}" data-cedula="${t.cedula}" data-cargo="${t.cargo}" data-unidad="${t.unidad_departamento}" data-grado="${t.grado_nivel}" data-fecha-ingreso="${t.fecha_ingreso}" data-fecha-nacimiento="${t.fecha_nacimiento}" data-genero="${t.genero}" data-nivel="${t.nivel_instruccion}" data-externo="${t.anos_servicio_externo}" data-porc-antig="${t.porcentaje_antiguedad}" data-cuenta="${t.cuenta_bancaria}"></i>
-                        <i data-lucide="trash-2" class="btn-icon btn-eliminar" title="Eliminar" data-id="${t.id}" data-nombre="${t.nombres} ${t.apellidos}"></i>
+                        <i class="fas fa-folder-open btn-icon btn-ver" title="Ver Expediente" data-id="${t.id}"></i>
+                        <i class="fas fa-pen btn-icon btn-editar" title="Editar" data-id="${t.id}" data-nombres="${t.nombres}" data-apellidos="${t.apellidos}" data-cedula="${t.cedula}" data-cargo="${t.cargo}" data-unidad="${t.unidad_departamento}" data-grado="${t.grado_nivel}" data-fecha-ingreso="${t.fecha_ingreso}" data-fecha-nacimiento="${t.fecha_nacimiento}" data-genero="${t.genero}" data-nivel="${t.nivel_instruccion}" data-externo="${t.anos_servicio_externo}" data-porc-antig="${t.porcentaje_antiguedad}" data-cuenta="${t.cuenta_bancaria}"></i>
+                        <i class="fas fa-trash-can btn-icon btn-eliminar" title="Eliminar" data-id="${t.id}" data-nombre="${t.nombres} ${t.apellidos}"></i>
                     </td>
                 `;
                 tbody.appendChild(fila);
             });
-
-            // Refrescar íconos Lucide
-            if (typeof lucide !== 'undefined') lucide.createIcons();
 
             // Actualizar contador
             const counter = document.querySelector('.total-badge-card h2');
@@ -118,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Abrir modal
         document.getElementById('modalTrabajador').style.display = 'flex';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
     /*

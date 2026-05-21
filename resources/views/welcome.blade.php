@@ -8,8 +8,7 @@
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <!-- Vinculamos al CSS unificado de presentación -->
     <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
-    <!-- Iconos para mantener la coherencia con el Dashboard -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
 </head>
 <body>
 
@@ -53,7 +52,6 @@
         <p>© 2026 INSTITUCIÓN EDUCATIVA - COORDINACIÓN DE TECNOLOGÍA</p>
     </footer>
 
-    <script>lucide.createIcons();</script>
     @include('partials.toast')
 </body>
 </html>

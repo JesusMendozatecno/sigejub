@@ -6,6 +6,7 @@
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <!-- CSS exclusivo del login -->
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
 </head>
 <body>
 
@@ -17,7 +18,7 @@
 
         <!-- Botón Volver -->
         <a href="{{ url('/') }}" class="btn-back" title="Volver al inicio">
-            <i data-lucide="arrow-left"></i>
+            <i class="fas fa-arrow-left"></i>
         </a>
 
         <!-- Título del sistema -->
@@ -54,8 +55,6 @@
 
     </div>
 </div>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
     @include('partials.toast')
     @if(session('success'))
         <script>mostrarToast('{{ session('success') }}', 'success');</script>

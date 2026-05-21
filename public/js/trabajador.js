@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAbrir && modal) {
         btnAbrir.addEventListener('click', () => {
             modal.style.display = 'flex';
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         });
     }
 

@@ -5,6 +5,7 @@
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/register.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
@@ -14,7 +15,7 @@
         @csrf
 
         <a href="{{ url('/') }}" class="btn-back" title="Volver al inicio">
-            <i data-lucide="arrow-left"></i>
+            <i class="fas fa-arrow-left"></i>
         </a>
 
         <h2 style="margin:0 0 16px;text-align:center;">Registro de Usuario</h2>
@@ -75,7 +76,7 @@
                 <div class="password-wrapper">
                     <input type="password" name="password" id="regPassword" placeholder="Mínimo 6 caracteres" required oninput="medirFortaleza()">
                     <button type="button" class="toggle-password" onclick="togglePassword('regPassword', this)" tabindex="-1">
-                        <i data-lucide="eye" size="16"></i>
+                        <i class="fas fa-eye"></i>
                     </button>
                 </div>
                 <div class="password-strength" id="passwordStrength">
@@ -89,7 +90,7 @@
                 <div class="password-wrapper">
                     <input type="password" name="password_confirmation" id="regPasswordConfirm" placeholder="Repita la contraseña" required oninput="validarConfirmacion()">
                     <button type="button" class="toggle-password" onclick="togglePassword('regPasswordConfirm', this)" tabindex="-1">
-                        <i data-lucide="eye" size="16"></i>
+                        <i class="fas fa-eye"></i>
                     </button>
                 </div>
                 <span class="validation-msg" id="confirmMsg"></span>
@@ -118,20 +119,16 @@
 
 </div>
 
-<script src="https://unpkg.com/lucide@1.16.0"></script>
 <script>
-lucide.createIcons();
-
 function togglePassword(inputId, btn) {
     var input = document.getElementById(inputId);
     if (input.type === 'password') {
         input.type = 'text';
-        btn.innerHTML = '<i data-lucide="eye-off" size="16"></i>';
+        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
     } else {
         input.type = 'password';
-        btn.innerHTML = '<i data-lucide="eye" size="16"></i>';
+        btn.innerHTML = '<i class="fas fa-eye"></i>';
     }
-    lucide.createIcons();
 }
 
 function capitalizar(input) {

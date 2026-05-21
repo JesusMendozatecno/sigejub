@@ -87,7 +87,7 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
 <div id="prestacion-detalle" class="hidden">
     <div class="detalle-header">
         <button class="btn-volver" onclick="volverAListaPrestaciones()">
-            <i data-lucide="arrow-left"></i>
+            <i class="fas fa-arrow-left"></i>
             <span>Volver a Trabajadores</span>
         </button>
         <div class="detalle-header-right">
@@ -99,7 +99,7 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
         <div class="calculation-main">
             <div class="worker-selector-card" id="detalleWorkerCard">
                 <div class="worker-avatar-box" id="detalleFoto">
-                    <i data-lucide="user"></i>
+                    <i class="fas fa-user"></i>
                 </div>
                 <div class="worker-details">
                     <h3 id="detalleNombre"></h3>
@@ -111,7 +111,7 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
             <div class="income-structure-card">
                 <div class="card-title-row">
                     <div class="title-with-icon">
-                        <i data-lucide="banknote"></i>
+                        <i class="fas fa-money-bill-wave"></i>
                         <h3>Estructura de Ingresos Mensuales</h3>
                     </div>
                     <span class="disclaimer">Valores en USD según tasa BCV</span>
@@ -148,13 +148,13 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
                 </div>
 
                 <button class="btn-primary" id="btnCalcularPrestacion" style="margin-top:20px;width:100%;justify-content:center;" onclick="calcularPrestacion()">
-                    <i data-lucide="calculator"></i> Calcular Prestaciones
+                    <i class="fas fa-calculator"></i> Calcular Prestaciones
                 </button>
             </div>
 
             <div class="bottom-metrics" id="resultadosCalculo" style="display:none;">
                 <div class="metric-box-white border-blue">
-                    <div class="metric-icon-small blue-bg"><i data-lucide="calculator"></i></div>
+                    <div class="metric-icon-small blue-bg"><i class="fas fa-calculator"></i></div>
                     <div class="metric-content">
                         <span class="tag-top">BASE MENSUAL</span>
                         <p>Salario Integral Estimado</p>
@@ -162,7 +162,7 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
                     </div>
                 </div>
                 <div class="metric-box-white border-green">
-                    <div class="metric-icon-small green-bg"><i data-lucide="history"></i></div>
+                    <div class="metric-icon-small green-bg"><i class="fas fa-clock-rotate-left"></i></div>
                     <div class="metric-content">
                         <span class="tag-top">TOTAL PRESTACIONES</span>
                         <p>Acumulado según años de servicio</p>
@@ -196,15 +196,15 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
             </div>
 
             <div class="action-buttons-stack">
-                <button class="btn-dark-full" type="button" onclick="generarComprobante()"><i data-lucide="printer"></i> Generar Comprobante</button>
+                <button class="btn-dark-full" type="button" onclick="generarComprobante()"><i class="fas fa-print"></i> Generar Comprobante</button>
             </div>
 
             <div class="doc-checklist-card">
                 <h3>DOCUMENTOS REQUERIDOS</h3>
                 <ul class="checklist">
-                    <li class="done"><i data-lucide="check-circle-2"></i> Certificación de Cargos</li>
-                    <li class="done"><i data-lucide="check-circle-2"></i> Constancia de Años de Servicio</li>
-                    <li class="pending"><i data-lucide="circle"></i> Acta de Cese de Funciones</li>
+                    <li class="done"><i class="fas fa-circle-check"></i> Certificación de Cargos</li>
+                    <li class="done"><i class="fas fa-circle-check"></i> Constancia de Años de Servicio</li>
+                    <li class="pending"><i class="fas fa-circle"></i> Acta de Cese de Funciones</li>
                 </ul>
             </div>
         </aside>
@@ -240,7 +240,7 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
                 card.onclick = () => abrirDetalle(t.id);
                 card.innerHTML = `
                     <div class="pc-foto">
-                        ${foto ? `<img src="${foto}" alt="">` : `<div class="pc-avatar"><i data-lucide="user" size="28"></i></div>`}
+                        ${foto ? `<img src="${foto}" alt="">` : `<div class="pc-avatar"><i class="fas fa-user" size="28"></i></div>`}
                     </div>
                     <div class="pc-info">
                         <strong>${t.nombres} ${t.apellidos}</strong>
@@ -253,7 +253,6 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
                 `;
                 grid.appendChild(card);
             });
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al cargar prestaciones:', err);
             grid.innerHTML = '<p class="empty-state">Error al cargar datos.</p>';
@@ -280,7 +279,7 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
             const foto = exp.foto_carnet ? `/storage/${exp.foto_carnet}` : '';
             document.getElementById('detalleFoto').innerHTML = foto
                 ? `<img src="${foto}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;">`
-                : `<i data-lucide="user"></i>`;
+                : `<i class="fas fa-user"></i>`;
             document.getElementById('detalleNombre').textContent = `${t.nombres} ${t.apellidos}`;
             document.getElementById('detalleInfo').textContent = `${t.cedula} • ${t.cargo} • ${t.total_anos_servicio || 0} años`;
             document.getElementById('detalleBadges').innerHTML = `
@@ -300,8 +299,6 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
             if (data.prestacion) {
                 document.getElementById('inputSueldoBase').value = (data.prestacion.monto * 0.5).toFixed(2);
             }
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         } catch (err) {
             console.error('Error al cargar detalle:', err);
             mostrarToast('Error al cargar datos del trabajador.', 'error');

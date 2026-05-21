@@ -6,15 +6,15 @@
 </header>
 
 <div class="tab-filters" style="margin-bottom:20px;">
-    <button class="admin-tab active" data-tab="usuarios"><i data-lucide="users" size="15"></i> Usuarios</button>
-    <button class="admin-tab" data-tab="actividades"><i data-lucide="activity" size="15"></i> Actividades</button>
+    <button class="admin-tab active" data-tab="usuarios"><i class="fas fa-users" size="15"></i> Usuarios</button>
+    <button class="admin-tab" data-tab="actividades"><i class="fas fa-wave-square" size="15"></i> Actividades</button>
 </div>
 
 <!-- ===== TAB USUARIOS ===== -->
 <div id="tabUsuarios" class="admin-tab-content">
     <div class="search-filter-bar" style="margin-bottom:16px;">
         <div class="search-wrapper">
-            <i data-lucide="search" size="16"></i>
+            <i class="fas fa-search" size="16"></i>
             <input type="text" id="buscadorUsuarios" placeholder="Buscar por nombre o email...">
         </div>
         <div class="filter-group-sm">
@@ -97,14 +97,14 @@
             <form id="formEditarUsuario">
                 <input type="hidden" name="user_id" id="editUserId">
                 <section class="form-section">
-                    <h3><i data-lucide="user"></i> Datos del Usuario</h3>
+                    <h3><i class="fas fa-user"></i> Datos del Usuario</h3>
                     <p style="margin:8px 0;font-size:0.9rem;">
                         <strong id="editUserName">—</strong><br>
                         <span id="editUserEmail">—</span>
                     </p>
                 </section>
                 <section class="form-section">
-                    <h3><i data-lucide="shield"></i> Rol / Permisos</h3>
+                    <h3><i class="fas fa-shield"></i> Rol / Permisos</h3>
                     <div class="input-group">
                         <label>ROL DEL USUARIO</label>
                         <select name="role" id="editUserRole" required>
@@ -135,13 +135,13 @@
             <form id="formEnviarNotificacion">
                 <input type="hidden" name="user_id" id="notifUserId">
                 <section class="form-section">
-                    <h3><i data-lucide="user"></i> Para:</h3>
+                    <h3><i class="fas fa-user"></i> Para:</h3>
                     <p style="margin:8px 0;font-size:0.9rem;">
                         <strong id="notifUserName">—</strong>
                     </p>
                 </section>
                 <section class="form-section">
-                    <h3><i data-lucide="bell"></i> Mensaje</h3>
+                    <h3><i class="fas fa-bell"></i> Mensaje</h3>
                     <div class="input-group">
                         <label>TÍTULO</label>
                         <input type="text" name="title" required placeholder="Ej: Actualización de expediente">
@@ -160,7 +160,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
 <script>
 (function() {
     let chartInstancia = null;
@@ -210,14 +210,12 @@
                     <td><span class="${rolClass}">${u.role.toUpperCase()}</span></td>
                     <td>${fecha}</td>
                     <td class="actions">
-                        <i data-lucide="shield" class="btn-icon btn-editar-usuario" title="Editar Permisos" data-id="${u.id}" data-name="${u.name}" data-email="${u.email}" data-role="${u.role}"></i>
-                        <i data-lucide="bell" class="btn-icon btn-notificar-usuario" title="Enviar Notificación" data-id="${u.id}" data-name="${u.name}"></i>
+                        <i class="fas fa-shield btn-icon btn-editar-usuario" title="Editar Permisos" data-id="${u.id}" data-name="${u.name}" data-email="${u.email}" data-role="${u.role}"></i>
+                        <i class="fas fa-bell btn-icon btn-notificar-usuario" title="Enviar Notificación" data-id="${u.id}" data-name="${u.name}"></i>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
 
             const total = data.total || data.data.length;
             document.getElementById('usuariosCounter').textContent = `Mostrando ${data.data.length} de ${total} usuarios`;
@@ -244,7 +242,6 @@
         document.getElementById('editUserEmail').textContent = btn.dataset.email;
         document.getElementById('editUserRole').value = btn.dataset.role;
         document.getElementById('modalEditarUsuario').style.display = 'flex';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
     function cerrarModalEditarUsuario() {
@@ -297,7 +294,6 @@
         document.getElementById('formEnviarNotificacion').reset();
         document.getElementById('notifUserId').value = btn.dataset.id;
         document.getElementById('modalEnviarNotificacion').style.display = 'flex';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
     function cerrarModalNotificacion() {

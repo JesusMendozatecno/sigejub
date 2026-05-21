@@ -5,7 +5,7 @@
     </div>
     <div class="header-actions">
         <button type="button" class="btn-primary-dark" id="btnRegistrarTrabajador">
-            <i data-lucide="plus-circle" size="20"></i> Registrar Trabajador
+            <i class="fas fa-circle-plus" size="20"></i> Registrar Trabajador
         </button>
     </div>
 </header>
@@ -33,7 +33,7 @@
             <p>TOTAL REGISTRADOS</p>
             <h2 id="totalTrabajadores">0</h2>
         </div>
-        <i data-lucide="users" class="icon-bg"></i>
+        <i class="fas fa-users icon-bg"></i>
     </div>
 </section>
 
@@ -74,13 +74,13 @@
             <button class="btn-white" type="button" style="margin-top:12px;">Ver Calendario</button>
         </div>
         <div class="promo-icon-watermark">
-            <i data-lucide="scroll"></i>
+            <i class="fas fa-scroll"></i>
         </div>
     </div>
 
     <div class="audit-card">
         <div class="audit-header">
-            <i data-lucide="check-circle-2"></i> AUDITORÍA AL DÍA
+            <i class="fas fa-circle-check"></i> AUDITORÍA AL DÍA
         </div>
         <h3>Estatus de Datos</h3>
         <p id="estatusDatosTexto">Cargando estadísticas...</p>
@@ -99,7 +99,7 @@
             <p id="modalDescription">Complete el expediente institucional para iniciar el cálculo de antigüedad y estatus jubilatorio.</p>
             <div class="sidebar-actions">
                 <button type="button" class="btn-sidebar-edit" id="btnHabilitarEdicion" style="display: none;">
-                    <i data-lucide="edit-3"></i> Editar Expediente
+                    <i class="fas fa-pen"></i> Editar Expediente
                 </button>
                 <button type="button" class="btn-sidebar-cancel" id="btnCancelar">Descartar</button>
             </div>
@@ -111,7 +111,7 @@
             <form id="formTrabajador">
                 @csrf
                 <section class="form-section">
-                    <h3><i data-lucide="user"></i> Datos Personales</h3>
+                    <h3><i class="fas fa-user"></i> Datos Personales</h3>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>CÉDULA DE IDENTIDAD</label>
@@ -145,7 +145,7 @@
                 </section>
 
                 <section class="form-section">
-                    <h3><i data-lucide="building"></i> Datos Institucionales</h3>
+                    <h3><i class="fas fa-building"></i> Datos Institucionales</h3>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>CARGO ACTUAL</label>
@@ -179,7 +179,7 @@
                 </section>
 
                 <section class="form-section">
-                    <h3><i data-lucide="graduation-cap"></i> Información Socio-Económica</h3>
+                    <h3><i class="fas fa-graduation-cap"></i> Información Socio-Económica</h3>
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>NIVEL DE INSTRUCCIÓN</label>
@@ -209,7 +209,7 @@
 <div id="modalEliminarConfirm" class="modal-overlay" style="z-index: 1100;">
     <div class="modal-delete-box">
         <div class="delete-icon-warn">
-            <i data-lucide="alert-triangle"></i>
+            <i class="fas fa-triangle-exclamation"></i>
         </div>
         <h3>¿Confirmar baja del trabajador?</h3>
         <p>Esta acción ejecutará un soft-delete institucional sobre <strong id="deleteWorkerName"></strong>. ¿Desea continuar?</p>
