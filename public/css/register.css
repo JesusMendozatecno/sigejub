@@ -114,9 +114,6 @@ a:hover {
 }
 
 .btn-back {
-    position: absolute;
-    top: 20px;
-    left: 20px;
     color: #64748b;
     text-decoration: none;
     transition: all 0.3s ease;
@@ -127,17 +124,13 @@ a:hover {
     height: 35px;
     border-radius: 50%;
     background: #f1f5f9;
+    margin-bottom: 8px;
 }
 
 .btn-back:hover {
     color: #002366;
     background: #e2e8f0;
     transform: translateX(-3px);
-}
-
-.register-container {
-    position: relative;
-    padding-top: 50px;
 }
 
 /* === PHONE WRAPPER === */
