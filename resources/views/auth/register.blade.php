@@ -46,25 +46,25 @@
                 <label>TELÉFONO</label>
                 <div class="phone-wrapper">
                     <select id="countryCode" class="country-code-select">
-                        <option value="+58">🇻🇪 +58</option>
-                        <option value="+56">🇨🇱 +56</option>
-                        <option value="+54">🇦🇷 +54</option>
-                        <option value="+57">🇨🇴 +57</option>
-                        <option value="+52">🇲🇽 +52</option>
-                        <option value="+51">🇵🇪 +51</option>
-                        <option value="+593">🇪🇨 +593</option>
-                        <option value="+591">🇧🇴 +591</option>
-                        <option value="+55">🇧🇷 +55</option>
-                        <option value="+598">🇺🇾 +598</option>
-                        <option value="+595">🇵🇾 +595</option>
-                        <option value="+507">🇵🇦 +507</option>
-                        <option value="+506">🇨🇷 +506</option>
-                        <option value="+502">🇬🇹 +502</option>
-                        <option value="+504">🇭🇳 +504</option>
-                        <option value="+503">🇸🇻 +503</option>
-                        <option value="+505">🇳🇮 +505</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+58">+58 (VE)</option>
+                        <option value="+56">+56 (CL)</option>
+                        <option value="+54">+54 (AR)</option>
+                        <option value="+57">+57 (CO)</option>
+                        <option value="+52">+52 (MX)</option>
+                        <option value="+51">+51 (PE)</option>
+                        <option value="+593">+593 (EC)</option>
+                        <option value="+591">+591 (BO)</option>
+                        <option value="+55">+55 (BR)</option>
+                        <option value="+598">+598 (UY)</option>
+                        <option value="+595">+595 (PY)</option>
+                        <option value="+507">+507 (PA)</option>
+                        <option value="+506">+506 (CR)</option>
+                        <option value="+502">+502 (GT)</option>
+                        <option value="+504">+504 (HN)</option>
+                        <option value="+503">+503 (SV)</option>
+                        <option value="+505">+505 (NI)</option>
+                        <option value="+1">+1 (US)</option>
+                        <option value="+34">+34 (ES)</option>
                     </select>
                     <input type="tel" name="phone" id="regPhone" placeholder="412-0000000" value="{{ old('phone') }}" required oninput="this.value=this.value.replace(/[^0-9-]/g,'')">
                 </div>
@@ -72,7 +72,12 @@
 
             <div class="input-group">
                 <label>CONTRASEÑA</label>
-                <input type="password" name="password" id="regPassword" placeholder="Mínimo 6 caracteres" required oninput="medirFortaleza()">
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="regPassword" placeholder="Mínimo 6 caracteres" required oninput="medirFortaleza()">
+                    <button type="button" class="toggle-password" onclick="togglePassword('regPassword', this)" tabindex="-1">
+                        <i data-lucide="eye" size="16"></i>
+                    </button>
+                </div>
                 <div class="password-strength" id="passwordStrength">
                     <div class="strength-bar" id="strengthBar"></div>
                 </div>
@@ -81,7 +86,12 @@
 
             <div class="input-group">
                 <label>CONFIRMAR CONTRASEÑA</label>
-                <input type="password" name="password_confirmation" id="regPasswordConfirm" placeholder="Repita la contraseña" required oninput="validarConfirmacion()">
+                <div class="password-wrapper">
+                    <input type="password" name="password_confirmation" id="regPasswordConfirm" placeholder="Repita la contraseña" required oninput="validarConfirmacion()">
+                    <button type="button" class="toggle-password" onclick="togglePassword('regPasswordConfirm', this)" tabindex="-1">
+                        <i data-lucide="eye" size="16"></i>
+                    </button>
+                </div>
                 <span class="validation-msg" id="confirmMsg"></span>
             </div>
 
@@ -111,6 +121,18 @@
 <script src="https://unpkg.com/lucide@1.16.0"></script>
 <script>
 lucide.createIcons();
+
+function togglePassword(inputId, btn) {
+    var input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<i data-lucide="eye-off" size="16"></i>';
+    } else {
+        input.type = 'password';
+        btn.innerHTML = '<i data-lucide="eye" size="16"></i>';
+    }
+    lucide.createIcons();
+}
 
 function capitalizar(input) {
     input.value = input.value.replace(/\b\w/g, function(c) { return c.toUpperCase(); });
