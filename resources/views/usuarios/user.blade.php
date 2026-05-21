@@ -461,6 +461,32 @@
     </div>
 </div>
 
+<!-- Modal Enviar Notificación -->
+<div class="modal-overlay" id="modalEnviarNotificacion">
+    <div class="modal-box" style="max-width:480px;">
+        <h3><i data-lucide="bell" size="18"></i> Enviar mensaje</h3>
+        <form id="formEnviarNotificacion">
+            <input type="hidden" name="user_id" id="notifUserId">
+            <div class="form-group">
+                <label>Para:</label>
+                <p style="margin:4px 0 8px;font-weight:600;font-size:0.95rem;color:#0f172a;" id="notifUserName">—</p>
+            </div>
+            <div class="form-group">
+                <label>Título</label>
+                <input type="text" class="form-input" name="title" required placeholder="Ej: Actualización importante">
+            </div>
+            <div class="form-group">
+                <label>Mensaje</label>
+                <textarea class="form-input" name="message" required placeholder="Escribe tu mensaje..." rows="4" style="resize:vertical;"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalNotificacion()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Enviar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 lucide.createIcons();
 
@@ -796,9 +822,15 @@ async function cargarAdminUsuarios() {
                 <td>${u.email}</td>
                 <td><select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(${u.id}, this.value)"><option value="analista" ${u.role==='analista'?'selected':''}>Analista</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select></td>
                 <td style="font-size:0.75rem;color:#94a3b8;">${new Date(u.created_at).toLocaleDateString('es-ES')}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.id})" ${u.id === {{ $user->id }} ? 'disabled style="opacity:0.4;"' : ''}>Eliminar</button></td>
+                <td style="display:flex;gap:6px;">
+                    <button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(${u.id}, '${u.name}')" title="Enviar mensaje">
+                        <i data-lucide="message-square" size="14"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.id})" ${u.id === {{ $user->id }} ? 'disabled style="opacity:0.4;"' : ''}>Eliminar</button>
+                </td>
             </tr>
         `).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Error al cargar</td></tr>'; }
 }
 
@@ -825,6 +857,50 @@ async function eliminarUsuario(id) {
         cargarAdminUsuarios();
     } catch (err) { mostrarToast('Error', 'error'); }
 }
+
+// === NOTIFICACIONES (MODAL) ===
+function abrirModalNotificacion(userId, userName) {
+    document.getElementById('notifUserId').value = userId;
+    document.getElementById('notifUserName').textContent = userName;
+    document.getElementById('formEnviarNotificacion').reset();
+    document.getElementById('modalEnviarNotificacion').style.display = 'flex';
+}
+
+function cerrarModalNotificacion() {
+    document.getElementById('modalEnviarNotificacion').style.display = 'none';
+}
+
+document.getElementById('formEnviarNotificacion')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const btn = this.querySelector('.btn-primary');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    try {
+        const resp = await fetch('/notificaciones', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken(),
+                'Accept': 'application/json'
+            }
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw data;
+        mostrarToast(data.message, 'success');
+        cerrarModalNotificacion();
+    } catch (err) {
+        mostrarToast(err.message || 'Error al enviar', 'error');
+    } finally {
+        btn.disabled = false; btn.textContent = 'Enviar';
+    }
+});
+
+// Cerrar modal al hacer clic fuera
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('modalEnviarNotificacion');
+    if (e.target === modal) cerrarModalNotificacion();
+});
 
 async function cargarAdminActividad() {
     const el = document.getElementById('adminActivityList');
