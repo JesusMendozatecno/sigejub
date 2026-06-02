@@ -2,8 +2,8 @@
 <html>
 <head>
     <title>Registro SIGEJUB</title>
-    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
-    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
+    <link rel="shortcut icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ asset('css/register.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">

@@ -1,10 +1,20 @@
+// ============================================
+// tabla1.js — Tabla dinámica de trabajadores con CRUD completo
+// Ubicación: Sección "Trabajadores" del dashboard (vista con tabla .custom-table)
+// Responsabilidades:
+//   - Carga asíncrona del listado de trabajadores desde GET /trabajadores
+//   - Renderizado de filas con avatar, estatus (activo/jubilado) y acciones
+//   - Vista rápida de expediente (guarda en sessionStorage y redirige)
+//   - Edición: carga datos en el modal y envía PUT
+//   - Eliminación: soft delete con confirmación y animación de salida
+//   - Envío del formulario (creación/edición) vía AJAX
+// ============================================
+
 document.addEventListener('DOMContentLoaded', () => {
 
-    /*
-    |======================================================
-    | 1. LISTADO DE TRABAJADORES — Cargar desde BD al entrar
-    |======================================================
-    */
+    // ============================================
+    // 1. LISTADO DE TRABAJADORES — GET /trabajadores y renderizado en tabla
+    // ============================================
     async function cargarTrabajadores() {
         try {
             const resp = await fetch('/trabajadores');
@@ -13,16 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!tbody || !data.data) return;
 
-            tbody.innerHTML = '';
+            tbody.innerHTML = '';  // Limpia la tabla antes de recargar
 
             data.data.forEach(t => {
+                // Determina estatus según reglas de jubilación
                 const estatus = (t.total_anos_servicio >= 25 || t.edad >= 60) ? 'jubilado' : 'activo';
                 const iniciales = t.nombres.charAt(0) + t.apellidos.charAt(0);
 
                 const fila = document.createElement('tr');
                 fila.dataset.id = t.id;
 
-                // Determinar clase color avatar según inicial
+                // Asigna un color de avatar basado en el ID (consistente por trabajador)
                 const colores = ['blue', 'purple', 'green', 'orange', 'red', 'teal', 'indigo', 'pink'];
                 const color = colores[t.id % colores.length];
 
@@ -47,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbody.appendChild(fila);
             });
 
-            // Actualizar contador
+            // Actualiza el contador total de trabajadores en la cabecera de la tabla
             const counter = document.querySelector('.total-badge-card h2');
             if (counter) counter.textContent = data.total || data.data.length;
             document.querySelector('.table-footer span')?.classList.add('text-muted');
@@ -57,43 +68,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Carga inicial al cargar la página
     cargarTrabajadores();
 
-    /*
-    |======================================================
-    | 2. VER EXPEDIENTE — Redirige al detalle del trabajador
-    |======================================================
-    */
+    // ============================================
+    // 2. VER EXPEDIENTE — GET /trabajadores/{id}, guarda en sessionStorage y redirige
+    // ============================================
     document.addEventListener('click', (e) => {
         const btnVer = e.target.closest('.btn-ver');
         if (btnVer) {
             const id = btnVer.dataset.id;
-            // Llamar al endpoint show para traer datos completos y guardarlos en sesión
             fetch(`/trabajadores/${id}`)
                 .then(r => r.json())
                 .then(data => {
+                    // Guarda los datos completos en sessionStorage para la vista de expediente
                     sessionStorage.setItem('trabajadorSeleccionado', JSON.stringify(data));
                     window.location.href = '/dashboard?tab=expedientes';
                 });
         }
     });
 
-    /*
-    |======================================================
-    | 3. EDITAR — Abre el modal con los datos cargados
-    |======================================================
-    */
+    // ============================================
+    // 3. EDITAR — Carga datos del trabajador en el modal y prepara PUT
+    // ============================================
     document.addEventListener('click', (e) => {
         const btnEditar = e.target.closest('.btn-editar');
         if (!btnEditar) return;
 
-        // Cargar datos en el formulario
         const f = document.getElementById('formTrabajador');
+        // Cambia la URL del formulario a la ruta de actualización con el ID
         f.setAttribute('data-action', `/trabajadores/${btnEditar.dataset.id}`);
-        // Cambiar a PUT explícitamente
-        f.setAttribute('data-method', 'PUT');
+        f.setAttribute('data-method', 'PUT');  // Laravel method spoofing
         f.querySelector('.btn-submit').textContent = 'Guardar Cambios';
 
+        // Puebla todos los campos del formulario con los datos del trabajador
         f.querySelector('[name="cedula"]').value = btnEditar.dataset.cedula;
         f.querySelector('[name="nombres"]').value = btnEditar.dataset.nombres;
         f.querySelector('[name="apellidos"]').value = btnEditar.dataset.apellidos;
@@ -108,20 +116,18 @@ document.addEventListener('DOMContentLoaded', () => {
         f.querySelector('[name="porcentaje_antiguedad"]').value = btnEditar.dataset.porcAntig;
         f.querySelector('[name="cuenta_bancaria"]').value = btnEditar.dataset.cuenta || '';
 
-        // Limpiar campos no editables del formulario
+        // Limpia campos NO editables (se calculan automáticamente en el backend)
         f.querySelector('[name="numero_hijos"]').value = '';
         f.querySelector('[name="hijos_discapacidad"]').value = '';
         f.querySelector('[name="porcentaje_caja_ahorro"]').value = '';
 
-        // Abrir modal
+        // Abre el modal
         document.getElementById('modalTrabajador').style.display = 'flex';
     });
 
-    /*
-    |======================================================
-    | 4. ELIMINAR — Confirmación y eliminación suave
-    |======================================================
-    */
+    // ============================================
+    // 4. ELIMINAR — Confirmación y DELETE con animación visual
+    // ============================================
     document.addEventListener('click', (e) => {
         const btnEliminar = e.target.closest('.btn-eliminar');
         if (!btnEliminar) return;
@@ -141,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(r => r.json())
         .then(data => {
             if (data.status === 'success') {
-                // Eliminar la fila visualmente
+                // Animación de desvanecimiento antes de remover la fila del DOM
                 const fila = btnEliminar.closest('tr');
                 fila.style.transition = 'opacity 0.3s';
                 fila.style.opacity = '0';
@@ -157,16 +163,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /*
-    |======================================================
-    | 5. FORMULARIO — Envío AJAX (CREAR o EDITAR según method)
-    |======================================================
-    */
+    // ============================================
+    // 5. FORMULARIO — Envío AJAX (POST para crear, PUT para editar)
+    // ============================================
     const formTrabajador = document.getElementById('formTrabajador');
     if (formTrabajador) {
         formTrabajador.addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            // Lee data-action y data-method para decidir si es creación o edición
             const actionUrl = this.getAttribute('data-action');
             const method = this.getAttribute('data-method') || 'POST';
             const formData = new FormData(this);
@@ -194,8 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 alert(data.message || 'Operación exitosa.');
                 formTrabajador.reset();
-                document.getElementById('closeModal')?.click();
-                // Si era edición, recargar la tabla
+                document.getElementById('closeModal')?.click();  // Cierra el modal
+
+                // En edición recarga la página; en creación refresca solo la tabla
                 if (method === 'PUT') {
                     location.reload();
                 } else {
@@ -203,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
             } catch (error) {
+                // Errores de validación de Laravel: muestra el primer mensaje de cada campo
                 if (error.errors) {
                     let mensajes = '';
                     Object.values(error.errors).forEach(err => { mensajes += err[0] + '\n'; });

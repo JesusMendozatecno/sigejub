@@ -1,9 +1,21 @@
+/* ============================================================
+   inicio.css — Estilos para la sección "Inicio" del dashboard
+   Grid de tarjetas de estadísticas, gráfico de barras,
+   contenedor de actividad reciente con scroll interno.
+   ============================================================ */
+
+/* === GRID DE ESTADÍSTICAS === */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 30px; }
+/* === TARJETAS INDIVIDUALES === */
 .stat-card { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
+/* === CONTENEDOR DEL GRÁFICO === */
 .chart-container { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
+/* === BARRAS DEL GRÁFICO === */
 .bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; }
+/* === ACTIVIDAD RECIENTE === */
 .recent-activity { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; }
 .recent-activity .activity-list { flex: 1; overflow-y: auto; max-height: 400px; }
+/* Scrollbar del listado de actividad */
 .recent-activity .activity-list::-webkit-scrollbar { width: 4px; }
 .recent-activity .activity-list::-webkit-scrollbar-track { background: transparent; }
 .recent-activity .activity-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }

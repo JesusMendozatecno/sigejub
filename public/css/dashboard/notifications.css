@@ -1,0 +1,51 @@
+/* ============================================================
+   notifications.css — Estilos del dropdown de notificaciones
+   y badge de contador en el header del dashboard.
+   ============================================================ */
+
+/* Botón campana de notificaciones */
+.notif-trigger {
+    position: relative;
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.notif-trigger:hover { background: #f1f5f9; }
+
+/* Badge contador de no leídas (oculto por defecto) */
+.notif-badge { display: none; }
+.notif-badge.show { display: flex !important; }
+
+/* Cada elemento de la lista de notificaciones */
+.notif-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 2px;
+}
+.notif-item:hover { background: #f8fafc; }
+.notif-item.unread {
+    background: #eff6ff;
+    border-left: 3px solid #2563eb;
+}
+
+/* Marca de tiempo dentro de cada notificación */
+.notif-item .notif-time {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+/* Título y mensaje de cada notificación */
+.notif-item .notif-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+.notif-item .notif-msg {
+    font-size: 0.78rem;
+    color: #475569;
+    margin-top: 2px;
+    line-height: 1.3;
+}

@@ -1,3 +1,11 @@
+/* ============================================================
+   dark-mode.css — Overrides para modo oscuro
+   Cada regla va prefijada con body.dark-mode para aumentar
+   especificidad. Cubre topbar, sidebar, tablas, formularios,
+   modales, badges, botones, expedientes, trabajadores,
+   prestaciones, reportes, toasts y misceláneos.
+   ============================================================ */
+
 /* === DARK MODE GLOBAL === */
 body.dark-mode { background: #0f172a; color: #cbd5e1; }
 
@@ -213,7 +221,7 @@ body.dark-mode .status-tag.pending { color: #fbbf24; }
 body.dark-mode .status-pill.active { background: #064e3b; color: #4ade80; }
 body.dark-mode .status-pill.retired { background: #1e3a5f; color: #93c5fd; }
 
-/* ── MODAL ── */
+/* ── MODAL — Selector complejo: apunta al contenedor directo del modal dentro del overlay ── */
 body.dark-mode .modal-overlay > div:not(.modal-overlay) { background: #1e293b; }
 body.dark-mode .modal-container { background: #1e293b; }
 body.dark-mode .modal-overlay h1, body.dark-mode .modal-overlay h2, body.dark-mode .modal-overlay h3 { color: #f1f5f9; }
@@ -455,7 +463,9 @@ body.dark-mode .modal-overlay { background: rgba(15, 23, 42, 0.8); }
 body.dark-mode .section-header { border-color: #334155; }
 body.dark-mode .section-header .list-header { border-color: #334155; }
 
-/* ── TEXT COLOR OVERRIDES (using !important to beat inline styles) ── */
+/* ── TEXT COLOR OVERRIDES — Usamos !important para ganarle a estilos inline ── */
+/* Algunos elementos del topbar y sidebar reciben color por inline styles en el blade,
+   estos overrides aseguran que dark mode se aplique correctamente */
 body.dark-mode .header-brand h3 { color: #f1f5f9 !important; }
 body.dark-mode .header-brand span { color: #94a3b8 !important; }
 body.dark-mode .top-bar .header-brand h3 { color: #f1f5f9 !important; }

@@ -1,13 +1,27 @@
-/**
- * SIGEJUB - Sistema de Gestión de Jubilaciones
- * Módulo Único Integrado: Directorio de Trabajadores, Modales Dinámicos y AJAX seguro
- */
-(function() {
-    let trabajadorSeleccionadoId = null;
-    let filaSeleccionadaDOM = null;
-    let modoEdicionActivo = false;
+// ============================================
+// secciones/trabajador.js — Módulo completo de gestión de trabajadores
+// Ubicación: Sección "Trabajadores" del dashboard (pestaña principal)
+// Responsabilidades:
+//   - Registro de nuevos trabajadores con formulario modal
+//   - Visualización de expediente en modo solo lectura
+//   - Edición de trabajadores (alternar entre vista/edición)
+//   - Eliminación (baja) con confirmación y animación
+//   - Carga asíncrona de tabla con filtros por estatus y nómina
+//   - Estadísticas del dashboard (próximas jubilaciones, % expedientes digitales)
+//   - Observer para cargar datos al cambiar de pestaña
+// ============================================
 
-    // Elementos del DOM del Modal Principal
+(function() {
+    // ============================================
+    // ESTADO GLOBAL DEL MÓDULO
+    // ============================================
+    let trabajadorSeleccionadoId = null;   // ID del trabajador en edición/visualización
+    let filaSeleccionadaDOM = null;        // Referencia a la fila <tr> para animaciones
+    let modoEdicionActivo = false;         // true = modo edición, false = solo lectura
+
+    // ============================================
+    // REFERENCIAS AL DOM — Modal principal y formulario
+    // ============================================
     const modal = document.getElementById('modalTrabajador');
     const form = document.getElementById('formTrabajador');
     const modalTitle = document.getElementById('modalTitle');
@@ -15,10 +29,13 @@
     const btnSubmit = document.getElementById('btnSubmitTrabajador');
     const btnHabilitarEdicion = document.getElementById('btnHabilitarEdicion');
 
-    // Elementos del Modal Eliminar
+    // Referencias al modal de confirmación de eliminación
     const modalEliminar = document.getElementById('modalEliminarConfirm');
     const deleteWorkerName = document.getElementById('deleteWorkerName');
 
+    // ============================================
+    // INICIALIZACIÓN — Eventos al cargar el DOM
+    // ============================================
     document.addEventListener('DOMContentLoaded', () => {
         const btnRegistrar = document.getElementById('btnRegistrarTrabajador');
         const btnCerrar = document.getElementById('closeModal');
@@ -26,16 +43,18 @@
         const btnNoEliminar = document.getElementById('btnNoEliminar');
         const btnSiEliminar = document.getElementById('btnSiEliminar');
 
-        // Configurar para registrar nuevo trabajador
+        // ============================================
+        // REGISTRAR NUEVO TRABAJADOR — Abre el modal en modo creación
+        // ============================================
         if (btnRegistrar) {
             btnRegistrar.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (!modal) return;
                 modoEdicionActivo = false;
                 trabajadorSeleccionadoId = null;
-                
+
                 form.reset();
-                habilitarCamposFormulario(true);
+                habilitarCamposFormulario(true);  // Todos los campos editables
 
                 modalTitle.innerHTML = "Registrar<br>Nuevo<br>Trabajador";
                 modalDescription.textContent = "Complete el expediente institucional para iniciar el cálculo de antigüedad.";
@@ -49,26 +68,32 @@
             });
         }
 
-        // Manejadores para cerrar modales de forma segura
+        // ============================================
+        // CIERRE DE MODALES — Botones y clic fuera
+        // ============================================
         const cerrarTodoModal = () => { if (modal) modal.style.display = 'none'; };
         if (btnCerrar) btnCerrar.addEventListener('click', cerrarTodoModal);
         if (btnCancelar) btnCancelar.addEventListener('click', cerrarTodoModal);
         if (btnNoEliminar) btnNoEliminar.addEventListener('click', () => { if (modalEliminar) modalEliminar.style.display = 'none'; });
 
+        // Cualquier clic en el fondo oscuro cierra el modal correspondiente
         window.addEventListener('click', (e) => {
             if (e.target === modal) cerrarTodoModal();
             if (e.target === modalEliminar) modalEliminar.style.display = 'none';
         });
 
-        // Alternar modo visualización a edición dentro del modal
+        // ============================================
+        // BOTÓN DE EDICIÓN — Alterna entre vista y edición dentro del modal
+        // ============================================
         if (btnHabilitarEdicion) {
             btnHabilitarEdicion.addEventListener('click', async function(e) {
                 e.preventDefault();
                 if (modoEdicionActivo) {
-                    // Ya estamos en edición → este clic envía el formulario
+                    // Segundo clic: envía el formulario para guardar cambios
                     form.requestSubmit();
                     return;
                 }
+                // Primer clic: activa la edición de campos
                 modoEdicionActivo = true;
                 habilitarCamposFormulario(true);
                 modalTitle.innerHTML = "Modificar<br>Expediente";
@@ -77,15 +102,18 @@
             });
         }
 
-        // Procesamiento del formulario vía AJAX
+        // ============================================
+        // ENVÍO DEL FORMULARIO — AJAX (POST para crear, PUT con spoofing para editar)
+        // ============================================
         if (form) {
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (btnSubmit) btnSubmit.disabled = true;
 
                 const formData = new FormData(this);
-                let url = '/trabajadores'; // Ruta de creación
-                
+                let url = '/trabajadores';  // Ruta por defecto: creación
+
+                // Si está en modo edición, cambia la URL y agrega spoofing de método PUT
                 if (modoEdicionActivo && trabajadorSeleccionadoId) {
                     url = `/trabajadores/${trabajadorSeleccionadoId}`;
                     formData.append('_method', 'PUT');
@@ -109,11 +137,12 @@
                     mostrarToast(data.message || 'Operación completada con éxito.', 'success');
                     form.reset();
                     cerrarTodoModal();
-                    cargarTrabajadores();
+                    cargarTrabajadores();  // Refresca la tabla sin recargar la página
 
                 } catch (err) {
                     console.error(err);
                     if (err.errors) {
+                        // Errores de validación de Laravel: aplana el array y los muestra en un toast
                         mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
                     } else {
                         mostrarToast(err.message || 'Error interno de comunicación.', 'error');
@@ -128,19 +157,27 @@
             });
         }
 
-        // Filtros reactivos
+        // ============================================
+        // FILTROS REACTIVOS — Cambian la consulta de la tabla en tiempo real
+        // ============================================
         const selEstatus = document.getElementById('filtroEstatus');
         if (selEstatus) selEstatus.addEventListener('change', () => cargarTrabajadores(selEstatus.value));
-        
+
         const selNomina = document.getElementById('filtroNomina');
         if (selNomina) selNomina.addEventListener('change', () => cargarTrabajadores(selEstatus?.value || '', selNomina.value));
 
+        // ============================================
+        // CONFIRMACIÓN DE ELIMINACIÓN — Botón "Sí, eliminar"
+        // ============================================
         if (btnSiEliminar) {
             btnSiEliminar.addEventListener('click', ejecutarBajaTrabajador);
         }
     });
 
-    // Función para renderizar la tabla asíncronamente
+    // ============================================
+    // CARGAR TRABAJADORES — Tabla dinámica con filtros
+    // GET /trabajadores?estatus=...&nomina=...
+    // ============================================
     async function cargarTrabajadores(estatus = '', nomina = '') {
         const tbody = document.getElementById('tbodyTrabajadores');
         if (!tbody) return;
@@ -152,9 +189,10 @@
             const data = await response.json();
 
             const items = data.data || [];
-            tbody.innerHTML = '';
+            tbody.innerHTML = '';  // Limpia la tabla
             document.getElementById('totalTrabajadores').textContent = data.total || items.length || 0;
 
+            // Renderiza cada trabajador como una fila <tr> con celdas creadas manualmente
             items.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.dataset.id = t.id;
@@ -175,6 +213,7 @@
                 statusPill.textContent = (t.estatus || 'SIN ESTATUS').toUpperCase();
                 tdEstatus.appendChild(statusPill);
 
+                // Columna de acciones: botones Ver y Eliminar
                 const tdAcciones = document.createElement('td');
                 const div = document.createElement('div'); div.className = 'acciones-cell';
                 const btnVer = document.createElement('button');
@@ -203,6 +242,9 @@
         }
     }
 
+    // ============================================
+    // VER EXPEDIENTE — GET /trabajadores/{id} y carga en modal (solo lectura)
+    // ============================================
     window.sigejubVerTrabajador = async function(id, elemento) {
         if (!modal) return;
         filaSeleccionadaDOM = elemento.closest('tr');
@@ -215,7 +257,7 @@
             if (!res.ok) throw new Error('No se pudo obtener la información del trabajador');
             const t = await res.json();
 
-            // Rellenar formulario
+            // Puebla todos los campos del formulario con los datos del servidor
             document.getElementById('inputCedula').value = t.cedula;
             document.getElementById('selectGenero').value = t.genero;
             document.getElementById('inputNombres').value = t.nombres;
@@ -230,7 +272,7 @@
             document.getElementById('selectNivelInstruccion').value = t.nivel_instruccion;
             document.getElementById('inputCuentaBancaria').value = t.cuenta_bancaria || '';
 
-            habilitarCamposFormulario(false);
+            habilitarCamposFormulario(false);  // Deshabilita todos los campos (solo lectura)
 
             modalTitle.innerHTML = "Expediente<br>Laboral";
             modalDescription.textContent = "Modo de lectura institucional. Use el botón inferior para editar.";
@@ -249,6 +291,9 @@
         }
     };
 
+    // ============================================
+    // ELIMINAR TRABAJADOR — Abre modal de confirmación de baja
+    // ============================================
     window.sigejubEliminarTrabajador = function(id, nombre, elemento) {
         trabajadorSeleccionadoId = id;
         filaSeleccionadaDOM = elemento.closest('tr');
@@ -256,6 +301,9 @@
         if (modalEliminar) modalEliminar.style.display = 'flex';
     };
 
+    // ============================================
+    // EJECUTAR BAJA — DELETE /trabajadores/{id} con animación de salida
+    // ============================================
     async function ejecutarBajaTrabajador() {
         if (!trabajadorSeleccionadoId) return;
         try {
@@ -273,9 +321,11 @@
             if (res.ok) {
                 if (modalEliminar) modalEliminar.style.display = 'none';
                 if (filaSeleccionadaDOM) {
+                    // Animación de desvanecimiento y luego remoción del DOM
                     filaSeleccionadaDOM.style.opacity = '0';
                     setTimeout(() => {
                         filaSeleccionadaDOM.remove();
+                        // Decrementa el contador de total de trabajadores
                         const badgeTotal = document.getElementById('totalTrabajadores');
                         if (badgeTotal) badgeTotal.textContent = Math.max(0, parseInt(badgeTotal.textContent) - 1);
                     }, 300);
@@ -291,23 +341,32 @@
         }
     }
 
+    // ============================================
+    // HABILITAR/DESHABILITAR CAMPOS — Controla la edición del formulario
+    // ============================================
     function habilitarCamposFormulario(condicion) {
         const inputs = form.querySelectorAll('input, select');
-        inputs.forEach(i => i.disabled = !condicion);
+        inputs.forEach(i => i.disabled = !condicion);  // true = habilitado, false = deshabilitado
     }
 
-    // Cargar estadísticas del dashboard de trabajadores
+    // ============================================
+    // ESTADÍSTICAS DEL DASHBOARD — Próximas jubilaciones y % expedientes digitales
+    // GET /trabajadores-stats/dashboard
+    // ============================================
     async function cargarTrabajadoresStats() {
         try {
             const resp = await fetch('/trabajadores-stats/dashboard');
             const data = await resp.json();
 
-            // Próximas jubilaciones
+            // ============================================
+            // LISTA DE PRÓXIMAS JUBILACIONES — Top 5
+            // ============================================
             const lista = document.getElementById('proximasJubilacionesList');
             if (lista && data.proximas) {
                 if (!data.proximas.length) {
                     lista.innerHTML = '<p style="color:rgba(255,255,255,0.7);font-size:0.85rem;">No hay trabajadores próximos a jubilarse.</p>';
                 } else {
+                    // Renderiza los primeros 5 trabajadores con su edad y años de servicio
                     lista.innerHTML = '<p style="color:rgba(255,255,255,0.85);font-size:0.85rem;margin-bottom:10px;">' +
                         data.proximas.length + ' trabajadores próximos a cumplir requisitos:</p>' +
                         data.proximas.slice(0, 5).map(t =>
@@ -319,7 +378,9 @@
                 }
             }
 
-            // Estatus de datos
+            // ============================================
+            // BARRA DE ESTATUS — % de expedientes digitalizados
+            // ============================================
             const texto = document.getElementById('estatusDatosTexto');
             const barra = document.getElementById('estatusDatosBarra');
             const pct = document.getElementById('estatusDatosPorcentaje');
@@ -333,12 +394,16 @@
         }
     }
 
-    // Observer para la inicialización al cambiar de pestaña
-    let estabaActivo = false;
+    // ============================================
+    // MUTATION OBSERVER — Detecta cambios de pestaña para cargar datos bajo demanda
+    // ============================================
+    let estabaActivo = false;  // Estado anterior de la pestaña
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {
+            // Solo nos interesa la sección #trabajadores
             if (m.target.id === 'trabajadores') {
                 const actualmenteActivo = m.target.classList.contains('active');
+                // Si se activó ahora y antes no lo estaba → carga datos
                 if (actualmenteActivo && !estabaActivo) {
                     cargarTrabajadores();
                     cargarTrabajadoresStats();
@@ -348,10 +413,13 @@
         });
     });
 
+    // Inicia la observación si la sección existe
     const seccion = document.getElementById('trabajadores');
     if (seccion) {
         estabaActivo = seccion.classList.contains('active');
+        // Si ya está visible, carga las stats inmediatamente
         if (estabaActivo) cargarTrabajadoresStats();
+        // Observa cambios en el atributo class de la sección
         observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
     }
 })();

@@ -1,4 +1,12 @@
-/* === LAYOUT === */
+/* ============================================================
+   expediente.css — Estilos para la sección "Expedientes"
+   Grid de tarjetas de expedientes con foto, detalle con
+   perfil, barra de progreso, documentos con aprobación/
+   rechazo, carga de archivos (dropzone), historial y
+   modal de creación con búsqueda por cédula.
+   ============================================================ */
+
+/* === LAYOUT — Utilidades y barra de búsqueda === */
 .hidden { display: none !important; }
 
 .search-filter-bar {
@@ -60,7 +68,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .expediente-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-4px); /* Efecto de elevación al hacer hover */
     box-shadow: 0 12px 30px rgba(0,0,0,0.1);
     border-color: #dbeafe;
 }
@@ -181,9 +189,9 @@
 }
 .progress-fill-mini {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    background: linear-gradient(90deg, #3b82f6, #2563eb); /* Degradado azul para la barra de progreso */
     border-radius: 10px;
-    transition: width 0.4s ease;
+    transition: width 0.4s ease; /* Animación suave al cambiar el progreso */
 }
 
 /* === DETALLE GRID === */
@@ -351,7 +359,7 @@
     height: 100%;
     background: linear-gradient(90deg, #3b82f6, #2563eb);
     border-radius: 10px;
-    transition: width 0.5s ease;
+    transition: width 0.5s ease; /* Más lento que el mini-progress para destacar el cambio */
 }
 .eg-desc {
     font-size: 12px;
@@ -395,6 +403,7 @@
     border: 1px solid #f1f5f9;
 }
 
+/* Grid con 3 columnas: ícono | info | botones de acción */
 .doc-item-row {
     display: grid;
     grid-template-columns: 50px 1fr auto;

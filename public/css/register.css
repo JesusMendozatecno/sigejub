@@ -1,3 +1,9 @@
+/* ============================================================
+   register.css — Estilos del formulario de registro
+   Grid de 2 columnas, validación visual, indicador de fortaleza
+   de contraseña y wrapper para teléfono/país. Responsive.
+   ============================================================ */
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -43,12 +49,14 @@ p {
     box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
 
+/* Grid de 2 columnas para el formulario de registro */
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
 }
 
+/* Elementos que ocupan todo el ancho (ej: botón submit) */
 .form-grid .full-width {
     grid-column: 1 / -1;
 }
@@ -82,7 +90,7 @@ input, select {
 input:focus, select:focus {
     border-color: #002366;
     background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(0,35,102,0.08);
+    box-shadow: 0 0 0 3px rgba(0,35,102,0.08); /* Anillo sutil alrededor del input enfocado */
 }
 
 .register-container button[type="submit"] {
@@ -133,7 +141,8 @@ a:hover {
     transform: translateX(-3px);
 }
 
-/* === PHONE WRAPPER === */
+/* === PHONE WRAPPER — Input de teléfono + código de país === */
+/* Flex para tener selector de país al lado del número */
 .phone-wrapper {
     display: flex;
     gap: 6px;
@@ -150,7 +159,8 @@ a:hover {
     flex: 1;
 }
 
-/* === PASSWORD WRAPPER (EYE ICON) === */
+/* === PASSWORD WRAPPER — Icono de ojo para mostrar/ocultar contraseña === */
+/* El input tiene padding-right para dejar espacio al ícono */
 .password-wrapper {
     position: relative;
     display: flex;
@@ -180,7 +190,8 @@ a:hover {
     color: #002366;
 }
 
-/* === PASSWORD STRENGTH === */
+/* === PASSWORD STRENGTH — Barra de fortaleza de contraseña === */
+/* Barra animada que cambia de ancho/color según la seguridad */
 .password-strength {
     height: 4px;
     background: #e2e8f0;
@@ -196,7 +207,7 @@ a:hover {
     transition: all 0.3s ease;
 }
 
-/* === VALIDATION MESSAGES === */
+/* === VALIDATION MESSAGES — Mensajes de validación en tiempo real === */
 .validation-msg {
     display: block;
     font-size: 11px;
@@ -222,6 +233,8 @@ input.invalid {
     background-color: #fef2f2;
 }
 
+/* === RESPONSIVE — Pantallas pequeñas <= 500px === */
+/* Grid pasa a 1 columna, inputs apilados */
 @media (max-width: 500px) {
     .form-grid {
         grid-template-columns: 1fr;

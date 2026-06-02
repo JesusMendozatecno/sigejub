@@ -2,8 +2,8 @@
 <html>
 <head>
     <title>Login SIGEJUB</title>
-    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
-    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
+    <link rel="shortcut icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
     <!-- CSS exclusivo del login -->
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">

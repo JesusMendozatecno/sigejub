@@ -1,41 +1,58 @@
-/**
- * SIGEJUB - Control y Apertura de Expedientes de Trabajadores
- * Lógica Exclusiva de Modales de Registro y Envíos AJAX (Fetch)
- */
+// ============================================
+// trabajador.js — Modal y registro de trabajadores (vista legacy/simple)
+// Ubicación: Sección de trabajadores del dashboard
+// Responsabilidades:
+//   - Apertura/cierre del modal de registro de trabajador
+//   - Envío del formulario vía AJAX (fetch)
+//   - Manejo de errores de validación del servidor
+// Nota: Este archivo maneja la versión simple; la versión completa
+//       con CRUD y tabla dinámica está en secciones/trabajador.js y tabla1.js
+// ============================================
+
 document.addEventListener('DOMContentLoaded', function() {
-    
+    // ============================================
+    // REFERENCIAS AL DOM — Modal, botones y formulario
+    // ============================================
     const modal = document.getElementById('modalTrabajador');
-    const btnAbrir = document.querySelector('.btn-primary-dark'); 
+    const btnAbrir = document.querySelector('.btn-primary-dark');
     const btnCerrar = document.getElementById('closeModal');
     const btnCancelar = document.getElementById('btnCancelar');
     const formTrabajador = document.getElementById('formTrabajador');
 
+    // Cierra el modal ocultándolo con display:none
     const cerrarModalTrabajador = () => {
         if (modal) modal.style.display = 'none';
     };
 
+    // Abre el modal al hacer clic en el botón principal de registro
     if (btnAbrir && modal) {
         btnAbrir.addEventListener('click', () => {
             modal.style.display = 'flex';
         });
     }
 
+    // Cierra el modal desde los botones de cerrar/cancelar
     if (btnCerrar) btnCerrar.addEventListener('click', cerrarModalTrabajador);
     if (btnCancelar) btnCancelar.addEventListener('click', cerrarModalTrabajador);
 
+    // Cierra el modal si el usuario hace clic en el fondo oscuro (overlay)
     window.addEventListener('click', (e) => {
         if (e.target === modal) cerrarModalTrabajador();
     });
 
-    // PROCESAMIENTO AJAX FORM TRABAJADOR
+    // ============================================
+    // ENVÍO DEL FORMULARIO — AJAX con fetch
+    // ============================================
     if (formTrabajador) {
         formTrabajador.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const actionUrl = this.getAttribute('data-action') || "/dashboard/trabajadores"; 
+            // Toma la URL del atributo data-action o usa la ruta por defecto
+            const actionUrl = this.getAttribute('data-action') || "/dashboard/trabajadores";
             const formData = new FormData(this);
             const btnSubmit = this.querySelector('.btn-submit');
 
+            // Deshabilita el botón y cambia el texto mientras se procesa
             if (btnSubmit) {
                 btnSubmit.disabled = true;
                 btnSubmit.innerText = 'Guardando...';
@@ -58,11 +75,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(data.message || 'Trabajador registrado de manera exitosa.');
                 formTrabajador.reset();
                 cerrarModalTrabajador();
-                location.reload(); 
+                location.reload();  // Recarga la página para reflejar el nuevo registro
             })
             .catch(error => {
                 console.error('Error procesando el registro:', error);
                 if (error.errors) {
+                    // Errores de validación de Laravel: concatena el primer mensaje de cada campo
                     let mensajes = '';
                     Object.values(error.errors).forEach(err => {
                         mensajes += err[0] + '\n';
@@ -73,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .finally(() => {
+                // Restaura el botón de envío siempre, haya éxito o error
                 if (btnSubmit) {
                     btnSubmit.disabled = false;
                     btnSubmit.innerText = 'Registrar Trabajador';

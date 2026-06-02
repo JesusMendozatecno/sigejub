@@ -1,9 +1,18 @@
-/* Scrollbar Minimalista en el modal de trabajador */
+/* ============================================================
+   trabajadores2.css — Estilos complementarios de trabajadores
+   Scrollbar del modal, botones de la barra lateral del modal,
+   status pills (activo/jubilado) y type tags para la tabla.
+   ============================================================ */
+
+/* Scrollbar minimalista en el modal de trabajador */
+.modal-form-content::-webkit-scrollbar { width: 6px; }
+/* Pulgar del scroll sutil */
+.modal-form-content::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 .modal-form-content::-webkit-scrollbar { width: 6px; }
 .modal-form-content::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 
 .input-group input:focus {
-    border-color: #6366f1;
+    border-color: #6366f1; /* Índigo en lugar del azul institucional para diferenciar inputs del modal */
     background: white;
     outline: none;
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
@@ -25,7 +34,7 @@
 }
 .btn-close-absolute:hover { background: #fee2e2; color: #ef4444; }
 
-/* Botones en la barra lateral del modal */
+/* === Botones en la barra lateral del modal (editar/cancelar) === */
 .sidebar-actions {
     margin-top: auto;
     display: flex;
@@ -67,7 +76,7 @@
     color: #f1f5f9;
 }
 
-/* Status pills y type tags para la tabla de trabajadores */
+/* === STATUS PILLS Y TYPE TAGS — Activo/Jubilado y tipo de trabajador === */
 .status-pill {
     font-size: 10px;
     font-weight: 800;

@@ -1,4 +1,12 @@
-/*-------------------------------------------------- EXTENSIÓN PARA SECCIÓN TRABAJADORES -----------------------------------------------------*/
+/* ============================================================
+   trabajadores.css — Estilos para la sección "Trabajadores"
+   Encabezado de sección, filtros, tabla con avatares,
+   badges de tipo (docente/admin), indicadores de estatus
+   con puntos de colores, paginación, tarjetas promocionales,
+   auditoría y modal de confirmación de eliminación.
+   ============================================================ */
+
+/* --- EXTENSIÓN PARA SECCIÓN TRABAJADORES --- */
 
 .section-header {
     display: flex;
@@ -20,7 +28,7 @@
     cursor: pointer;
 }
 
-/* Filtros */
+/* === FILTROS — Grid de filtros + contador total === */
 .filters-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr) 200px;
@@ -66,7 +74,7 @@
 .total-badge-card h2 { font-size: 22px; color: #1e3a8a; }
 .total-badge-card .icon-bg { color: #bfdbfe; }
 
-/* Tabla Customizada */
+/* === TABLA CUSTOMIZADA — Contenedor con border-radius y sombra === */
 .data-table-container {
     background: white;
     border-radius: 16px;
@@ -89,7 +97,7 @@
 .avatar.blue { background: #dbeafe; color: #1e40af; }
 .avatar.purple { background: #f3e8ff; color: #6b21a8; }
 
-/* Estatus con Puntos */
+/* === ESTATUS CON PUNTOS — Indicador visual de estado (activo/jubilado/suspensión) === */
 .dot {
     height: 8px;
     width: 8px;
@@ -101,7 +109,7 @@
 .dot.jubilado { background: #3b82f6; }
 .dot.suspension { background: #ef4444; }
 
-/* Badges de Tipo */
+/* === BADGES DE TIPO — Docente o Administrativo === */
 .badge-type {
     font-size: 9px;
     font-weight: 800;
@@ -115,7 +123,7 @@
 .actions i { cursor: pointer; margin-right: 10px; transition: 0.2s; }
 .actions i:hover { color: #1a365d; }
 
-/* Footer Tabla */
+/* === FOOTER TABLA — Paginación e información de resultados === */
 .table-footer {
     padding: 20px;
     display: flex;
@@ -135,14 +143,15 @@
 }
 .pagination button.active { background: #1a365d; color: white; border-color: #1a365d; }
 
-/* Widgets Promo */
+/* === WIDGETS PROMO — Tarjetas promocionales y de auditoría === */
+/* Tarjeta promocional con degradado azul y contenido en blanco */
 .promo-card-blue {
     background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
     border-radius: 20px;
     padding: 30px;
     color: white;
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* Para que los elementos decorativos no se salgan */
 }
 
 .promo-card-blue h3 { margin-bottom: 10px; }
@@ -157,7 +166,7 @@
     cursor: pointer;
 }
 
-/* Auditoria */
+/* === TARJETA DE AUDITORÍA — Progreso de cumplimiento === */
 .audit-card {
     background: #f8fafc;
     border-radius: 20px;
@@ -190,7 +199,7 @@
 
 
 
-/* --- NUEVAS REGLAS PARA EL MODAL DE CONFIRMACIÓN DE ELIMINACIÓN --- */
+/* === MODAL DE CONFIRMACIÓN DE ELIMINACIÓN === */
 .modal-delete-box {
     background-color: #ffffff;
     width: 100%;
@@ -265,7 +274,7 @@
     background-color: #b91c1c;
 }
 
-/* Efecto físico al pulsar botones */
+/* Efecto de presión al hacer clic — escala ligeramente hacia abajo */
 .btn-delete-cancel:active, .btn-delete-confirm:active {
     transform: scale(0.96);
 }
