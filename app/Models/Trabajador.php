@@ -13,6 +13,11 @@ class Trabajador extends Model
 
     protected $appends = ['estatus'];
 
+    public function solicitudes()
+    {
+        return $this->hasMany(Solicitud::class, 'trabajador_id');
+    }
+
     public function getEstatusAttribute()
     {
         if ($this->total_anos_servicio >= 25 || $this->edad >= 60) {

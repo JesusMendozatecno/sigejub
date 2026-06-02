@@ -14,7 +14,7 @@
         const select = document.getElementById('selectTrabajador');
         if (!select) return;
         try {
-            const resp = await fetch('/trabajadores?per_page=1000');
+            const resp = await fetch('/trabajadores?sin_solicitud_activa=1&per_page=1000');
             const data = await resp.json();
             select.innerHTML = '<option value="">Seleccione un trabajador...</option>';
             (data.data || []).forEach(t => {
@@ -31,7 +31,7 @@
         }
     }
 
-    /* === 2. Buscar trabajador por cédula al escribir === */
+    /* === 2.. Buscar trabajador por cédula al escribir === */
     let timeoutCedula = null;
     document.addEventListener('input', function(e) {
         if (e.target.id !== 'displayCedula') return;
@@ -141,21 +141,19 @@
     /* === 5. Cargar métricas (pendientes, aprobadas, total, rechazadas) === */
     async function cargarMetricas() {
         try {
-            const resp = await fetch('/solicitudes?per_page=1');
+            const [resp, respPend, respAprob, respRech] = await Promise.all([
+                fetch('/solicitudes?per_page=1'),
+                fetch('/solicitudes?estado=pending&per_page=1'),
+                fetch('/solicitudes?estado=approved&per_page=1'),
+                fetch('/solicitudes?estado=rejected&per_page=1'),
+            ]);
             const data = await resp.json();
-            const total = data.total || 0;
-            document.getElementById('metricTotal').textContent = total;
-
-            const respPend = await fetch('/solicitudes?estado=pending&per_page=1');
             const dataPend = await respPend.json();
-            document.getElementById('metricPendientes').textContent = dataPend.total || 0;
-
-            const respAprob = await fetch('/solicitudes?estado=approved&per_page=1');
             const dataAprob = await respAprob.json();
-            document.getElementById('metricAprobadas').textContent = dataAprob.total || 0;
-
-            const respRech = await fetch('/solicitudes?estado=rejected&per_page=1');
             const dataRech = await respRech.json();
+            document.getElementById('metricTotal').textContent = data.total || 0;
+            document.getElementById('metricPendientes').textContent = dataPend.total || 0;
+            document.getElementById('metricAprobadas').textContent = dataAprob.total || 0;
             document.getElementById('metricRechazadas').textContent = dataRech.total || 0;
         } catch (err) {
             console.error('Error al cargar métricas:', err);
@@ -330,7 +328,54 @@
         });
     });
 
-    /* === 11. Exportar solicitudes a PDF === */
+    /* === 11. Envío del formulario de creación (AJAX, sin recarga) === */
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('formSolicitud');
+        if (!form) return;
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const btnSubmit = this.querySelector('.btn-submit');
+
+            if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Registrando...'; }
+
+            try {
+                mostrarCargando('Registrando solicitud...');
+                const resp = await fetch('/solicitudes', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw data;
+
+                mostrarToast(data.message || 'Solicitud registrada exitosamente.', 'success');
+                cerrarModalSolicitud();
+                form.reset();
+                document.getElementById('displayNombreCompleto').value = '';
+                document.getElementById('displayCedula').value = '';
+                cargarSolicitudes(currentStatus);
+                cargarMetricas();
+
+            } catch (err) {
+                if (err.errors) {
+                    mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
+                } else {
+                    mostrarToast(err.message || 'Error en el sistema.', 'error');
+                }
+            } finally {
+                ocultarCargando();
+                if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Registrar Solicitud'; }
+            }
+        });
+    });
+
+    /* === 12. Exportar solicitudes a PDF === */
     window.exportarSolicitudesPDF = function() {
         const params = currentStatus !== 'all' ? `?estado=${currentStatus}` : '';
         window.open('/solicitudes/exportar' + params, '_blank', 'width=1000,height=700');
@@ -342,6 +387,7 @@
             if (m.target.id === 'solicitudes' && m.target.classList.contains('active')) {
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
+                cargarSelectTrabajadores();
             }
         });
     });

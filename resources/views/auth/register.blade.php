@@ -227,6 +227,7 @@ function validarFormulario(e) {
     return true;
 }
 </script>
+@include('partials.loading-overlay')
 @include('partials.toast')
 @if(session('success'))
     <script>mostrarToast('{{ session('success') }}', 'success');</script>

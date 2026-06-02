@@ -18,6 +18,18 @@
     <style>:root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }</style>
 </head>
 <body>
+@include('partials.loading-overlay')
+<script>document.getElementById('loading-overlay').classList.add('active');</script>
+<script>
+(function(){
+    var theme = '{{ auth()->user()->theme }}';
+    if (theme === 'dark') document.body.classList.add('dark-mode');
+    var saved = localStorage.getItem('sigejub_active_section');
+    if (saved && saved !== 'inicio') {
+        document.write('<style id="tmp-section-style">.content-section.active{display:none!important} #' + saved + '{display:block}</style>');
+    }
+})();
+</script>
 
 <header class="top-bar">
     <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
@@ -155,8 +167,40 @@
 
 @include('partials.toast')
 
+<script>
+/* === Precarga del dashboard al cargar === */
+(function() {
+    var overlay = document.getElementById('loading-overlay');
+    if (!overlay || !overlay.classList.contains('active')) return;
+    document.getElementById('loadingText').textContent = 'Preparando el sistema...';
+    Promise.all([
+        fetch('/actividades').catch(function(){}),
+        fetch('/solicitudes?per_page=1').catch(function(){}),
+        fetch('/trabajadores?per_page=1').catch(function(){}),
+        fetch('/expedientes?per_page=1').catch(function(){}),
+        fetch('/caja-negra?per_page=1').catch(function(){}),
+        fetch('/solicitudes/por-mes').catch(function(){}),
+        fetch('/solicitudes/vencimientos').catch(function(){}),
+        fetch('/trabajadores-stats/dashboard').catch(function(){}),
+        fetch('/notificaciones/no-leidas').catch(function(){}),
+    ]).then(function() {
+        ocultarCargando();
+    }).catch(function() {
+        ocultarCargando();
+    });
+})();
+</script>
+
 @if(session('success'))
-    <script>mostrarToast('{{ session('success') }}', 'success');</script>
+    <script>
+    var checkBienvenida = setInterval(function() {
+        var overlay = document.getElementById('loading-overlay');
+        if (!overlay || !overlay.classList.contains('active')) {
+            clearInterval(checkBienvenida);
+            mostrarToast('{{ session('success') }}', 'success');
+        }
+    }, 200);
+    </script>
 @endif
 @if($errors->any())
     <script>mostrarToast('{{ $errors->first() }}', 'error');</script>

@@ -27,25 +27,62 @@
         <!-- Subtítulo -->
         <p>Accede a tu cuenta</p>
 
-        <!-- Formulario de autenticación -->
-        <form method="POST" action="/login" onsubmit="mostrarCargando('Iniciando sesión...')">
-            @csrf <!-- Seguridad Laravel (evita ataques CSRF) -->
+        <!-- Formulario de autenticación (AJAX + loading + sonidos) -->
+        <form id="loginForm">
+            @csrf
 
             <!-- Campo email -->
             <div class="input-group">
                 <label>Usuario</label>
-                <input type="text" name="email" required>
+                <input type="text" name="email" id="loginEmail" required>
             </div>
 
             <!-- Campo contraseña -->
             <div class="input-group">
                 <label>Contraseña</label>
-                <input type="password" name="password" required>
+                <input type="password" name="password" id="loginPassword" required>
             </div>
 
             <!-- Botón de acceso -->
-            <button class="btn">Entrar</button>
+            <button class="btn" id="loginBtn" type="submit">Entrar</button>
         </form>
+
+        <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            mostrarCargando('Verificando credenciales...');
+            var btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+            try {
+                var resp = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    },
+                    body: new URLSearchParams(new FormData(this))
+                });
+                var data = await resp.json();
+                if (!resp.ok) throw data;
+                document.getElementById('loadingText').textContent = 'Cargando el sistema...';
+                // Obtiene el HTML completo del dashboard
+                var dashResp = await fetch('/dashboard');
+                var dashHtml = await dashResp.text();
+                // Reemplaza la página completa sin recargar (el overlay sigue visible)
+                document.open();
+                document.write(dashHtml);
+                document.close();
+                history.pushState(null, '', data.redirect || '/dashboard');
+            } catch (err) {
+                ocultarCargando();
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+                var mensaje = err.message || err.error || 'Credenciales incorrectas';
+                mostrarToast(mensaje, 'error');
+            }
+        });
+        </script>
 
         <!-- Enlace a registro -->
         <p style="margin-top: 10px;">
@@ -55,6 +92,7 @@
 
     </div>
 </div>
+    @include('partials.loading-overlay')
     @include('partials.toast')
     @if(session('success'))
         <script>mostrarToast('{{ session('success') }}', 'success');</script>

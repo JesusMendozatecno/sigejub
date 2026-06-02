@@ -16,7 +16,7 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    // 🔐 LOGIN
+    // 🔐 LOGIN (AJAX + JSON)
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
@@ -27,7 +27,24 @@ class AuthController extends Controller
             $user->last_login_at = now();
             $user->last_login_ip = $request->ip();
             $user->save();
+
+            if ($request->expectsJson()) {
+                $request->session()->flash('success', 'Bienvenido al sistema SIGEJUB');
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Bienvenido al sistema SIGEJUB',
+                    'redirect' => '/dashboard'
+                ]);
+            }
+
             return redirect('dashboard')->with('success', 'Bienvenido al sistema SIGEJUB');
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Credenciales incorrectas'
+            ], 422);
         }
 
         return back()->withErrors([

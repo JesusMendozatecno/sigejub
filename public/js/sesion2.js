@@ -14,6 +14,8 @@
 
 // Función global para saltar entre módulos (accesible desde accesos rápidos del inicio)
 function switchTab(id) {
+    var tmp = document.getElementById('tmp-section-style');
+    if (tmp) tmp.remove();
     const menuItems = document.querySelectorAll('.menu-item');
     const sections = document.querySelectorAll('.content-section');
     const targetMenu = document.querySelector(`[data-target="${id}"]`);
@@ -27,6 +29,9 @@ function switchTab(id) {
         // Luego activa SOLO el ítem de menú y la sección que corresponden al target
         targetMenu.classList.add('active');
         targetSection.classList.add('active');
+
+        // Guarda la sección activa para restaurarla al recargar la página
+        localStorage.setItem('sigejub_active_section', id);
     }
 
     // ============================================
@@ -89,6 +94,12 @@ document.addEventListener('DOMContentLoaded', () => {
             switchTab(target);
         });
     });
+
+    // Restaura la sección activa guardada (al recargar la página)
+    var savedSection = localStorage.getItem('sigejub_active_section');
+    if (savedSection && savedSection !== 'inicio') {
+        switchTab(savedSection);
+    }
 
     // Cierre adaptativo: clic en el fondo difuminado cierra el modal de solicitud
     window.addEventListener('click', (event) => {

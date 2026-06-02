@@ -26,6 +26,13 @@ class TrabajadorController extends Controller
             });
         }
 
+        // Filtro: solo trabajadores sin solicitud activa o con solicitud rechazada
+        if ($request->boolean('sin_solicitud_activa')) {
+            $query->whereDoesntHave('solicitudes', function ($q) {
+                $q->whereIn('estado', ['pendiente', 'revision', 'aprobado']);
+            });
+        }
+
         // Filtro por estatus (activo / jubilado)
         if ($estatus = $request->get('estatus')) {
             if ($estatus === 'jubilado') {

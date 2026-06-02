@@ -104,40 +104,112 @@
         }
     };
 
-    /* === Ver detalle de un registro en modal === */
+    /* === Ver detalle de un registro en modal (sidebar style) === */
     window.verDetalleCajaNegra = async function(id) {
         const modal = document.getElementById('cnDetailModal');
         const content = document.getElementById('cnDetailContent');
-        modal.classList.add('show');
-        content.innerHTML = '<p class="cn-modal-loading">Cargando detalle...</p>';
+        modal.style.display = 'flex';
+        content.innerHTML = '<p class="cn-modal-loading" style="text-align:center;padding:2rem;color:#94a3b8;">Cargando detalle...</p>';
         try {
             const r = await fetch('/caja-negra/' + id);
             const a = await r.json();
             const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+            const diff = Math.floor((Date.now() - new Date(a.created_at).getTime()) / 1000);
+            const tiempoAgo = diff < 60 ? 'hace unos segundos' : diff < 3600 ? `hace ${Math.floor(diff/60)} min` : diff < 86400 ? `hace ${Math.floor(diff/3600)} h` : `hace ${Math.floor(diff/86400)} días`;
             const user = a.user ? a.user.name : 'Sistema';
+            const userEmail = a.user ? a.user.email : '—';
+            const userRole = a.user ? (a.user.role === 'admin' ? 'Administrador' : 'Analista') : '—';
             const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.action] || a.action;
-            const oldHtml = a.old_values ? `<pre>${JSON.stringify(a.old_values, null, 2)}</pre>` : '<span class="text-muted">—</span>';
-            const newHtml = a.new_values ? `<pre>${JSON.stringify(a.new_values, null, 2)}</pre>` : '<span class="text-muted">—</span>';
-            const reqHtml = a.request_data ? `<pre>${JSON.stringify(a.request_data, null, 2)}</pre>` : '<span class="text-muted">—</span>';
+            const tipoLabel = a.subject_type ? a.subject_type.charAt(0).toUpperCase() + a.subject_type.slice(1) : '—';
+            const oldHtml = a.old_values ? `<pre>${JSON.stringify(a.old_values, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const newHtml = a.new_values ? `<pre>${JSON.stringify(a.new_values, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const reqHtml = a.request_data ? `<pre>${JSON.stringify(a.request_data, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const uaHtml = a.user_agent ? `<div style="font-size:0.73rem;color:#64748b;word-break:break-all;font-family:monospace;background:#f1f5f9;padding:8px 10px;border-radius:6px;margin-top:4px;">${a.user_agent}</div>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const iconAccion = { created:'fa-plus-circle', updated:'fa-pen', deleted:'fa-trash-can' }[a.action] || 'fa-circle';
+            const iconTipo = { trabajador:'fa-user', solicitud:'fa-file-lines', expediente:'fa-folder', documento:'fa-file-pdf', usuario:'fa-user-shield', notificacion:'fa-bell' }[a.subject_type] || 'fa-circle';
 
             content.innerHTML = `
-                <div class="cn-detail-grid">
-                    <div class="cn-detail-field"><label>Fecha/Hora</label><div class="value">${fecha}</div></div>
-                    <div class="cn-detail-field"><label>Usuario</label><div class="value">${user}</div></div>
-                    <div class="cn-detail-field"><label>Acción</label><div class="value"><span class="badge-action ${'badge-'+a.action}">${badgeAction}</span></div></div>
-                    <div class="cn-detail-field"><label>Tipo</label><div class="value"><span class="badge-type">${a.subject_type||'—'}</span></div></div>
-                    <div class="cn-detail-field"><label>ID del registro</label><div class="value">${a.subject_id ?? '—'}</div></div>
-                    <div class="cn-detail-field"><label>IP</label><div class="value" style="font-family:monospace;">${a.ip_address||'—'}</div></div>
-                </div>
-                <div class="cn-detail-field" style="margin-bottom:8px;"><label>Descripción</label><div class="value">${a.description}</div></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-                    <div class="cn-detail-full"><label>Valores Anteriores</label>${oldHtml}</div>
-                    <div class="cn-detail-full"><label>Valores Nuevos</label>${newHtml}</div>
-                </div>
-                <div class="cn-detail-full" style="margin-top:12px;"><label>Datos de la Petición</label>${reqHtml}</div>
+                <section class="form-section">
+                    <h3><i class="fas fa-info-circle"></i> Información General</h3>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>FECHA/HORA</label>
+                            <input type="text" value="${fecha}" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label>TIEMPO TRANSCURRIDO</label>
+                            <input type="text" value="${tiempoAgo}" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>ACCIÓN</label>
+                            <input type="text" value="${badgeAction}" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label>TIPO</label>
+                            <input type="text" value="${tipoLabel}" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>ID DEL REGISTRO</label>
+                            <input type="text" value="${a.subject_id ?? '—'}" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label>DIRECCIÓN IP</label>
+                            <input type="text" value="${a.ip_address || '—'}" readonly style="font-family:monospace;">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h3><i class="fas fa-user"></i> Usuario</h3>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>NOMBRE</label>
+                            <input type="text" value="${user}" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label>CORREO</label>
+                            <input type="text" value="${userEmail}" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>ROL</label>
+                            <input type="text" value="${userRole}" readonly>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h3><i class="fas fa-align-left"></i> Descripción</h3>
+                    <textarea class="form-textarea" readonly style="resize:none;">${a.description}</textarea>
+                </section>
+
+                <section class="form-section">
+                    <h3><i class="fas fa-globe"></i> Navegador / Dispositivo</h3>
+                    <div style="margin-top:4px;">${uaHtml}</div>
+                </section>
+
+                <section class="form-section">
+                    <h3><i class="fas fa-code-branch"></i> Valores Anteriores</h3>
+                    ${oldHtml}
+                </section>
+
+                <section class="form-section">
+                    <h3><i class="fas fa-code-branch"></i> Valores Nuevos</h3>
+                    ${newHtml}
+                </section>
+
+                <section class="form-section">
+                    <h3><i class="fas fa-paper-plane"></i> Datos de la Petición</h3>
+                    ${reqHtml}
+                </section>
             `;
         } catch (e) {
-            content.innerHTML = '<p class="cn-modal-loading" style="color:#ef4444;">Error al cargar detalle</p>';
+            content.innerHTML = '<p class="cn-modal-loading" style="text-align:center;padding:2rem;color:#ef4444;">Error al cargar detalle</p>';
         }
     };
 
@@ -159,11 +231,19 @@
         cnTimeout = setTimeout(() => { cnPagina = 1; cargarCajaNegra(); }, 400);
     });
 
+    function cerrarCnDetalle() {
+        document.getElementById('cnDetailModal').style.display = 'none';
+    }
+
     /* === Inicialización al cargar el DOM === */
     document.addEventListener('DOMContentLoaded', () => {
         cargarStats();
         cargarUsuarios();
         cargarCajaNegra();
+        document.getElementById('btnCerrarCnDetalle')?.addEventListener('click', cerrarCnDetalle);
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('cnDetailModal')) cerrarCnDetalle();
+        });
     });
 
     /* === Observador para recargar al cambiar a la pestaña === */

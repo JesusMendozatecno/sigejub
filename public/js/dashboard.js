@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', inicializarDashboard);
 
 window.addEventListener('pageshow', function(e) {
     if (e.persisted) {
-        window.location.reload();
+        cargarContadorNoLeidas();
     }
 });
 

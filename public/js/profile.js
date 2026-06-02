@@ -32,10 +32,12 @@ function inicializarPerfil() {
 
 document.addEventListener('DOMContentLoaded', inicializarPerfil);
 
-// Forzar refresco completo cuando el usuario vuelve con el botón Atrás del navegador
+// Refrescar datos activos al volver con el botón Atrás del navegador (sin recarga completa)
 window.addEventListener('pageshow', function(e) {
-    if (e.persisted) {
-        window.location.reload();
+    if (e.persisted && document.querySelector('.profile-nav-item.active')) {
+        var tabId = document.querySelector('.profile-nav-item.active').dataset.tab;
+        if (tabId === 'tab-actividad' && typeof cargarActividad === 'function') cargarActividad();
+        if (tabId === 'tab-configuracion' && typeof cargarConfigExtra === 'function') cargarConfigExtra();
     }
 });
 
@@ -172,14 +174,25 @@ async function confirmarCrop() {
     }, 'image/jpeg', 0.9);
 }
 
-// DELETE /perfil/avatar — Elimina la foto de perfil y recarga la página
+// DELETE /perfil/avatar — Elimina la foto de perfil y actualiza el DOM sin recargar
 async function eliminarAvatar() {
     if (!confirm('¿Eliminar foto de perfil?')) return;
     try {
         var r = await fetch('/perfil/avatar', { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' } });
         var d = await r.json();
         if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        location.reload();
+        var img = document.getElementById('profileAvatarImg');
+        if (img) {
+            img.remove();
+            var wrap = document.querySelector('.avatar-wrap');
+            if (wrap) {
+                var placeholder = document.createElement('i');
+                placeholder.className = 'fas fa-user fa-3x avatar-placeholder';
+                placeholder.id = 'profileAvatarPlaceholder';
+                wrap.insertBefore(placeholder, wrap.querySelector('.avatar-overlay'));
+            }
+        }
+        mostrarToast(d.message, 'success');
     } catch (err) { console.error('Error eliminar avatar:', err); mostrarToast('Error de conexión', 'error'); }
 }
 

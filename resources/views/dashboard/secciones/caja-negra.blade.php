@@ -87,12 +87,18 @@
 
 <!-- Detail Modal -->
 <div class="modal-overlay" id="cnDetailModal">
-    <div class="modal-box cn-detail-modal">
-        <div class="cn-modal-head">
-            <h3><i class="fas fa-search" size="18"></i> Detalle del Registro</h3>
-            <button class="cn-modal-close" onclick="document.getElementById('cnDetailModal').classList.remove('show')">&times;</button>
-        </div>
-        <div id="cnDetailContent"><p class="cn-modal-loading">Cargando detalle...</p></div>
+    <div class="modal-container" style="max-width: 820px;">
+        <aside class="modal-sidebar">
+            <span class="badge-new">AUDITORÍA</span>
+            <h1>Detalle del<br>Registro</h1>
+            <p>Información completa del registro de auditoría seleccionado.</p>
+            <div class="sidebar-actions" style="margin-top: auto;">
+                <button type="button" class="btn-sidebar-cancel" id="btnCerrarCnDetalle">Cerrar</button>
+            </div>
+        </aside>
+        <main class="modal-form-content" id="cnDetailContent">
+            <p class="cn-modal-loading">Cargando detalle...</p>
+        </main>
     </div>
 </div>
 
