@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Activity;
 use App\Models\UserNotification;
+use App\Services\DashboardCache;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -142,27 +144,36 @@ class AdminController extends Controller
             \Illuminate\Support\Facades\Log::warning('Error al enviar email de notificación: ' . $e->getMessage());
         }
 
+        DashboardCache::flushNotifications($request->user_id);
+
         return response()->json(['message' => 'Notificación enviada correctamente.']);
     }
 
     public function misNotificaciones()
     {
-        $notifs = UserNotification::where('user_id', auth()->id())
-            ->with('fromUser')
-            ->latest()
-            ->take(20)
-            ->get();
+        $userId = auth()->id();
+        $notifs = Cache::remember(DashboardCache::key('notificaciones', $userId), 120, function () use ($userId) {
+            return UserNotification::where('user_id', $userId)
+                ->with('fromUser')
+                ->latest()
+                ->take(20)
+                ->get();
+        });
 
         return response()->json($notifs);
     }
 
     public function notificacionesNoLeidas()
     {
-        $count = UserNotification::where('user_id', auth()->id())
-            ->where('is_read', false)
-            ->count();
+        $userId = auth()->id();
+        $data = Cache::remember(DashboardCache::key('notificaciones.no_leidas', $userId), 120, function () use ($userId) {
+            $count = UserNotification::where('user_id', $userId)
+                ->where('is_read', false)
+                ->count();
+            return ['count' => $count];
+        });
 
-        return response()->json(['count' => $count]);
+        return response()->json($data);
     }
 
     public function marcarLeida($id)
@@ -173,6 +184,8 @@ class AdminController extends Controller
 
         $notif->update(['is_read' => true]);
 
+        DashboardCache::flushNotifications(auth()->id());
+
         return response()->json(['message' => 'Notificación marcada como leída.']);
     }
 
@@ -181,6 +194,8 @@ class AdminController extends Controller
         UserNotification::where('user_id', auth()->id())
             ->where('is_read', false)
             ->update(['is_read' => true]);
+
+        DashboardCache::flushNotifications(auth()->id());
 
         return response()->json(['message' => 'Todas las notificaciones marcadas como leídas.']);
     }

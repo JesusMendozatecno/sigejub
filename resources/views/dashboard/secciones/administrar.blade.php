@@ -95,6 +95,7 @@
         <main class="modal-form-content">
             <button class="btn-close-absolute" id="closeModalEditarUsuario" type="button">&times;</button>
             <form id="formEditarUsuario">
+                @csrf
                 <input type="hidden" name="user_id" id="editUserId">
                 <section class="form-section">
                     <h3><i class="fas fa-user"></i> Datos del Usuario</h3>
@@ -133,6 +134,7 @@
         <main class="modal-form-content">
             <button class="btn-close-absolute" id="closeModalNotificacion" type="button">&times;</button>
             <form id="formEnviarNotificacion">
+                @csrf
                 <input type="hidden" name="user_id" id="notifUserId">
                 <section class="form-section">
                     <h3><i class="fas fa-user"></i> Para:</h3>
@@ -205,13 +207,13 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${u.id}</td>
-                    <td><strong>${u.name}</strong></td>
-                    <td>${u.email}</td>
-                    <td><span class="${rolClass}">${u.role.toUpperCase()}</span></td>
-                    <td>${fecha}</td>
+                    <td><strong>${escaparHTML(u.name)}</strong></td>
+                    <td>${escaparHTML(u.email)}</td>
+                    <td><span class="${rolClass}">${escaparHTML(u.role.toUpperCase())}</span></td>
+                    <td>${escaparHTML(fecha)}</td>
                     <td class="actions">
-                        <i class="fas fa-shield btn-icon btn-editar-usuario" title="Editar Permisos" data-id="${u.id}" data-name="${u.name}" data-email="${u.email}" data-role="${u.role}"></i>
-                        <i class="fas fa-bell btn-icon btn-notificar-usuario" title="Enviar Notificación" data-id="${u.id}" data-name="${u.name}"></i>
+                        <i class="fas fa-shield btn-icon btn-editar-usuario" title="Editar Permisos" data-id="${u.id}" data-name="${escaparHTML(u.name)}" data-email="${escaparHTML(u.email)}" data-role="${escaparHTML(u.role)}"></i>
+                        <i class="fas fa-bell btn-icon btn-notificar-usuario" title="Enviar Notificación" data-id="${u.id}" data-name="${escaparHTML(u.name)}"></i>
                     </td>
                 `;
                 tbody.appendChild(tr);

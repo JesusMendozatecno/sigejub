@@ -1,46 +1,56 @@
-// ============================================
-// dashboard.js — Panel principal del SIGEJUB
-// Ubicación: Dashboard administrativo
-// Responsabilidades:
-//   - Inicialización del dashboard (tema oscuro, sidebar, contadores)
-//   - Toggle del menú lateral y overlay en móviles
-//   - Dropdown de usuario (cerrar sesión, perfil)
-//   - Gestión completa de notificaciones (listar, marcar leídas, contador)
-//   - Configuración global de tema (oscuro/claro) y color de acento
-// ============================================
+// === DASHBOARD.JS - SIGEJUB ===
 
-// ============================================
-// INICIALIZACIÓN DEL DASHBOARD
-// ============================================
+window.escaparHTML = function(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+};
+
+window.cachedFetch = async function(url, options) {
+    options = options || {};
+    var ttl = options.ttl || 60000;
+    var cacheKey = 'sigejub_cache_' + url;
+    var cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        try {
+            var parsed = JSON.parse(cached);
+            if (Date.now() - parsed.ts < ttl) {
+                return { data: parsed.data, fromCache: true };
+            }
+        } catch (e) {}
+    }
+    try {
+        var resp = await fetch(url);
+        var data = await resp.json();
+        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: data }));
+        return { data: data, fromCache: false };
+    } catch (e) {
+        if (cached) {
+            try { return { data: JSON.parse(cached).data, fromCache: true }; } catch (e2) {}
+        }
+        throw e;
+    }
+};
+
 function inicializarDashboard() {
-    // Aplica el tema oscuro si el usuario lo tenía guardado en la sesión
     if (window.SIGEJUB_THEME === 'dark') {
         document.body.classList.add('dark-mode');
     }
 
-    // Polling cada 30s para actualizar el contador de notificaciones no leídas
+    // Notification counter
     cargarContadorNoLeidas();
     setInterval(cargarContadorNoLeidas, 30000);
 
-    // ============================================
-    // SIDEBAR — Apertura/cierre en escritorio y móvil
-    // ============================================
+    // Sidebar toggle
     var sidebar = document.querySelector('.sidebar');
     var toggle = document.getElementById('sidebarToggle');
     var overlay = document.getElementById('sidebarOverlay');
-
-    // Cierra sidebar y overlay simultáneamente
     function closeSidebar() { if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('show'); }
-
-    // Botón hamburguesa: alterna visibilidad del menú lateral
     if (toggle) {
         toggle.addEventListener('click', function(e) { e.stopPropagation(); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('show'); });
     }
-
-    // Clic en el overlay (fondo oscuro) cierra el menú en móviles
     if (overlay) overlay.addEventListener('click', closeSidebar);
-
-    // En móviles, al hacer clic en una opción del menú se cierra automáticamente
     document.querySelectorAll('.sidebar-menu .menu-item').forEach(function(item) {
         item.addEventListener('click', function() { if (window.innerWidth < 768) closeSidebar(); });
     });
@@ -54,26 +64,19 @@ window.addEventListener('pageshow', function(e) {
     }
 });
 
-// ============================================
-// DROPDOWN DE USUARIO
-// ============================================
+// === USER DROPDOWN ===
 function toggleDropdown() {
-    // Alterna la visibilidad del menú desplegable de usuario (perfil/cerrar sesión)
     document.getElementById('userDropdown')?.classList.toggle('open');
 }
 
-// Cierra el dropdown si se hace clic fuera de él
 window.addEventListener('click', function(e) {
     var dropdown = document.getElementById('userDropdown');
     if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove('open');
 });
 
-// ============================================
-// NOTIFICACIONES — Listado, contador, marcado como leído
-// ============================================
-var notifAbierto = false;  // Estado del panel de notificaciones (abierto/cerrado)
+// === NOTIFICACIONES ===
+var notifAbierto = false;
 
-// Abre/cierra el menú desplegable de notificaciones y carga los datos si se abre
 function toggleNotifDropdown() {
     var menu = document.getElementById('notifMenu');
     if (!menu) return;
@@ -82,44 +85,33 @@ function toggleNotifDropdown() {
     if (notifAbierto) cargarNotificaciones();
 }
 
-// GET /notificaciones — Obtiene y renderiza la lista de notificaciones del usuario
 async function cargarNotificaciones() {
     var list = document.getElementById('notifList');
     if (!list) return;
     try {
-        var resp = await fetch('/notificaciones');
-        if (!resp.ok) {
-            list.innerHTML = '<p style="text-align:center;color:#ef4444;padding:20px;font-size:0.85rem;">Error al cargar</p>';
-            return;
-        }
-        var data = await resp.json();
-        // Muestra mensaje si no hay notificaciones
+        var result = await cachedFetch('/notificaciones', { ttl: 30000 });
+        var data = result.data;
         if (!data.length) {
             list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;font-size:0.85rem;">Sin notificaciones</p>';
             return;
         }
-        // Renderiza cada notificación como un elemento del listado
         list.innerHTML = '';
         data.forEach(function(n) {
             var de = n.from_user ? n.from_user.name : 'Sistema';
-            // Formatea la fecha al estilo: "15 ene — 10:30"
             var fecha = new Date(n.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
             var div = document.createElement('div');
             div.className = 'notif-item' + (n.is_read ? '' : ' unread');
-            // Al hacer clic se marca como leída
             div.onclick = function() { marcarLeida(n.id); };
-            div.innerHTML = '<div class="notif-title">' + n.title + '</div><div class="notif-msg">' + n.message + '</div><div class="notif-time">' + de + ' — ' + fecha + '</div>';
+            div.innerHTML = '<div class="notif-title">' + escaparHTML(n.title) + '</div><div class="notif-msg">' + escaparHTML(n.message) + '</div><div class="notif-time">' + escaparHTML(de) + ' — ' + escaparHTML(fecha) + '</div>';
             list.appendChild(div);
         });
     } catch (err) { console.error('Error al cargar notificaciones:', err); }
 }
 
-// GET /notificaciones/no-leidas — Consulta el contador de no leídas y actualiza el badge
 async function cargarContadorNoLeidas() {
     try {
-        var resp = await fetch('/notificaciones/no-leidas');
-        if (!resp.ok) return;
-        var data = await resp.json();
+        var result = await cachedFetch('/notificaciones/no-leidas', { ttl: 30000 });
+        var data = result.data;
         var badge = document.getElementById('notifBadge');
         if (badge) {
             if (data.count > 0) {
@@ -132,7 +124,6 @@ async function cargarContadorNoLeidas() {
     } catch (err) { console.error('Error al cargar contador:', err); }
 }
 
-// PUT /notificaciones/{id}/leer — Marca una notificación como leída y refresca la vista
 async function marcarLeida(id) {
     try {
         await fetch('/notificaciones/' + id + '/leer', { method: 'PUT', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content } });
@@ -141,7 +132,6 @@ async function marcarLeida(id) {
     } catch (err) { console.error('Error al marcar leída:', err); }
 }
 
-// PUT /notificaciones/leer-todas — Marca TODAS como leídas de una sola vez
 async function marcarTodasLeidas() {
     try {
         await fetch('/notificaciones/leer-todas', { method: 'PUT', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content } });
@@ -151,7 +141,7 @@ async function marcarTodasLeidas() {
     } catch (err) { console.error('Error al marcar todas:', err); }
 }
 
-// Cierra el menú de notificaciones si el usuario hace clic fuera del contenedor
+// Cerrar menú de notificaciones al hacer clic fuera
 window.addEventListener('click', function(e) {
     var notif = document.getElementById('notifDropdown');
     if (notif && !notif.contains(e.target) && notifAbierto) {
@@ -161,14 +151,8 @@ window.addEventListener('click', function(e) {
     }
 });
 
-// ============================================
-// CONFIGURACIÓN GLOBAL — Tema oscuro/claro y color de acento
-// Se persisten en el backend vía /perfil/configuracion
-// ============================================
-
-// PUT /perfil/configuracion — Cambia entre tema claro y oscuro
+// === GLOBAL THEME CONFIG ===
 window.cambiarTema = async function(tema) {
-    // Aplica/remueve la clase 'dark-mode' del <body>
     document.body.classList.toggle('dark-mode', tema === 'dark');
     var meta = document.querySelector('meta[name="csrf-token"]');
     var token = meta?.content;
@@ -178,14 +162,11 @@ window.cambiarTema = async function(tema) {
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
             body: JSON.stringify({ theme: tema }),
         });
-    } catch (err) {}  // Error silencioso — la UI ya refleja el cambio
+    } catch (err) {}
 };
 
-// PUT /perfil/configuracion — Cambia el color de acento (variable CSS --accent)
 window.cambiarColor = async function(color) {
-    // Actualiza la variable CSS global para el color de acento
     document.documentElement.style.setProperty('--accent', color);
-    // Marca visualmente el preset seleccionado
     document.querySelectorAll('.color-preset').forEach(function(el) { el.classList.remove('selected'); });
     var preset = document.querySelector('.color-preset[data-color="' + color + '"]');
     if (preset) preset.classList.add('selected');
@@ -197,5 +178,5 @@ window.cambiarColor = async function(color) {
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
             body: JSON.stringify({ accent_color: color }),
         });
-    } catch (err) {}  // Error silencioso — la UI ya refleja el cambio
+    } catch (err) {}
 };

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\Trabajador;
 use App\Models\Activity;
+use App\Services\DashboardCache;
+use Illuminate\Support\Facades\Cache;
 // use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller
@@ -40,48 +42,55 @@ class SolicitudController extends Controller
 
     public function porMes()
     {
-        $meses = Solicitud::selectRaw('MONTH(fecha_solicitud) as mes, count(*) as total')
-            ->whereYear('fecha_solicitud', now()->year)
-            ->groupBy('mes')
-            ->orderBy('mes')
-            ->pluck('total', 'mes');
+        $datos = Cache::remember(DashboardCache::key('solicitudes.por_mes'), DashboardCache::TTL_STATS, function () {
+            $meses = Solicitud::selectRaw('MONTH(fecha_solicitud) as mes, count(*) as total')
+                ->whereYear('fecha_solicitud', now()->year)
+                ->groupBy('mes')
+                ->orderBy('mes')
+                ->pluck('total', 'mes');
 
-        $datos = [];
-        foreach (range(1, 12) as $m) {
-            $datos[] = $meses->get($m, 0);
-        }
+            $datos = [];
+            foreach (range(1, 12) as $m) {
+                $datos[] = $meses->get($m, 0);
+            }
+            return $datos;
+        });
 
         return response()->json($datos);
     }
 
     public function vencimientos()
     {
-        $proximosJubilacion = Trabajador::where(function ($q) {
-            $q->whereBetween('edad', [55, 59])
-              ->orWhereBetween('total_anos_servicio', [20, 24]);
-        })->orderBy('edad', 'desc')->orderBy('total_anos_servicio', 'desc')
-          ->limit(3)->get();
+        $data = Cache::remember(DashboardCache::key('solicitudes.vencimientos'), DashboardCache::TTL_STATS, function () {
+            $proximosJubilacion = Trabajador::where(function ($q) {
+                $q->whereBetween('edad', [55, 59])
+                  ->orWhereBetween('total_anos_servicio', [20, 24]);
+            })->orderBy('edad', 'desc')->orderBy('total_anos_servicio', 'desc')
+              ->limit(3)->get();
 
-        $pendientesAntiguas = Solicitud::with('trabajador')
-            ->where('estado', 'pendiente')
-            ->orderBy('created_at', 'asc')
-            ->limit(3)->get();
+            $pendientesAntiguas = Solicitud::with('trabajador')
+                ->where('estado', 'pendiente')
+                ->orderBy('created_at', 'asc')
+                ->limit(3)->get();
 
-        $total = Solicitud::count();
-        $aprobadas = Solicitud::where('estado', 'aprobado')->count();
-        $tasaAprobacion = $total > 0 ? round(($aprobadas / $total) * 100) : 0;
+            $total = Solicitud::count();
+            $aprobadas = Solicitud::where('estado', 'aprobado')->count();
+            $tasaAprobacion = $total > 0 ? round(($aprobadas / $total) * 100) : 0;
 
-        $recientes = Solicitud::with('trabajador')
-            ->orderBy('created_at', 'desc')
-            ->limit(5)->get();
+            $recientes = Solicitud::with('trabajador')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)->get();
 
-        return response()->json([
-            'proximos' => $proximosJubilacion,
-            'pendientes' => $pendientesAntiguas,
-            'tasa_aprobacion' => $tasaAprobacion,
-            'total_solicitudes' => $total,
-            'recientes' => $recientes,
-        ]);
+            return [
+                'proximos' => $proximosJubilacion,
+                'pendientes' => $pendientesAntiguas,
+                'tasa_aprobacion' => $tasaAprobacion,
+                'total_solicitudes' => $total,
+                'recientes' => $recientes,
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function exportarPDF(Request $request)

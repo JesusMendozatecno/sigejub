@@ -46,7 +46,7 @@
             <div class="input-group">
                 <label>TELÉFONO</label>
                 <div class="phone-wrapper">
-                    <select id="countryCode" class="country-code-select">
+                    <select name="phone_country_code" id="countryCode" class="country-code-select">
                         <option value="+58">+58 (VE)</option>
                         <option value="+56">+56 (CL)</option>
                         <option value="+54">+54 (AR)</option>
@@ -74,7 +74,7 @@
             <div class="input-group">
                 <label>CONTRASEÑA</label>
                 <div class="password-wrapper">
-                    <input type="password" name="password" id="regPassword" placeholder="Mínimo 6 caracteres" required oninput="medirFortaleza()">
+                    <input type="password" name="password" id="regPassword" placeholder="Mín. 8 caracteres, mayúscula, minúscula y número" required oninput="medirFortaleza()">
                     <button type="button" class="toggle-password" onclick="togglePassword('regPassword', this)" tabindex="-1">
                         <i class="fas fa-eye"></i>
                     </button>
@@ -212,9 +212,14 @@ function validarFormulario(e) {
     var pwd = document.getElementById('regPassword').value;
     var confirm = document.getElementById('regPasswordConfirm').value;
 
-    if (pwd.length < 6) {
+    if (pwd.length < 8) {
         e.preventDefault();
-        mostrarToast('La contraseña debe tener al menos 6 caracteres', 'error');
+        mostrarToast('La contraseña debe tener al menos 8 caracteres', 'error');
+        return false;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(pwd)) {
+        e.preventDefault();
+        mostrarToast('La contraseña debe incluir mayúsculas, minúsculas y números', 'error');
         return false;
     }
     if (pwd !== confirm) {

@@ -5,17 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIGEJUB - Sistema de Jubilaciones</title>
 
-    <link rel="icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
-    <link rel="icon" href="{{ asset('img/logo-dark.svg') }}" sizes="any" type="image/svg+xml">
-    <link rel="shortcut icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('img/favicon-32.png') }}" sizes="32x32" type="image/png">
+    <link rel="icon" href="{{ asset('img/favicon-16.png') }}" sizes="16x16" type="image/png">
+    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/base.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link rel="stylesheet" href="{{ asset('css/dashboard/notifications.css') }}?v={{ filemtime(public_path('css/dashboard/notifications.css')) }}">
-    <style>:root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }</style>
+    <script>
+    window.escaparHTML = function(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    };
+    </script>
+
+    <style>
+        :root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }
+        .notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
+        .notif-trigger:hover { background: #f1f5f9; }
+        .notif-badge { display: none; }
+        .notif-badge.show { display: flex !important; }
+        .notif-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; margin-bottom: 2px; }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background: #eff6ff; border-left: 3px solid #2563eb; }
+        .notif-item .notif-time { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
+        .notif-item .notif-title { font-size: 0.8rem; font-weight: 600; color: #0f172a; }
+        .notif-item .notif-msg { font-size: 0.78rem; color: #475569; margin-top: 2px; line-height: 1.3; }
+    </style>
 </head>
 <body>
 @include('partials.loading-overlay')
@@ -38,7 +58,7 @@
         <span class="hamburger-line"></span>
     </button>
     <div class="header-brand">
-        <img src="{{ asset('img/logo-dark.svg') }}" alt="SIGEJUB" style="width: 42px; height: 42px;">
+        <div class="logo-box" style="background: #1a365d; color: white; padding: 8px; border-radius: 8px; font-size: 1.2rem;">🏛️</div>
         <div>
             <h3 style="margin:0; font-size: 1.1rem; color: #1e293b;">SIGEJUB</h3>
             <span style="font-size: 0.65rem; color: #64748b; font-weight: bold; letter-spacing: 0.5px; display: block;">ARQUITECTURA DE CONFIANZA</span>
@@ -205,6 +225,5 @@
 @if($errors->any())
     <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
 @endif
-<script defer src="{{ asset('js/dashboard/notifications.js') }}?v={{ filemtime(public_path('js/dashboard/notifications.js')) }}"></script>
 </body>
 </html>
