@@ -1,3 +1,11 @@
+/* ============================================================
+   welcome.css — Estilos de la landing page / portada
+   Barra de navegación fija, hero section centrado con logo
+   grande, botones CTA y footer. Hoy la vista usa Tailwind
+   directamente en el blade, pero estos estilos se mantienen
+   como respaldo o para personalizaciones adicionales.
+   ============================================================ */
+
 :root {
     --primary-dark: #002366; /* Color de la barra en image_87cc18.jpg */
     --accent-blue: #002366;  /* Azul de tu proyecto (unnamed(1).png) */
@@ -86,7 +94,7 @@ body {
     color: white;
 }
 
-/* Botón de la Navbar con el azul de tu proyecto */
+/* Botón "Iniciar Sesión" en la navbar — usa !important para sobreescribir padding de .nav-links a */
 .btn-nav-login {
     border: 1px solid #4a5568;
     padding: 8px 20px !important;
@@ -176,6 +184,7 @@ body {
     background: #f1f5f9;
 }
 
+/* === FOOTER DE LA LANDING PAGE === */
 .welcome-footer {
     position: absolute;
     bottom: 30px;

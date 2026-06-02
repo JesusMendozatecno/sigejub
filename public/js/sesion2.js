@@ -1,9 +1,18 @@
-/**
- * SIGEJUB - Núcleo de Control de Interfaz y Navegación General
- * Controlador de Pestañas y Modales de Solicitud
- */
+// ============================================
+// sesion2.js — Navegación general y modales del SIGEJUB
+// Ubicación: Panel principal del dashboard
+// Responsabilidades:
+//   - Cambio de pestañas/secciones del dashboard (switchTab)
+//   - Apertura/cierre del modal de solicitudes
+//   - Validación de cédula en inputs
+//   - Cierre de modales al hacer clic fuera o presionar ESC
+// ============================================
 
-// Función global para saltar entre módulos (Accesible desde los accesos rápidos de inicio)
+// ============================================
+// CAMBIO DE PESTAÑAS — Navegación entre secciones del dashboard
+// ============================================
+
+// Función global para saltar entre módulos (accesible desde accesos rápidos del inicio)
 function switchTab(id) {
     const menuItems = document.querySelectorAll('.menu-item');
     const sections = document.querySelectorAll('.content-section');
@@ -11,48 +20,55 @@ function switchTab(id) {
     const targetSection = document.getElementById(id);
 
     if (targetMenu && targetSection) {
-        // Remover clases activas de la totalidad de los nodos
+        // Primero limpia todas las selecciones activas
         menuItems.forEach(i => i.classList.remove('active'));
         sections.forEach(s => s.classList.remove('active'));
 
-        // Activar de forma emparejada el menú y el contenedor HTML
+        // Luego activa SOLO el ítem de menú y la sección que corresponden al target
         targetMenu.classList.add('active');
         targetSection.classList.add('active');
+    }
 
-        // CERRAR MODAL AL HACER CLIC FUERA
-        window.addEventListener('click', function(e) {
-            var modals = document.querySelectorAll('.modal-overlay');
-            for (var i = 0; i < modals.length; i++) {
-                if (e.target === modals[i]) {
-                    modals[i].style.display = 'none';
-                }
+    // ============================================
+    // CIERRE DE MODALES — Clic fuera o tecla ESC
+    // ============================================
+
+    // Cierra cualquier modal con clase .modal-overlay al hacer clic en el fondo
+    window.addEventListener('click', function(e) {
+        var modals = document.querySelectorAll('.modal-overlay');
+        for (var i = 0; i < modals.length; i++) {
+            if (e.target === modals[i]) {
+                modals[i].style.display = 'none';
             }
-        });
+        }
+    });
 
-        // TAMBIÉN AL PRESIONAR ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(function(m) {
-                    m.style.display = 'none';
-                });
-            }
-        });
-    }
-
-    // VALIDAR NÚMERO DE CÉDULA
-    function validarCedula(input) {
-        input.value = input.value.replace(/\D/g, '');
-    }
-
-    function initSelect2() {
-    }
+    // También cierra todos los modales al presionar la tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay').forEach(function(m) {
+                m.style.display = 'none';
+            });
+        }
+    });
 }
 
-// Funciones globales para control de la modal de solicitudes
+// ============================================
+// VALIDACIÓN DE CÉDULA — Solo permite dígitos numéricos
+// ============================================
+function validarCedula(input) {
+    // Elimina cualquier carácter que no sea dígito (/\D/g = todo lo que no sea 0-9)
+    input.value = input.value.replace(/\D/g, '');
+}
+
+// ============================================
+// MODAL DE SOLICITUDES — Abrir/Cerrar
+// ============================================
+
 function abrirModal() {
     const modal = document.getElementById('modalSolicitud');
     if (modal) {
-        modal.style.display = 'flex';
+        modal.style.display = 'flex';  // Muestra el modal centrado con flexbox
     }
 }
 
@@ -61,8 +77,11 @@ function cerrarModal() {
     if (modal) modal.style.display = 'none';
 }
 
+// ============================================
+// INICIALIZACIÓN — Eventos al cargar el DOM
+// ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Escuchador único y limpio para el menú de navegación lateral
+    // Escuchador único para cada ítem del menú lateral de navegación
     const menuItems = document.querySelectorAll('.menu-item');
     menuItems.forEach(item => {
         item.addEventListener('click', function() {
@@ -71,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Cierre adaptativo de la modal al hacer clic en el fondo difuminado
+    // Cierre adaptativo: clic en el fondo difuminado cierra el modal de solicitud
     window.addEventListener('click', (event) => {
         const modal = document.getElementById('modalSolicitud');
         if (event.target === modal) {

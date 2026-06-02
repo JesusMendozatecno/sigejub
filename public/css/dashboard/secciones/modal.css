@@ -1,11 +1,19 @@
-/*------------------------------------ ventana modal------------------------------------- */
+/* ============================================================
+   modal.css — Estilos para ventanas modales del dashboard
+   Overlay con backdrop-filter, contenedor con sidebar oscuro
+   y formulario scrollable, grids de 2 y 3 columnas, secciones
+   de documentos, tabla mini, botones de acción y filtros
+   por pestañas.
+   ============================================================ */
+
+/* === VENTANA MODAL === */
 .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(8px);
-    z-index: 2000;
+    backdrop-filter: blur(8px); /* Desenfoque del fondo para dar profundidad */
+    z-index: 2000; /* Por encima de todo */
     justify-content: center;
     align-items: center;
     padding: 20px;
@@ -66,6 +74,7 @@
     position: relative;
 }
 
+/* === SECCIONES DEL FORMULARIO === */
 .form-section { margin-bottom: 40px; }
 .form-section h3 {
     font-size: 0.9rem;
@@ -80,6 +89,7 @@
     gap: 10px;
 }
 
+/* Grids de 2 y 3 columnas para los campos del formulario */
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
 
@@ -122,6 +132,7 @@
     border: 1px solid #e2e8f0;
 }
 
+/* === ACCIONES DEL MODAL — Botones de guardar/cancelar === */
 .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -151,6 +162,7 @@
 }
 .btn-submit:hover { background: #1e293b; transform: translateY(-1px); }
 
+/* === SECCIÓN INTERNA CON ENCABEZADO Y BOTÓN === */
 .section-header-inline {
     display: flex;
     justify-content: space-between;

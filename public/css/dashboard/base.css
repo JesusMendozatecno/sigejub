@@ -1,3 +1,10 @@
+/* ============================================================
+   base.css — Variables CSS globales y reseteos del dashboard
+   Define colores institucionales, scrollbar personalizado
+   y clases utilitarias de color. Es el primer archivo que se
+   carga y establece la paleta del sistema.
+   ============================================================ */
+
 :root {
     --bg-main: #f8fafc;
     --primary-blue: #002366;
@@ -14,7 +21,8 @@ body {
     display: flex;
 }
 
-/* Colores de texto y estados globales */
+/* === CLASES UTILITARIAS DE COLOR === */
+/* Se usan con !important para garantizar que prevalezcan sobre cualquier especificidad */
 .text-orange { color: #f08c00 !important; }
 .text-green { color: #0ca678 !important; }
 .text-red { color: #fa5252 !important; }
@@ -35,6 +43,7 @@ body {
 
 * { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,0.25) transparent; }
 
+/* Scrollbar más sutil en modo oscuro */
 body.dark-mode::-webkit-scrollbar-thumb {
     background: rgba(148,163,184,0.2);
 }

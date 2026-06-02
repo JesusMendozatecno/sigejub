@@ -1,18 +1,25 @@
+/* ============================================================
+   layout.css — Estructura principal del dashboard
+   Top bar con búsqueda centrada, sidebar lateral, dropdown
+   de usuario y layout de contenido scrollable. Define la
+   arquitectura general de la aplicación.
+   ============================================================ */
 
-  /* Funcionalidad de cambio de pestañas dinámicas */
+/* === SISTEMA DE PESTAÑAS DINÁMICAS === */
+  /* Las secciones se muestran/ocultan con la clase .active, controlado por JS */
         .content-section { display: none; animation: fadeIn 0.3s ease; }
         .content-section.active { display: block; }
         .menu-item { cursor: pointer; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Ajustes estéticos de badges y utilidades */
+        /* === BADGES DE ESTADO === */
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
         .status-activo { background: #e6fcf5; color: #0ca678; }
         .status-jubilado { background: #e7f5ff; color: #1c7ed6; }
         .status-suspension { background: #fff5f5; color: #fa5252; }
         .data-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        /* --- ARQUITECTURA GENERAL --- */
+        /* === ARQUITECTURA GENERAL === */
         body {
             margin: 0;
             font-family: system-ui, -apple-system, sans-serif;
@@ -23,7 +30,7 @@
             background-color: #f8fafc;
         }
 
-        /* Header Superior Superior con búsqueda centrada */
+        /* === TOP BAR — Barra superior con búsqueda centrada === */
         .top-bar {
             display: flex;
             align-items: center;
@@ -44,7 +51,7 @@
             z-index: 10;
         }
 
-        /* Centrado matemático absoluto del contenedor de búsqueda */
+        /* Centrado absoluto: left:50% + translateX(-50%) para centrar perfectamente sin importar el ancho */
         .search-wrapper-centered {
             position: absolute;
             left: 50%;
@@ -95,7 +102,8 @@
             z-index: 10;
         }
 
-        /* Contenedor de la parte inferior (Sidebar + Contenido) */
+        /* === APP CONTAINER — Sidebar + Main Content === */
+        /* 65px = altura del top-bar */
         .app-container {
             display: flex;
             flex-grow: 1;
@@ -103,7 +111,7 @@
             overflow: hidden;
         }
 
-        /* Sidebar lateral izquierdo */
+        /* === SIDEBAR — Menú lateral izquierdo === */
         .sidebar {
             width: 260px;
             background: white;
@@ -148,7 +156,9 @@
             font-weight: bold;
         }
 
-        /* Dropdown de Usuario */
+        /* Separador visual entre menú y footer del sidebar */
+
+        /* === DROPDOWN DE USUARIO === */
         .user-dropdown {
             position: relative;
             display: inline-block;
@@ -187,11 +197,12 @@
             object-fit: cover;
         }
 
+        /* Dropdown invisible por defecto, se muestra con .open en el padre */
         .dropdown-menu {
             display: none;
             position: absolute;
             right: 0;
-            top: 115%;
+            top: 115%; /* Pequeño espacio entre el trigger y el menú */
             background: white;
             min-width: 220px;
             border-radius: 8px;
@@ -241,7 +252,7 @@
             background-color: #fef2f2;
         }
 
-        /* Contenido Principal con Scrollable independiente */
+        /* === MAIN CONTENT — Área scrollable principal === */
         .main-content {
             flex-grow: 1;
             padding: 24px;

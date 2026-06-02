@@ -1,4 +1,12 @@
-/* -----------------------------------------------------EXTENSIÓN SECCIÓN SOLICITUDES ----------------------------------------------*/
+/* ============================================================
+   solicitud.css — Estilos para la sección "Solicitudes"
+   Formulario de solicitud con grid de 4 columnas, filtros
+   por pestañas (tab-filters), tabla con badges de estado,
+   tarjetas de métricas (aprobadas/pendientes/rechazadas) y
+   botones de acción (exportar, filtrar).
+   ============================================================ */
+
+/* --- EXTENSIÓN SECCIÓN SOLICITUDES --- */
 
 .text-blue-accent { color: #1e3a8a; font-weight: 800; }
 
@@ -31,7 +39,7 @@
 
 .input-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas para los campos rápidos del formulario */
     gap: 15px;
 }
 
@@ -56,6 +64,7 @@
     font-size: 13px;
 }
 
+/* Icono posicionado absolutamente dentro del input, centrado verticalmente */
 .input-with-icon i {
     position: absolute;
     right: 12px;
@@ -108,7 +117,7 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* Estilos de Tabla de Solicitudes */
+/* === TABLA DE SOLICITUDES — Folio, trabajador y badge de estado === */
 .folio { color: #1e3a8a; font-weight: bold; font-size: 12px; }
 .worker-info strong { display: block; font-size: 13px; }
 .worker-info span { font-size: 11px; color: #94a3b8; }
@@ -123,7 +132,7 @@
 .badge-status.approved { background: #f0fdf4; color: #22c55e; }
 .badge-status.rejected { background: #fef2f2; color: #ef4444; }
 
-/* Tarjetas de Métricas */
+/* === TARJETAS DE MÉTRICAS — Total, aprobadas, pendientes, rechazadas === */
 .metrics-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -158,7 +167,7 @@
 .metric-data p { font-size: 10px; font-weight: bold; color: #64748b; }
 
 
-/* Botones de Acción (Filtros y Exportar) */
+/* === BOTONES DE ACCIÓN — Filtros y Exportar === */
 .list-actions {
     display: flex;
     gap: 10px;
@@ -186,7 +195,7 @@
     transform: translateY(-1px);
 }
 
-/* Estilo de la Tabla y Estatus */
+/* === ESTILOS DE TABLA Y ESTATUS — Badges de estado duplicados aquí para especificidad === */
 .badge-status {
     padding: 4px 10px;
     border-radius: 6px;
@@ -196,3 +205,6 @@
 .badge-status.pending { background: #fff7ed; color: #c2410c; }
 .badge-status.approved { background: #f0fdf4; color: #15803d; }
 .badge-status.rejected { background: #fef2f2; color: #b91c1c; }
+
+/* === CAMPO DE BÚSQUEDA POR CÉDULA (solicitudes.blade.php) === */
+#displayCedula:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }

@@ -1,4 +1,12 @@
-/* EXTENSIÓN SECCIÓN 5: PRESTACIONES */
+/* ============================================================
+   prestaciones.css — Estilos para la sección "Prestaciones"
+   Grid de tarjetas de prestaciones, selector de trabajador,
+   formulario de cálculo de ingresos, toggle de porcentaje
+   de jubilación, sidebar consolidado con totales, checklist
+   de documentos y tarjetas de métricas con borde lateral.
+   ============================================================ */
+
+/* === EXTENSIÓN SECCIÓN 5: PRESTACIONES === */
 
 /* === GRID DE TARJETAS === */
 .prestaciones-grid-cards {
@@ -33,6 +41,7 @@
     position: relative;
 }
 
+/* Degradado sutil al final de la foto para que se funda con el fondo blanco de la info */
 .prestacion-card .pc-foto::after {
     content: '';
     position: absolute;
@@ -105,7 +114,7 @@
     display: inline-block;
 }
 
-/* === DETALLE === */
+/* === DETALLE — Vista de detalle de una prestación === */
 #prestacion-detalle .prestaciones-grid {
     margin-top: 20px;
 }
@@ -145,7 +154,7 @@
     align-items: start;
 }
 
-/* Selector de Trabajador */
+/* === SELECTOR DE TRABAJADOR — Barra superior con avatar y nombre === */
 .worker-selector-card {
     background: white;
     border-radius: 12px;
@@ -184,7 +193,7 @@
     cursor: pointer;
 }
 
-/* Formulario de Cálculo */
+/* === FORMULARIO DE CÁLCULO — Ingresos y estructura salarial === */
 .income-structure-card {
     background: white;
     border-radius: 12px;
@@ -229,7 +238,7 @@
     width: 100%;
 }
 
-/* Toggle de Jubilación */
+/* === TOGGLE DE JUBILACIÓN — Selector de porcentaje (60% / 100%) === */
 .jubilation-percent-area {
     display: flex;
     justify-content: space-between;
@@ -257,9 +266,9 @@
 }
 
 .percent-toggle button.active { background: white; color: #1e3a8a; font-weight: bold; }
-.percent-toggle button span { display: block; font-size: 10px; font-weight: normal; }
+.percent-toggle button span { display: block; font-size: 10px; font-weight: normal; } /* Sub-etiqueta debajo del porcentaje */
 
-/* Sidebar Consolidado */
+/* === SIDEBAR CONSOLIDADO — Totales y desglose de la prestación === */
 .consolidated-card {
     background: #1e3a8a;
     color: white;
@@ -285,7 +294,7 @@
 
 .status-tag-green { background: #4ade80; color: #064e3b; font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 800; }
 
-/* Botones Sidebar */
+/* === BOTONES SIDEBAR — Acciones de guardar/exportar desde el panel lateral === */
 .btn-dark-full {
     width: 100%;
     background: #1e3a8a;
@@ -309,7 +318,7 @@
     cursor: pointer;
 }
 
-/* Checklist de Documentos */
+/* === CHECKLIST DE DOCUMENTOS — Requisitos para la prestación === */
 .doc-checklist-card {
     background: #f8fafc;
     padding: 20px;
@@ -341,7 +350,7 @@
     min-height: 160px;
 }
 
-/* Borde lateral grueso y oscuro según la imagen */
+/* Borde lateral izquierdo grueso para categorizar visualmente las tarjetas */
 .metric-card-styled.border-blue { border-left: 6px solid #1a365d; }
 .metric-card-styled.border-green { border-left: 6px solid #064e3b; }
 
@@ -352,7 +361,7 @@
     width: 100%;
 }
 
-/* Iconos con fondo suave */
+/* Iconos con fondo de color suave y transparente */
 .icon-box {
     width: 50px;
     height: 50px;

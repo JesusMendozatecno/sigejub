@@ -1,4 +1,11 @@
-/* EXTENSIÓN SECCIÓN 6: REPORTES */
+/* ============================================================
+   reportes.css — Estilos para la sección "Reportes"
+   Barra de filtros con grid, métricas en 3 columnas,
+   gráficos (barras y donut), tabla de reportes, botones
+   de exportación a Excel/PDF con efectos hover.
+   ============================================================ */
+
+/* === EXTENSIÓN SECCIÓN 6: REPORTES === */
 
 .section-header-flex {
     display: flex;
@@ -7,7 +14,7 @@
     margin-bottom: 25px;
 }
 
-/* Barra de Filtros */
+/* === BARRA DE FILTROS — Grid de filtros con selector y botón aplicar === */
 .filters-bar-card {
     background: white;
     padding: 20px;
@@ -53,7 +60,7 @@
     gap: 8px;
 }
 
-/* Métricas */
+/* === MÉTRICAS — Grid de 3 columnas con tarjetas de indicadores === */
 .metrics-grid-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 2fr;
@@ -90,14 +97,15 @@
 .trend.down { color: #ef4444; }
 
 .metric-card-wide { display: flex; justify-content: space-between; }
+/* Marca de agua decorativa al fondo de las tarjetas de métricas */
 .bg-icon-watermark {
     position: absolute;
     right: -10px; bottom: -10px;
     font-size: 120px; color: #f1f5f9;
-    z-index: 0;
+    z-index: 0; /* Detrás de todo el contenido */
 }
 
-/* Gráficos */
+/* === GRÁFICOS — Grid de 2 columnas para charts (barras + donut) === */
 .charts-grid-2 {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
@@ -122,16 +130,17 @@
 .bar-container span { font-size: 10px; color: #94a3b8; }
 
 .donut-chart-area { display: flex; align-items: center; gap: 20px; margin-top: 20px; }
+/* Donut visual simplificado — cada borde de color representa una categoría */
 .donut-visual {
     width: 120px; height: 120px;
     border-radius: 50%;
-    border: 15px solid #3b82f6; /* Simplificado */
-    border-bottom-color: #ef4444;
-    border-left-color: #22c55e;
+    border: 15px solid #3b82f6; /* Color por defecto (azul) */
+    border-bottom-color: #ef4444; /* Rojo */
+    border-left-color: #22c55e;   /* Verde */
     display: flex; align-items: center; justify-content: center;
 }
 
-/* Tabla Reporte */
+/* === TABLA REPORTE — Tabla con datos exportables === */
 .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
 .report-table th { text-align: left; font-size: 10px; color: #94a3b8; padding: 15px; border-bottom: 1px solid #f1f5f9; }
 .report-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }

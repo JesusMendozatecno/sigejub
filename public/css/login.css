@@ -1,6 +1,12 @@
+/* ============================================================
+   login.css — Estilos para la página de inicio de sesión
+   Define el layout centrado, la tarjeta blanca, inputs y botón
+   de acceso. Diseño limpio y profesional con azul institucional.
+   ============================================================ */
+
 /* =========================
    CONFIGURACIÓN GLOBAL
-========================= */
+   ========================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -9,7 +15,7 @@
 }
 
 body {
-    /* Fondo con gradiente sutil como en unnamed(1).png */
+    /* Fondo con gradiente sutil: blanco puro al centro, gris muy claro en bordes */
     background: radial-gradient(circle at center, #ffffff 0%, #e9eff5 100%);
     height: 100vh;
     display: flex;
@@ -19,7 +25,7 @@ body {
 
 /* =========================
    CONTENEDORES PRINCIPALES
-========================= */
+   ========================= */
 .login-container, .register-container {
     display: flex;
     flex-direction: column;
@@ -28,7 +34,7 @@ body {
     max-width: 400px;
 }
 
-/* Títulos fuera de la tarjeta (estilo Gestión Retiro) */
+/* Títulos fuera de la tarjeta — estilo "Gestión Retiro" */
 h2 {
     color: #002366; /* Azul marino institucional */
     margin-bottom: 5px;
@@ -45,8 +51,8 @@ p {
 
 /* =========================
    TARJETA (CARD)
-========================= */
-/* En el login ya tienes el div .card, en el registro lo aplicaremos al form */
+   ========================= */
+/* .card para login, register-container form para registro */
 .card, .register-container form {
     background: white;
     padding: 40px;
@@ -57,7 +63,7 @@ p {
 
 /* =========================
    INPUTS Y GRUPOS
-========================= */
+   ========================= */
 .input-group {
     margin-bottom: 15px;
     text-align: left;
@@ -97,7 +103,7 @@ input:focus, select:focus {
 
 /* =========================
    BOTONES
-========================= */
+   ========================= */
 .btn, .register-container button {
     width: 100%;
     padding: 14px;
@@ -116,7 +122,9 @@ input:focus, select:focus {
     background: #001a4d;
 }
 
-/* Enlaces inferiores */
+/* =========================
+   ENLACES INFERIORES
+   ========================= */
 a {
     color: #002366;
     text-decoration: none;
@@ -126,7 +134,10 @@ a {
 a:hover {
     text-decoration: underline;
 }
-/* Estilo para el botón de volver */
+/* =========================
+   BOTÓN DE VOLVER (FLECHA)
+   ========================= */
+/* Botón circular con flecha, posicionado absoluto en la tarjeta */
 .btn-back {
     position: absolute;
     top: 20px;
@@ -149,7 +160,7 @@ a:hover {
     transform: translateX(-3px); /* Efecto sutil de retroceso */
 }
 
-/* Asegúrate de que la tarjeta (.card o .register-container) tenga position: relative */
+/* Asegura que la tarjeta tenga position: relative para el posicionamiento del btn-back */
 .card, .register-container {
     position: relative;
     padding-top: 50px; /* Espacio extra para que la flecha no tape el título */

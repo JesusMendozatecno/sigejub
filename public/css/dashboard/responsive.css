@@ -1,3 +1,11 @@
+/* ============================================================
+   responsive.css — Adaptaciones responsive del dashboard
+   Sidebar colapsable, grids que se apilan, modales en modo
+   bottom sheet, tablas con scroll horizontal, y ajustes para
+   welcome/login/register. Breakpoints: < 1024px (tablet),
+   < 768px (mobile), < 480px (small mobile).
+   ============================================================ */
+
 /* =============================
    SIGEJUB — Responsive Styles
    Breakpoints:
@@ -19,13 +27,13 @@
 }
 .sidebar-toggle:hover { background: #f1f5f9; }
 
-/* === SIDEBAR OVERLAY === */
+/* === SIDEBAR OVERLAY — Fondo semitransparente cuando el sidebar es flotante en mobile === */
 .sidebar-overlay {
   display: none;
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.3);
-  z-index: 199;
+  z-index: 199; /* Justo detrás del sidebar (z-index: 200) */
 }
 
 /* === HAMBURGER MENU STYLES (inline in index.blade.php) === */
@@ -127,10 +135,10 @@
   /* === LAYOUT === */
   .sidebar-toggle { display: flex; align-items: center; }
 
-  /* Show sidebar as overlay */
+  /* Sidebar como overlay: se desliza desde la izquierda con .open */
   .sidebar {
     position: fixed;
-    left: -280px;
+    left: -280px; /* Oculto inicialmente fuera de pantalla */
     top: 65px;
     width: 260px;
     height: calc(100vh - 65px);
