@@ -47,7 +47,7 @@ styleToast.textContent = '@keyframes slideUp { from { transform: translateY(20px
 document.head.appendChild(styleToast);
 
 // === CSRF HELPER ===
-function csrfToken() { return document.querySelector('meta[name="csrf-token"]').content; }
+function csrfToken() { const m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; }
 function api(url, opts) {
     opts = opts || {};
     return fetch(url, {

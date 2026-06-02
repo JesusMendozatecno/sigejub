@@ -215,6 +215,10 @@
                 </button>
                 @endif
                 <div class="profile-nav-divider"></div>
+                <a href="{{ route('documentacion') }}" class="profile-nav-item" style="text-decoration:none;cursor:pointer;">
+                    <i class="fas fa-book"></i> Documentación
+                </a>
+                <div class="profile-nav-divider"></div>
                 <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                     @csrf
                     <button type="submit" class="profile-nav-item" style="color:#dc2626;">

@@ -140,6 +140,7 @@
 
 /* === STATS === */
 .cn-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px; }
+@media (max-width: 600px) { .cn-stats { grid-template-columns:1fr; } }
 .cn-stat-card { background:white;border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #f1f5f9;transition:transform 0.2s; }
 .cn-stat-card:hover { transform:translateY(-2px); }
 .cn-stat-card i { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
@@ -150,7 +151,7 @@
 .cn-stat-week i { background:#fff7ed;color:#ea580c; }
 
 /* === TABLE === */
-.cn-table-wrap { background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #f1f5f9; }
+.cn-table-wrap { background:white;border-radius:14px;overflow-x:auto;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #f1f5f9; }
 .cn-table { width:100%;border-collapse:collapse; }
 .cn-table th { padding:14px 16px;font-size:0.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;text-align:left;background:#f8fafc;border-bottom:1px solid #e2e8f0; }
 .cn-table td { padding:12px 16px;font-size:0.83rem;color:#334155;border-bottom:1px solid #f1f5f9; }
@@ -238,18 +239,18 @@
             }
             tbody.innerHTML = data.data.map(a => {
                 const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                const user = a.user ? a.user.name : '<em>Sistema</em>';
+                const userEscaped = a.user ? escaparHTML(a.user.name) : 'Sistema';
                 const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.action] || a.action;
                 const badgeClass = 'badge-' + a.action;
                 const tipoLabel = a.subject_type ? a.subject_type.charAt(0).toUpperCase() + a.subject_type.slice(1) : '—';
                 const ip = a.ip_address || '—';
                 return `<tr>
                     <td style="font-size:0.78rem;color:#64748b;white-space:nowrap;">${fecha}</td>
-                    <td style="font-weight:600;font-size:0.85rem;">${user}</td>
+                    <td style="font-weight:600;font-size:0.85rem;">${userEscaped}</td>
                     <td><span class="badge-action ${badgeClass}">${badgeAction}</span></td>
-                    <td><span class="badge-type">${tipoLabel}</span></td>
-                    <td style="font-size:0.83rem;color:#334155;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.description}</td>
-                    <td style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">${ip}</td>
+                    <td><span class="badge-type">${escaparHTML(tipoLabel)}</span></td>
+                    <td style="font-size:0.83rem;color:#334155;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escaparHTML(a.description)}</td>
+                    <td style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">${escaparHTML(ip)}</td>
                     <td><button class="cn-btn-ghost" onclick="verDetalleCajaNegra(${a.id})" title="Ver detalle"><i class="fas fa-eye" size="15"></i> Ver</button></td>
                 </tr>`;
             }).join('');
@@ -288,7 +289,7 @@
             const r = await fetch('/caja-negra/' + id);
             const a = await r.json();
             const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-            const user = a.user ? a.user.name : 'Sistema';
+            const userEscaped = a.user ? escaparHTML(a.user.name) : 'Sistema';
             const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.action] || a.action;
             const oldHtml = a.old_values ? `<pre>${JSON.stringify(a.old_values, null, 2)}</pre>` : '<span class="text-muted">—</span>';
             const newHtml = a.new_values ? `<pre>${JSON.stringify(a.new_values, null, 2)}</pre>` : '<span class="text-muted">—</span>';
@@ -297,13 +298,13 @@
             content.innerHTML = `
                 <div class="cn-detail-grid">
                     <div class="cn-detail-field"><label>Fecha/Hora</label><div class="value">${fecha}</div></div>
-                    <div class="cn-detail-field"><label>Usuario</label><div class="value">${user}</div></div>
+                    <div class="cn-detail-field"><label>Usuario</label><div class="value">${userEscaped}</div></div>
                     <div class="cn-detail-field"><label>Acción</label><div class="value"><span class="badge-action ${'badge-'+a.action}">${badgeAction}</span></div></div>
-                    <div class="cn-detail-field"><label>Tipo</label><div class="value"><span class="badge-type">${a.subject_type||'—'}</span></div></div>
+                    <div class="cn-detail-field"><label>Tipo</label><div class="value"><span class="badge-type">${escaparHTML(a.subject_type) || '—'}</span></div></div>
                     <div class="cn-detail-field"><label>ID del registro</label><div class="value">${a.subject_id ?? '—'}</div></div>
-                    <div class="cn-detail-field"><label>IP</label><div class="value" style="font-family:monospace;">${a.ip_address||'—'}</div></div>
+                    <div class="cn-detail-field"><label>IP</label><div class="value" style="font-family:monospace;">${escaparHTML(a.ip_address) || '—'}</div></div>
                 </div>
-                <div class="cn-detail-field" style="margin-bottom:8px;"><label>Descripción</label><div class="value">${a.description}</div></div>
+                <div class="cn-detail-field" style="margin-bottom:8px;"><label>Descripción</label><div class="value">${escaparHTML(a.description)}</div></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
                     <div class="cn-detail-full"><label>Valores Anteriores</label>${oldHtml}</div>
                     <div class="cn-detail-full"><label>Valores Nuevos</label>${newHtml}</div>

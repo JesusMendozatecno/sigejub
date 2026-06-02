@@ -117,6 +117,7 @@
         <main class="modal-form-content">
             <button class="btn-close-absolute" id="closeModalExpediente" type="button">&times;</button>
             <form id="formCrearExpediente">
+                @csrf
                 <section class="form-section">
                     <h3><i class="fas fa-search"></i> Buscar Trabajador</h3>
                     <div class="busqueda-cedula-row">
@@ -174,6 +175,7 @@
     <div class="modal-delete-box" style="text-align:left;max-width:500px;">
         <h3 style="text-align:center;">Subir Documento</h3>
         <form id="formSubirDocumento">
+            @csrf
             <div class="input-group">
                 <label>NOMBRE DEL DOCUMENTO</label>
                 <select name="nombre" id="selectNombreDocumento" required>
@@ -221,8 +223,8 @@
         const grid = document.getElementById('expedientesGrid');
         if (!grid) return;
         try {
-            const resp = await fetch('/expedientes');
-            const data = await resp.json();
+            const result = await cachedFetch('/expedientes', { ttl: 60000 });
+            const data = result.data;
             grid.innerHTML = '';
             if (!data.length) {
                 grid.innerHTML = '<p class="empty-state">No hay expedientes registrados. Cree el primero.</p>';
@@ -242,8 +244,8 @@
                         ${foto ? `<img src="${foto}" alt="">` : `<div class="ec-avatar"><i class="fas fa-user" size="28"></i></div>`}
                     </div>
                     <div class="ec-info">
-                        <strong>${t.nombres || ''} ${t.apellidos || ''}</strong>
-                        <span>${t.cedula || '—'}</span>
+                        <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
+                        <span>${escaparHTML(t.cedula || '—')}</span>
                         <span class="ec-badge ${claseEstado}">${textoEstado}</span>
                     </div>
                 `;

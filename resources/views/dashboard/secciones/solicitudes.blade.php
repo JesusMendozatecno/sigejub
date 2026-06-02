@@ -30,20 +30,22 @@
     </div>
 </div>
 
-<table class="custom-table">
-    <thead>
-        <tr>
-            <th>FOLIO</th>
-            <th>TRABAJADOR</th>
-            <th>TIPO DE RETIRO</th>
-            <th>FECHA APERTURA</th>
-            <th>ESTATUS</th>
-            <th>ACCIONES</th>
-        </tr>
-    </thead>
-    <tbody id="tbodySolicitudes">
-        </tbody>
-</table>
+<div style="overflow-x:auto;">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>FOLIO</th>
+                <th>TRABAJADOR</th>
+                <th>TIPO DE RETIRO</th>
+                <th>FECHA APERTURA</th>
+                <th>ESTATUS</th>
+                <th>ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody id="tbodySolicitudes">
+            </tbody>
+    </table>
+</div>
 
 <div class="table-footer">
     <span id="solicitudesCounter">Mostrando 0 solicitudes</span>
@@ -296,6 +298,12 @@
 </div>
 
 <script>
+function escaparHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 (function() {
     let currentStatus = 'all';
 
@@ -376,8 +384,8 @@
     async function cargarSolicitudes(estado = 'all') {
         const params = estado !== 'all' ? `?estado=${estado}` : '';
         try {
-            const resp = await fetch('/solicitudes' + params);
-            const data = await resp.json();
+            const result = await cachedFetch('/solicitudes' + params, { ttl: 60000 });
+            const data = result.data;
             const tbody = document.getElementById('tbodySolicitudes');
             if (!tbody) return;
 
@@ -400,21 +408,22 @@
                 const badgeClass = s.estado === 'pendiente' ? 'pending' : (s.estado === 'aprobado' ? 'approved' : 'rejected');
                 const badgeText = s.estado.charAt(0).toUpperCase() + s.estado.slice(1);
 
+                const tipoJub = s.tipo_jubilacion || '—';
                 const fila = document.createElement('tr');
                 fila.innerHTML = `
-                    <td class="folio">${folio}</td>
+                    <td class="folio">${escaparHTML(folio)}</td>
                     <td>
                         <div class="worker-info">
-                            <strong>${nombre}</strong>
-                            <span>${unidad}</span>
+                            <strong>${escaparHTML(nombre)}</strong>
+                            <span>${escaparHTML(unidad)}</span>
                         </div>
                     </td>
-                    <td>${fecha}</td>
-                    <td>${periodo}</td>
-                    <td><span class="badge-status ${badgeClass}">${badgeText}</span></td>
+                    <td>${escaparHTML(tipoJub)}</td>
+                    <td>${escaparHTML(fecha)}</td>
+                    <td><span class="badge-status ${escaparHTML(badgeClass)}">${escaparHTML(badgeText)}</span></td>
                     <td class="actions">
-                        <i class="fas fa-eye btn-icon btn-ver-solicitud" title="Ver Detalle" data-id="${s.id}"></i>
-                        <i class="fas fa-pen btn-icon btn-editar-solicitud" title="Editar" data-id="${s.id}"></i>
+                        <i class="fas fa-eye btn-icon btn-ver-solicitud" title="Ver Detalle" data-id="${escaparHTML(String(s.id))}"></i>
+                        <i class="fas fa-pen btn-icon btn-editar-solicitud" title="Editar" data-id="${escaparHTML(String(s.id))}"></i>
                     </td>
                 `;
                 tbody.appendChild(fila);
@@ -431,22 +440,17 @@
     // === 4. CARGAR MÉTRICAS ===
     async function cargarMetricas() {
         try {
-            const resp = await fetch('/solicitudes?per_page=1');
-            const data = await resp.json();
-            const total = data.total || 0;
-            document.getElementById('metricTotal').textContent = total;
+            const cTotal = await cachedFetch('/solicitudes?per_page=1', { ttl: 60000 });
+            document.getElementById('metricTotal').textContent = cTotal.data.total || 0;
 
-            const respPend = await fetch('/solicitudes?estado=pending&per_page=1');
-            const dataPend = await respPend.json();
-            document.getElementById('metricPendientes').textContent = dataPend.total || 0;
+            const cPend = await cachedFetch('/solicitudes?estado=pending&per_page=1', { ttl: 60000 });
+            document.getElementById('metricPendientes').textContent = cPend.data.total || 0;
 
-            const respAprob = await fetch('/solicitudes?estado=approved&per_page=1');
-            const dataAprob = await respAprob.json();
-            document.getElementById('metricAprobadas').textContent = dataAprob.total || 0;
+            const cAprob = await cachedFetch('/solicitudes?estado=approved&per_page=1', { ttl: 60000 });
+            document.getElementById('metricAprobadas').textContent = cAprob.data.total || 0;
 
-            const respRech = await fetch('/solicitudes?estado=rejected&per_page=1');
-            const dataRech = await respRech.json();
-            document.getElementById('metricRechazadas').textContent = dataRech.total || 0;
+            const cRech = await cachedFetch('/solicitudes?estado=rejected&per_page=1', { ttl: 60000 });
+            document.getElementById('metricRechazadas').textContent = cRech.data.total || 0;
         } catch (err) {
             console.error('Error al cargar métricas:', err);
         }
@@ -463,33 +467,33 @@
         cargarSolicitudes(currentStatus);
     });
 
-    // === 6. MODAL ===
+    // === 6. MODAL NUEVA SOLICITUD ===
     window.abrirModalSolicitud = function() {
         const modal = document.getElementById('modalSolicitud');
-        if (modal) {
-                    modal.style.display = 'flex';
-                }
-            })
-            .catch(err => {
-                ocultarCargando();
-                console.error('Error al cargar detalle:', err);
-                mostrarToast('Error al cargar el detalle de la solicitud.', 'error');
-            });
-    });
+        if (modal) modal.style.display = 'flex';
+    };
+
+    function cerrarModalSolicitud() {
+        const modal = document.getElementById('modalSolicitud');
+        if (modal) modal.style.display = 'none';
+    }
 
     function cerrarModalVer() {
         const modal = document.getElementById('modalVerSolicitud');
         if (modal) modal.style.display = 'none';
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnCerrar = document.getElementById('btnCerrarVer');
-        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModalVer);
+    document.getElementById('closeModalSolicitud')?.addEventListener('click', cerrarModalSolicitud);
+    document.getElementById('btnCancelarSolicitud')?.addEventListener('click', cerrarModalSolicitud);
+    window.addEventListener('click', (e) => {
+        const m = document.getElementById('modalSolicitud');
+        if (e.target === m) cerrarModalSolicitud();
+    });
 
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('modalVerSolicitud');
-            if (e.target === modal) cerrarModalVer();
-        });
+    document.getElementById('btnCerrarVer')?.addEventListener('click', cerrarModalVer);
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('modalVerSolicitud');
+        if (e.target === modal) cerrarModalVer();
     });
 
     // === 9. EDITAR SOLICITUD (Cambiar estatus) ===
@@ -529,24 +533,18 @@
         if (modal) modal.style.display = 'none';
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnCerrar = document.getElementById('closeModalEditar');
-        const btnCancelar = document.getElementById('btnCancelarEditar');
-        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModalEditar);
-        if (btnCancelar) btnCancelar.addEventListener('click', cerrarModalEditar);
-
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('modalEditarSolicitud');
-            if (e.target === modal) cerrarModalEditar();
-        });
+    document.getElementById('closeModalEditar')?.addEventListener('click', cerrarModalEditar);
+    document.getElementById('btnCancelarEditar')?.addEventListener('click', cerrarModalEditar);
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('modalEditarSolicitud');
+        if (e.target === modal) cerrarModalEditar();
     });
 
     // === 10. ENVÍO DEL FORMULARIO DE EDICIÓN ===
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('formEditarSolicitud');
-        if (!form) return;
+    const formEdit = document.getElementById('formEditarSolicitud');
+    if (formEdit) {
 
-        form.addEventListener('submit', async function(e) {
+        formEdit.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const id = document.getElementById('editSolicitudId').value;
@@ -584,7 +582,7 @@
                 if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Guardar Cambios'; }
             }
         });
-    });
+    }
 
     // === EXPORTAR PDF ===
     window.exportarSolicitudesPDF = function() {

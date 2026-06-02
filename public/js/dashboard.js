@@ -1,5 +1,38 @@
 // === DASHBOARD.JS - SIGEJUB ===
 
+window.escaparHTML = function(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+};
+
+window.cachedFetch = async function(url, options) {
+    options = options || {};
+    var ttl = options.ttl || 60000;
+    var cacheKey = 'sigejub_cache_' + url;
+    var cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        try {
+            var parsed = JSON.parse(cached);
+            if (Date.now() - parsed.ts < ttl) {
+                return { data: parsed.data, fromCache: true };
+            }
+        } catch (e) {}
+    }
+    try {
+        var resp = await fetch(url);
+        var data = await resp.json();
+        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: data }));
+        return { data: data, fromCache: false };
+    } catch (e) {
+        if (cached) {
+            try { return { data: JSON.parse(cached).data, fromCache: true }; } catch (e2) {}
+        }
+        throw e;
+    }
+};
+
 function inicializarDashboard() {
     if (window.SIGEJUB_THEME === 'dark') {
         document.body.classList.add('dark-mode');
@@ -56,12 +89,8 @@ async function cargarNotificaciones() {
     var list = document.getElementById('notifList');
     if (!list) return;
     try {
-        var resp = await fetch('/notificaciones');
-        if (!resp.ok) {
-            list.innerHTML = '<p style="text-align:center;color:#ef4444;padding:20px;font-size:0.85rem;">Error al cargar</p>';
-            return;
-        }
-        var data = await resp.json();
+        var result = await cachedFetch('/notificaciones', { ttl: 30000 });
+        var data = result.data;
         if (!data.length) {
             list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;font-size:0.85rem;">Sin notificaciones</p>';
             return;
@@ -73,7 +102,7 @@ async function cargarNotificaciones() {
             var div = document.createElement('div');
             div.className = 'notif-item' + (n.is_read ? '' : ' unread');
             div.onclick = function() { marcarLeida(n.id); };
-            div.innerHTML = '<div class="notif-title">' + n.title + '</div><div class="notif-msg">' + n.message + '</div><div class="notif-time">' + de + ' — ' + fecha + '</div>';
+            div.innerHTML = '<div class="notif-title">' + escaparHTML(n.title) + '</div><div class="notif-msg">' + escaparHTML(n.message) + '</div><div class="notif-time">' + escaparHTML(de) + ' — ' + escaparHTML(fecha) + '</div>';
             list.appendChild(div);
         });
     } catch (err) { console.error('Error al cargar notificaciones:', err); }
@@ -81,9 +110,8 @@ async function cargarNotificaciones() {
 
 async function cargarContadorNoLeidas() {
     try {
-        var resp = await fetch('/notificaciones/no-leidas');
-        if (!resp.ok) return;
-        var data = await resp.json();
+        var result = await cachedFetch('/notificaciones/no-leidas', { ttl: 30000 });
+        var data = result.data;
         var badge = document.getElementById('notifBadge');
         if (badge) {
             if (data.count > 0) {

@@ -50,8 +50,8 @@ class AuthController extends Controller
         'email' => 'required|string|email|max:255|unique:users',
         'phone' => 'required|string|max:20',
         'fecha_nacimiento' => 'required|date',
-        'password' => 'required|string|min:6|confirmed',
-        'role' => 'required|in:analista,admin',
+            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
+            'role' => 'required|in:analista,admin',
     ]);
 
     $user = User::create([

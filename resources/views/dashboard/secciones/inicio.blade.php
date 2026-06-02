@@ -123,8 +123,8 @@
         const container = document.getElementById('actividadRecienteLista');
         if (!container) return;
         try {
-            const resp = await fetch('/actividades');
-            const actividades = await resp.json();
+            const result = await cachedFetch('/actividades', { ttl: 60000 });
+            const actividades = result.data;
             container.innerHTML = '';
             if (!actividades.length) {
                 container.innerHTML = '<div class="activity-item"><div class="activity-text" style="text-align:center;color:#94a3b8;padding:20px;"><p>Sin actividades recientes</p></div></div>';
@@ -132,13 +132,13 @@
             }
             actividades.forEach(a => {
                 const [icon, color] = getActivityIcon(a.action, a.subject_type);
-                const user = a.user ? a.user.name : 'Sistema';
+                const user = a.user ? escaparHTML(a.user.name) : 'Sistema';
                 const div = document.createElement('div');
                 div.className = 'activity-item';
                 div.innerHTML = `
                     <div class="activity-icon ${color}"><i class="fas ${icon}"></i></div>
                     <div class="activity-text">
-                        <p>${a.description}</p>
+                        <p>${escaparHTML(a.description)}</p>
                         <span>${user} • ${timeAgo(a.created_at)}</span>
                     </div>
                 `;
@@ -150,94 +150,117 @@
     }
 
     async function cargarEstadisticasInicio() {
+        const ttlStats = 120000;
+        const statsKey = 'sigejub_cache_stats_inicio';
+        var cached = localStorage.getItem(statsKey);
+        var skipRender = false;
+        if (cached) {
+            try {
+                var p = JSON.parse(cached);
+                if (Date.now() - p.ts < ttlStats) {
+                    renderEstadisticasInicio(p.data);
+                    skipRender = true;
+                }
+            } catch (e) {}
+        }
+
         try {
-            const [respTrab, respPend, respAprob, respRech, respMes, respVenc] = await Promise.all([
-                fetch('/trabajadores?per_page=1'),
-                fetch('/solicitudes?estado=pending&per_page=1'),
-                fetch('/solicitudes?estado=approved&per_page=1'),
-                fetch('/solicitudes?estado=rejected&per_page=1'),
-                fetch('/solicitudes/por-mes'),
-                fetch('/solicitudes/vencimientos'),
+            const [cTrab, cPend, cAprob, cRech, cMes, cVenc] = await Promise.all([
+                cachedFetch('/trabajadores?per_page=1'),
+                cachedFetch('/solicitudes?estado=pending&per_page=1'),
+                cachedFetch('/solicitudes?estado=approved&per_page=1'),
+                cachedFetch('/solicitudes?estado=rejected&per_page=1'),
+                cachedFetch('/solicitudes/por-mes'),
+                cachedFetch('/solicitudes/vencimientos'),
             ]);
 
-            const dataTrab = await respTrab.json();
-            const dataPend = await respPend.json();
-            const dataAprob = await respAprob.json();
-            const dataRech = await respRech.json();
-            const dataMes = await respMes.json();
-            const dataVenc = await respVenc.json();
+            const data = {
+                totalTrab: cTrab.data.total || 0,
+                totalPend: cPend.data.total || 0,
+                totalAprob: cAprob.data.total || 0,
+                totalRech: cRech.data.total || 0,
+                porMes: cMes.data,
+                vencimientos: cVenc.data,
+            };
 
-            const el = id => document.getElementById(id);
-            if (el('inicioTotalTrabajadores')) el('inicioTotalTrabajadores').textContent = dataTrab.total || 0;
-            if (el('inicioPendientes')) el('inicioPendientes').textContent = dataPend.total || 0;
-            if (el('inicioAprobadas')) el('inicioAprobadas').textContent = dataAprob.total || 0;
-            if (el('inicioRechazadas')) el('inicioRechazadas').textContent = dataRech.total || 0;
+            localStorage.setItem(statsKey, JSON.stringify({ ts: Date.now(), data: data }));
 
-            const nombresMeses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-            const barras = document.querySelectorAll('#barChartSolicitudes .bar-group .bar');
-            if (barras.length && Array.isArray(dataMes)) {
-                const max = Math.max(...dataMes, 1);
-                dataMes.forEach((val, i) => {
-                    if (barras[i]) {
-                        const pct = Math.max((val / max) * 90, 5);
-                        barras[i].style.height = pct + '%';
-                        if (val > 0) {
-                            barras[i].innerHTML = `<span class="val">${val}</span>`;
-                        } else {
-                            barras[i].innerHTML = '';
-                        }
+            if (!skipRender) renderEstadisticasInicio(data);
+        } catch (err) {
+            console.error('Error al cargar estadísticas:', err);
+        }
+    }
+
+    function renderEstadisticasInicio(data) {
+        const el = id => document.getElementById(id);
+        if (el('inicioTotalTrabajadores')) el('inicioTotalTrabajadores').textContent = data.totalTrab;
+        if (el('inicioPendientes')) el('inicioPendientes').textContent = data.totalPend;
+        if (el('inicioAprobadas')) el('inicioAprobadas').textContent = data.totalAprob;
+        if (el('inicioRechazadas')) el('inicioRechazadas').textContent = data.totalRech;
+
+        const nombresMeses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+        const barras = document.querySelectorAll('#barChartSolicitudes .bar-group .bar');
+        if (barras.length && Array.isArray(data.porMes)) {
+            const max = Math.max(...data.porMes, 1);
+            data.porMes.forEach((val, i) => {
+                if (barras[i]) {
+                    const pct = Math.max((val / max) * 90, 5);
+                    barras[i].style.height = pct + '%';
+                    if (val > 0) {
+                        barras[i].innerHTML = `<span class="val">${val}</span>`;
+                    } else {
+                        barras[i].innerHTML = '';
                     }
+                }
+            });
+        }
+
+        const container = document.getElementById('deadlineItems');
+        if (container && data.vencimientos) {
+            let html = '';
+            const venc = data.vencimientos;
+            const urgentes = venc.proximos || [];
+            const pendientes = venc.pendientes || [];
+
+            if (urgentes.length === 0 && pendientes.length === 0) {
+                html = '<div class="deadline-item" style="padding: 16px; color: #94a3b8; text-align: center; font-size: 0.85rem;">Sin vencimientos próximos</div>';
+            } else {
+                urgentes.forEach(t => {
+                    const nombre = [t.nombres, t.apellidos].filter(Boolean).join(' ');
+                    const edadRestante = Math.max(60 - (t.edad || 0), 0);
+                    html += `
+                        <div class="deadline-item urgent">
+                            <span class="tag">Urgente</span>
+                            <p>${escaparHTML(nombre)}</p>
+                            <span>${edadRestante > 0 ? edadRestante + ' años para edad de jubilación' : 'Edad de jubilación cumplida'} · ${escaparHTML(t.total_anos_servicio) || 0} años servicio</span>
+                        </div>
+                    `;
+                });
+                pendientes.forEach(s => {
+                    const nombre = s.trabajador ? [s.trabajador.nombres, s.trabajador.apellidos].filter(Boolean).join(' ') : '—';
+                    const dias = Math.ceil((new Date() - new Date(s.created_at)) / (1000 * 60 * 60 * 24));
+                    html += `
+                        <div class="deadline-item warning">
+                            <span class="tag">${dias > 7 ? 'Pendiente' : 'Mañana'}</span>
+                            <p>Solicitud de ${escaparHTML(nombre)}</p>
+                            <span>${dias} días en espera · #SOL-${String(s.id).padStart(4, '0')}</span>
+                        </div>
+                    `;
                 });
             }
+            container.innerHTML = html;
+        }
 
-            const container = document.getElementById('deadlineItems');
-            if (container && dataVenc) {
-                let html = '';
-                const urgentes = dataVenc.proximos || [];
-                const pendientes = dataVenc.pendientes || [];
-
-                if (urgentes.length === 0 && pendientes.length === 0) {
-                    html = '<div class="deadline-item" style="padding: 16px; color: #94a3b8; text-align: center; font-size: 0.85rem;">Sin vencimientos próximos</div>';
-                } else {
-                    urgentes.forEach(t => {
-                        const nombre = [t.nombres, t.apellidos].filter(Boolean).join(' ');
-                        const edadRestante = Math.max(60 - (t.edad || 0), 0);
-                        html += `
-                            <div class="deadline-item urgent">
-                                <span class="tag">Urgente</span>
-                                <p>${nombre}</p>
-                                <span>${edadRestante > 0 ? edadRestante + ' años para edad de jubilación' : 'Edad de jubilación cumplida'} · ${t.total_anos_servicio || 0} años servicio</span>
-                            </div>
-                        `;
-                    });
-                    pendientes.forEach(s => {
-                        const nombre = s.trabajador ? [s.trabajador.nombres, s.trabajador.apellidos].filter(Boolean).join(' ') : '—';
-                        const dias = Math.ceil((new Date() - new Date(s.created_at)) / (1000 * 60 * 60 * 24));
-                        html += `
-                            <div class="deadline-item warning">
-                                <span class="tag">${dias > 7 ? 'Pendiente' : 'Mañana'}</span>
-                                <p>Solicitud de ${nombre}</p>
-                                <span>${dias} días en espera · #SOL-${String(s.id).padStart(4, '0')}</span>
-                            </div>
-                        `;
-                    });
-                }
-                container.innerHTML = html;
+        const datoTexto = document.getElementById('datoInstitucionalTexto');
+        if (datoTexto && data.vencimientos) {
+            const venc = data.vencimientos;
+            const total = venc.total_solicitudes || 0;
+            const tasa = venc.tasa_aprobacion || 0;
+            if (total === 0) {
+                datoTexto.textContent = 'Aún no hay solicitudes registradas en el sistema.';
+            } else {
+                datoTexto.textContent = `Se han procesado ${total} solicitudes de jubilación, con una tasa de aprobación del ${tasa}%.`;
             }
-
-            const datoTexto = document.getElementById('datoInstitucionalTexto');
-            if (datoTexto && dataVenc) {
-                const total = dataVenc.total_solicitudes || 0;
-                const tasa = dataVenc.tasa_aprobacion || 0;
-                if (total === 0) {
-                    datoTexto.textContent = 'Aún no hay solicitudes registradas en el sistema.';
-                } else {
-                    datoTexto.textContent = `Se han procesado ${total} solicitudes de jubilación, con una tasa de aprobación del ${tasa}%.`;
-                }
-            }
-
-        } catch (err) {
-            console.error('Error al cargar estadísticas de inicio:', err);
         }
     }
 

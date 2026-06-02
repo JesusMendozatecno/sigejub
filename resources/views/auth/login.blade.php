@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login SIGEJUB</title>
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}" type="image/x-icon">
-    <!-- CSS exclusivo del login -->
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
 </head>
@@ -33,8 +34,8 @@
 
             <!-- Campo email -->
             <div class="input-group">
-                <label>Usuario</label>
-                <input type="text" name="email" required>
+                <label>Correo Electrónico</label>
+                <input type="email" name="email" required>
             </div>
 
             <!-- Campo contraseña -->

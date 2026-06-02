@@ -299,8 +299,8 @@
     // Cargar estadísticas del dashboard de trabajadores
     async function cargarTrabajadoresStats() {
         try {
-            const resp = await fetch('/trabajadores-stats/dashboard');
-            const data = await resp.json();
+            const result = await cachedFetch('/trabajadores-stats/dashboard', { ttl: 120000 });
+            const data = result.data;
 
             // Próximas jubilaciones
             const lista = document.getElementById('proximasJubilacionesList');
@@ -312,8 +312,8 @@
                         data.proximas.length + ' trabajadores próximos a cumplir requisitos:</p>' +
                         data.proximas.slice(0, 5).map(t =>
                             `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);font-size:0.82rem;">
-                                <span>${t.nombres} ${t.apellidos}</span>
-                                <span style="color:rgba(255,255,255,0.6);font-size:0.75rem;">${t.edad || '—'} años · ${t.total_anos_servicio || 0} años serv.</span>
+                                <span>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</span>
+                                <span style="color:rgba(255,255,255,0.6);font-size:0.75rem;">${escaparHTML(t.edad) || '—'} años · ${escaparHTML(t.total_anos_servicio) || 0} años serv.</span>
                             </div>`
                         ).join('');
                 }

@@ -226,8 +226,8 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
         const grid = document.getElementById('prestacionesGrid');
         if (!grid) return;
         try {
-            const resp = await fetch('/prestaciones');
-            const data = await resp.json();
+            const result = await cachedFetch('/prestaciones', { ttl: 60000 });
+            const data = result.data;
             grid.innerHTML = '';
             if (!data.length) {
                 grid.innerHTML = '<p class="empty-state">No hay trabajadores disponibles. Deben tener solicitud aprobada y expediente registrado.</p>';
@@ -243,11 +243,11 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
                         ${foto ? `<img src="${foto}" alt="">` : `<div class="pc-avatar"><i class="fas fa-user" size="28"></i></div>`}
                     </div>
                     <div class="pc-info">
-                        <strong>${t.nombres} ${t.apellidos}</strong>
-                        <span class="pc-cedula">${t.cedula} · ${t.cargo || ''}</span>
+                        <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
+                        <span class="pc-cedula">${escaparHTML(t.cedula)} · ${escaparHTML(t.cargo)}</span>
                         <div class="pc-row">
-                            <span class="pc-anios">${t.total_anos_servicio || 0} años</span>
-                            <span class="pc-badge">${t.tipo_jubilacion}</span>
+                            <span class="pc-anios">${escaparHTML(t.total_anos_servicio) || 0} años</span>
+                            <span class="pc-badge">${escaparHTML(t.tipo_jubilacion)}</span>
                         </div>
                     </div>
                 `;
@@ -283,8 +283,8 @@ body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd;
             document.getElementById('detalleNombre').textContent = `${t.nombres} ${t.apellidos}`;
             document.getElementById('detalleInfo').textContent = `${t.cedula} • ${t.cargo} • ${t.total_anos_servicio || 0} años`;
             document.getElementById('detalleBadges').innerHTML = `
-                <span class="badge-status active-bg">${t.edad || '—'} AÑOS</span>
-                <span class="badge-status info-bg">${t.unidad_departamento || ''}</span>
+                <span class="badge-status active-bg">${escaparHTML(t.edad || '—')} AÑOS</span>
+                <span class="badge-status info-bg">${escaparHTML(t.unidad_departamento)}</span>
             `;
 
             // Sidebar

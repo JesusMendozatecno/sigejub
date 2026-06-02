@@ -22,7 +22,7 @@ Route::get('/', function () {
 })->name('welcome');
 
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 /*
 |-----------------------------
@@ -74,6 +74,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/perfil/admin/usuarios/{id}', [UserController::class, 'adminDeleteUser'])->name('usuarios.admin.delete-user');
     Route::get('/perfil/admin/actividad', [UserController::class, 'adminActivity'])->name('usuarios.admin.activity');
     Route::post('/perfil/admin/config-global', [UserController::class, 'adminGlobalConfig'])->name('usuarios.admin.config');
+
+    // Documentación / Changelog
+    Route::get('/documentacion', [App\Http\Controllers\ChangelogController::class, 'view'])->name('documentacion');
+    Route::post('/documentacion/generar', [App\Http\Controllers\ChangelogController::class, 'generate'])->name('documentacion.generate');
+    Route::get('/documentacion/api', [App\Http\Controllers\ChangelogController::class, 'index'])->name('documentacion.api');
 });
 
 /*

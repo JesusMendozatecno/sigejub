@@ -14,6 +14,15 @@
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <script>
+    window.escaparHTML = function(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    };
+    </script>
+
     <style>
         :root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }
         .notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
