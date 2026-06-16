@@ -67,9 +67,9 @@ document.getElementById('formProfile')?.addEventListener('submit', async functio
     try {
         var r = await api('/perfil/actualizar', { method: 'POST', body: fd });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message || 'Error al guardar', 'error'); return; }
-        mostrarToast(d.message, 'success');
-        document.querySelector('.profile-name').textContent = fd.get('name');
+        if (!r.ok) { mostrarToast(d.mensaje || 'Error al guardar', 'error'); return; }
+        mostrarToast(d.mensaje, 'success');
+        document.querySelector('.profile-name').textContent = fd.get('nombre');
     } catch (err) { mostrarToast('Error de conexión', 'error'); }
 });
 
@@ -117,9 +117,23 @@ async function confirmarCrop() {
             var text = await r.text();
             var d;
             try { d = JSON.parse(text); } catch (e) { console.error('Respuesta no JSON:', text.substring(0,200)); mostrarToast('Error del servidor', 'error'); return; }
-            if (!r.ok) { mostrarToast(d.message || 'Error al subir', 'error'); return; }
-            document.getElementById('profileAvatarImg').src = d.avatar + '?t=' + Date.now();
-            mostrarToast(d.message, 'success');
+            if (!r.ok) { mostrarToast(d.mensaje || 'Error al subir', 'error'); return; }
+            var img = document.getElementById('profileAvatarImg');
+            var placeholder = document.getElementById('profileAvatarPlaceholder');
+            if (img) {
+                img.src = d.avatar + '?t=' + Date.now();
+            } else {
+                if (placeholder) placeholder.remove();
+                var wrap = document.querySelector('.avatar-wrap');
+                if (wrap) {
+                    var newImg = document.createElement('img');
+                    newImg.id = 'profileAvatarImg';
+                    newImg.src = d.avatar + '?t=' + Date.now();
+                    newImg.alt = 'Avatar';
+                    wrap.insertBefore(newImg, wrap.querySelector('.avatar-overlay'));
+                }
+            }
+            mostrarToast(d.mensaje, 'success');
             cerrarCrop();
         } catch (err) { console.error('Error avatar:', err); mostrarToast('Error de conexión', 'error'); }
     }, 'image/jpeg', 0.9);
@@ -131,7 +145,7 @@ async function eliminarAvatar() {
     try {
         var r = await fetch('/perfil/avatar', { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' } });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message, 'error'); return; }
+        if (!r.ok) { mostrarToast(d.mensaje, 'error'); return; }
         var img = document.getElementById('profileAvatarImg');
         if (img) {
             img.remove();
@@ -143,7 +157,7 @@ async function eliminarAvatar() {
                 wrap.insertBefore(placeholder, wrap.querySelector('.avatar-overlay'));
             }
         }
-        mostrarToast(d.message, 'success');
+        mostrarToast(d.mensaje, 'success');
     } catch (err) { console.error('Error eliminar avatar:', err); mostrarToast('Error de conexión', 'error'); }
 }
 
@@ -155,8 +169,8 @@ document.getElementById('formPassword')?.addEventListener('submit', async functi
     try {
         var r = await api('/perfil/password', { method: 'POST', body: fd });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message || 'Error', 'error'); return; }
-        mostrarToast(d.message, 'success');
+        if (!r.ok) { mostrarToast(d.mensaje || 'Error', 'error'); return; }
+        mostrarToast(d.mensaje, 'success');
         e.target.reset();
     } catch (err) { mostrarToast('Error de conexión', 'error'); }
 });
@@ -165,11 +179,11 @@ async function toggleFA() {
     var tog = document.getElementById('toggle2FA');
     var nuevo = !tog.classList.contains('active');
     try {
-        var r = await api('/perfil/2fa', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ enabled: nuevo }) });
+        var r = await api('/perfil/2fa', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ activado: nuevo }) });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        tog.classList.toggle('active', d.enabled);
-        mostrarToast(d.message, 'success');
+        if (!r.ok) { mostrarToast(d.mensaje, 'error'); return; }
+        tog.classList.toggle('active', d.activado);
+        mostrarToast(d.mensaje, 'success');
     } catch (err) { mostrarToast('Error', 'error'); }
 }
 
@@ -180,7 +194,7 @@ async function cargarSesiones() {
         var sessions = await r.json();
         if (!sessions.length) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Sin sesiones activas</p>'; return; }
         el.innerHTML = sessions.map(function(s) {
-            return '<div class="session-item' + (s.is_current ? ' current' : '') + '"><div class="session-device"><i class="fas ' + (s.is_current ? 'fa-mobile-screen-button' : 'fa-laptop') + '"></i><div class="session-info"><p>' + (s.user_agent ? s.user_agent.substring(0, 60) + '...' : 'Dispositivo desconocido') + (s.is_current ? ' <span class="session-badge current">Actual</span>' : '') + '</p><span>' + s.ip_address + ' — ' + (s.last_activity_humans || 'desconocido') + '</span></div></div>' + (!s.is_current ? '<button class="btn btn-danger btn-sm" onclick="eliminarSesion(\'' + s.id + '\')">Cerrar</button>' : '') + '</div>';
+            return '<div class="session-item' + (s.is_current ? ' current' : '') + '"><div class="session-device"><i class="fas ' + (s.is_current ? 'fa-mobile-screen-button' : 'fa-laptop') + '"></i><div class="session-info"><p>' + (s.navegador ? s.navegador.substring(0, 60) + '...' : 'Dispositivo desconocido') + (s.is_current ? ' <span class="session-badge current">Actual</span>' : '') + '</p><span>' + s.direccion_ip + ' — ' + (s.last_activity_humans || 'desconocido') + '</span></div></div>' + (!s.is_current ? '<button class="btn btn-danger btn-sm" onclick="eliminarSesion(\'' + s.id + '\')">Cerrar</button>' : '') + '</div>';
         }).join('');
     } catch (err) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Error al cargar sesiones</p>'; }
 }
@@ -189,8 +203,8 @@ async function eliminarSesion(id) {
     try {
         var r = await api('/perfil/sesiones/' + id, { method: 'DELETE' });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        mostrarToast(d.message, 'success');
+        if (!r.ok) { mostrarToast(d.mensaje, 'error'); return; }
+        mostrarToast(d.mensaje, 'success');
         cargarSesiones();
     } catch (err) { mostrarToast('Error', 'error'); }
 }
@@ -200,8 +214,8 @@ async function cerrarOtrasSesiones() {
     try {
         var r = await api('/perfil/sesiones/cerrar-otras', { method: 'POST' });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        mostrarToast(d.message, 'success');
+        if (!r.ok) { mostrarToast(d.mensaje, 'error'); return; }
+        mostrarToast(d.mensaje, 'success');
         cargarSesiones();
     } catch (err) { mostrarToast('Error', 'error'); }
 }
@@ -212,13 +226,13 @@ async function cambiarTema(tema) {
     document.querySelector('.theme-option[data-theme="' + tema + '"]')?.classList.add('selected');
     document.body.classList.toggle('dark-mode', tema === 'dark');
     try {
-        await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ theme: tema }) });
+        await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ tema: tema }) });
     } catch (err) {}
 }
 
 async function cambiarIdioma(lang) {
     try {
-        await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ language: lang }) });
+        await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ idioma: lang }) });
         mostrarToast('Idioma actualizado', 'success');
     } catch (err) {}
 }
@@ -228,14 +242,14 @@ async function cambiarColor(color) {
     document.querySelector('.color-preset[data-color="' + color + '"]')?.classList.add('selected');
     document.documentElement.style.setProperty('--accent', color);
     try {
-        await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ accent_color: color }) });
+        await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ color_acento: color }) });
         mostrarToast('Color actualizado', 'success');
     } catch (err) {}
 }
 
 async function guardarNotificaciones() {
     try {
-        await api('/perfil/notificaciones', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ notification_email: document.getElementById('notifEmail').value, notification_system: document.getElementById('notifSystem').value }) });
+        await api('/perfil/notificaciones', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ notificacion_correo: document.getElementById('notifEmail').value, notificacion_sistema: document.getElementById('notifSystem').value }) });
     } catch (err) {}
 }
 
@@ -244,7 +258,7 @@ async function togglePrivacidad() {
     var nuevo = !tog.classList.contains('active');
     tog.classList.toggle('active', nuevo);
     try {
-        await api('/perfil/notificaciones', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ profile_public: nuevo }) });
+        await api('/perfil/notificaciones', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ perfil_publico: nuevo }) });
         mostrarToast(nuevo ? 'Perfil público' : 'Perfil privado', 'success');
     } catch (err) { tog.classList.toggle('active', !nuevo); }
 }
@@ -266,9 +280,9 @@ async function cargarActividad() {
         list.innerHTML = acts.map(function(a) {
             var icons = { created: { trabajador: ['users','green'], solicitud: ['file-lines','blue'], usuario: ['user-plus','purple'], documento: ['file','blue'], notificacion: ['bell','purple'] }, updated: { trabajador: ['pen','orange'], solicitud: ['pen-to-square','orange'], usuario: ['pen-to-square','orange'] }, deleted: { trabajador: ['trash-can','red'], solicitud: ['circle-xmark','red'] } };
             var fallback = ['circle','blue'];
-            var iconData = (icons[a.action] && icons[a.action][a.subject_type]) || fallback;
+            var iconData = (icons[a.accion] && icons[a.accion][a.tipo_entidad]) || fallback;
             var fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-            return '<div class="activity-item"><div class="activity-icon ' + iconData[1] + '"><i class="fas fa-' + iconData[0] + '"></i></div><div class="activity-text"><p>' + (a.description || a.action + ' ' + a.subject_type) + '</p><span>' + fecha + '</span></div></div>';
+            return '<div class="activity-item"><div class="activity-icon ' + iconData[1] + '"><i class="fas fa-' + iconData[0] + '"></i></div><div class="activity-text"><p>' + (a.descripcion || a.accion + ' ' + a.tipo_entidad) + '</p><span>' + fecha + '</span></div></div>';
         }).join('');
     } catch (err) { list.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Error al cargar actividad</p>'; }
 }
@@ -288,24 +302,24 @@ function cambiarAdminTab(tab) {
 
 async function cargarAdminUsuarios() {
     var search = document.getElementById('adminSearch').value;
-    var role = document.getElementById('adminRoleFilter').value;
+    var rol = document.getElementById('adminRoleFilter').value;
     var tbody = document.getElementById('adminUsersBody');
     try {
-        var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&role=' + role);
+        var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&rol=' + role);
         var data = await r.json();
         if (!data.data || !data.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Sin usuarios</td></tr>'; return; }
         tbody.innerHTML = data.data.map(function(u) {
-            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.name.charAt(0).toUpperCase()) + '</div>' + u.name + '</div></td><td>' + u.email + '</td><td><select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(' + u.id + ', this.value)"><option value="analista"' + (u.role === 'analista' ? ' selected' : '') + '>Analista</option><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Admin</option></select></td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.name.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i class="fas fa-message"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(' + u.id + ')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
+            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.nombre.charAt(0).toUpperCase()) + '</div>' + u.nombre + '</div></td><td>' + u.correo + '</td><td><select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(' + u.id + ', this.value)"><option value="analista"' + (u.rol === 'analista' ? ' selected' : '') + '>Analista</option><option value="admin"' + (u.rol === 'admin' ? ' selected' : '') + '>Admin</option></select></td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.nombre.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i class="fas fa-message"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(' + u.id + ')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
         }).join('');
     } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Error al cargar</td></tr>'; }
 }
 
 async function cambiarRolUsuario(id, role) {
     try {
-        var r = await api('/perfil/admin/usuarios/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ role: role }) });
+        var r = await api('/perfil/admin/usuarios/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ rol: role }) });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        mostrarToast(d.message, 'success');
+        if (!r.ok) { mostrarToast(d.mensaje, 'error'); return; }
+        mostrarToast(d.mensaje, 'success');
     } catch (err) { mostrarToast('Error', 'error'); }
 }
 
@@ -314,8 +328,8 @@ async function eliminarUsuario(id) {
     try {
         var r = await api('/perfil/admin/usuarios/' + id, { method: 'DELETE' });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        mostrarToast(d.message, 'success');
+        if (!r.ok) { mostrarToast(d.mensaje, 'error'); return; }
+        mostrarToast(d.mensaje, 'success');
         cargarAdminUsuarios();
     } catch (err) { mostrarToast('Error', 'error'); }
 }
@@ -341,9 +355,9 @@ document.getElementById('formEnviarNotificacion')?.addEventListener('submit', as
         var resp = await fetch('/notificaciones', { method: 'POST', body: formData, headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' } });
         var data = await resp.json();
         if (!resp.ok) throw data;
-        mostrarToast(data.message, 'success');
+        mostrarToast(data.mensaje, 'success');
         cerrarModalNotificacion();
-    } catch (err) { mostrarToast(err.message || 'Error al enviar', 'error'); }
+    } catch (err) { mostrarToast(err.mensaje || 'Error al enviar', 'error'); }
     finally { btn.disabled = false; btn.textContent = 'Enviar'; }
 });
 
@@ -360,7 +374,7 @@ async function cargarAdminActividad() {
         if (!acts.length) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Sin actividad global</p>'; return; }
         el.innerHTML = acts.map(function(a) {
             var fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-            return '<div class="activity-item"><div class="activity-text"><p>' + a.description + '</p><span>' + (a.user ? a.user.name : 'Sistema') + ' — ' + fecha + '</span></div></div>';
+            return '<div class="activity-item"><div class="activity-text"><p>' + a.descripcion + '</p><span>' + (a.user ? a.user.nombre : 'Sistema') + ' — ' + fecha + '</span></div></div>';
         }).join('');
     } catch (err) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Error al cargar</p>'; }
 }
@@ -372,7 +386,7 @@ document.getElementById('formGlobalConfig')?.addEventListener('submit', async fu
     try {
         var r = await api('/perfil/admin/config-global', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify(data) });
         var d = await r.json();
-        if (!r.ok) { mostrarToast(d.message, 'error'); return; }
-        mostrarToast(d.message, 'success');
+        if (!r.ok) { mostrarToast(d.mensaje, 'error'); return; }
+        mostrarToast(d.mensaje, 'success');
     } catch (err) { mostrarToast('Error', 'error'); }
 });

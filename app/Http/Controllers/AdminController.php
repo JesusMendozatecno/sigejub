@@ -14,20 +14,20 @@ class AdminController extends Controller
 {
     public function usuarios(Request $request)
     {
-        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
-        $role = $request->get('role', '');
+        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        $rol = $request->get('rol', '');
         $search = $request->get('search', '');
 
         $query = User::query();
 
-        if ($role) {
-            $query->where('role', $role);
+        if ($rol) {
+            $query->where('rol', $rol);
         }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                $q->where('nombre', 'like', "%{$search}%")
+                  ->orWhere('correo', 'like', "%{$search}%");
             });
         }
 
@@ -38,41 +38,41 @@ class AdminController extends Controller
 
     public function showUsuario($id)
     {
-        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
         $user = User::findOrFail($id);
         return response()->json($user);
     }
 
     public function updateUsuario(Request $request, $id)
     {
-        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
         $user = User::findOrFail($id);
 
         $request->validate([
-            'role' => 'required|in:analista,admin',
+            'rol' => 'required|in:analista,admin',
         ]);
 
-        $oldRole = $user->role;
-        $user->role = $request->role;
+        $oldRol = $user->rol;
+        $user->rol = $request->rol;
         $user->save();
 
         Activity::log('updated', 'usuario', $user->id,
-            "Rol de {$user->name} cambiado de {$oldRole} a {$request->role}"
+            "Rol de {$user->nombre} cambiado de {$oldRol} a {$request->rol}"
         );
 
-        return response()->json(['message' => 'Permisos actualizados correctamente.']);
+        return response()->json(['mensaje' => 'Permisos actualizados correctamente.']);
     }
 
     public function actividades(Request $request)
     {
-        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
-        $type = $request->get('type', '');
+        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        $tipo = $request->get('tipo', '');
         $days = $request->get('days', 7);
 
         $query = Activity::query();
 
-        if ($type) {
-            $query->where('subject_type', $type);
+        if ($tipo) {
+            $query->where('tipo_entidad', $tipo);
         }
 
         if ($days > 0) {
@@ -86,19 +86,19 @@ class AdminController extends Controller
 
     public function actividadResumen(Request $request)
     {
-        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
         $days = $request->get('days', 7);
-        $type = $request->get('type', '');
+        $tipo = $request->get('tipo', '');
         $since = now()->subDays($days);
 
         $query = Activity::where('created_at', '>=', $since);
 
-        if ($type) {
-            $query->where('subject_type', $type);
+        if ($tipo) {
+            $query->where('tipo_entidad', $tipo);
         }
 
-        $resumen = $query->selectRaw('DATE(created_at) as fecha, subject_type, COUNT(*) as total')
-            ->groupBy('fecha', 'subject_type')
+        $resumen = $query->selectRaw('DATE(created_at) as fecha, tipo_entidad, COUNT(*) as total')
+            ->groupBy('fecha', 'tipo_entidad')
             ->orderBy('fecha')
             ->get();
 
@@ -107,12 +107,12 @@ class AdminController extends Controller
 
     public function enviarNotificacion(Request $request)
     {
-        abort_unless(auth()->user()?->role === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'message' => 'required|string',
-            'type' => 'nullable|string|max:50',
+            'titulo' => 'required|string|max:255',
+            'mensaje' => 'required|string',
+            'tipo' => 'nullable|string|max:50',
         ]);
 
         $receptor = User::findOrFail($request->user_id);
@@ -120,24 +120,24 @@ class AdminController extends Controller
         $notif = UserNotification::create([
             'user_id' => $request->user_id,
             'from_user_id' => auth()->id(),
-            'title' => $request->title,
-            'message' => $request->message,
-            'type' => $request->type ?? 'info',
+            'titulo' => $request->titulo,
+            'mensaje' => $request->mensaje,
+            'tipo' => $request->tipo ?? 'info',
         ]);
 
         Activity::log('created', 'notificacion', $notif->id,
-            auth()->user()->name . " envió notificación a {$receptor->name}"
+            auth()->user()->nombre . " envió notificación a {$receptor->nombre}"
         );
 
         try {
             Mail::raw(
-                "Has recibido un mensaje de " . auth()->user()->name . ":\n\n" .
-                "Asunto: {$request->title}\n\n" .
-                "{$request->message}\n\n" .
+                "Has recibido un mensaje de " . auth()->user()->nombre . ":\n\n" .
+                "Asunto: {$request->titulo}\n\n" .
+                "{$request->mensaje}\n\n" .
                 "---\nSistema SIGEJUB - Arquitectura de Confianza",
                 function ($message) use ($receptor, $request) {
-                    $message->to($receptor->email, $receptor->name)
-                        ->subject('SIGEJUB - ' . $request->title);
+                    $message->to($receptor->correo, $receptor->nombre)
+                        ->subject('SIGEJUB - ' . $request->titulo);
                 }
             );
         } catch (\Exception $e) {
@@ -146,7 +146,7 @@ class AdminController extends Controller
 
         DashboardCache::flushNotifications($request->user_id);
 
-        return response()->json(['message' => 'Notificación enviada correctamente.']);
+        return response()->json(['mensaje' => 'Notificación enviada correctamente.']);
     }
 
     public function misNotificaciones()
@@ -168,7 +168,7 @@ class AdminController extends Controller
         $userId = auth()->id();
         $data = Cache::remember(DashboardCache::key('notificaciones.no_leidas', $userId), 120, function () use ($userId) {
             $count = UserNotification::where('user_id', $userId)
-                ->where('is_read', false)
+                ->where('leida', false)
                 ->count();
             return ['count' => $count];
         });
@@ -182,21 +182,21 @@ class AdminController extends Controller
             ->where('id', $id)
             ->firstOrFail();
 
-        $notif->update(['is_read' => true]);
+        $notif->update(['leida' => true]);
 
         DashboardCache::flushNotifications(auth()->id());
 
-        return response()->json(['message' => 'Notificación marcada como leída.']);
+        return response()->json(['mensaje' => 'Notificación marcada como leída.']);
     }
 
     public function marcarTodasLeidas()
     {
         UserNotification::where('user_id', auth()->id())
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+            ->where('leida', false)
+            ->update(['leida' => true]);
 
         DashboardCache::flushNotifications(auth()->id());
 
-        return response()->json(['message' => 'Todas las notificaciones marcadas como leídas.']);
+        return response()->json(['mensaje' => 'Todas las notificaciones marcadas como leídas.']);
     }
 }

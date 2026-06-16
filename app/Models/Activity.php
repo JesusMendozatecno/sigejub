@@ -8,16 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Activity extends Model
 {
     protected $fillable = [
-        'user_id', 'action', 'subject_type', 'subject_id', 'description',
-        'ip_address', 'user_agent', 'old_values', 'new_values', 'request_data'
+        'user_id', 'accion', 'tipo_entidad', 'entidad_id', 'descripcion',
+        'direccion_ip', 'navegador', 'valores_anteriores', 'valores_nuevos', 'datos_peticion'
     ];
 
     protected $with = ['user'];
 
     protected $casts = [
-        'old_values' => 'array',
-        'new_values' => 'array',
-        'request_data' => 'array',
+        'valores_anteriores' => 'array',
+        'valores_nuevos' => 'array',
+        'datos_peticion' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -26,26 +26,26 @@ class Activity extends Model
     }
 
     public static function log(
-        string $action,
-        string $subjectType,
-        ?int $subjectId,
-        string $description,
-        ?array $oldValues = null,
-        ?array $newValues = null,
-        ?array $requestData = null
+        string $accion,
+        string $tipoEntidad,
+        ?int $entidadId,
+        string $descripcion,
+        ?array $valoresAnteriores = null,
+        ?array $valoresNuevos = null,
+        ?array $datosPeticion = null
     ): self {
         $request = request();
         return self::create([
             'user_id' => auth()->id(),
-            'action' => $action,
-            'subject_type' => $subjectType,
-            'subject_id' => $subjectId,
-            'description' => $description,
-            'ip_address' => $request?->ip(),
-            'user_agent' => $request?->userAgent(),
-            'old_values' => $oldValues ? json_encode($oldValues) : null,
-            'new_values' => $newValues ? json_encode($newValues) : null,
-            'request_data' => $requestData ? json_encode($requestData) : null,
+            'accion' => $accion,
+            'tipo_entidad' => $tipoEntidad,
+            'entidad_id' => $entidadId,
+            'descripcion' => $descripcion,
+            'direccion_ip' => $request?->ip(),
+            'navegador' => $request?->userAgent(),
+            'valores_anteriores' => $valoresAnteriores ? json_encode($valoresAnteriores) : null,
+            'valores_nuevos' => $valoresNuevos ? json_encode($valoresNuevos) : null,
+            'datos_peticion' => $datosPeticion ? json_encode($datosPeticion) : null,
         ]);
     }
 }

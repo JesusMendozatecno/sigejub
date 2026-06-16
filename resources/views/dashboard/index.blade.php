@@ -24,7 +24,7 @@
     </script>
 
     <style>
-        :root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }
+        :root { --accent: {{ auth()->user()->color_acento ?? '#1a365d' }}; }
         .notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
         .notif-trigger:hover { background: #f1f5f9; }
         .notif-badge { display: none; }
@@ -42,7 +42,7 @@
 <script>document.getElementById('loading-overlay').classList.add('active');</script>
 <script>
 (function(){
-    var theme = '{{ auth()->user()->theme }}';
+    var theme = '{{ auth()->user()->tema }}';
     if (theme === 'dark') document.body.classList.add('dark-mode');
     var saved = localStorage.getItem('sigejub_active_section');
     if (saved && saved !== 'inicio') {
@@ -92,15 +92,15 @@
                     @endif
                 </div>
                 <div style="text-align: left; display: block;">
-                    <p style="margin:0; font-size: 0.85rem; font-weight: bold; line-height: 1; color: #1e293b;">{{ Auth::user()->name }}</p>
+                    <p style="margin:0; font-size: 0.85rem; font-weight: bold; line-height: 1; color: #1e293b;">{{ Auth::user()->nombre }}</p>
                 </div>
                 <i class="fas fa-chevron-down" size="14" style="color: #64748b;"></i>
             </div>
 
             <div class="dropdown-menu">
                 <div class="dropdown-header">
-                    <p style="margin:0; font-size: 0.85rem; font-weight: bold; color: #1e293b;">{{ Auth::user()->name }}</p>
-                    <span style="font-size: 0.75rem; color: #64748b;">{{ Auth::user()->email }}</span>
+                    <p style="margin:0; font-size: 0.85rem; font-weight: bold; color: #1e293b;">{{ Auth::user()->nombre }}</p>
+                    <span style="font-size: 0.75rem; color: #64748b;">{{ Auth::user()->correo }}</span>
                 </div>
 
                 <a href="{{ route('usuarios.user') }}" class="dropdown-item">
@@ -131,7 +131,8 @@
                 <li class="menu-item" data-target="expedientes"><i class="fas fa-folder" size="18"></i> Expedientes</li>
                 <li class="menu-item" data-target="prestaciones"><i class="fas fa-wallet" size="18"></i> Prestaciones</li>
                 <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
-                @if(Auth::user()->role === 'admin')
+                <li class="menu-item" data-target="diagramas"><i class="fas fa-diagram-project" size="18"></i> Diagramas</li>
+                @if(Auth::user()->rol === 'admin')
                 <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
                 @endif
 
@@ -167,19 +168,23 @@
                 @include('dashboard.secciones.reportes')
             </div>
 
-            @if(Auth::user()->role === 'admin')
+            @if(Auth::user()->rol === 'admin')
     
             <div id="caja-negra" class="content-section">
                 @include('dashboard.secciones.caja-negra')
             </div>
             @endif
 
+            <div id="diagramas" class="content-section">
+                @include('dashboard.secciones.diagramas')
+            </div>
+
         </div>
     </main>
 
 </div>
 
-<script>window.SIGEJUB_THEME='{{ auth()->user()->theme }}';</script>
+<script>window.SIGEJUB_THEME='{{ auth()->user()->tema }}';</script>
 <script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
 <script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>

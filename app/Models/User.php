@@ -19,24 +19,24 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'surname',
-        'email',
-        'phone',
+        'nombre',
+        'apellido',
+        'correo',
+        'telefono',
         'fecha_nacimiento',
         'password',
-        'role',
+        'rol',
         'avatar',
-        'theme',
-        'language',
-        'accent_color',
-        'two_factor_enabled',
-        'two_factor_secret',
-        'notification_email',
-        'notification_system',
-        'profile_public',
-        'last_login_at',
-        'last_login_ip',
+        'tema',
+        'idioma',
+        'color_acento',
+        'verificacion_dos_pasos',
+        'secreto_2fa',
+        'notificacion_correo',
+        'notificacion_sistema',
+        'perfil_publico',
+        'ultimo_acceso',
+        'ultimo_acceso_ip',
     ];
 
     /**
@@ -46,7 +46,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
+        'token_recordar',
     ];
 
     /**
@@ -57,11 +57,11 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'correo_verificado_en' => 'datetime',
             'password' => 'hashed',
-            'two_factor_enabled' => 'boolean',
-            'profile_public' => 'boolean',
-            'last_login_at' => 'datetime',
+            'verificacion_dos_pasos' => 'boolean',
+            'perfil_publico' => 'boolean',
+            'ultimo_acceso' => 'datetime',
         ];
     }
 }

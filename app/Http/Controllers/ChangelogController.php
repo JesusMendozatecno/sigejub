@@ -30,7 +30,7 @@ class ChangelogController extends Controller
         $output = Artisan::output();
 
         return response()->json([
-            'message' => 'Changelog generado',
+            'mensaje' => 'Changelog generado',
             'output' => $output,
         ]);
     }

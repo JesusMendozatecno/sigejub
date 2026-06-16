@@ -108,7 +108,7 @@
                     <h3><i class="fas fa-shield"></i> Rol / Permisos</h3>
                     <div class="input-group">
                         <label>ROL DEL USUARIO</label>
-                        <select name="role" id="editUserRole" required>
+                        <select name="rol" id="editUserRole" required>
                             <option value="analista">Analista</option>
                             <option value="admin">Admin</option>
                         </select>
@@ -146,11 +146,11 @@
                     <h3><i class="fas fa-bell"></i> Mensaje</h3>
                     <div class="input-group">
                         <label>TÍTULO</label>
-                        <input type="text" name="title" required placeholder="Ej: Actualización de expediente">
+                        <input type="text" name="titulo" required placeholder="Ej: Actualización de expediente">
                     </div>
                     <div class="input-group" style="margin-top:12px;">
                         <label>MENSAJE</label>
-                        <textarea class="form-textarea" name="message" required placeholder="Escriba el mensaje..."></textarea>
+                        <textarea class="form-textarea" name="mensaje" required placeholder="Escriba el mensaje..."></textarea>
                     </div>
                 </section>
                 <div class="modal-actions">
@@ -183,10 +183,10 @@
 
     // ===== USUARIOS =====
     async function cargarUsuarios() {
-        const role = document.getElementById('filtroRol').value;
+        const rol = document.getElementById('filtroRol').value;
         const search = document.getElementById('buscadorUsuarios').value;
         const params = new URLSearchParams();
-        if (role) params.set('role', role);
+        if (rol) params.set('rol', rol);
         if (search) params.set('search', search);
 
         try {
@@ -202,18 +202,18 @@
             }
 
             data.data.forEach(u => {
-                const rolClass = u.role === 'admin' ? 'status-pill active' : 'status-pill retired';
+                const rolClass = u.rol === 'admin' ? 'status-pill active' : 'status-pill retired';
                 const fecha = new Date(u.created_at + 'T12:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${u.id}</td>
-                    <td><strong>${escaparHTML(u.name)}</strong></td>
-                    <td>${escaparHTML(u.email)}</td>
-                    <td><span class="${rolClass}">${escaparHTML(u.role.toUpperCase())}</span></td>
+                    <td><strong>${escaparHTML(u.nombre)}</strong></td>
+                    <td>${escaparHTML(u.correo)}</td>
+                    <td><span class="${rolClass}">${escaparHTML(u.rol.toUpperCase())}</span></td>
                     <td>${escaparHTML(fecha)}</td>
                     <td class="actions">
-                        <i class="fas fa-shield btn-icon btn-editar-usuario" title="Editar Permisos" data-id="${u.id}" data-name="${escaparHTML(u.name)}" data-email="${escaparHTML(u.email)}" data-role="${escaparHTML(u.role)}"></i>
-                        <i class="fas fa-bell btn-icon btn-notificar-usuario" title="Enviar Notificación" data-id="${u.id}" data-name="${escaparHTML(u.name)}"></i>
+                        <i class="fas fa-shield btn-icon btn-editar-usuario" title="Editar Permisos" data-id="${u.id}" data-nombre="${escaparHTML(u.nombre)}" data-correo="${escaparHTML(u.correo)}" data-rol="${escaparHTML(u.rol)}"></i>
+                        <i class="fas fa-bell btn-icon btn-notificar-usuario" title="Enviar Notificación" data-id="${u.id}" data-nombre="${escaparHTML(u.nombre)}"></i>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -223,7 +223,7 @@
             document.getElementById('usuariosCounter').textContent = `Mostrando ${data.data.length} de ${total} usuarios`;
         } catch (err) {
             console.error('Error al cargar usuarios:', err);
-            mostrarToast('Error al cargar usuarios: ' + (err.message || 'desconocido'), 'error');
+            mostrarToast('Error al cargar usuarios: ' + (err.mensaje || err.message || 'desconocido'), 'error');
         }
     }
 
@@ -240,9 +240,9 @@
         const btn = e.target.closest('.btn-editar-usuario');
         if (!btn) return;
         document.getElementById('editUserId').value = btn.dataset.id;
-        document.getElementById('editUserName').textContent = btn.dataset.name;
-        document.getElementById('editUserEmail').textContent = btn.dataset.email;
-        document.getElementById('editUserRole').value = btn.dataset.role;
+        document.getElementById('editUserName').textContent = btn.dataset.nombre;
+        document.getElementById('editUserEmail').textContent = btn.dataset.correo;
+        document.getElementById('editUserRole').value = btn.dataset.rol;
         document.getElementById('modalEditarUsuario').style.display = 'flex';
     });
 
@@ -276,11 +276,11 @@
             });
             const data = await resp.json();
             if (!resp.ok) throw data;
-            mostrarToast(data.message, 'success');
+            mostrarToast(data.mensaje, 'success');
             cerrarModalEditarUsuario();
             cargarUsuarios();
         } catch (err) {
-            const msg = err.errors ? Object.values(err.errors).flat().join('\n') : (err.message || 'Error al actualizar');
+            const msg = err.errors ? Object.values(err.errors).flat().join('\n') : (err.mensaje || err.message || 'Error al actualizar');
             mostrarToast(msg, 'error');
         } finally {
             ocultarCargando();
@@ -292,7 +292,7 @@
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-notificar-usuario');
         if (!btn) return;
-        document.getElementById('notifUserName').textContent = btn.dataset.name;
+        document.getElementById('notifUserName').textContent = btn.dataset.nombre;
         document.getElementById('formEnviarNotificacion').reset();
         document.getElementById('notifUserId').value = btn.dataset.id;
         document.getElementById('modalEnviarNotificacion').style.display = 'flex';
@@ -326,10 +326,10 @@
             });
             const data = await resp.json();
             if (!resp.ok) throw data;
-            mostrarToast(data.message, 'success');
+            mostrarToast(data.mensaje, 'success');
             cerrarModalNotificacion();
         } catch (err) {
-            mostrarToast(err.message || 'Error al enviar', 'error');
+            mostrarToast(err.mensaje || err.message || 'Error al enviar', 'error');
         } finally {
             ocultarCargando();
             btn.disabled = false; btn.textContent = 'Enviar';
@@ -358,13 +358,13 @@
                 const u = a.user || {};
                 const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const accionMap = { created: 'Creó', updated: 'Modificó', deleted: 'Eliminó' };
-                const accion = accionMap[a.action] || a.action;
+                const accion = accionMap[a.accion] || a.accion;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="white-space:nowrap;font-size:0.8rem;color:#64748b;">${fecha}</td>
-                    <td><strong>${u.name || 'Sistema'}</strong></td>
-                    <td><span class="badge-status ${a.action === 'created' ? 'approved' : a.action === 'deleted' ? 'rejected' : 'pending'}">${accion}</span></td>
-                    <td style="color:#475569;font-size:0.85rem;">${a.description}</td>
+                    <td><strong>${u.nombre || 'Sistema'}</strong></td>
+                    <td><span class="badge-status ${a.accion === 'created' ? 'approved' : a.accion === 'deleted' ? 'rejected' : 'pending'}">${accion}</span></td>
+                    <td style="color:#475569;font-size:0.85rem;">${a.descripcion}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -384,13 +384,13 @@
             const data = await resp.json();
 
             const labels = [...new Set(data.map(d => d.fecha))].sort();
-            const tipos = [...new Set(data.map(d => d.subject_type))];
+            const tipos = [...new Set(data.map(d => d.tipo_entidad))];
 
             const datasets = tipos.map((tipo, i) => {
                 const colores = ['#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
                 const bg = colores[i % colores.length];
                 const valores = labels.map(l => {
-                    const item = data.find(d => d.fecha === l && d.subject_type === tipo);
+                    const item = data.find(d => d.fecha === l && d.tipo_entidad === tipo);
                     return item ? item.total : 0;
                 });
                 return {

@@ -97,12 +97,12 @@ async function cargarNotificaciones() {
         }
         list.innerHTML = '';
         data.forEach(function(n) {
-            var de = n.from_user ? n.from_user.name : 'Sistema';
+            var de = n.from_user ? n.from_user.nombre : 'Sistema';
             var fecha = new Date(n.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
             var div = document.createElement('div');
-            div.className = 'notif-item' + (n.is_read ? '' : ' unread');
+            div.className = 'notif-item' + (n.leida ? '' : ' unread');
             div.onclick = function() { marcarLeida(n.id); };
-            div.innerHTML = '<div class="notif-title">' + escaparHTML(n.title) + '</div><div class="notif-msg">' + escaparHTML(n.message) + '</div><div class="notif-time">' + escaparHTML(de) + ' — ' + escaparHTML(fecha) + '</div>';
+            div.innerHTML = '<div class="notif-title">' + escaparHTML(n.titulo) + '</div><div class="notif-msg">' + escaparHTML(n.mensaje) + '</div><div class="notif-time">' + escaparHTML(de) + ' — ' + escaparHTML(fecha) + '</div>';
             list.appendChild(div);
         });
     } catch (err) { console.error('Error al cargar notificaciones:', err); }
@@ -160,7 +160,7 @@ window.cambiarTema = async function(tema) {
         await fetch('/perfil/configuracion', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
-            body: JSON.stringify({ theme: tema }),
+            body: JSON.stringify({ tema: tema }),
         });
     } catch (err) {}
 };
@@ -176,7 +176,71 @@ window.cambiarColor = async function(color) {
         await fetch('/perfil/configuracion', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
-            body: JSON.stringify({ accent_color: color }),
+            body: JSON.stringify({ color_acento: color }),
         });
     } catch (err) {}
 };
+
+// === INACTIVITY AUTO-LOGOUT (idle timer) ===
+(function() {
+    var INACTIVITY_TIMEOUT = 15 * 60;
+    var WARNING_TIME = 14 * 60;
+    var PING_INTERVAL = 60;
+    var idleSeconds = 0;
+    var warningShown = false;
+    var inactivityTimer = null;
+    var pingTimer = null;
+    var token = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    function resetIdleTimer() {
+        idleSeconds = 0;
+        warningShown = false;
+        clearInterval(inactivityTimer);
+        clearInterval(pingTimer);
+        inactivityTimer = setInterval(tick, 1000);
+        pingTimer = setInterval(sendPing, PING_INTERVAL * 1000);
+    }
+
+    function tick() {
+        idleSeconds++;
+        if (idleSeconds >= WARNING_TIME && !warningShown) {
+            warningShown = true;
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Tu sesión está por expirar por inactividad. Mueve el mouse o presiona una tecla para continuar.', 'warning');
+            }
+        }
+        if (idleSeconds >= INACTIVITY_TIMEOUT) {
+            clearInterval(inactivityTimer);
+            clearInterval(pingTimer);
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Cerrando sesión por inactividad...', 'info');
+            }
+            setTimeout(function() {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token }
+                }).then(function() {
+                    window.location.href = '/login';
+                }).catch(function() {
+                    window.location.href = '/login';
+                });
+            }, 1500);
+        }
+    }
+
+    function sendPing() {
+        if (idleSeconds === 0) {
+            fetch('/actividad/ping', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Content-Type': 'application/json' }
+            }).catch(function() {});
+        }
+    }
+
+    var activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    activityEvents.forEach(function(ev) {
+        document.addEventListener(ev, resetIdleTimer, { passive: true });
+    });
+
+    resetIdleTimer();
+})();

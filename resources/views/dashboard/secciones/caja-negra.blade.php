@@ -210,7 +210,7 @@
             const users = await r.json();
             const sel = document.getElementById('cnUsuario');
             sel.innerHTML = '<option value="">Todos los usuarios</option>' +
-                users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+                users.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
         } catch (e) { console.error('Error usuarios:', e); }
     }
 
@@ -225,8 +225,8 @@
         const hasta = document.getElementById('cnHasta').value;
         if (search) params.set('search', search);
         if (usuario) params.set('user_id', usuario);
-        if (accion) params.set('action', accion);
-        if (tipo) params.set('subject_type', tipo);
+        if (accion) params.set('accion', accion);
+        if (tipo) params.set('tipo_entidad', tipo);
         if (desde) params.set('from', desde);
         if (hasta) params.set('to', hasta);
         params.set('page', cnPagina);
@@ -245,17 +245,17 @@
             }
             tbody.innerHTML = data.data.map(a => {
                 const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                const userEscaped = a.user ? escaparHTML(a.user.name) : 'Sistema';
-                const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.action] || a.action;
-                const badgeClass = 'badge-' + a.action;
-                const tipoLabel = a.subject_type ? a.subject_type.charAt(0).toUpperCase() + a.subject_type.slice(1) : '—';
-                const ip = a.ip_address || '—';
+                const userEscaped = a.user ? escaparHTML(a.user.nombre) : 'Sistema';
+                const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.accion] || a.accion;
+                const badgeClass = 'badge-' + a.accion;
+                const tipoLabel = a.tipo_entidad ? a.tipo_entidad.charAt(0).toUpperCase() + a.tipo_entidad.slice(1) : '—';
+                const ip = a.direccion_ip || '—';
                 return `<tr>
                     <td style="font-size:0.78rem;color:#64748b;white-space:nowrap;">${fecha}</td>
                     <td style="font-weight:600;font-size:0.85rem;">${userEscaped}</td>
                     <td><span class="badge-action ${badgeClass}">${badgeAction}</span></td>
                     <td><span class="badge-type">${escaparHTML(tipoLabel)}</span></td>
-                    <td style="font-size:0.83rem;color:#334155;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escaparHTML(a.description)}</td>
+                    <td style="font-size:0.83rem;color:#334155;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escaparHTML(a.descripcion)}</td>
                     <td style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">${escaparHTML(ip)}</td>
                     <td><button class="cn-btn-ghost" onclick="verDetalleCajaNegra(${a.id})" title="Ver detalle"><i class="fas fa-eye" size="15"></i> Ver</button></td>
                 </tr>`;
@@ -295,22 +295,22 @@
             const r = await fetch('/caja-negra/' + id);
             const a = await r.json();
             const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-            const userEscaped = a.user ? escaparHTML(a.user.name) : 'Sistema';
-            const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.action] || a.action;
-            const oldHtml = a.old_values ? `<pre>${JSON.stringify(a.old_values, null, 2)}</pre>` : '<span class="text-muted">—</span>';
-            const newHtml = a.new_values ? `<pre>${JSON.stringify(a.new_values, null, 2)}</pre>` : '<span class="text-muted">—</span>';
-            const reqHtml = a.request_data ? `<pre>${JSON.stringify(a.request_data, null, 2)}</pre>` : '<span class="text-muted">—</span>';
+            const userEscaped = a.user ? escaparHTML(a.user.nombre) : 'Sistema';
+            const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.accion] || a.accion;
+            const oldHtml = a.valores_anteriores ? `<pre>${JSON.stringify(a.valores_anteriores, null, 2)}</pre>` : '<span class="text-muted">—</span>';
+            const newHtml = a.valores_nuevos ? `<pre>${JSON.stringify(a.valores_nuevos, null, 2)}</pre>` : '<span class="text-muted">—</span>';
+            const reqHtml = a.datos_peticion ? `<pre>${JSON.stringify(a.datos_peticion, null, 2)}</pre>` : '<span class="text-muted">—</span>';
 
             content.innerHTML = `
                 <div class="cn-detail-grid">
                     <div class="cn-detail-field"><label>Fecha/Hora</label><div class="value">${fecha}</div></div>
                     <div class="cn-detail-field"><label>Usuario</label><div class="value">${userEscaped}</div></div>
-                    <div class="cn-detail-field"><label>Acción</label><div class="value"><span class="badge-action ${'badge-'+a.action}">${badgeAction}</span></div></div>
-                    <div class="cn-detail-field"><label>Tipo</label><div class="value"><span class="badge-type">${escaparHTML(a.subject_type) || '—'}</span></div></div>
-                    <div class="cn-detail-field"><label>ID del registro</label><div class="value">${a.subject_id ?? '—'}</div></div>
-                    <div class="cn-detail-field"><label>IP</label><div class="value" style="font-family:monospace;">${escaparHTML(a.ip_address) || '—'}</div></div>
+                    <div class="cn-detail-field"><label>Acción</label><div class="value"><span class="badge-action ${'badge-'+a.accion}">${badgeAction}</span></div></div>
+                    <div class="cn-detail-field"><label>Tipo</label><div class="value"><span class="badge-type">${escaparHTML(a.tipo_entidad) || '—'}</span></div></div>
+                    <div class="cn-detail-field"><label>ID del registro</label><div class="value">${a.entidad_id ?? '—'}</div></div>
+                    <div class="cn-detail-field"><label>IP</label><div class="value" style="font-family:monospace;">${escaparHTML(a.direccion_ip) || '—'}</div></div>
                 </div>
-                <div class="cn-detail-field" style="margin-bottom:8px;"><label>Descripción</label><div class="value">${escaparHTML(a.description)}</div></div>
+                <div class="cn-detail-field" style="margin-bottom:8px;"><label>Descripción</label><div class="value">${escaparHTML(a.descripcion)}</div></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
                     <div class="cn-detail-full"><label>Valores Anteriores</label>${oldHtml}</div>
                     <div class="cn-detail-full"><label>Valores Nuevos</label>${newHtml}</div>

@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class Changelog extends Model
 {
     protected $fillable = [
-        'author_name',
-        'author_email',
-        'commit_hash',
-        'commit_message',
-        'description',
-        'type',
-        'section',
+        'nombre_autor',
+        'correo_autor',
+        'hash_commit',
+        'mensaje_commit',
+        'descripcion',
+        'tipo',
+        'seccion',
     ];
 }

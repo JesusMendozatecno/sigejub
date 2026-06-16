@@ -10,7 +10,7 @@ class CajaNegraController extends Controller
 {
     private function verifyAdmin(): void
     {
-        if (auth()->user()?->role !== 'admin') {
+        if (auth()->user()?->rol !== 'admin') {
             abort(403, 'Acceso no autorizado');
         }
     }
@@ -24,16 +24,16 @@ class CajaNegraController extends Controller
             $query->where('user_id', $userId);
         }
 
-        if ($action = $request->get('action')) {
-            $query->where('action', $action);
+        if ($accion = $request->get('accion')) {
+            $query->where('accion', $accion);
         }
 
-        if ($subjectType = $request->get('subject_type')) {
-            $query->where('subject_type', $subjectType);
+        if ($tipoEntidad = $request->get('tipo_entidad')) {
+            $query->where('tipo_entidad', $tipoEntidad);
         }
 
         if ($search = $request->get('search')) {
-            $query->where('description', 'like', "%{$search}%");
+            $query->where('descripcion', 'like', "%{$search}%");
         }
 
         if ($from = $request->get('from')) {
@@ -61,10 +61,10 @@ class CajaNegraController extends Controller
         $this->verifyAdmin();
         $total = Activity::count();
         $today = Activity::whereDate('created_at', today())->count();
-        $byAction = Activity::selectRaw('action, COUNT(*) as total')
-            ->groupBy('action')->orderByDesc('total')->get();
-        $byType = Activity::selectRaw('subject_type, COUNT(*) as total')
-            ->groupBy('subject_type')->orderByDesc('total')->get();
+        $byAction = Activity::selectRaw('accion, COUNT(*) as total')
+            ->groupBy('accion')->orderByDesc('total')->get();
+        $byType = Activity::selectRaw('tipo_entidad, COUNT(*) as total')
+            ->groupBy('tipo_entidad')->orderByDesc('total')->get();
         $byUser = Activity::selectRaw('user_id, COUNT(*) as total')
             ->groupBy('user_id')->orderByDesc('total')->take(10)->with('user')->get();
         $lastWeek = Activity::where('created_at', '>=', now()->subDays(7))->count();
@@ -92,6 +92,6 @@ class CajaNegraController extends Controller
     public function usuarios()
     {
         $this->verifyAdmin();
-        return response()->json(User::select('id', 'name', 'email')->orderBy('name')->get());
+        return response()->json(User::select('id', 'nombre', 'correo')->orderBy('nombre')->get());
     }
 }

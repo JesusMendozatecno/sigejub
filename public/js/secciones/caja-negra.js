@@ -27,7 +27,7 @@
             const users = await r.json();
             const sel = document.getElementById('cnUsuario');
             sel.innerHTML = '<option value="">Todos los usuarios</option>' +
-                users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+                users.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
         } catch (e) { console.error('Error usuarios:', e); }
     }
 
@@ -43,8 +43,8 @@
         const hasta = document.getElementById('cnHasta').value;
         if (search) params.set('search', search);
         if (usuario) params.set('user_id', usuario);
-        if (accion) params.set('action', accion);
-        if (tipo) params.set('subject_type', tipo);
+        if (accion) params.set('accion', accion);
+        if (tipo) params.set('tipo_entidad', tipo);
         if (desde) params.set('from', desde);
         if (hasta) params.set('to', hasta);
         params.set('page', cnPagina);
@@ -63,17 +63,17 @@
             }
             tbody.innerHTML = data.data.map(a => {
                 const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                const user = a.user ? a.user.name : '<em>Sistema</em>';
-                const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.action] || a.action;
-                const badgeClass = 'badge-' + a.action;
-                const tipoLabel = a.subject_type ? a.subject_type.charAt(0).toUpperCase() + a.subject_type.slice(1) : '—';
-                const ip = a.ip_address || '—';
+                const user = a.user ? a.user.nombre : '<em>Sistema</em>';
+                const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.accion] || a.accion;
+                const badgeClass = 'badge-' + a.accion;
+                const tipoLabel = a.tipo_entidad ? a.tipo_entidad.charAt(0).toUpperCase() + a.tipo_entidad.slice(1) : '—';
+                const ip = a.direccion_ip || '—';
                 return `<tr>
                     <td style="font-size:0.78rem;color:#64748b;white-space:nowrap;">${fecha}</td>
                     <td style="font-weight:600;font-size:0.85rem;">${user}</td>
                     <td><span class="badge-action ${badgeClass}">${badgeAction}</span></td>
                     <td><span class="badge-type">${tipoLabel}</span></td>
-                    <td style="font-size:0.83rem;color:#334155;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.description}</td>
+                    <td style="font-size:0.83rem;color:#334155;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.descripcion}</td>
                     <td style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">${ip}</td>
                     <td><button class="cn-btn-ghost" onclick="verDetalleCajaNegra(${a.id})" title="Ver detalle"><i class="fas fa-eye" size="15"></i> Ver</button></td>
                 </tr>`;
@@ -116,17 +116,17 @@
             const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
             const diff = Math.floor((Date.now() - new Date(a.created_at).getTime()) / 1000);
             const tiempoAgo = diff < 60 ? 'hace unos segundos' : diff < 3600 ? `hace ${Math.floor(diff/60)} min` : diff < 86400 ? `hace ${Math.floor(diff/3600)} h` : `hace ${Math.floor(diff/86400)} días`;
-            const user = a.user ? a.user.name : 'Sistema';
-            const userEmail = a.user ? a.user.email : '—';
-            const userRole = a.user ? (a.user.role === 'admin' ? 'Administrador' : 'Analista') : '—';
-            const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.action] || a.action;
-            const tipoLabel = a.subject_type ? a.subject_type.charAt(0).toUpperCase() + a.subject_type.slice(1) : '—';
-            const oldHtml = a.old_values ? `<pre>${JSON.stringify(a.old_values, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
-            const newHtml = a.new_values ? `<pre>${JSON.stringify(a.new_values, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
-            const reqHtml = a.request_data ? `<pre>${JSON.stringify(a.request_data, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
-            const uaHtml = a.user_agent ? `<div style="font-size:0.73rem;color:#64748b;word-break:break-all;font-family:monospace;background:#f1f5f9;padding:8px 10px;border-radius:6px;margin-top:4px;">${a.user_agent}</div>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
-            const iconAccion = { created:'fa-plus-circle', updated:'fa-pen', deleted:'fa-trash-can' }[a.action] || 'fa-circle';
-            const iconTipo = { trabajador:'fa-user', solicitud:'fa-file-lines', expediente:'fa-folder', documento:'fa-file-pdf', usuario:'fa-user-shield', notificacion:'fa-bell' }[a.subject_type] || 'fa-circle';
+            const user = a.user ? a.user.nombre : 'Sistema';
+            const userEmail = a.user ? a.user.correo : '—';
+            const userRole = a.user ? (a.user.rol === 'admin' ? 'Administrador' : 'Analista') : '—';
+            const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.accion] || a.accion;
+            const tipoLabel = a.tipo_entidad ? a.tipo_entidad.charAt(0).toUpperCase() + a.tipo_entidad.slice(1) : '—';
+            const oldHtml = a.valores_anteriores ? `<pre>${JSON.stringify(a.valores_anteriores, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const newHtml = a.valores_nuevos ? `<pre>${JSON.stringify(a.valores_nuevos, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const reqHtml = a.datos_peticion ? `<pre>${JSON.stringify(a.datos_peticion, null, 2)}</pre>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const uaHtml = a.navegador ? `<div style="font-size:0.73rem;color:#64748b;word-break:break-all;font-family:monospace;background:#f1f5f9;padding:8px 10px;border-radius:6px;margin-top:4px;">${a.navegador}</div>` : '<span class="text-muted" style="color:#94a3b8;">—</span>';
+            const iconAccion = { created:'fa-plus-circle', updated:'fa-pen', deleted:'fa-trash-can' }[a.accion] || 'fa-circle';
+            const iconTipo = { trabajador:'fa-user', solicitud:'fa-file-lines', expediente:'fa-folder', documento:'fa-file-pdf', usuario:'fa-user-shield', notificacion:'fa-bell' }[a.tipo_entidad] || 'fa-circle';
 
             content.innerHTML = `
                 <section class="form-section">
@@ -154,11 +154,11 @@
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>ID DEL REGISTRO</label>
-                            <input type="text" value="${a.subject_id ?? '—'}" readonly>
+                            <input type="text" value="${a.entidad_id ?? '—'}" readonly>
                         </div>
                         <div class="input-group">
                             <label>DIRECCIÓN IP</label>
-                            <input type="text" value="${a.ip_address || '—'}" readonly style="font-family:monospace;">
+                            <input type="text" value="${a.direccion_ip || '—'}" readonly style="font-family:monospace;">
                         </div>
                     </div>
                 </section>
@@ -185,7 +185,7 @@
 
                 <section class="form-section">
                     <h3><i class="fas fa-align-left"></i> Descripción</h3>
-                    <textarea class="form-textarea" readonly style="resize:none;">${a.description}</textarea>
+                    <textarea class="form-textarea" readonly style="resize:none;">${a.descripcion}</textarea>
                 </section>
 
                 <section class="form-section">

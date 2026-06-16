@@ -13,11 +13,16 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-:: Verificar si el servidor ya esta corriendo
-netstat -an | find ":8000" >nul 2>&1
+:: Leer puerto desde .env (default 8080)
+set PORT=8080
+for /f "tokens=2 delims==" %%a in ('findstr /b "APP_PORT" .env 2^>nul') do set PORT=%%a
+if "%PORT%"=="" set PORT=8080
+
+:: Verificar si el servidor ya esta corriendo (Apache o artisan)
+netstat -an | find ":%PORT%" >nul 2>&1
 if %ERRORLEVEL% equ 0 (
-    echo [OK] El servidor ya esta corriendo en http://localhost:8000
-    start http://localhost:8000
+    echo [OK] Servidor disponible en http://localhost:%PORT%/
+    start http://localhost:%PORT%/
     exit /b 0
 )
 
@@ -29,9 +34,9 @@ if not exist ".env" (
     echo [SETUP] Hecho. Revisa y configura tu base de datos en .env
 )
 
-:: Iniciar servidor
-echo [INICIANDO] Servidor en http://localhost:8000
-start http://localhost:8000
-php artisan serve --port=8000
+:: Iniciar servidor (fallback: php artisan serve si Apache no esta configurado)
+echo [INICIANDO] Servidor en http://localhost:%PORT%
+start http://localhost:%PORT%
+php artisan serve --port=%PORT%
 
 pause

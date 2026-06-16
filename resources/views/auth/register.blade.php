@@ -24,18 +24,18 @@
 
             <div class="input-group full-width">
                 <label>CORREO ELECTRÓNICO</label>
-                <input type="email" name="email" id="regEmail" placeholder="correo@ejemplo.com" value="{{ old('email') }}" required oninput="validarEmail()">
+                <input type="email" name="correo" id="regEmail" placeholder="correo@ejemplo.com" value="{{ old('correo') }}" required oninput="validarEmail()">
                 <span class="validation-msg" id="emailMsg"></span>
             </div>
 
             <div class="input-group">
                 <label>NOMBRE</label>
-                <input type="text" name="name" id="regName" placeholder="Nombre" value="{{ old('name') }}" required oninput="capitalizar(this)">
+                <input type="text" name="nombre" id="regName" placeholder="Nombre" value="{{ old('nombre') }}" required oninput="capitalizar(this)">
             </div>
 
             <div class="input-group">
                 <label>APELLIDO</label>
-                <input type="text" name="surname" id="regSurname" placeholder="Apellido" value="{{ old('surname') }}" required oninput="capitalizar(this)">
+                <input type="text" name="apellido" id="regSurname" placeholder="Apellido" value="{{ old('apellido') }}" required oninput="capitalizar(this)">
             </div>
 
             <div class="input-group">
@@ -67,7 +67,7 @@
                         <option value="+1">+1 (US)</option>
                         <option value="+34">+34 (ES)</option>
                     </select>
-                    <input type="tel" name="phone" id="regPhone" placeholder="412-0000000" value="{{ old('phone') }}" required oninput="this.value=this.value.replace(/[^0-9-]/g,'')">
+                    <input type="tel" name="telefono" id="regPhone" placeholder="412-0000000" value="{{ old('telefono') }}" required oninput="this.value=this.value.replace(/[^0-9-]/g,'')">
                 </div>
             </div>
 
@@ -98,7 +98,7 @@
 
             <div class="input-group full-width">
                 <label>ROL DEL USUARIO</label>
-                <select name="role" required>
+                <select name="rol" required>
                     <option value="" disabled selected>Seleccione un rol...</option>
                     <option value="analista">Analista</option>
                     <option value="admin">Admin</option>

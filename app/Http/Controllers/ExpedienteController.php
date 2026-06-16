@@ -75,8 +75,8 @@ class ExpedienteController extends Controller
             "Se creó el expediente de {$trabajador->nombres} {$trabajador->apellidos}");
 
         return response()->json([
-            'status' => 'success',
-            'message' => 'Expediente creado exitosamente.',
+            'estado' => 'success',
+            'mensaje' => 'Expediente creado exitosamente.',
             'expediente' => $expediente->load('trabajador', 'documentos'),
         ]);
     }
@@ -100,8 +100,8 @@ class ExpedienteController extends Controller
         $this->recalcularEstadoGlobal($documento->expediente_id);
 
         return response()->json([
-            'status' => 'success',
-            'message' => 'Estado del documento actualizado.',
+            'estado' => 'success',
+            'mensaje' => 'Estado del documento actualizado.',
         ]);
     }
 
@@ -125,8 +125,8 @@ class ExpedienteController extends Controller
         $this->recalcularEstadoGlobal($expediente->id);
 
         return response()->json([
-            'status' => 'success',
-            'message' => 'Documento subido correctamente.',
+            'estado' => 'success',
+            'mensaje' => 'Documento subido correctamente.',
         ]);
     }
 
@@ -148,8 +148,8 @@ class ExpedienteController extends Controller
         $this->recalcularEstadoGlobal($documento->expediente_id);
 
         return response()->json([
-            'status' => 'success',
-            'message' => 'Documento reemplazado correctamente.',
+            'estado' => 'success',
+            'mensaje' => 'Documento reemplazado correctamente.',
         ]);
     }
 
@@ -163,8 +163,8 @@ class ExpedienteController extends Controller
         $expediente->update($validated);
 
         return response()->json([
-            'status' => 'success',
-            'message' => 'Notas actualizadas.',
+            'estado' => 'success',
+            'mensaje' => 'Notas actualizadas.',
         ]);
     }
 

@@ -134,18 +134,18 @@
                     const data = await response.json();
                     if (!response.ok) throw data;
 
-                    mostrarToast(data.message || 'Operación completada con éxito.', 'success');
+                    mostrarToast(data.mensaje || 'Operación completada con éxito.', 'success');
                     form.reset();
                     cerrarTodoModal();
                     cargarTrabajadores();  // Refresca la tabla sin recargar la página
 
                 } catch (err) {
                     console.error(err);
-                    if (err.errors) {
+                    if (err.errores) {
                         // Errores de validación de Laravel: aplana el array y los muestra en un toast
-                        mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
+                        mostrarToast(Object.values(err.errores).flat().join('\n'), 'error');
                     } else {
-                        mostrarToast(err.message || 'Error interno de comunicación.', 'error');
+                        mostrarToast(err.mensaje || 'Error interno de comunicación.', 'error');
                     }
                 } finally {
                     ocultarCargando();
@@ -330,9 +330,9 @@
                         if (badgeTotal) badgeTotal.textContent = Math.max(0, parseInt(badgeTotal.textContent) - 1);
                     }, 300);
                 }
-                mostrarToast(data.message || 'Baja procesada.', 'success');
+                mostrarToast(data.mensaje || 'Baja procesada.', 'success');
             } else {
-                mostrarToast(data.message || 'Error al procesar la baja.', 'error');
+                mostrarToast(data.mensaje || 'Error al procesar la baja.', 'error');
             }
         } catch (err) {
             mostrarToast('Error de red al intentar conectar.', 'error');

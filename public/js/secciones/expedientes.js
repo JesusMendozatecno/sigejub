@@ -288,11 +288,11 @@
                 });
                 const data = await resp.json();
                 if (!resp.ok) throw data;
-                mostrarToast(data.message, 'success');
+                mostrarToast(data.mensaje, 'success');
                 document.getElementById('modalCrearExpediente').style.display = 'none';
                 cargarExpedientes();
             } catch (err) {
-                mostrarToast(err.message || 'Error al crear expediente', 'error');
+                mostrarToast(err.mensaje || 'Error al crear expediente', 'error');
             } finally {
                 ocultarCargando();
                 btn.disabled = false; btn.textContent = 'Crear Expediente';
@@ -324,11 +324,11 @@
                 });
                 const data = await resp.json();
                 if (!resp.ok) throw data;
-                mostrarToast(data.message, 'success');
+                mostrarToast(data.mensaje, 'success');
                 document.getElementById('modalSubirDocumento').style.display = 'none';
                 abrirDetalle(expedienteActualId);
             } catch (err) {
-                mostrarToast(err.message || 'Error al subir', 'error');
+                mostrarToast(err.mensaje || 'Error al subir', 'error');
             } finally {
                 ocultarCargando();
                 btn.disabled = false; btn.textContent = 'Subir';
@@ -350,9 +350,9 @@
                 });
                 const data = await resp.json();
                 if (!resp.ok) throw data;
-                mostrarToast(data.message, 'success');
+                mostrarToast(data.mensaje, 'success');
             } catch (err) {
-                mostrarToast(err.message || 'Error al guardar notas', 'error');
+                mostrarToast(err.mensaje || 'Error al guardar notas', 'error');
             } finally {
                 ocultarCargando();
             }
@@ -380,7 +380,7 @@
                     mostrarToast('Documento aprobado', 'success');
                     abrirDetalle(expedienteActualId);
                 } catch (err) {
-                    mostrarToast(err.message || 'Error', 'error');
+                    mostrarToast(err.mensaje || 'Error', 'error');
                 } finally {
                     ocultarCargando();
                 }
@@ -404,7 +404,7 @@
                     mostrarToast('Documento rechazado', 'warning');
                     abrirDetalle(expedienteActualId);
                 } catch (err) {
-                    mostrarToast(err.message || 'Error', 'error');
+                    mostrarToast(err.mensaje || 'Error', 'error');
                 } finally {
                     ocultarCargando();
                 }
@@ -430,10 +430,10 @@
                         });
                         const data = await resp.json();
                         if (!resp.ok) throw data;
-                        mostrarToast(data.message, 'success');
+                        mostrarToast(data.mensaje, 'success');
                         abrirDetalle(expedienteActualId);
                     } catch (err) {
-                        mostrarToast(err.message || 'Error al reemplazar', 'error');
+                        mostrarToast(err.mensaje || 'Error al reemplazar', 'error');
                     } finally {
                         ocultarCargando();
                     }

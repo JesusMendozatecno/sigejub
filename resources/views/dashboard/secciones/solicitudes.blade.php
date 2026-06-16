@@ -566,7 +566,7 @@ function escaparHTML(str) {
                 const data = await resp.json();
                 if (!resp.ok) throw data;
 
-                mostrarToast(data.message || 'Estatus actualizado correctamente.', 'success');
+                mostrarToast(data.mensaje || 'Estatus actualizado correctamente.', 'success');
                 cerrarModalEditar();
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
@@ -575,7 +575,7 @@ function escaparHTML(str) {
                 if (err.errors) {
                     mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
                 } else {
-                    mostrarToast(err.message || 'Error en el sistema.', 'error');
+                    mostrarToast(err.mensaje || err.message || 'Error en el sistema.', 'error');
                 }
             } finally {
                 ocultarCargando();

@@ -18,6 +18,9 @@ use App\Http\Controllers\CajaNegraController;
 |-----------------------------
 */
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect('/dashboard');
+    }
     return view('welcome');
 })->name('welcome');
 
@@ -47,6 +50,16 @@ Route::get('/dashboard', [AuthController::class, 'dashboard'])
 |-----------------------------
 */
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+/*
+|-----------------------------
+| ACTIVITY PING (keep-alive)
+|-----------------------------
+*/
+Route::post('/actividad/ping', function () {
+    session(['ultima_actividad' => now()]);
+    return response()->json(['estado' => 'ok']);
+})->middleware(['auth', 'throttle:60,1']);
 
 /*
 |-----------------------------

@@ -35,7 +35,7 @@
             <!-- Campo email -->
             <div class="input-group">
                 <label>Usuario</label>
-                <input type="text" name="email" id="loginEmail" required>
+                <input type="text" name="correo" id="loginEmail" required>
             </div>
 
             <!-- Campo contraseña -->

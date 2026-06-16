@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
-        :root { --accent: {{ auth()->user()->accent_color ?? '#1a365d' }}; }
+        :root { --accent: {{ auth()->user()->color_acento ?? '#1a365d' }}; }
         body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #f1f5f9; min-height: 100vh; }
         .doc-wrapper { max-width: 1000px; margin: 0 auto; padding: 24px; }
         .doc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
@@ -78,7 +78,7 @@
         body.dark-mode .doc-empty i { color: #475569; }
     </style>
 </head>
-<body class="{{ auth()->user()->theme === 'dark' ? 'dark-mode' : '' }}">
+<body class="{{ auth()->user()->tema === 'dark' ? 'dark-mode' : '' }}">
 <div class="doc-wrapper">
     <div class="doc-header">
         <div style="display:flex;align-items:center;gap:12px;">
@@ -107,23 +107,23 @@
                 </div>
                 @foreach($logs as $log)
                     @php
-                        $typeInfo = $types[$log->type] ?? ['Cambio', 'change'];
+                        $typeInfo = $types[$log->tipo] ?? ['Cambio', 'change'];
                         $icons = ['feature'=>'fa-star','fix'=>'fa-wrench','security'=>'fa-shield','improvement'=>'fa-arrow-trend-up','style'=>'fa-palette','docs'=>'fa-book','change'=>'fa-circle'];
-                        $icon = $icons[$log->type] ?? 'fa-circle';
+                        $icon = $icons[$log->tipo] ?? 'fa-circle';
                     @endphp
-                    <div class="doc-card {{ $log->type }}">
+                    <div class="doc-card {{ $log->tipo }}">
                         <div class="doc-icon"><i class="fas {{ $icon }}"></i></div>
                         <div class="doc-body">
-                            <h3>{{ $log->commit_message }}</h3>
-                            @if($log->description)
+                            <h3>{{ $log->mensaje_commit }}</h3>
+                            @if($log->descripcion)
                                 <p><button class="toggle-desc" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'Ocultar detalle':'Ver detalle'">Ver detalle</button></p>
-                                <div class="doc-desc">{{ $log->description }}</div>
+                                <div class="doc-desc">{{ $log->descripcion }}</div>
                             @endif
                             <div class="doc-meta">
-                                <span class="author"><i class="fas fa-user"></i> {{ $log->author_name }}</span>
-                                @if($log->section)<span class="badge badge-section">{{ ucfirst($log->section) }}</span>@endif
-                                <span class="badge" style="background:{{ ['feature'=>'#dcfce7','fix'=>'#fef3c7','security'=>'#fee2e2','improvement'=>'#dbeafe','style'=>'#ede9fe','docs'=>'#f1f5f9','change'=>'#f8fafc'][$log->type] ?? '#f1f5f9' }};color:{{ ['feature'=>'#16a34a','fix'=>'#d97706','security'=>'#dc2626','improvement'=>'#2563eb','style'=>'#7c3aed','docs'=>'#64748b','change'=>'#64748b'][$log->type] ?? '#64748b' }}">{{ $typeInfo[0] }}</span>
-                                <span class="hash">{{ substr($log->commit_hash, 0, 8) }}</span>
+                                <span class="author"><i class="fas fa-user"></i> {{ $log->nombre_autor }}</span>
+                                @if($log->seccion)<span class="badge badge-section">{{ ucfirst($log->seccion) }}</span>@endif
+                                <span class="badge" style="background:{{ ['feature'=>'#dcfce7','fix'=>'#fef3c7','security'=>'#fee2e2','improvement'=>'#dbeafe','style'=>'#ede9fe','docs'=>'#f1f5f9','change'=>'#f8fafc'][$log->tipo] ?? '#f1f5f9' }};color:{{ ['feature'=>'#16a34a','fix'=>'#d97706','security'=>'#dc2626','improvement'=>'#2563eb','style'=>'#7c3aed','docs'=>'#64748b','change'=>'#64748b'][$log->tipo] ?? '#64748b' }}">{{ $typeInfo[0] }}</span>
+                                <span class="hash">{{ substr($log->hash_commit, 0, 8) }}</span>
                                 <span>{{ $log->created_at->locale('es')->diffForHumans() }}</span>
                             </div>
                         </div>
@@ -136,7 +136,7 @@
 
 <script>
 window.addEventListener('DOMContentLoaded', function() {
-    if ('{{ auth()->user()->theme }}' === 'dark') document.body.classList.add('dark-mode');
+    if ('{{ auth()->user()->tema }}' === 'dark') document.body.classList.add('dark-mode');
 });
 
 async function generarChangelog() {

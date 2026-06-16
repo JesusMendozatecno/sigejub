@@ -131,14 +131,14 @@
                 return;
             }
             actividades.forEach(a => {
-                const [icon, color] = getActivityIcon(a.action, a.subject_type);
-                const user = a.user ? escaparHTML(a.user.name) : 'Sistema';
+                const [icon, color] = getActivityIcon(a.accion, a.tipo_entidad);
+                const user = a.user ? escaparHTML(a.user.nombre) : 'Sistema';
                 const div = document.createElement('div');
                 div.className = 'activity-item';
                 div.innerHTML = `
                     <div class="activity-icon ${color}"><i class="fas ${icon}"></i></div>
                     <div class="activity-text">
-                        <p>${escaparHTML(a.description)}</p>
+                        <p>${escaparHTML(a.descripcion)}</p>
                         <span>${user} • ${timeAgo(a.created_at)}</span>
                     </div>
                 `;

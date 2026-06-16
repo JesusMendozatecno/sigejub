@@ -133,18 +133,18 @@ class SolicitudController extends Controller
                 "Se registró una solicitud de jubilación para {$nombre}");
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Solicitud de jubilación registrada exitosamente.'
+                'estado' => 'success',
+                'mensaje' => 'Solicitud de jubilación registrada exitosamente.'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'status' => 'error',
+                'estado' => 'error',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Error al registrar: ' . $e->getMessage()
+                'estado' => 'error',
+                'mensaje' => 'Error al registrar: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -190,18 +190,18 @@ class SolicitudController extends Controller
             Activity::log('updated', 'solicitud', $solicitud->id, $desc);
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Solicitud actualizada correctamente.',
+                'estado' => 'success',
+                'mensaje' => 'Solicitud actualizada correctamente.',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'status' => 'error',
+                'estado' => 'error',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Error al actualizar: ' . $e->getMessage()
+                'estado' => 'error',
+                'mensaje' => 'Error al actualizar: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -218,13 +218,13 @@ class SolicitudController extends Controller
                 "Se eliminó la solicitud de {$nombre}");
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Solicitud eliminada correctamente.'
+                'estado' => 'success',
+                'mensaje' => 'Solicitud eliminada correctamente.'
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Error al eliminar: ' . $e->getMessage()
+                'estado' => 'error',
+                'mensaje' => 'Error al eliminar: ' . $e->getMessage()
             ], 500);
         }
     }

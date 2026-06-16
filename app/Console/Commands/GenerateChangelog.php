@@ -38,18 +38,18 @@ class GenerateChangelog extends Command
             $message = trim($parts[3]);
             $date = isset($parts[4]) ? trim($parts[4]) : now()->toDateTimeString();
 
-            if (Changelog::where('commit_hash', $hash)->exists()) continue;
+            if (Changelog::where('hash_commit', $hash)->exists()) continue;
 
             $section = $this->detectSection($message);
 
             Changelog::create([
-                'author_name' => $author,
-                'author_email' => $email,
-                'commit_hash' => $hash,
-                'commit_message' => $message,
-                'description' => $this->getCommitDescription($hash),
-                'type' => $this->detectType($message),
-                'section' => $section,
+                'nombre_autor' => $author,
+                'correo_autor' => $email,
+                'hash_commit' => $hash,
+                'mensaje_commit' => $message,
+                'descripcion' => $this->getCommitDescription($hash),
+                'tipo' => $this->detectType($message),
+                'seccion' => $section,
                 'created_at' => Carbon::parse($date),
             ]);
             $count++;

@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return data;
             })
             .then(data => {
-                alert(data.message || 'Trabajador registrado de manera exitosa.');
+                alert(data.mensaje || 'Trabajador registrado de manera exitosa.');
                 formTrabajador.reset();
                 cerrarModalTrabajador();
                 location.reload();  // Recarga la página para reflejar el nuevo registro
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     alert(mensajes);
                 } else {
-                    alert(error.message || 'Error interno al comunicarse con el servidor.');
+                    alert(error.mensaje || error.message || 'Error interno al comunicarse con el servidor.');
                 }
             })
             .finally(() => {

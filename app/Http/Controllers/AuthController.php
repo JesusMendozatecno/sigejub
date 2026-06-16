@@ -19,20 +19,20 @@ class AuthController extends Controller
     // 🔐 LOGIN (AJAX + JSON)
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $credentials = $request->only('correo', 'password');
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $user = Auth::user();
-            $user->last_login_at = now();
-            $user->last_login_ip = $request->ip();
+            $user->ultimo_acceso = now();
+            $user->ultimo_acceso_ip = $request->ip();
             $user->save();
 
             if ($request->expectsJson()) {
                 $request->session()->flash('success', 'Bienvenido al sistema SIGEJUB');
                 return response()->json([
-                    'status' => 'success',
-                    'message' => 'Bienvenido al sistema SIGEJUB',
+                    'estado' => 'success',
+                    'mensaje' => 'Bienvenido al sistema SIGEJUB',
                     'redirect' => '/dashboard'
                 ]);
             }
@@ -42,13 +42,13 @@ class AuthController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Credenciales incorrectas'
+                'estado' => 'error',
+                'mensaje' => 'Credenciales incorrectas'
             ], 422);
         }
 
         return back()->withErrors([
-            'email' => 'Credenciales incorrectas'
+            'correo' => 'Credenciales incorrectas'
         ]);
     }
 
@@ -62,27 +62,27 @@ class AuthController extends Controller
  public function register(Request $request)
 {
     $request->validate([
-        'name' => 'required|string|max:255',
-        'surname' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
-        'phone' => 'required|string|max:20',
+        'nombre' => 'required|string|max:255',
+        'apellido' => 'required|string|max:255',
+        'correo' => 'required|string|email|max:255|unique:users',
+        'telefono' => 'required|string|max:20',
         'fecha_nacimiento' => 'required|date',
             'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
-            'role' => 'required|in:analista,admin',
+            'rol' => 'required|in:analista,admin',
     ]);
 
     $user = User::create([
-        'name' => $request->name,
-        'surname' => $request->surname,
-        'email' => $request->email,
-        'phone' => $request->phone,
+        'nombre' => $request->nombre,
+        'apellido' => $request->apellido,
+        'correo' => $request->correo,
+        'telefono' => $request->telefono,
         'fecha_nacimiento' => $request->fecha_nacimiento,
         'password' => Hash::make($request->password),
-        'role' => $request->role,
+        'rol' => $request->rol,
     ]);
 
     Activity::log('created', 'usuario', $user->id,
-        "Se registró el usuario {$user->name} {$user->surname}");
+        "Se registró el usuario {$user->nombre} {$user->apellido}");
 
     return redirect('login')->with('success', 'Usuario registrado correctamente');
 }

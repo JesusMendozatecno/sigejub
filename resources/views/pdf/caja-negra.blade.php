@@ -53,17 +53,17 @@
             @forelse($activities as $a)
             <tr>
                 <td style="white-space:nowrap;">{{ $a->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ $a->user?->name ?? 'Sistema' }}</td>
-                <td><span class="badge badge-{{ $a->action }}">{{ ucfirst($a->action) }}</span></td>
-                <td>{{ $a->subject_type ?? '—' }}</td>
-                <td>{{ Str::limit($a->description, 80) }}</td>
-                <td style="font-family:monospace;">{{ $a->ip_address ?? '—' }}</td>
+                <td>{{ $a->user?->nombre ?? 'Sistema' }}</td>
+                <td><span class="badge badge-{{ $a->accion }}">{{ ucfirst($a->accion) }}</span></td>
+                <td>{{ $a->tipo_entidad ?? '—' }}</td>
+                <td>{{ Str::limit($a->descripcion, 80) }}</td>
+                <td style="font-family:monospace;">{{ $a->direccion_ip ?? '—' }}</td>
             </tr>
             @empty
             <tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">Sin registros</td></tr>
             @endforelse
         </tbody>
     </table>
-    <p class="footer">SIGEJUB v1.0 — Documento generado por {{ auth()->user()?->name ?? 'Sistema' }}</p>
+    <p class="footer">SIGEJUB v1.0 — Documento generado por {{ auth()->user()?->nombre ?? 'Sistema' }}</p>
 </body>
 </html>

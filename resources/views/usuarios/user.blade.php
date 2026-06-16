@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/cropperjs/cropper.min.css') }}">
     <script defer src="{{ asset('js/cropperjs/cropper.min.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/dashboard/profile.css') }}?v={{ filemtime(public_path('css/dashboard/profile.css')) }}">
-    <style>:root { --accent: {{ $user->accent_color ?? '#1a365d' }}; }</style>
+    <style>:root { --accent: {{ $user->color_acento ?? '#1a365d' }}; }</style>
 </head>
 <body>
 <div class="profile-wrapper">
@@ -23,7 +23,7 @@
             </a>
             <h1>Mi Perfil</h1>
         </div>
-        <span class="text-muted">Último acceso: {{ $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Primer ingreso' }}</span>
+        <span class="text-muted">Último acceso: {{ $user->ultimo_acceso ? $user->ultimo_acceso->diffForHumans() : 'Primer ingreso' }}</span>
     </div>
 
     <div class="profile-layout">
@@ -39,10 +39,10 @@
                     <div class="avatar-overlay"><i class="fas fa-camera"></i></div>
                 </div>
                 <input type="file" id="avatarInput" hidden accept="image/*" onchange="onAvatarSelect(event)">
-                <h2 class="profile-name">{{ $user->name }}</h2>
-                <p class="profile-email">{{ $user->email }}</p>
-                <span class="profile-role {{ $user->role === 'admin' ? 'role-admin' : 'role-analista' }}">
-                    {{ $user->role === 'admin' ? 'Administrador' : 'Analista' }}
+                <h2 class="profile-name">{{ $user->nombre }}</h2>
+                <p class="profile-email">{{ $user->correo }}</p>
+                <span class="profile-role {{ $user->rol === 'admin' ? 'role-admin' : 'role-analista' }}">
+                    {{ $user->rol === 'admin' ? 'Administrador' : 'Analista' }}
                 </span>
             </div>
             <div class="profile-nav">
@@ -58,7 +58,7 @@
                 <button class="profile-nav-item" data-tab="tab-actividad">
                     <i class="fas fa-wave-square"></i> Actividad
                 </button>
-                @if($user->role === 'admin')
+                @if($user->rol === 'admin')
                 <div class="profile-nav-divider"></div>
                 <button class="profile-nav-item" data-tab="tab-admin">
                     <i class="fas fa-shield"></i> Administración
@@ -88,11 +88,11 @@
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Nombre completo</label>
-                            <input type="text" class="form-input" name="name" value="{{ $user->name }}" required>
+                            <input type="text" class="form-input" name="nombre" value="{{ $user->nombre }}" required>
                         </div>
                         <div class="form-group">
                             <label>Correo electrónico</label>
-                            <input type="email" class="form-input" name="email" value="{{ $user->email }}" required>
+                            <input type="email" class="form-input" name="correo" value="{{ $user->correo }}" required>
                         </div>
                     </div>
                     <div class="flex gap-2 mt-3">
@@ -135,7 +135,7 @@
                         <h4 style="font-size:0.9rem;color:#0f172a;margin:0;">Verificación en dos pasos (2FA)</h4>
                         <p style="margin:4px 0 0;font-size:0.78rem;color:#64748b;">Añade una capa extra de seguridad a tu cuenta</p>
                     </div>
-                    <div class="toggle-switch {{ $user->two_factor_enabled ? 'active' : '' }}" id="toggle2FA" onclick="toggleFA()"></div>
+                    <div class="toggle-switch {{ $user->verificacion_dos_pasos ? 'active' : '' }}" id="toggle2FA" onclick="toggleFA()"></div>
                 </div>
 
                 <hr style="border:0;border-top:1px solid #f1f5f9;margin:24px 0;">
@@ -157,11 +157,11 @@
 
                 <h4 style="font-size:0.9rem;color:#0f172a;margin:0 0 12px;">Tema</h4>
                 <div class="theme-toggle mb-4">
-                    <div class="theme-option {{ $user->theme === 'light' ? 'selected' : '' }}" data-theme="light" onclick="cambiarTema('light')">
+                    <div class="theme-option {{ $user->tema === 'light' ? 'selected' : '' }}" data-theme="light" onclick="cambiarTema('light')">
                         <i class="fas fa-sun fa-fw"></i>
                         <span>Claro</span>
                     </div>
-                    <div class="theme-option {{ $user->theme === 'dark' ? 'selected' : '' }}" data-theme="dark" onclick="cambiarTema('dark')">
+                    <div class="theme-option {{ $user->tema === 'dark' ? 'selected' : '' }}" data-theme="dark" onclick="cambiarTema('dark')">
                         <i class="fas fa-moon fa-fw"></i>
                         <span>Oscuro</span>
                     </div>
@@ -170,8 +170,8 @@
                 <h4 style="font-size:0.9rem;color:#0f172a;margin:0 0 12px;">Idioma</h4>
                 <div style="max-width:200px;">
                     <select class="form-input" id="selectLanguage" onchange="cambiarIdioma(this.value)">
-                        <option value="es" {{ $user->language === 'es' ? 'selected' : '' }}>Español</option>
-                        <option value="en" {{ $user->language === 'en' ? 'selected' : '' }}>English</option>
+                        <option value="es" {{ $user->idioma === 'es' ? 'selected' : '' }}>Español</option>
+                        <option value="en" {{ $user->idioma === 'en' ? 'selected' : '' }}>English</option>
                     </select>
                 </div>
 
@@ -179,7 +179,7 @@
                 <div class="color-presets" id="colorPresets">
                     @php $colors = ['#1a365d','#2563eb','#7c3aed','#db2777','#dc2626','#ea580c','#ca8a04','#16a34a','#0d9488']; @endphp
                     @foreach($colors as $c)
-                    <div class="color-preset {{ $user->accent_color === $c ? 'selected' : '' }}" style="background:{{ $c }};" data-color="{{ $c }}" onclick="cambiarColor('{{ $c }}')"></div>
+                    <div class="color-preset {{ $user->color_acento === $c ? 'selected' : '' }}" style="background:{{ $c }};" data-color="{{ $c }}" onclick="cambiarColor('{{ $c }}')"></div>
                     @endforeach
                 </div>
 
@@ -189,22 +189,22 @@
                 <div class="toggle-wrap">
                     <div><div class="toggle-label">Notificaciones por correo</div><div class="toggle-desc">Recibe alertas importantes en tu email</div></div>
                     <select class="form-input" style="width:auto;padding:6px 10px;" id="notifEmail" onchange="guardarNotificaciones()">
-                        <option value="all" {{ $user->notification_email === 'all' ? 'selected' : '' }}>Todas</option>
-                        <option value="important" {{ $user->notification_email === 'important' ? 'selected' : '' }}>Solo importantes</option>
-                        <option value="none" {{ $user->notification_email === 'none' ? 'selected' : '' }}>Ninguna</option>
+                        <option value="all" {{ $user->notificacion_correo === 'all' ? 'selected' : '' }}>Todas</option>
+                        <option value="important" {{ $user->notificacion_correo === 'important' ? 'selected' : '' }}>Solo importantes</option>
+                        <option value="none" {{ $user->notificacion_correo === 'none' ? 'selected' : '' }}>Ninguna</option>
                     </select>
                 </div>
                 <div class="toggle-wrap">
                     <div><div class="toggle-label">Notificaciones en sistema</div><div class="toggle-desc">Alertas dentro de la plataforma</div></div>
                     <select class="form-input" style="width:auto;padding:6px 10px;" id="notifSystem" onchange="guardarNotificaciones()">
-                        <option value="all" {{ $user->notification_system === 'all' ? 'selected' : '' }}>Todas</option>
-                        <option value="important" {{ $user->notification_system === 'important' ? 'selected' : '' }}>Solo importantes</option>
-                        <option value="none" {{ $user->notification_system === 'none' ? 'selected' : '' }}>Ninguna</option>
+                        <option value="all" {{ $user->notificacion_sistema === 'all' ? 'selected' : '' }}>Todas</option>
+                        <option value="important" {{ $user->notificacion_sistema === 'important' ? 'selected' : '' }}>Solo importantes</option>
+                        <option value="none" {{ $user->notificacion_sistema === 'none' ? 'selected' : '' }}>Ninguna</option>
                     </select>
                 </div>
                 <div class="toggle-wrap">
                     <div><div class="toggle-label">Perfil público</div><div class="toggle-desc">Permitir que otros usuarios vean tu perfil</div></div>
-                    <div class="toggle-switch {{ $user->profile_public ? 'active' : '' }}" id="togglePrivacy" onclick="togglePrivacidad()"></div>
+                    <div class="toggle-switch {{ $user->perfil_publico ? 'active' : '' }}" id="togglePrivacy" onclick="togglePrivacidad()"></div>
                 </div>
             </div>
 
@@ -229,7 +229,7 @@
             </div>
 
             <!-- TAB: ADMINISTRACIÓN (solo admin) -->
-            @if($user->role === 'admin')
+            @if($user->rol === 'admin')
             <div class="profile-tab" id="tab-admin">
                 <h2 class="tab-title">Administración</h2>
                 <p class="tab-subtitle">Gestión de usuarios y configuración global del sistema</p>
@@ -323,11 +323,11 @@
             </div>
             <div class="form-group">
                 <label>Título</label>
-                <input type="text" class="form-input" name="title" required placeholder="Ej: Actualización importante">
+                <input type="text" class="form-input" name="titulo" required placeholder="Ej: Actualización importante">
             </div>
             <div class="form-group">
                 <label>Mensaje</label>
-                <textarea class="form-input" name="message" required placeholder="Escribe tu mensaje..." rows="4" style="resize:vertical;"></textarea>
+                <textarea class="form-input" name="mensaje" required placeholder="Escribe tu mensaje..." rows="4" style="resize:vertical;"></textarea>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="cerrarModalNotificacion()">Cancelar</button>
@@ -340,8 +340,8 @@
 <script>
 window.SIGEJUB_USER_ID={{ $user->id }};
 window.SIGEJUB_STORAGE_URL='{{ asset("storage") }}';
-window.SIGEJUB_PROFILE_THEME='{{ $user->theme }}';
-window.SIGEJUB_ACCENT_COLOR='{{ $user->accent_color ?? "#1a365d" }}';
+window.SIGEJUB_PROFILE_THEME='{{ $user->tema }}';
+window.SIGEJUB_ACCENT_COLOR='{{ $user->color_acento ?? "#1a365d" }}';
 </script>
 <script defer src="{{ asset('js/profile.js') }}?v={{ filemtime(public_path('js/profile.js')) }}"></script>
 </body>

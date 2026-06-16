@@ -135,19 +135,19 @@ class TrabajadorController extends Controller
                 "Se registró al trabajador {$trabajador->nombres} {$trabajador->apellidos}");
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Trabajador registrado exitosamente en Sigejub.'
+                'estado' => 'success',
+                'mensaje' => 'Trabajador registrado exitosamente en Sigejub.'
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'status' => 'error',
+                'estado' => 'error',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Error en la base de datos: ' . $e->getMessage()
+                'estado' => 'error',
+                'mensaje' => 'Error en la base de datos: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -197,20 +197,20 @@ class TrabajadorController extends Controller
                 "Se actualizó el expediente de {$trabajador->nombres} {$trabajador->apellidos}");
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Datos del trabajador actualizados correctamente.',
+                'estado' => 'success',
+                'mensaje' => 'Datos del trabajador actualizados correctamente.',
                 'trabajador' => $datos
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'status' => 'error',
+                'estado' => 'error',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Error al actualizar: ' . $e->getMessage()
+                'estado' => 'error',
+                'mensaje' => 'Error al actualizar: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -264,13 +264,19 @@ class TrabajadorController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Trabajador eliminado correctamente.'
+                'mensaje' => 'Trabajador eliminado correctamente.'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Error al eliminar: ' . $e->getMessage()
+                'estado' => 'success',
+                'mensaje' => 'Trabajador eliminado correctamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 'error',
+                'mensaje' => 'Error al eliminar: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -114,4 +114,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Inactivity Timeout (server-side)
+    |--------------------------------------------------------------------------
+    |
+    | Number of minutes of inactivity before the user is automatically logged
+    | out by the server-side middleware. The JS idle timer is shorter (15 min
+    | by default) and handles the warning UI; this is a defense-in-depth.
+    |
+    */
+
+    'inactivity_timeout' => env('AUTH_INACTIVITY_TIMEOUT', 30),
+
 ];

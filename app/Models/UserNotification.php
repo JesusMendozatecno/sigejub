@@ -10,11 +10,11 @@ class UserNotification extends Model
     protected $table = 'notifications';
 
     protected $fillable = [
-        'user_id', 'from_user_id', 'title', 'message', 'type', 'is_read'
+        'user_id', 'from_user_id', 'titulo', 'mensaje', 'tipo', 'leida'
     ];
 
     protected $casts = [
-        'is_read' => 'boolean',
+        'leida' => 'boolean',
     ];
 
     public function user(): BelongsTo

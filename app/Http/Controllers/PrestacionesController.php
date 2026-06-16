@@ -104,7 +104,7 @@ class PrestacionesController extends Controller
             "Se registró cálculo de prestaciones para trabajador ID {$request->trabajador_id}");
 
         return response()->json([
-            'message' => 'Prestaciones calculadas correctamente.',
+            'mensaje' => 'Prestaciones calculadas correctamente.',
             'prestacion' => $prestacion,
         ]);
     }

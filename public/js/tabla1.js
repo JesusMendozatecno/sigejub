@@ -146,15 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(r => r.json())
         .then(data => {
-            if (data.status === 'success') {
+            if (data.estado === 'success') {
                 // Animación de desvanecimiento antes de remover la fila del DOM
                 const fila = btnEliminar.closest('tr');
                 fila.style.transition = 'opacity 0.3s';
                 fila.style.opacity = '0';
                 setTimeout(() => fila.remove(), 300);
-                alert(data.message);
+                alert(data.mensaje);
             } else {
-                alert(data.message || 'Error al eliminar');
+                alert(data.mensaje || 'Error al eliminar');
             }
         })
         .catch(err => {
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!resp.ok) throw data;
 
-                alert(data.message || 'Operación exitosa.');
+                alert(data.mensaje || 'Operación exitosa.');
                 formTrabajador.reset();
                 document.getElementById('closeModal')?.click();  // Cierra el modal
 
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     Object.values(error.errors).forEach(err => { mensajes += err[0] + '\n'; });
                     alert(mensajes);
                 } else {
-                    alert(error.message || 'Error interno.');
+                    alert(error.mensaje || 'Error interno.');
                 }
             } finally {
                 if (btnSubmit) {

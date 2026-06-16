@@ -7,16 +7,19 @@ echo " SIGEJUB - Sistema de Jubilaciones"
 echo "============================================"
 echo ""
 
+# Read port from .env (default 8080)
+PORT=$(grep -oP '^APP_PORT=\K\d+' .env 2>/dev/null || echo "8080")
+
 # Check PHP
 if ! command -v php &> /dev/null; then
     echo "[ERROR] PHP no esta instalado o no esta en PATH."
     exit 1
 fi
 
-# Check if server is already running
-if netstat -an 2>/dev/null | grep ":8000" > /dev/null; then
-    echo "[OK] El servidor ya esta corriendo en http://localhost:8000"
-    xdg-open http://localhost:8000 2>/dev/null || open http://localhost:8000 2>/dev/null
+# Check if server is already running (Apache or artisan)
+if ss -tln 2>/dev/null | grep ":$PORT" > /dev/null || netstat -an 2>/dev/null | grep ":$PORT" > /dev/null; then
+    echo "[OK] Servidor disponible en http://localhost:$PORT/"
+    xdg-open "http://localhost:$PORT/" 2>/dev/null || open "http://localhost:$PORT/" 2>/dev/null
     exit 0
 fi
 
@@ -29,6 +32,6 @@ if [ ! -f ".env" ]; then
 fi
 
 # Start server
-echo "[INICIANDO] Servidor en http://localhost:8000"
-xdg-open http://localhost:8000 2>/dev/null || open http://localhost:8000 2>/dev/null
-php artisan serve --port=8000
+echo "[INICIANDO] Servidor en http://localhost:$PORT"
+xdg-open "http://localhost:$PORT" 2>/dev/null || open "http://localhost:$PORT" 2>/dev/null
+php artisan serve --port="$PORT"
