@@ -16,46 +16,18 @@
 function switchTab(id) {
     var tmp = document.getElementById('tmp-section-style');
     if (tmp) tmp.remove();
-    const menuItems = document.querySelectorAll('.menu-item');
-    const sections = document.querySelectorAll('.content-section');
-    const targetMenu = document.querySelector(`[data-target="${id}"]`);
-    const targetSection = document.getElementById(id);
+    var menuItems = document.querySelectorAll('.menu-item');
+    var sections = document.querySelectorAll('.content-section');
+    var targetMenu = document.querySelector('[data-target="' + id + '"]');
+    var targetSection = document.getElementById(id);
 
     if (targetMenu && targetSection) {
-        // Primero limpia todas las selecciones activas
-        menuItems.forEach(i => i.classList.remove('active'));
-        sections.forEach(s => s.classList.remove('active'));
-
-        // Luego activa SOLO el ítem de menú y la sección que corresponden al target
+        menuItems.forEach(function(i) { i.classList.remove('active'); });
+        sections.forEach(function(s) { s.classList.remove('active'); });
         targetMenu.classList.add('active');
         targetSection.classList.add('active');
-
-        // Guarda la sección activa para restaurarla al recargar la página
         localStorage.setItem('sigejub_active_section', id);
     }
-
-    // ============================================
-    // CIERRE DE MODALES — Clic fuera o tecla ESC
-    // ============================================
-
-    // Cierra cualquier modal con clase .modal-overlay al hacer clic en el fondo
-    window.addEventListener('click', function(e) {
-        var modals = document.querySelectorAll('.modal-overlay');
-        for (var i = 0; i < modals.length; i++) {
-            if (e.target === modals[i]) {
-                modals[i].style.display = 'none';
-            }
-        }
-    });
-
-    // También cierra todos los modales al presionar la tecla ESC
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay').forEach(function(m) {
-                m.style.display = 'none';
-            });
-        }
-    });
 }
 
 // ============================================
@@ -101,11 +73,22 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab(savedSection);
     }
 
-    // Cierre adaptativo: clic en el fondo difuminado cierra el modal de solicitud
-    window.addEventListener('click', (event) => {
-        const modal = document.getElementById('modalSolicitud');
-        if (event.target === modal) {
-            cerrarModal();
+    // Cierre de modales: clic en el fondo difuminado cierra todos los modales
+    window.addEventListener('click', function(e) {
+        var modals = document.querySelectorAll('.modal-overlay');
+        for (var i = 0; i < modals.length; i++) {
+            if (e.target === modals[i]) {
+                modals[i].style.display = 'none';
+            }
+        }
+    });
+
+    // Cierre de modales con tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay').forEach(function(m) {
+                m.style.display = 'none';
+            });
         }
     });
 });

@@ -10,6 +10,7 @@ use App\Http\Controllers\PrestacionesController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CajaNegraController;
+use App\Http\Controllers\NominaExportController;
 
 
 /*
@@ -108,6 +109,7 @@ Route::delete('/trabajadores/{id}', [TrabajadorController::class, 'destroy'])->n
 // El store se mantiene igual
 Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trabajador');
 Route::get('/trabajadores-stats/dashboard', [TrabajadorController::class, 'dashboardStats']);
+Route::get('/exportar/nomina', [NominaExportController::class, 'exportar'])->middleware('auth')->name('exportar.nomina');
 
 /*
 |-----------------------------

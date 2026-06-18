@@ -101,6 +101,7 @@
     <?php if($errors->any()): ?>
         <script>mostrarToast('<?php echo e($errors->first()); ?>', 'error');</script>
     <?php endif; ?>
+    <script>sessionStorage.removeItem('sigejub_dashboard_cargado');</script>
 </body>
 </html>
 <?php /**PATH C:\xampp\htdocs\sigejub 2\resources\views/auth/login.blade.php ENDPATH**/ ?>

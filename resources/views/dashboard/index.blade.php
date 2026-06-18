@@ -129,6 +129,7 @@
                 <li class="menu-item" data-target="trabajadores"><i class="fas fa-users" size="18"></i> Trabajadores</li>
                 <li class="menu-item" data-target="solicitudes"><i class="fas fa-file-lines" size="18"></i> Solicitudes</li>
                 <li class="menu-item" data-target="expedientes"><i class="fas fa-folder" size="18"></i> Expedientes</li>
+                <li class="menu-item" data-target="nomina"><i class="fas fa-file-invoice-dollar" size="18"></i> Nómina</li>
                 <li class="menu-item" data-target="prestaciones"><i class="fas fa-wallet" size="18"></i> Prestaciones</li>
                 <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
                 <li class="menu-item" data-target="diagramas"><i class="fas fa-diagram-project" size="18"></i> Diagramas</li>
@@ -158,6 +159,10 @@
 
             <div id="expedientes" class="content-section">
                 @include('dashboard.secciones.expedientes')
+            </div>
+
+            <div id="nomina" class="content-section">
+                @include('dashboard.secciones.nomina')
             </div>
 
             <div id="prestaciones" class="content-section">
@@ -193,9 +198,14 @@
 @include('partials.toast')
 
 <script>
-/* === Precarga del dashboard al cargar === */
+/* === Precarga del dashboard al cargar (solo en login→dashboard) === */
 (function() {
     var overlay = document.getElementById('loading-overlay');
+    var yaCargo = sessionStorage.getItem('sigejub_dashboard_cargado');
+    if (yaCargo) {
+        if (overlay) overlay.classList.remove('active');
+        return;
+    }
     if (!overlay || !overlay.classList.contains('active')) return;
     document.getElementById('loadingText').textContent = 'Preparando el sistema...';
     Promise.all([
@@ -209,8 +219,10 @@
         fetch('/trabajadores-stats/dashboard').catch(function(){}),
         fetch('/notificaciones/no-leidas').catch(function(){}),
     ]).then(function() {
+        sessionStorage.setItem('sigejub_dashboard_cargado', '1');
         ocultarCargando();
     }).catch(function() {
+        sessionStorage.setItem('sigejub_dashboard_cargado', '1');
         ocultarCargando();
     });
 })();

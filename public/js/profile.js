@@ -305,7 +305,7 @@ async function cargarAdminUsuarios() {
     var rol = document.getElementById('adminRoleFilter').value;
     var tbody = document.getElementById('adminUsersBody');
     try {
-        var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&rol=' + role);
+        var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&rol=' + rol);
         var data = await r.json();
         if (!data.data || !data.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Sin usuarios</td></tr>'; return; }
         tbody.innerHTML = data.data.map(function(u) {

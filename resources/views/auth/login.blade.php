@@ -101,5 +101,6 @@
     @if($errors->any())
         <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
     @endif
+    <script>sessionStorage.removeItem('sigejub_dashboard_cargado');</script>
 </body>
 </html>
