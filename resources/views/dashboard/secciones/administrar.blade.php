@@ -1,3 +1,4 @@
+{{-- administrar.blade.php - Sección de administración: gestión de usuarios (CRUD), tabla de actividades, gráfica de actividad y modales para editar/enviar notificaciones. --}}
 <header class="section-header">
     <div class="header-info">
         <h1>Panel de <span class="text-blue-accent">Administración</span></h1>

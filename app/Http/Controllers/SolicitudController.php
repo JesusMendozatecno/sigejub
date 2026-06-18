@@ -1,4 +1,7 @@
 <?php
+// Controlador de solicitudes de jubilación.
+// CRUD completo con filtros por estado y búsqueda, más endpoints para estadísticas
+// (solicitudes por mes, vencimientos próximos, tasa de aprobación) y exportación PDF.
 
 namespace App\Http\Controllers;
 
@@ -17,12 +20,11 @@ class SolicitudController extends Controller
         $query = Solicitud::with('trabajador');
 
         if ($estado = $request->get('estado')) {
-            if ($estado === 'pending') {
-                $query->where('estado', 'pendiente');
-            } elseif ($estado === 'approved') {
-                $query->where('estado', 'aprobado');
-            } elseif ($estado === 'rejected') {
-                $query->where('estado', 'rechazado');
+            $estadosValidos = ['pendiente', 'aprobado', 'rechazado', 'revision'];
+            $mapIngles = ['pending' => 'pendiente', 'approved' => 'aprobado', 'rejected' => 'rechazado'];
+            $dbEstado = $mapIngles[$estado] ?? (in_array($estado, $estadosValidos) ? $estado : null);
+            if ($dbEstado) {
+                $query->where('estado', $dbEstado);
             }
         }
 
@@ -98,12 +100,11 @@ class SolicitudController extends Controller
         $query = Solicitud::with('trabajador');
 
         if ($estado = $request->get('estado')) {
-            if ($estado === 'pending') {
-                $query->where('estado', 'pendiente');
-            } elseif ($estado === 'approved') {
-                $query->where('estado', 'aprobado');
-            } elseif ($estado === 'rejected') {
-                $query->where('estado', 'rechazado');
+            $estadosValidos = ['pendiente', 'aprobado', 'rechazado', 'revision'];
+            $mapIngles = ['pending' => 'pendiente', 'approved' => 'aprobado', 'rejected' => 'rechazado'];
+            $dbEstado = $mapIngles[$estado] ?? (in_array($estado, $estadosValidos) ? $estado : null);
+            if ($dbEstado) {
+                $query->where('estado', $dbEstado);
             }
         }
 

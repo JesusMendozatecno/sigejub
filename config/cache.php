@@ -1,4 +1,6 @@
 <?php
+// Configuración de caché. Driver por defecto: database.
+// Usado por DashboardCache para almacenar estadísticas y listados con TTL configurable.
 
 use Illuminate\Support\Str;
 

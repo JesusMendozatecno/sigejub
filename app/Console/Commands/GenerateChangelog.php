@@ -1,4 +1,6 @@
 <?php
+// Comando de Artisan para generar el changelog desde git log.
+// Clasifica automáticamente los commits por tipo (fix, feature, docs, etc.) y sección del sistema.
 
 namespace App\Console\Commands;
 

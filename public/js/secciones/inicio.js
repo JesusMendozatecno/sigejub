@@ -1,10 +1,7 @@
-/* ============================================================
-   inicio.js — JavaScript para la sección "Inicio" (Panel Principal)
-   Funcionalidad: carga de estadísticas (trabajadores, solicitudes
-   pendientes/aprobadas/rechazadas), gráfico de barras por mes,
-   actividad reciente con marca de tiempo, próximos vencimientos
-   y dato institucional.
-   ============================================================ */
+/**
+ * inicio.js — Script de la sección de inicio/dashboard.
+ * Gestiona tarjetas de resumen, actividades recientes, solicitudes próximas.
+ */
 
 (function() {
     const ICON_MAP = {

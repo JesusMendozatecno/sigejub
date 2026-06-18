@@ -1,4 +1,6 @@
 <?php
+// Modelo para prestaciones sociales (tabla "prestaciones").
+// Almacena el cálculo simple de años de servicio y monto para trabajadores con solicitud aprobada.
 
 namespace App\Models;
 

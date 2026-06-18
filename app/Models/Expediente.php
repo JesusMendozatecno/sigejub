@@ -1,4 +1,6 @@
 <?php
+// Modelo para expedientes de jubilación.
+// Agrupa trabajador + solicitud + documentos, con un estado_global (%) que refleja el progreso documental.
 
 namespace App\Models;
 

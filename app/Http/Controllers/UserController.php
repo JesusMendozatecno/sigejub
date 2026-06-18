@@ -1,4 +1,7 @@
 <?php
+// Controlador de perfil de usuario y administración de usuarios (admin).
+// Gestiona: perfil, avatar, contraseña, configuraciones, notificaciones, 2FA,
+// sesiones activas, actividad personal, y funciones admin (CRUD usuarios, config global).
 
 namespace App\Http\Controllers;
 
@@ -45,11 +48,17 @@ class UserController extends Controller
         $user = Auth::user();
         $request->validate([
             'nombre' => 'required|string|max:255',
+            'apellido' => 'nullable|string|max:255',
             'correo' => 'required|string|email|max:255|unique:users,correo,' . $user->id,
+            'telefono' => 'nullable|string|max:20',
+            'fecha_nacimiento' => 'nullable|date',
         ]);
 
         $user->nombre = $request->nombre;
+        $user->apellido = $request->apellido;
         $user->correo = $request->correo;
+        $user->telefono = $request->telefono;
+        $user->fecha_nacimiento = $request->fecha_nacimiento;
         $user->save();
 
         return response()->json(['mensaje' => 'Perfil actualizado correctamente.']);

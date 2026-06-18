@@ -1,4 +1,6 @@
 <?php
+// Configuración de servicios externos (terceros).
+// Credenciales para Postmark, Resend, AWS SES y Slack.
 
 return [
 

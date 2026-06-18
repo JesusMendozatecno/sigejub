@@ -1,10 +1,7 @@
-// ============================================
-// expedientelevel1.js — Puente legacy para la apertura de expedientes
-// Ubicación: Vista de detalle de expediente
-// Responsabilidades:
-//   - Función global de compatibilidad para abrir expedientes desde HTML heredado
-//   - Dispara un evento personalizado 'abrir-expediente' que los listeners modernos capturan
-// ============================================
+/**
+ * expedientelevel1.js — Script del nivel 1 de expedientes.
+ * Gestiona la búsqueda de trabajadores por cédula y creación de expedientes.
+ */
 
 // ============================================
 // Función legacy: verDetalleExpediente

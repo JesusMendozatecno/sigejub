@@ -1,4 +1,5 @@
 <?php
+// Migración para recrear expedientes con estructura ampliada y crear la tabla documentos.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

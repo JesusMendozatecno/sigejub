@@ -1,4 +1,5 @@
 <?php
+// Migración para crear las tablas jobs, job_batches y failed_jobs.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

@@ -1,4 +1,6 @@
 <?php
+// Modelo para el registro de actividad (caja negra). 
+// Almacena auditoría de todas las acciones del sistema: creación, modificación y eliminación de entidades.
 
 namespace App\Models;
 

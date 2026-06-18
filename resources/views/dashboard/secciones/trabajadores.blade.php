@@ -1,3 +1,4 @@
+{{-- trabajadores.blade.php - Sección de directorio de trabajadores: tabla DataTable con filtros, modal de registro/edición con formulario completo y modal de confirmación de baja. --}}
 <header class="section-header">
     <div class="header-info">
         <h1>Directorio de Trabajadores</h1>

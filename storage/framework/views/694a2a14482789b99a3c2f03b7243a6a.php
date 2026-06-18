@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -86,21 +87,38 @@
                 <h2 class="tab-title">Mi Perfil</h2>
                 <p class="tab-subtitle">Información básica de tu cuenta</p>
                 <form id="formProfile">
+                    <div class="form-group">
+                        <label>Rol</label>
+                        <input type="text" class="form-input" value="<?php echo e($user->rol === 'admin' ? 'Administrador' : 'Analista'); ?>" disabled>
+                    </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label>Nombre completo</label>
-                            <input type="text" class="form-input" name="nombre" value="<?php echo e($user->nombre); ?>" required>
+                            <label>Nombre</label>
+                            <input type="text" class="form-input" name="nombre" value="<?php echo e($user->nombre); ?>" disabled>
                         </div>
                         <div class="form-group">
-                            <label>Correo electrónico</label>
-                            <input type="email" class="form-input" name="correo" value="<?php echo e($user->correo); ?>" required>
+                            <label>Apellido</label>
+                            <input type="text" class="form-input" name="apellido" value="<?php echo e($user->apellido); ?>" disabled>
                         </div>
                     </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Correo electrónico</label>
+                            <input type="email" class="form-input" name="correo" value="<?php echo e($user->correo); ?>" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" class="form-input" name="telefono" value="<?php echo e($user->telefono); ?>" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de nacimiento</label>
+                        <input type="date" class="form-input" name="fecha_nacimiento" value="<?php echo e($user->fecha_nacimiento ? \Carbon\Carbon::parse($user->fecha_nacimiento)->format('Y-m-d') : ''); ?>" disabled>
+                    </div>
                     <div class="flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                        <?php if($user->avatar): ?>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarAvatar()">Eliminar foto</button>
-                        <?php endif; ?>
+                        <button type="button" class="btn btn-primary" id="btnEditarPerfil">Editar Datos</button>
+                        <button type="submit" class="btn btn-success" id="btnGuardarPerfil" style="display:none;">Guardar Datos</button>
+                        <button type="button" class="btn btn-secondary" id="btnCancelarEditar" style="display:none;">Cancelar</button>
                     </div>
                 </form>
             </div>

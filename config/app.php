@@ -1,4 +1,6 @@
 <?php
+// Configuración general de la aplicación Laravel.
+// Define nombre, entorno, debug, URL, zona horaria, locale, clave de cifrado y mantenimiento.
 
 return [
 

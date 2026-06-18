@@ -1,4 +1,6 @@
 <?php
+// Modelo para el registro de cambios del sistema (changelog).
+// Almacena commits de git categorizados por tipo y sección, visibles en la documentación.
 
 namespace App\Models;
 

@@ -1,3 +1,4 @@
+{{-- pdf/caja-negra.blade.php - Vista PDF para exportación del reporte de auditoría (Caja Negra): tabla de actividades con filtros, imprimible. --}}
 <!DOCTYPE html>
 <html>
 <head>

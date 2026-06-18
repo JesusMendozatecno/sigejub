@@ -1,4 +1,7 @@
 <?php
+// Configuración de autenticación.
+// Define guards, providers, reseteo de contraseñas y timeout de inactividad (30 min).
+// El campo de login es 'correo' (no 'email').
 
 use App\Models\User;
 

@@ -1,4 +1,5 @@
 <?php
+// Migración para añadir apellido, teléfono y fecha de nacimiento a la tabla users.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

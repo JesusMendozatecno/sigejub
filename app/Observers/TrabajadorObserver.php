@@ -1,4 +1,6 @@
 <?php
+// Observador del modelo Trabajador.
+// Invalida el caché de estadísticas del dashboard cuando se crea, actualiza o elimina un trabajador.
 
 namespace App\Observers;
 

@@ -1,4 +1,6 @@
 <?php
+// Test de funcionalidad de ejemplo para SIGEJUB.
+// Verifica que la aplicación responde correctamente en la ruta raíz.
 
 namespace Tests\Feature;
 

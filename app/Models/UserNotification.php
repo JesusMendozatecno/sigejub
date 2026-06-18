@@ -1,4 +1,6 @@
 <?php
+// Modelo para notificaciones internas entre usuarios.
+// Almacena título, mensaje, tipo y estado de lectura. Relaciona usuario emisor y receptor.
 
 namespace App\Models;
 

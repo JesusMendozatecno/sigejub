@@ -1,4 +1,6 @@
 <?php
+// Tests de integración con PostgreSQL (base de datos original).
+// Verifica driver, conexión, existencia de tablas y usuarios requeridos.
 
 namespace Tests\Feature;
 

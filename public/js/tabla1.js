@@ -1,14 +1,7 @@
-// ============================================
-// tabla1.js — Tabla dinámica de trabajadores con CRUD completo
-// Ubicación: Sección "Trabajadores" del dashboard (vista con tabla .custom-table)
-// Responsabilidades:
-//   - Carga asíncrona del listado de trabajadores desde GET /trabajadores
-//   - Renderizado de filas con avatar, estatus (activo/jubilado) y acciones
-//   - Vista rápida de expediente (guarda en sessionStorage y redirige)
-//   - Edición: carga datos en el modal y envía PUT
-//   - Eliminación: soft delete con confirmación y animación de salida
-//   - Envío del formulario (creación/edición) vía AJAX
-// ============================================
+/**
+ * tabla1.js — Script para la tabla de trabajadores en la vista principal del dashboard.
+ * Gestiona carga AJAX y paginación.
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
 

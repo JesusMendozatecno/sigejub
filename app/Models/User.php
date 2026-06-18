@@ -1,4 +1,7 @@
 <?php
+// Modelo de usuario del sistema SIGEJUB.
+// Extiende Authenticatable de Laravel. Campos en español: nombre, apellido, correo, rol.
+// Soporta temas, 2FA, notificaciones y preferencias de perfil.
 
 namespace App\Models;
 

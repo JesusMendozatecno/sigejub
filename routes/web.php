@@ -1,4 +1,6 @@
 <?php
+// Archivo principal de rutas web del sistema SIGEJUB.
+// Define todas las rutas HTTP: autenticación, CRUD de entidades, API AJAX, exportaciones y administración.
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -10,6 +12,7 @@ use App\Http\Controllers\PrestacionesController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CajaNegraController;
+use App\Http\Controllers\NominaExportController;
 
 
 /*
@@ -108,6 +111,7 @@ Route::delete('/trabajadores/{id}', [TrabajadorController::class, 'destroy'])->n
 // El store se mantiene igual
 Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trabajador');
 Route::get('/trabajadores-stats/dashboard', [TrabajadorController::class, 'dashboardStats']);
+Route::get('/exportar/nomina', [NominaExportController::class, 'exportar'])->middleware('auth')->name('exportar.nomina');
 
 /*
 |-----------------------------
@@ -167,6 +171,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/caja-negra/{id}', [CajaNegraController::class, 'show']);
     Route::get('/caja-negra-data/estadisticas', [CajaNegraController::class, 'stats']);
     Route::get('/caja-negra-data/usuarios', [CajaNegraController::class, 'usuarios']);
+});
+
+use App\Http\Controllers\BackupController;
+Route::middleware('auth')->group(function () {
+    Route::get('/backups', [BackupController::class, 'index']);
+    Route::post('/backups/generar', [BackupController::class, 'generar']);
+    Route::get('/backups/{archivo}/descargar', [BackupController::class, 'descargar']);
+    Route::delete('/backups/{archivo}', [BackupController::class, 'eliminar']);
 });
 
 Route::get('/prestaciones', [PrestacionesController::class, 'index']);

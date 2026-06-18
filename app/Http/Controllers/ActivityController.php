@@ -1,4 +1,6 @@
 <?php
+// Controlador de actividades recientes.
+// Devuelve las últimas 20 actividades del sistema para el dashboard, con caché de 2 minutos.
 
 namespace App\Http\Controllers;
 

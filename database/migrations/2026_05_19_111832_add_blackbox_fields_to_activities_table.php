@@ -1,4 +1,5 @@
 <?php
+// Migración para añadir campos de auditoría (IP, navegador, valores anteriores/nuevos) a la tabla activities.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

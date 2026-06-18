@@ -1,4 +1,5 @@
 <?php
+// Migración para crear la tabla prestaciones con años de servicio y monto.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

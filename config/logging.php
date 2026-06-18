@@ -1,4 +1,6 @@
 <?php
+// Configuración de logging. Canal por defecto: stack (single).
+// Soporta canales: single, daily, slack, syslog, stderr, null.
 
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;

@@ -1,4 +1,6 @@
 <?php
+// Clase base para tests del sistema SIGEJUB.
+// Extiende TestCase de Laravel para proporcionar funcionalidad de testing.
 
 namespace Tests;
 

@@ -1,3 +1,4 @@
+{{-- toast.blade.php - Partial de notificaciones toast: contenedor y lógica JS para mostrar mensajes de éxito/error/advertencia/info con sonidos y auto-cierre. --}}
 <div id="toast-container"></div>
 
 <style>

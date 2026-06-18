@@ -1,4 +1,5 @@
 <?php
+// Migración para crear la tabla users con roles, password_reset_tokens y sessions.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

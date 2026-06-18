@@ -1,4 +1,5 @@
 <?php
+// Migración para crear la tabla solicitudes de jubilación vinculada a trabajadores.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

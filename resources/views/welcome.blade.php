@@ -1,3 +1,4 @@
+{{-- welcome.blade.php - Página de bienvenida/landing page del sistema SIGEJUB con hero, tarjetas de funcionalidades, noticias, formulario de contacto y footer. --}}
 <!DOCTYPE html>
 <html class="scroll-smooth" lang="es">
 <head>

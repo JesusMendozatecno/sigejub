@@ -1,3 +1,4 @@
+{{-- expedientes.blade.php - Sección de expedientes digitales: listado con búsqueda, detalle con documentos, subida/aprobación/rechazo y notas de administrador. --}}
 <div id="expedientes-lista">
     <header class="section-header">
         <div class="header-info">

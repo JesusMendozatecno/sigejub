@@ -1,4 +1,7 @@
 <?php
+// Controlador de administración de usuarios, notificaciones y actividades.
+// Solo accesible por usuarios con rol 'admin'. Proporciona CRUD de usuarios, envío de notificaciones,
+// y consulta de actividades con filtros (tipo, fechas, resumen estadístico).
 
 namespace App\Http\Controllers;
 

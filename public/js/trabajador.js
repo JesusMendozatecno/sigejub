@@ -1,13 +1,7 @@
-// ============================================
-// trabajador.js — Modal y registro de trabajadores (vista legacy/simple)
-// Ubicación: Sección de trabajadores del dashboard
-// Responsabilidades:
-//   - Apertura/cierre del modal de registro de trabajador
-//   - Envío del formulario vía AJAX (fetch)
-//   - Manejo de errores de validación del servidor
-// Nota: Este archivo maneja la versión simple; la versión completa
-//       con CRUD y tabla dinámica está en secciones/trabajador.js y tabla1.js
-// ============================================
+/**
+ * trabajador.js — Script para el formulario de registro de trabajador.
+ * Gestiona validación, cálculo automático de edad y años de servicio.
+ */
 
 document.addEventListener('DOMContentLoaded', function() {
     // ============================================

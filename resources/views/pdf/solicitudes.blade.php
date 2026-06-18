@@ -1,3 +1,4 @@
+{{-- pdf/solicitudes.blade.php - Vista PDF para exportación del reporte de solicitudes: tabla de solicitudes con datos del trabajador y estatus, imprimible. --}}
 <!DOCTYPE html>
 <html>
 <head>

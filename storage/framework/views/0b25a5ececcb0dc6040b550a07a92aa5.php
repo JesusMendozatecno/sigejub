@@ -1,3 +1,4 @@
+
 <style>
 .dark-mode .diagram-card { background:#1e293b !important; border-color:#334155 !important; }
 .dark-mode .diagram-card h2 { color:#f1f5f9 !important; }

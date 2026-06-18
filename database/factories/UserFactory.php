@@ -1,4 +1,5 @@
 <?php
+// Fábrica de usuarios para pruebas. Genera datos aleatorios con campos en español.
 
 namespace Database\Factories;
 

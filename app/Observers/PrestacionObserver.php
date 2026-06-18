@@ -1,4 +1,6 @@
 <?php
+// Observador del modelo Prestacion.
+// Invalida el caché de estadísticas del dashboard cuando cambia una prestación.
 
 namespace App\Observers;
 

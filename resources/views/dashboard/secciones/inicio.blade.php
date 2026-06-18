@@ -1,3 +1,4 @@
+{{-- inicio.blade.php - Página de inicio del dashboard: tarjetas de estadísticas, gráfico de solicitudes por mes, vencimientos próximos y feed de actividad reciente. --}}
 <header class="welcome-header">
     <div class="welcome-text">
         <p class="subtitle"></p>

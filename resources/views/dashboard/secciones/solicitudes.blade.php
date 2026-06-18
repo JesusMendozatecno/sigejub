@@ -1,3 +1,4 @@
+{{-- solicitudes.blade.php - Sección de gestión de solicitudes de jubilación: CRUD completo con filtros por estado, métricas, modales de creación/edición/detalle y exportación PDF. --}}
 <style>
     #displayCedula:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 </style>
@@ -469,6 +470,7 @@ function escaparHTML(str) {
 
     // === 6. MODAL NUEVA SOLICITUD ===
     window.abrirModalSolicitud = function() {
+        cargarSelectTrabajadores();
         const modal = document.getElementById('modalSolicitud');
         if (modal) modal.style.display = 'flex';
     };
@@ -595,6 +597,7 @@ function escaparHTML(str) {
             if (m.target.id === 'solicitudes' && m.target.classList.contains('active')) {
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
+                cargarSelectTrabajadores();
             }
         });
     });

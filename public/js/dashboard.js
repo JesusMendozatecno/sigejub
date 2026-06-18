@@ -1,4 +1,7 @@
-// === DASHBOARD.JS - SIGEJUB ===
+/**
+ * dashboard.js — Script principal del dashboard.
+ * Gestiona navegación por pestañas, sidebar, carga de secciones y modales.
+ */
 
 window.escaparHTML = function(str) {
     if (!str) return '';

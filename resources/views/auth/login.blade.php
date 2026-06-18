@@ -1,3 +1,4 @@
+{{-- login.blade.php - Template de la página de inicio de sesión con formulario AJAX, loading overlay y sonidos. --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -101,5 +102,6 @@
     @if($errors->any())
         <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
     @endif
+    <script>sessionStorage.removeItem('sigejub_dashboard_cargado');localStorage.removeItem('sigejub_active_section');</script>
 </body>
 </html>

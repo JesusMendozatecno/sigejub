@@ -1,4 +1,7 @@
 <?php
+// Controlador de la Caja Negra (auditoría completa del sistema).
+// Proporciona acceso detallado a todas las actividades con filtros avanzados,
+// estadísticas agregadas y exportación PDF. Solo accesible por administradores.
 
 namespace App\Http\Controllers;
 

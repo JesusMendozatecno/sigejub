@@ -1,4 +1,7 @@
 <?php
+// Configuración de sesiones.
+// Driver: database (sesiones persistentes en BD). Lifetime: 120 min.
+// Cookie SameSite: lax, HTTP Only: true.
 
 use Illuminate\Support\Str;
 

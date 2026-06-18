@@ -1,10 +1,7 @@
-/* ============================================================
-   caja-negra.js — JavaScript para la sección "Caja Negra"
-   (Historial / Registro de Auditoría)
-   Funcionalidad: carga de estadísticas, carga de usuarios
-   para el filtro, búsqueda con debounce, paginación,
-   visualización de detalle en modal y exportación.
-   ============================================================ */
+/**
+ * caja-negra.js — Script del módulo Caja Negra (auditoría).
+ * Gestiona tabla con filtros, estadísticas, exportación y paginación.
+ */
 
 (function() {
     let cnPagina = 1;

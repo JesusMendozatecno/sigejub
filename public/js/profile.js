@@ -1,4 +1,8 @@
-// === PROFILE.JS - SIGEJUB ===
+/**
+ * profile.js — Script del perfil de usuario.
+ * Gestiona pestañas (información, seguridad, configuración, actividad, admin),
+ * avatar, estadísticas y sesiones.
+ */
 
 function inicializarPerfil() {
     if (window.SIGEJUB_PROFILE_THEME === 'dark') {
@@ -59,19 +63,58 @@ function api(url, opts) {
     });
 }
 
-// === TAB: PERFIL ===
-document.getElementById('formProfile')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    var fd = new FormData(e.target);
-    fd.append('_method', 'PUT');
-    try {
-        var r = await api('/perfil/actualizar', { method: 'POST', body: fd });
-        var d = await r.json();
-        if (!r.ok) { mostrarToast(d.mensaje || 'Error al guardar', 'error'); return; }
-        mostrarToast(d.mensaje, 'success');
-        document.querySelector('.profile-name').textContent = fd.get('nombre');
-    } catch (err) { mostrarToast('Error de conexión', 'error'); }
-});
+// === TAB: PERFIL (edición deshabilitada por defecto) ===
+(function(){
+    var form = document.getElementById('formProfile');
+    if (!form) return;
+    var inputs = form.querySelectorAll('input[name], select[name]');
+    var btnEditar = document.getElementById('btnEditarPerfil');
+    var btnGuardar = document.getElementById('btnGuardarPerfil');
+    var btnCancelar = document.getElementById('btnCancelarEditar');
+    var originalValues = {};
+
+    function guardarOriginales() {
+        originalValues = {};
+        inputs.forEach(function(inp) { originalValues[inp.name] = inp.value; });
+    }
+
+    function toggleEditar(habilitar) {
+        inputs.forEach(function(inp) { inp.disabled = !habilitar; });
+        btnEditar.style.display = habilitar ? 'none' : '';
+        btnGuardar.style.display = habilitar ? '' : 'none';
+        btnCancelar.style.display = habilitar ? '' : 'none';
+    }
+
+    guardarOriginales();
+
+    btnEditar?.addEventListener('click', function() { toggleEditar(true); });
+
+    btnCancelar?.addEventListener('click', function() {
+        inputs.forEach(function(inp) {
+            if (originalValues[inp.name] !== undefined) inp.value = originalValues[inp.name];
+        });
+        toggleEditar(false);
+    });
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var fd = new FormData(e.target);
+        fd.append('_method', 'PUT');
+        var btn = btnGuardar;
+        btn.disabled = true; btn.textContent = 'Guardando...';
+        try {
+            var r = await api('/perfil/actualizar', { method: 'POST', body: fd });
+            var d = await r.json();
+            if (!r.ok) { mostrarToast(d.mensaje || 'Error al guardar', 'error'); btn.disabled = false; btn.textContent = 'Guardar Datos'; return; }
+            mostrarToast(d.mensaje, 'success');
+            var newName = fd.get('nombre') + ' ' + (fd.get('apellido') || '');
+            document.querySelector('.profile-name').textContent = newName.trim();
+            guardarOriginales();
+            toggleEditar(false);
+        } catch (err) { mostrarToast('Error de conexión', 'error'); }
+        finally { btn.disabled = false; btn.textContent = 'Guardar Datos'; }
+    });
+})();
 
 // === AVATAR CROPPER ===
 var cropper = null;
@@ -305,7 +348,7 @@ async function cargarAdminUsuarios() {
     var rol = document.getElementById('adminRoleFilter').value;
     var tbody = document.getElementById('adminUsersBody');
     try {
-        var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&rol=' + role);
+        var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&rol=' + rol);
         var data = await r.json();
         if (!data.data || !data.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Sin usuarios</td></tr>'; return; }
         tbody.innerHTML = data.data.map(function(u) {

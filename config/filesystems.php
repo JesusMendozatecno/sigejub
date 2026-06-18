@@ -1,4 +1,7 @@
 <?php
+// Configuración de sistemas de archivos.
+// Discos: local (almacenamiento privado) y public (avatares, documentos, fotos).
+// El enlace simbólico apunta storage/app/public → public/storage.
 
 return [
 

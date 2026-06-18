@@ -1,4 +1,6 @@
 <?php
+// Modelo para documentos adjuntos a un expediente.
+// Cada documento tiene un estado (en_revision, aprobado, rechazado) y pertenece a un expediente.
 
 namespace App\Models;
 

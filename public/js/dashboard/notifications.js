@@ -1,9 +1,7 @@
-// ============================================================
-// notifications.js — Polling de notificaciones no leídas,
-// alternancia del menú desplegable y marcado como leídas.
-// Dependencias: dashboard.js (contiene toggleNotifDropdown,
-// marcarTodasLeidas).
-// ============================================================
+/**
+ * notifications.js — Script para el centro de notificaciones.
+ * Polling periódico, badge de no leídas, marcado como leídas.
+ */
 
 (function() {
     'use strict';

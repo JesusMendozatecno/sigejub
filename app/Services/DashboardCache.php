@@ -1,4 +1,6 @@
 <?php
+// Servicio de caché para el dashboard.
+// Centraliza la gestión de claves de caché y su invalidación para estadísticas, solicitudes y notificaciones.
 
 namespace App\Services;
 

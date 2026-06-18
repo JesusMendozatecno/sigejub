@@ -1,4 +1,5 @@
 <?php
+// Sembrador de la base de datos. Crea el usuario administrador por defecto (test@example.com).
 
 namespace Database\Seeders;
 

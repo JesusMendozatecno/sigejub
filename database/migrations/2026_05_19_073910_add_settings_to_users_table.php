@@ -1,4 +1,5 @@
 <?php
+// Migración para añadir configuración de usuario (avatar, tema, idioma, 2FA, etc.) a la tabla users.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

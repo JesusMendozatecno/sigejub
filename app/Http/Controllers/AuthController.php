@@ -1,4 +1,6 @@
 <?php
+// Controlador de autenticación: login, registro, dashboard y logout.
+// Maneja tanto respuestas JSON (AJAX) como redirecciones HTTP tradicionales.
 
 namespace App\Http\Controllers;
 
@@ -10,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // 🔵 MOSTRAR LOGIN
+    // Muestra el formulario de inicio de sesión
     public function loginForm()
     {
         return view('auth.login');

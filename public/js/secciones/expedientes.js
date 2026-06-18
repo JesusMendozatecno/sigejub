@@ -1,11 +1,7 @@
-/* ============================================================
-   expedientes.js — JavaScript para la sección "Expedientes"
-   Funcionalidad: CRUD de expedientes digitales, carga de lista
-   con tarjetas, detalle de expediente con documentos, subida
-   y gestión de documentos (aprobar/rechazar/re-subir), notas
-   de administrador, búsqueda por cédula y observador de
-   recarga al cambiar de pestaña.
-   ============================================================ */
+/**
+ * expedientes.js — Script de la sección expedientes.
+ * Gestiona listado, documentos, estados, notas de admin.
+ */
 
 (function() {
     let expedienteActualId = null;

@@ -1,4 +1,6 @@
 <?php
+// Controlador del changelog (registro de cambios).
+// Permite ver, generar desde git log y consultar vía API el historial de cambios del sistema.
 
 namespace App\Http\Controllers;
 

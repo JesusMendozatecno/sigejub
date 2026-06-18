@@ -1,4 +1,5 @@
 <?php
+// Migración para crear la tabla changelogs para registrar cambios de git.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

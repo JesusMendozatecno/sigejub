@@ -1,4 +1,7 @@
 <?php
+// Controlador de expedientes de jubilación.
+// Gestiona la creación de expedientes, vinculación con trabajador y solicitud,
+// carga y revisión de documentos, y cálculo automático del estado global (%).
 
 namespace App\Http\Controllers;
 

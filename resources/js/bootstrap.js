@@ -1,3 +1,4 @@
+// Configuración de Bootstrap y Axios para Laravel.
 import axios from 'axios';
 window.axios = axios;
 

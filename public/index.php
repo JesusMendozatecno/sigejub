@@ -1,4 +1,6 @@
 <?php
+// Punto de entrada público del sistema SIGEJUB.
+// Front controller de Laravel: inicia la aplicación y maneja la petición HTTP entrante.
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;

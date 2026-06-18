@@ -1,3 +1,4 @@
+{{-- loading-overlay.blade.php - Partial del overlay de carga: pantalla completa con spinner animado y texto dinámico, usado durante transiciones y peticiones AJAX. --}}
 <style>
 #loading-overlay {
     display: none;

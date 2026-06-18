@@ -1,4 +1,5 @@
 <?php
+// Migración para crear la tabla activities para el registro de auditoría.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

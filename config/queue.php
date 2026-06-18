@@ -1,4 +1,6 @@
 <?php
+// Configuración de colas. Driver por defecto: database.
+// Define conexiones, job batching y manejo de trabajos fallidos.
 
 return [
 

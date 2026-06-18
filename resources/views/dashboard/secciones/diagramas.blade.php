@@ -1,3 +1,4 @@
+{{-- diagramas.blade.php - Sección de diagramas del sistema: tabs con diagramas UML (flujo, clases, ER, casos de uso) renderizados con Mermaid.js y exportables a PNG/SVG. --}}
 <style>
 .dark-mode .diagram-card { background:#1e293b !important; border-color:#334155 !important; }
 .dark-mode .diagram-card h2 { color:#f1f5f9 !important; }

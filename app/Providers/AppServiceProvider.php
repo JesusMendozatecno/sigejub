@@ -1,4 +1,6 @@
 <?php
+// Proveedor de servicios principal de la aplicación.
+// Registra los observers de los modelos para invalidar caché automáticamente.
 
 namespace App\Providers;
 

@@ -1,4 +1,6 @@
 <?php
+// Observador del modelo Solicitud.
+// Invalida caché de solicitudes y estadísticas cuando se crea, actualiza o elimina una solicitud.
 
 namespace App\Observers;
 

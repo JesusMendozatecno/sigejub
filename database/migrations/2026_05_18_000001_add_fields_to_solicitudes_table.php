@@ -1,4 +1,5 @@
 <?php
+// Migración para añadir periodo, tipo_jubilacion y observaciones a la tabla solicitudes.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

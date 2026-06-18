@@ -1,4 +1,5 @@
 <?php
+// Test unitario de ejemplo para SIGEJUB.
 
 namespace Tests\Unit;
 

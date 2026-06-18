@@ -1,3 +1,4 @@
+{{-- prestaciones.blade.php - Sección de cálculo de prestaciones sociales: selección de trabajador, estructura de ingresos, cálculo de monto con porcentaje y generación de comprobante. --}}
 <style>
 .prestaciones-grid-cards {
     display: grid;

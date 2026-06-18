@@ -1,4 +1,7 @@
 <?php
+// Middleware que verifica la inactividad del usuario.
+// Cierra la sesión automática si supera el timeout configurado (30 min por defecto).
+// El ping AJAX (/actividad/ping) actualiza la variable de sesión sin resetear en peticiones AJAX.
 
 namespace App\Http\Middleware;
 

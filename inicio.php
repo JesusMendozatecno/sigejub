@@ -1,19 +1,10 @@
 <?php
-/**
- * SIGEJUB - Auto-launcher web
- * 
- * Accede via: http://localhost/sigejub%202/inicio.php
- * 
- * Sirve el proyecto Laravel directamente a traves de Apache (XAMPP)
- * en el puerto definido por APP_PORT (.env).
- * No necesita "php artisan serve".
- * 
- * Para otros proyectos Laravel:
- * - Copia este archivo a la raiz del otro proyecto
- * - Agrega un VirtualHost en httpd-vhosts.conf con su puerto
- * - Cambia APP_PORT en su .env (ej: 8082, 8083, ...)
- * - Accede via: http://localhost/OTRO_PROYECTO/inicio.php
- */
+// SIGEJUB - Auto-launcher web.
+// Accede via: http://localhost/sigejub%202/inicio.php
+// Sirve el proyecto Laravel directamente a traves de Apache (XAMPP)
+// en el puerto definido por APP_PORT (.env). No necesita "php artisan serve".
+// Para otros proyectos Laravel: copia este archivo a la raiz del otro proyecto,
+// agrega un VirtualHost en httpd-vhosts.conf con su puerto, cambia APP_PORT en su .env.
 
 // ─── Configuracion ──────────────────────────────────────────
 $projectDir = __DIR__;

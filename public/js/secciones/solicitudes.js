@@ -1,10 +1,7 @@
-/* ============================================================
-   solicitudes.js — JavaScript para la sección "Solicitudes"
-   Funcionalidad: CRUD de solicitudes de jubilación, búsqueda
-   por cédula, filtros por estado (pendiente/aprobado/rechazado),
-   métricas, modales de creación/edición/visualización y
-   exportación a PDF.
-   ============================================================ */
+/**
+ * solicitudes.js — Script de la sección solicitudes.
+ * CRUD completo con DataTable, filtros, exportación PDF y aprobación/rechazo.
+ */
 
 (function() {
     let currentStatus = 'all';

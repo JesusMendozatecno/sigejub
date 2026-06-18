@@ -1,4 +1,5 @@
 <?php
+// Migración para crear las tablas cache y cache_locks.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

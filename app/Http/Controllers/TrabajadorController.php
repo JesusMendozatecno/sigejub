@@ -1,4 +1,7 @@
 <?php
+// Controlador de trabajadores de la UPTYAB.
+// CRUD completo con SoftDeletes, cálculos automáticos de edad y años de servicio,
+// filtros por estatus (activo/jubilado) y búsqueda, más estadísticas del dashboard.
 
 namespace App\Http\Controllers;
 
@@ -264,12 +267,6 @@ class TrabajadorController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'mensaje' => 'Trabajador eliminado correctamente.'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'estado' => 'success',
                 'mensaje' => 'Trabajador eliminado correctamente.'
             ]);
 

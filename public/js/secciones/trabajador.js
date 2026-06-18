@@ -1,15 +1,7 @@
-// ============================================
-// secciones/trabajador.js — Módulo completo de gestión de trabajadores
-// Ubicación: Sección "Trabajadores" del dashboard (pestaña principal)
-// Responsabilidades:
-//   - Registro de nuevos trabajadores con formulario modal
-//   - Visualización de expediente en modo solo lectura
-//   - Edición de trabajadores (alternar entre vista/edición)
-//   - Eliminación (baja) con confirmación y animación
-//   - Carga asíncrona de tabla con filtros por estatus y nómina
-//   - Estadísticas del dashboard (próximas jubilaciones, % expedientes digitales)
-//   - Observer para cargar datos al cambiar de pestaña
-// ============================================
+/**
+ * secciones/trabajador.js — Script de la sección trabajador.
+ * Gestiona CRUD con DataTable, filtros por estatus y búsqueda.
+ */
 
 (function() {
     // ============================================

@@ -1,4 +1,6 @@
 <?php
+// Configuración de correo. Driver por defecto: log (solo registro, no envía).
+// Soporta SMTP, SES, Postmark, Sendmail. Usado para notificaciones desde AdminController.
 
 return [
 

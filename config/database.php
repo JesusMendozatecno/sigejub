@@ -1,4 +1,7 @@
 <?php
+// Configuración de bases de datos.
+// Soporta SQLite, MySQL, MariaDB, PostgreSQL y SQL Server.
+// Por defecto usa SQLite (configurable vía DB_CONNECTION en .env).
 
 use Illuminate\Support\Str;
 use Pdo\Mysql;

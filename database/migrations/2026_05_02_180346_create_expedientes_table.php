@@ -1,4 +1,5 @@
 <?php
+// Migración para crear la tabla expedientes (versión inicial) vinculada a solicitudes.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

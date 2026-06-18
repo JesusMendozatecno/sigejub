@@ -1,4 +1,7 @@
 <?php
+// Controlador de prestaciones sociales.
+// Lista trabajadores con solicitudes aprobadas para cálculo de prestaciones,
+// permite ver detalle y registrar/actualizar montos y años de servicio.
 
 namespace App\Http\Controllers;
 

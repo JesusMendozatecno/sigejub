@@ -1,3 +1,4 @@
+
 <header class="section-header">
     <div class="header-info">
         <h1><i class="fas fa-hard-drive" size="22"></i> Historial</h1>
@@ -84,6 +85,122 @@
     <span id="cnCounter" class="cn-counter">Mostrando 0 registros</span>
     <div class="cn-pagination" id="cnPagination"></div>
 </div>
+
+<!-- Backup Section -->
+<div style="margin-top: 24px; background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #f1f5f9;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div>
+            <h3 style="margin: 0; font-size: 1rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-shield"></i> Copias de Seguridad
+            </h3>
+            <p style="margin: 4px 0 0; font-size: 0.78rem; color: #64748b;">
+                Respaldo completo: base de datos + archivos del sistema
+            </p>
+        </div>
+        <button class="cn-btn-action cn-btn-primary" id="btnGenerarBackup" onclick="generarBackup()">
+            <i class="fas fa-hard-drive" size="16"></i>
+            <span>Generar Respaldo</span>
+        </button>
+    </div>
+    <div id="backupList" style="min-height: 40px;">
+        <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 16px;">Cargando respaldos...</p>
+    </div>
+</div>
+
+<style>
+    .backup-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 10px; background: #f8fafc; margin-bottom: 6px; border: 1px solid #f1f5f9; transition: all 0.15s; }
+    .backup-item:hover { border-color: #e2e8f0; background: #fafbfc; }
+    .backup-item .backup-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .backup-item .backup-icon { width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #1a365d; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .backup-item .backup-name { font-size: 0.85rem; font-weight: 600; color: #0f172a; word-break: break-all; }
+    .backup-item .backup-meta { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+    .backup-item .backup-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .backup-item .btn-bk-download { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid #e2e8f0; background: white; color: #2563eb; cursor: pointer; transition: all 0.15s; }
+    .backup-item .btn-bk-download:hover { background: #eff6ff; border-color: #bfdbfe; }
+    .backup-item .btn-bk-delete { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid transparent; background: transparent; color: #dc2626; cursor: pointer; transition: all 0.15s; }
+    .backup-item .btn-bk-delete:hover { background: #fef2f2; }
+    .backup-empty { text-align: center; padding: 24px; color: #94a3b8; font-size: 0.85rem; }
+    .backup-error { text-align: center; padding: 16px; color: #dc2626; font-size: 0.85rem; }
+    .backup-loading { text-align: center; padding: 16px; color: #64748b; font-size: 0.85rem; }
+    .backup-loading i { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+
+<script>
+(function() {
+    async function cargarBackups() {
+        const el = document.getElementById('backupList');
+        try {
+            const r = await fetch('/backups');
+            const data = await r.json();
+            if (!data.backups || !data.backups.length) {
+                el.innerHTML = '<div class="backup-empty"><i class="fas fa-database" style="font-size:2rem;display:block;margin-bottom:8px;color:#cbd5e1;"></i>No hay copias de seguridad disponibles</div>';
+                return;
+            }
+            el.innerHTML = data.backups.map(function(b) {
+                return '<div class="backup-item">' +
+                    '<div class="backup-info">' +
+                        '<div class="backup-icon"><i class="fas fa-file-zipper"></i></div>' +
+                        '<div>' +
+                            '<div class="backup-name">' + b.nombre + '</div>' +
+                            '<div class="backup-meta">' + b.fecha + ' — ' + (b.tamano || '—') + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="backup-actions">' +
+                        '<button class="btn-bk-download" onclick="descargarBackup(\'' + b.nombre + '\')"><i class="fas fa-download"></i> Descargar</button>' +
+                        '<button class="btn-bk-delete" onclick="eliminarBackup(\'' + b.nombre + '\')"><i class="fas fa-trash-can"></i></button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        } catch (e) {
+            el.innerHTML = '<div class="backup-error">Error al cargar respaldos</div>';
+        }
+    }
+    window.generarBackup = async function() {
+        const btn = document.getElementById('btnGenerarBackup');
+        const el = document.getElementById('backupList');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+        el.innerHTML = '<div class="backup-loading"><i class="fas fa-spinner"></i> Generando copia de seguridad, esto puede tomar varios minutos...</div>';
+        try {
+            const r = await fetch('/backups/generar', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
+            const data = await r.json();
+            if (data.estado === 'error') { throw new Error(data.mensaje); }
+            await cargarBackups();
+            if (typeof mostrarToast === 'function') mostrarToast(data.mensaje || 'Respaldo generado', 'success');
+        } catch (e) {
+            el.innerHTML = '<div class="backup-error">Error: ' + e.message + '</div>';
+            if (typeof mostrarToast === 'function') mostrarToast('Error al generar respaldo', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-hard-drive"></i> Generar Respaldo';
+        }
+    };
+    window.descargarBackup = function(nombre) {
+        window.open('/backups/' + encodeURIComponent(nombre) + '/descargar', '_blank');
+    };
+    window.eliminarBackup = async function(nombre) {
+        if (!confirm('Eliminar esta copia de seguridad?')) return;
+        try {
+            const r = await fetch('/backups/' + encodeURIComponent(nombre), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
+            const data = await r.json();
+            if (data.estado === 'error') { throw new Error(data.mensaje); }
+            await cargarBackups();
+            if (typeof mostrarToast === 'function') mostrarToast('Respaldo eliminado', 'success');
+        } catch (e) {
+            if (typeof mostrarToast === 'function') mostrarToast('Error al eliminar', 'error');
+        }
+    };
+    document.addEventListener('DOMContentLoaded', cargarBackups);
+    const obs = new MutationObserver(function(m) {
+        m.forEach(function(mm) {
+            if (mm.target.id === 'caja-negra' && mm.target.classList.contains('active')) cargarBackups();
+        });
+    });
+    var sec = document.getElementById('caja-negra');
+    if (sec) obs.observe(sec, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>
 
 <!-- Detail Modal -->
 <div class="modal-overlay" id="cnDetailModal">

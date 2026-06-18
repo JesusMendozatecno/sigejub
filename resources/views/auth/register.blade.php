@@ -1,3 +1,4 @@
+{{-- register.blade.php - Template de la página de registro de usuarios con validación en tiempo real y medidor de fortaleza de contraseña. --}}
 <!DOCTYPE html>
 <html>
 <head>

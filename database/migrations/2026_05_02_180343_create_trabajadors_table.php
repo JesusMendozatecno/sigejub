@@ -1,4 +1,5 @@
 <?php
+// Migración para crear la tabla trabajadores con datos personales, laborales y de clasificación.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

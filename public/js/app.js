@@ -1,12 +1,7 @@
-// ============================================
-// app.js — Punto de entrada principal del SIGEJUB
-// Ubicación: Global (layout principal)
-// Responsabilidades:
-//   - Inicialización básica de la aplicación
-//   - Punto de verificación de carga del frontend
-// Nota: Este es el archivo por defecto de Laravel.
-//       La lógica pesada está en dashboard.js y los módulos específicos.
-// ============================================
+/**
+ * app.js — Script principal del frontend.
+ * Gestiona peticiones AJAX, toast, y utilidades compartidas.
+ */
 
 document.addEventListener("DOMContentLoaded", () => {
     // Log de confirmación de que el bundle JS se cargó correctamente
