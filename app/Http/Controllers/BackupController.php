@@ -96,21 +96,33 @@ class BackupController extends Controller
 
     private function backupDatabase(string $destino): void
     {
-        $db = config('database.connections.mysql.database');
-        $user = config('database.connections.mysql.username');
-        $pass = config('database.connections.mysql.password');
-        $host = config('database.connections.mysql.host');
-        $port = config('database.connections.mysql.port');
-        $mysqldump = realpath('C:/xampp/mysql/bin/mysqldump.exe');
-        if (!$mysqldump) {
-            $mysqldump = 'mysqldump';
+        $conn = config('database.default');
+        $db = config("database.connections.{$conn}.database");
+        $user = config("database.connections.{$conn}.username");
+        $pass = config("database.connections.{$conn}.password");
+        $host = config("database.connections.{$conn}.host");
+        $port = config("database.connections.{$conn}.port");
+        $driver = config("database.connections.{$conn}.driver");
+
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            $bin = env('BACKUP_MYSQLDUMP_PATH') ?: 'mysqldump';
+            if ($bin !== 'mysqldump') {
+                $bin = realpath($bin) ?: 'mysqldump';
+            }
+            $cmd = "\"{$bin}\" --host={$host} --port={$port} --user={$user} --password={$pass} --routines --events --triggers --add-drop-table --databases {$db} 2>&1";
+        } elseif ($driver === 'pgsql') {
+            $bin = env('BACKUP_PGDUMP_PATH') ?: 'pg_dump';
+            $cmd = "\"{$bin}\" --host={$host} --port={$port} --username={$user} --dbname={$db} --format=plain 2>&1";
+            putenv("PGPASSWORD={$pass}");
+        } else {
+            throw new \RuntimeException("Driver {$driver} no soportado para respaldo CLI.");
         }
-        $cmd = "\"{$mysqldump}\" --host={$host} --port={$port} --user={$user} --password={$pass} --routines --events --triggers --add-drop-table --databases {$db} 2>&1";
+
         $output = [];
         $returnVar = 0;
         exec($cmd, $output, $returnVar);
         if ($returnVar !== 0) {
-            throw new \RuntimeException('mysqldump falló: ' . implode("\n", array_slice($output, 0, 20)));
+            throw new \RuntimeException("{$bin} falló: " . implode("\n", array_slice($output, 0, 20)));
         }
         file_put_contents($destino, implode("\n", $output));
         if (!file_exists($destino) || filesize($destino) < 10) {
