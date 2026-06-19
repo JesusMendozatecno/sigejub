@@ -2,10 +2,9 @@
 title SIGEJUB - Instalador
 cd /d "%~dp0"
 echo.
-echo  [94mSIGEJUB - Sistema Integral de Gesti[24m[94mn de Jubilaciones[0m
-echo  [90m------------------------------------------------[0m
+echo  SIGEJUB - Sistema Integral de Gestion de Jubilaciones
+echo  ----------------------------------------------------
 echo.
-echo  Usando instalador interactivo...
+echo  Ejecutando instalador grafico...
 echo.
-timeout /t 1 /nobreak >nul
-call install.bat %*
+start "" "%~dp0SIGEJUB-Installer.exe"

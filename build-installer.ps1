@@ -427,20 +427,29 @@ namespace SIGEJUB_Installer
                 try
                 {
                     string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    string appPath = Application.StartupPath;
+                    string batPath = Path.Combine(appPath, "iniciar.bat");
                     AppendLog("Creando acceso directo en: " + desktop, Color.Gray);
 
-                    // Metodo 1: .url file (fallback mas simple)
-                    string urlFile = Path.Combine(desktop, "SIGEJUB - Sistema.url");
-                    using (StreamWriter sw = new StreamWriter(urlFile, false, new UTF8Encoding(false)))
-                    {
-                        sw.WriteLine("[InternetShortcut]");
-                        sw.WriteLine("URL=http://localhost:" + selectedPort);
-                    }
-                    AppendLog("[OK] Acceso directo creado: " + urlFile, Color.Green);
+                    // Crear .lnk via PowerShell (WScript.Shell)
+                    string psCode = "$ws=New-Object -ComObject WScript.Shell;" +
+                        "$sc=$ws.CreateShortcut('" + desktop.Replace("'", "''") + "\\SIGEJUB.lnk');" +
+                        "$sc.TargetPath='" + batPath.Replace("'", "''") + "';" +
+                        "$sc.WorkingDirectory='" + appPath.Replace("'", "''") + "';" +
+                        "$sc.Description='SIGEJUB - Sistema de Gestion de Jubilaciones';" +
+                        "$sc.IconLocation='" + appPath.Replace("'", "''") +
+                            "\\public\\img\\imagen_2026-05-19_065531142.ico, 0';" +
+                        "$sc.Save()";
+                    Process.Start("powershell", "-Command \"" + psCode + "\"").WaitForExit();
+
+                    if (File.Exists(Path.Combine(desktop, "SIGEJUB.lnk")))
+                        AppendLog("[OK] Acceso directo: " + Path.Combine(desktop, "SIGEJUB.lnk"), Color.Green);
+                    else
+                        AppendLog("[AVISO] El acceso directo podria no haberse creado", Color.Orange);
                 }
                 catch (Exception ex)
                 {
-                    AppendLog("[AVISO] No se pudo crear acceso directo: " + ex.Message, Color.Orange);
+                    AppendLog("[AVISO] Acceso directo: " + ex.Message, Color.Orange);
                 }
             }
 
