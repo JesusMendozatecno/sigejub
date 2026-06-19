@@ -424,28 +424,23 @@ namespace SIGEJUB_Installer
             // Acceso directo
             if (chkShortcut.Checked)
             {
-                // Crear acceso directo via .url file (no requiere COM)
                 try
                 {
                     string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                    string urlFile = Path.Combine(desktop, "SIGEJUB.url");
-                    string appPath = Application.StartupPath;
-                    using (StreamWriter sw = new StreamWriter(urlFile, false, Encoding.UTF8))
+                    AppendLog("Creando acceso directo en: " + desktop, Color.Gray);
+
+                    // Metodo 1: .url file (fallback mas simple)
+                    string urlFile = Path.Combine(desktop, "SIGEJUB - Sistema.url");
+                    using (StreamWriter sw = new StreamWriter(urlFile, false, new UTF8Encoding(false)))
                     {
                         sw.WriteLine("[InternetShortcut]");
                         sw.WriteLine("URL=http://localhost:" + selectedPort);
-                        sw.WriteLine("WorkingDirectory=" + appPath);
-                        sw.WriteLine("IconIndex=0");
-                        string iconPath = Path.Combine(appPath, "public", "img",
-                            "imagen_2026-05-19_065531142.ico");
-                        if (File.Exists(iconPath))
-                            sw.WriteLine("IconFile=" + iconPath);
                     }
-                    AppendLog("[OK] Acceso directo en escritorio", Color.Green);
+                    AppendLog("[OK] Acceso directo creado: " + urlFile, Color.Green);
                 }
                 catch (Exception ex)
                 {
-                    AppendLog("[AVISO] Acceso directo: " + ex.Message, Color.Orange);
+                    AppendLog("[AVISO] No se pudo crear acceso directo: " + ex.Message, Color.Orange);
                 }
             }
 
