@@ -55,6 +55,7 @@ namespace SIGEJUB_Installer
         private ProgressBar progressBar;
         private Button btnInstall;
         private RichTextBox logBox;
+        private CheckBox chkShortcut;
         private bool installing = false;
 
         private string dbHost = "127.0.0.1";
@@ -141,7 +142,7 @@ namespace SIGEJUB_Installer
             btnConfig.Click += (s, e) => ShowConfig();
 
             // Checkbox acceso directo
-            var chkShortcut = new CheckBox
+            chkShortcut = new CheckBox
             {
                 Text = "Crear acceso directo en el escritorio",
                 Location = new Point(145, 338),
@@ -182,7 +183,6 @@ namespace SIGEJUB_Installer
             btnClose.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
             btnClose.Click += (s, e) => this.Close();
 
-            var chkRef = chkShortcut;
             this.Controls.AddRange(new Control[] {
                 lblLogo, lblSub, logBox, progressBar, lblStatus,
                 btnConfig, chkShortcut, btnInstall, btnClose
@@ -422,8 +422,7 @@ namespace SIGEJUB_Installer
             SetProgress(100);
 
             // Acceso directo
-            var chk = (CheckBox)this.Controls[7];
-            if (chk.Checked)
+            if (chkShortcut.Checked)
             {
                 // Crear acceso directo via .url file (no requiere COM)
                 try
@@ -536,9 +535,11 @@ $argList += $csFile
 Write-Host "Compilando..." -Foreground Yellow
 $p = Start-Process -FilePath $csc -ArgumentList $argList -NoNewWindow -Wait -PassThru
 
-# Fallback si Start-Process no maneja bien los espacios
-if ($p.ExitCode -ne 0 -and (Test-Path $outExe)) {
-    $p.ExitCode = 0
+# Si el .exe ya existe y no se pudo sobrescribir, reintentar
+if ($p.ExitCode -ne 0) {
+    Start-Sleep -Seconds 1
+    try { Remove-Item $outExe -Force -ErrorAction Stop } catch { }
+    $p = Start-Process -FilePath $csc -ArgumentList $argList -NoNewWindow -Wait -PassThru
 }
 
 if ($p.ExitCode -eq 0) {
