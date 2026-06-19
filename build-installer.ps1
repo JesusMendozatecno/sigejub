@@ -429,21 +429,27 @@ namespace SIGEJUB_Installer
                     string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     string appPath = Application.StartupPath;
                     string batPath = Path.Combine(appPath, "iniciar.bat");
+                    string lnkPath = Path.Combine(desktop, "SIGEJUB.lnk");
                     AppendLog("Creando acceso directo en: " + desktop, Color.Gray);
 
-                    // Crear .lnk via PowerShell (WScript.Shell)
-                    string psCode = "$ws=New-Object -ComObject WScript.Shell;" +
-                        "$sc=$ws.CreateShortcut('" + desktop.Replace("'", "''") + "\\SIGEJUB.lnk');" +
-                        "$sc.TargetPath='" + batPath.Replace("'", "''") + "';" +
-                        "$sc.WorkingDirectory='" + appPath.Replace("'", "''") + "';" +
-                        "$sc.Description='SIGEJUB - Sistema de Gestion de Jubilaciones';" +
-                        "$sc.IconLocation='" + appPath.Replace("'", "''") +
-                            "\\public\\img\\imagen_2026-05-19_065531142.ico, 0';" +
-                        "$sc.Save()";
-                    Process.Start("powershell", "-Command \"" + psCode + "\"").WaitForExit();
+                    // Escribir script VBS temporal que crea el .lnk
+                    string vbs = Path.GetTempFileName() + ".vbs";
+                    string ico = Path.Combine(appPath, "public", "img",
+                        "imagen_2026-05-19_065531142.ico") + ", 0";
+                    File.WriteAllText(vbs,
+                        "Set ws = CreateObject(\"WScript.Shell\")\n" +
+                        "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
+                        "sc.TargetPath = \"" + batPath + "\"\n" +
+                        "sc.WorkingDirectory = \"" + appPath + "\"\n" +
+                        "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
+                        "sc.IconLocation = \"" + ico + "\"\n" +
+                        "sc.Save()\n");
 
-                    if (File.Exists(Path.Combine(desktop, "SIGEJUB.lnk")))
-                        AppendLog("[OK] Acceso directo: " + Path.Combine(desktop, "SIGEJUB.lnk"), Color.Green);
+                    Process.Start("cscript", "//Nologo \"" + vbs + "\"").WaitForExit();
+                    try { File.Delete(vbs); } catch { }
+
+                    if (File.Exists(lnkPath))
+                        AppendLog("[OK] Acceso directo: " + lnkPath, Color.Green);
                     else
                         AppendLog("[AVISO] El acceso directo podria no haberse creado", Color.Orange);
                 }
