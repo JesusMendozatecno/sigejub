@@ -441,6 +441,7 @@ namespace SIGEJUB_Installer
                         "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
                         "sc.TargetPath = \"" + batPath + "\"\n" +
                         "sc.WorkingDirectory = \"" + appPath + "\"\n" +
+                        "sc.WindowStyle = 7\n" +
                         "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
                         "sc.IconLocation = \"" + ico + "\"\n" +
                         "sc.Save()\n");
