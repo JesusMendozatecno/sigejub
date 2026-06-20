@@ -586,6 +586,46 @@ function escaparHTML(str) {
         });
     }
 
+    // === 11. ENVÍO DEL FORMULARIO DE CREACIÓN ===
+    const formCreate = document.getElementById('formSolicitud');
+    if (formCreate) {
+        formCreate.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const btnSubmit = this.querySelector('.btn-submit');
+            if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Registrando...'; }
+            try {
+                mostrarCargando('Registrando solicitud...');
+                const resp = await fetch('/solicitudes', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw data;
+                mostrarToast(data.mensaje || 'Solicitud registrada exitosamente.', 'success');
+                cerrarModalSolicitud();
+                formCreate.reset();
+                document.getElementById('displayNombreCompleto').value = '';
+                document.getElementById('displayCedula').value = '';
+                cargarSolicitudes(currentStatus);
+                cargarMetricas();
+            } catch (err) {
+                if (err.errors) {
+                    mostrarToast(Object.values(err.errors).flat().join('\n'), 'error');
+                } else {
+                    mostrarToast(err.mensaje || err.message || 'Error en el sistema.', 'error');
+                }
+            } finally {
+                ocultarCargando();
+                if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Registrar Solicitud'; }
+            }
+        });
+    }
+
     // === EXPORTAR PDF ===
     window.exportarSolicitudesPDF = function() {
         const params = currentStatus !== 'all' ? `?estado=${currentStatus}` : '';

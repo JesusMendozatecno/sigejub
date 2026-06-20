@@ -201,7 +201,6 @@
 <script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
 <script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>
-<script defer src="{{ asset('js/secciones/solicitudes.js') }}?v={{ filemtime(public_path('js/secciones/solicitudes.js')) }}"></script>
 <script defer src="{{ asset('js/secciones/expedientes.js') }}?v={{ filemtime(public_path('js/secciones/expedientes.js')) }}"></script>
 <script defer src="{{ asset('js/secciones/inicio.js') }}?v={{ filemtime(public_path('js/secciones/inicio.js')) }}"></script>
 <script defer src="{{ asset('js/secciones/caja-negra.js') }}?v={{ filemtime(public_path('js/secciones/caja-negra.js')) }}"></script>
