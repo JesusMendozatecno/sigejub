@@ -201,9 +201,6 @@
 <script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
 <script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>
-<script defer src="{{ asset('js/secciones/expedientes.js') }}?v={{ filemtime(public_path('js/secciones/expedientes.js')) }}"></script>
-<script defer src="{{ asset('js/secciones/inicio.js') }}?v={{ filemtime(public_path('js/secciones/inicio.js')) }}"></script>
-<script defer src="{{ asset('js/secciones/caja-negra.js') }}?v={{ filemtime(public_path('js/secciones/caja-negra.js')) }}"></script>
 <script defer src="{{ asset('js/sesion2.js') }}?v={{ filemtime(public_path('js/sesion2.js')) }}"></script>
 
 @include('partials.toast')
