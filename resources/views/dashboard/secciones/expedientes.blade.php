@@ -481,6 +481,7 @@
                 if (!resp.ok) throw data;
                 mostrarToast(data.mensaje, 'success');
                 document.getElementById('modalCrearExpediente').style.display = 'none';
+                Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/expedientes')).forEach(k => localStorage.removeItem(k));
                 cargarExpedientes();
             } catch (err) {
                 mostrarToast(err.mensaje || err.message || 'Error al crear expediente', 'error');
@@ -638,6 +639,7 @@
             mutations.forEach(m => {
                 if (m.target.id === 'expedientes' && m.target.classList.contains('active')) {
                     if (!document.getElementById('expediente-detalle').classList.contains('hidden')) return;
+                    Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/expedientes')).forEach(k => localStorage.removeItem(k));
                     cargarExpedientes();
                 }
             });
