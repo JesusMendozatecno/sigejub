@@ -140,7 +140,6 @@
                 <li class="menu-item" data-target="nomina"><i class="fas fa-file-invoice-dollar" size="18"></i> Nómina</li>
                 <li class="menu-item" data-target="prestaciones"><i class="fas fa-wallet" size="18"></i> Prestaciones</li>
                 <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
-                <li class="menu-item" data-target="nomina"><i class="fas fa-file-invoice-dollar" size="18"></i> Nómina</li>
                 <li class="menu-item" data-target="diagramas"><i class="fas fa-diagram-project" size="18"></i> Diagramas</li>
                 @if(Auth::user()->rol === 'admin')
                 <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
@@ -182,10 +181,6 @@
                 @include('dashboard.secciones.reportes')
             </div>
 
-            <div id="nomina" class="content-section">
-                @include('dashboard.secciones.nomina')
-            </div>
-
             @if(Auth::user()->rol === 'admin')
     
             <div id="caja-negra" class="content-section">
@@ -206,6 +201,10 @@
 <script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
 <script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>
+<script defer src="{{ asset('js/secciones/solicitudes.js') }}?v={{ filemtime(public_path('js/secciones/solicitudes.js')) }}"></script>
+<script defer src="{{ asset('js/secciones/expedientes.js') }}?v={{ filemtime(public_path('js/secciones/expedientes.js')) }}"></script>
+<script defer src="{{ asset('js/secciones/inicio.js') }}?v={{ filemtime(public_path('js/secciones/inicio.js')) }}"></script>
+<script defer src="{{ asset('js/secciones/caja-negra.js') }}?v={{ filemtime(public_path('js/secciones/caja-negra.js')) }}"></script>
 <script defer src="{{ asset('js/sesion2.js') }}?v={{ filemtime(public_path('js/sesion2.js')) }}"></script>
 
 @include('partials.toast')
