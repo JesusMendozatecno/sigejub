@@ -570,6 +570,7 @@ function escaparHTML(str) {
 
                 mostrarToast(data.mensaje || 'Estatus actualizado correctamente.', 'success');
                 cerrarModalEditar();
+                Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/solicitudes')).forEach(k => localStorage.removeItem(k));
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
 
@@ -611,6 +612,7 @@ function escaparHTML(str) {
                 formCreate.reset();
                 document.getElementById('displayNombreCompleto').value = '';
                 document.getElementById('displayCedula').value = '';
+                Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/solicitudes')).forEach(k => localStorage.removeItem(k));
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
             } catch (err) {
@@ -635,6 +637,7 @@ function escaparHTML(str) {
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {
             if (m.target.id === 'solicitudes' && m.target.classList.contains('active')) {
+                Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/solicitudes')).forEach(k => localStorage.removeItem(k));
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
                 cargarSelectTrabajadores();
