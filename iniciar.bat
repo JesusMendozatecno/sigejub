@@ -6,13 +6,6 @@ set PORT=%APP_URL:http://localhost:=%
 if "%PORT%"=="" set PORT=8000
 set URL=http://localhost:%PORT%
 
-:: Si el puerto ya esta ocupado, abrir directo
-netstat -an 2>nul | findstr /C:":%PORT% " >nul 2>&1
-if not errorlevel 1 (
-    start "" "%URL%"
-    exit /b
-)
-
 :: Verificar PHP
 where php >nul 2>&1
 if errorlevel 1 (
@@ -22,8 +15,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Matar proceso anterior en el puerto (si existe)
+for /f "tokens=5" %%A in ('netstat -ano ^| findstr /C:":%PORT% "') do (
+    taskkill /f /pid %%A >nul 2>&1
+)
+timeout /t 1 /nobreak >nul
+
 :: Iniciar servidor oculto (sin ventanas visibles)
-echo Iniciando servidor SIGEJUB en segundo plano...
+echo Iniciando servidor SIGEJUB...
 powershell -WindowStyle Hidden -Command "Start-Process php -ArgumentList 'artisan serve --port=%PORT%' -WindowStyle Hidden"
 
 :: Esperar a que el puerto este escuchando (max 30s)
