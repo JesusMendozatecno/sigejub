@@ -70,7 +70,7 @@ class AuthController extends Controller
         'telefono' => 'required|string|max:20',
         'fecha_nacimiento' => 'required|date',
             'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
-            'rol' => 'required|in:analista,admin',
+            'rol' => 'required|in:usuario,admin,superadmin',
     ]);
 
     $user = User::create([

@@ -8,6 +8,7 @@
     <link rel="icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
     <link rel="shortcut icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/modern-theme.css') }}?v={{ filemtime(public_path('css/dashboard/modern-theme.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/cropperjs/cropper.min.css') }}">
@@ -42,8 +43,8 @@
                 <input type="file" id="avatarInput" hidden accept="image/*" onchange="onAvatarSelect(event)">
                 <h2 class="profile-name">{{ $user->nombre }}</h2>
                 <p class="profile-email">{{ $user->correo }}</p>
-                <span class="profile-role {{ $user->rol === 'admin' ? 'role-admin' : 'role-analista' }}">
-                    {{ $user->rol === 'admin' ? 'Administrador' : 'Analista' }}
+                <span class="profile-role {{ $user->rol === 'admin' ? 'role-admin' : ($user->rol === 'superadmin' ? 'role-admin' : 'role-analista') }}">
+                    {{ $user->rol === 'admin' ? 'Administrador' : ($user->rol === 'superadmin' ? 'Superadmin' : 'Usuario') }}
                 </span>
             </div>
             <div class="profile-nav">
@@ -59,7 +60,7 @@
                 <button class="profile-nav-item" data-tab="tab-actividad">
                     <i class="fas fa-wave-square"></i> Actividad
                 </button>
-                @if($user->rol === 'admin')
+                @if(in_array($user->rol, ['admin', 'superadmin']))
                 <div class="profile-nav-divider"></div>
                 <button class="profile-nav-item" data-tab="tab-admin">
                     <i class="fas fa-shield"></i> Administración
@@ -88,7 +89,7 @@
                 <form id="formProfile">
                     <div class="form-group">
                         <label>Rol</label>
-                        <input type="text" class="form-input" value="{{ $user->rol === 'admin' ? 'Administrador' : 'Analista' }}" disabled>
+                        <input type="text" class="form-input" value="{{ $user->rol === 'admin' ? 'Administrador' : ($user->rol === 'superadmin' ? 'Superadmin' : 'Usuario') }}" disabled>
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
@@ -183,6 +184,10 @@
                         <i class="fas fa-moon fa-fw"></i>
                         <span>Oscuro</span>
                     </div>
+                    <div class="theme-option {{ $user->tema === 'modern' ? 'selected' : '' }}" data-theme="modern" onclick="cambiarTema('modern')">
+                        <i class="fas fa-brush fa-fw"></i>
+                        <span>Moderno</span>
+                    </div>
                 </div>
 
                 <h4 style="font-size:0.9rem;color:#0f172a;margin:0 0 12px;">Idioma</h4>
@@ -246,8 +251,8 @@
                 </div>
             </div>
 
-            <!-- TAB: ADMINISTRACIÓN (solo admin) -->
-            @if($user->rol === 'admin')
+            <!-- TAB: ADMINISTRACIÓN (solo admin/superadmin) -->
+            @if(in_array($user->rol, ['admin', 'superadmin']))
             <div class="profile-tab" id="tab-admin">
                 <h2 class="tab-title">Administración</h2>
                 <p class="tab-subtitle">Gestión de usuarios y configuración global del sistema</p>
@@ -271,7 +276,8 @@
                         <select id="adminRoleFilter" class="form-input" style="width:auto;" onchange="cargarAdminUsuarios()">
                             <option value="">Todos los roles</option>
                             <option value="admin">Admin</option>
-                            <option value="analista">Analista</option>
+                            <option value="usuario">Usuario</option>
+                            <option value="superadmin">Superadmin</option>
                         </select>
                     </div>
                     <div style="overflow-x:auto;">
@@ -301,6 +307,7 @@
                             <select class="form-input" name="default_theme" style="max-width:200px;">
                                 <option value="light">Claro</option>
                                 <option value="dark">Oscuro</option>
+                                <option value="modern">Moderno</option>
                             </select>
                         </div>
                         <div class="toggle-wrap">

@@ -119,7 +119,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $request->validate([
-            'tema' => 'in:light,dark',
+            'tema' => 'in:light,dark,modern',
             'idioma' => 'in:es,en',
             'color_acento' => 'string|max:7',
         ]);
@@ -242,7 +242,7 @@ class UserController extends Controller
 
     public function adminUsers(Request $request)
     {
-        abort_unless(Auth::user()->rol === 'admin', 403);
+        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
         $rol = $request->get('rol', '');
         $search = $request->get('search', '');
         $query = User::query();
@@ -258,9 +258,9 @@ class UserController extends Controller
 
     public function adminUpdateUser(Request $request, $id)
     {
-        abort_unless(Auth::user()->rol === 'admin', 403);
+        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
         $user = User::findOrFail($id);
-        $request->validate(['rol' => 'required|in:analista,admin']);
+        $request->validate(['rol' => 'required|in:usuario,admin,superadmin']);
         $oldRol = $user->rol;
         $user->rol = $request->rol;
         $user->save();
@@ -270,7 +270,7 @@ class UserController extends Controller
 
     public function adminDeleteUser($id)
     {
-        abort_unless(Auth::user()->rol === 'admin', 403);
+        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
         if ((int)$id === (int)Auth::id()) {
             return response()->json(['mensaje' => 'No puedes eliminar tu propio usuario.'], 422);
         }
@@ -282,17 +282,17 @@ class UserController extends Controller
 
     public function adminActivity()
     {
-        abort_unless(Auth::user()->rol === 'admin', 403);
+        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
         $activities = Activity::with('user')->latest()->take(100)->get();
         return response()->json($activities);
     }
 
     public function adminGlobalConfig(Request $request)
     {
-        abort_unless(Auth::user()->rol === 'admin', 403);
+        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
         $request->validate([
             'app_name' => 'nullable|string|max:255',
-            'default_theme' => 'nullable|in:light,dark',
+            'default_theme' => 'nullable|in:light,dark,modern',
             'maintenance_mode' => 'nullable|boolean',
         ]);
 

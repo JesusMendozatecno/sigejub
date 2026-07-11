@@ -16,6 +16,7 @@ class Expediente extends Model
         'foto_carnet',
         'estado_global',
         'notas_admin',
+        'carta_aprobacion',
     ];
 
     public function trabajador(): BelongsTo

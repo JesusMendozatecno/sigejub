@@ -11,6 +11,7 @@ use App\Models\Activity;
 use App\Services\DashboardCache;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class TrabajadorController extends Controller
 {
@@ -56,6 +57,30 @@ class TrabajadorController extends Controller
         $trabajadores = $query->orderBy('apellidos', 'asc')
                               ->orderBy('nombres', 'asc')
                               ->paginate($request->get('per_page', 10));
+
+        return response()->json($trabajadores);
+    }
+
+    /**
+     * AUTOCOMPLETE para el buscador de trabajadores en solicitudes
+     * Muestra los últimos 10 registrados, o filtra por búsqueda
+     */
+    public function autocomplete(Request $request)
+    {
+        $query = Trabajador::query()->whereDoesntHave('solicitudes', function ($q) {
+            $q->whereIn('estado', ['pendiente', 'revision', 'aprobado']);
+        });
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where(DB::raw("CONCAT(nombres, ' ', apellidos)"), 'like', "%{$search}%")
+                  ->orWhere('cedula', 'like', "%{$search}%");
+            });
+        }
+
+        $trabajadores = $query->orderBy('created_at', 'desc')
+                              ->take(10)
+                              ->get(['id', 'nombres', 'apellidos', 'cedula']);
 
         return response()->json($trabajadores);
     }

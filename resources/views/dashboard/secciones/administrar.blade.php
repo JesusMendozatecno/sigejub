@@ -21,8 +21,9 @@
         <div class="filter-group-sm">
             <select id="filtroRol">
                 <option value="">Todos los roles</option>
-                <option value="analista">Analista</option>
+                <option value="usuario">Usuario</option>
                 <option value="admin">Admin</option>
+                <option value="superadmin">Superadmin</option>
             </select>
         </div>
     </div>
@@ -110,8 +111,9 @@
                     <div class="input-group">
                         <label>ROL DEL USUARIO</label>
                         <select name="rol" id="editUserRole" required>
-                            <option value="analista">Analista</option>
+                            <option value="usuario">Usuario</option>
                             <option value="admin">Admin</option>
+                            <option value="superadmin">Superadmin</option>
                         </select>
                     </div>
                 </section>
@@ -203,7 +205,7 @@
             }
 
             data.data.forEach(u => {
-                const rolClass = u.rol === 'admin' ? 'status-pill active' : 'status-pill retired';
+                const rolClass = u.rol === 'admin' || u.rol === 'superadmin' ? 'status-pill active' : 'status-pill retired';
                 const fecha = new Date(u.created_at + 'T12:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
                 const tr = document.createElement('tr');
                 tr.innerHTML = `

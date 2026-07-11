@@ -52,6 +52,8 @@ class ExpedienteController extends Controller
             'trabajador_id' => 'required|exists:trabajadores,id',
             'solicitud_id' => 'required|exists:solicitudes,id',
             'foto_carnet' => 'nullable|image|max:2048',
+            'documentos' => 'nullable|array',
+            'documentos.*' => 'file|mimes:pdf|max:5120',
         ]);
 
         if ($request->hasFile('foto_carnet')) {
@@ -114,7 +116,7 @@ class ExpedienteController extends Controller
 
         $validated = $request->validate([
             'nombre' => 'required|string',
-            'archivo' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'archivo' => 'required|file|mimes:pdf|max:5120',
         ]);
 
         $path = $request->file('archivo')->store('expedientes/documentos', 'public');
@@ -138,7 +140,7 @@ class ExpedienteController extends Controller
         $documento = \App\Models\Documento::findOrFail($id);
 
         $validated = $request->validate([
-            'archivo' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'archivo' => 'required|file|mimes:pdf|max:5120',
         ]);
 
         $path = $request->file('archivo')->store('expedientes/documentos', 'public');
@@ -153,6 +155,42 @@ class ExpedienteController extends Controller
         return response()->json([
             'estado' => 'success',
             'mensaje' => 'Documento reemplazado correctamente.',
+        ]);
+    }
+
+    public function listosParaAprobacion()
+    {
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403);
+
+        $expedientes = Expediente::with('trabajador', 'solicitud', 'documentos')
+            ->where('estado_global', 100)
+            ->whereNull('carta_aprobacion')
+            ->latest()
+            ->get();
+
+        return response()->json($expedientes);
+    }
+
+    public function subirCartaAprobacion(Request $request, $id)
+    {
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403);
+
+        $expediente = Expediente::findOrFail($id);
+
+        $request->validate([
+            'carta' => 'required|file|mimes:pdf|max:5120',
+        ]);
+
+        $path = $request->file('carta')->store('expedientes/cartas', 'public');
+        $expediente->update(['carta_aprobacion' => $path]);
+
+        $trabajador = $expediente->trabajador;
+        Activity::log('updated', 'expediente', $expediente->id,
+            "Se subió la carta de aprobación del consejo para {$trabajador->nombres} {$trabajador->apellidos}");
+
+        return response()->json([
+            'estado' => 'success',
+            'mensaje' => 'Carta de aprobación subida correctamente.',
         ]);
     }
 

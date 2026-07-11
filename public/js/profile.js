@@ -8,6 +8,9 @@ function inicializarPerfil() {
     if (window.SIGEJUB_PROFILE_THEME === 'dark') {
         document.body.classList.add('dark-mode');
     }
+    if (window.SIGEJUB_PROFILE_THEME === 'modern') {
+        document.body.classList.add('theme-modern');
+    }
     document.documentElement.style.setProperty('--accent', window.SIGEJUB_ACCENT_COLOR || '#1a365d');
     if (document.getElementById('tab-actividad')?.classList.contains('active')) cargarActividad();
 }
@@ -267,7 +270,9 @@ async function cerrarOtrasSesiones() {
 async function cambiarTema(tema) {
     document.querySelectorAll('.theme-option').forEach(function(el) { el.classList.remove('selected'); });
     document.querySelector('.theme-option[data-theme="' + tema + '"]')?.classList.add('selected');
-    document.body.classList.toggle('dark-mode', tema === 'dark');
+    document.body.classList.remove('dark-mode', 'theme-modern');
+    if (tema === 'dark') document.body.classList.add('dark-mode');
+    if (tema === 'modern') document.body.classList.add('theme-modern');
     try {
         await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ tema: tema }) });
     } catch (err) {}

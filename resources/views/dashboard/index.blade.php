@@ -12,6 +12,7 @@
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/modern-theme.css') }}?v={{ filemtime(public_path('css/dashboard/modern-theme.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <script defer src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -52,6 +53,7 @@
 (function(){
     var theme = '{{ auth()->user()->tema }}';
     if (theme === 'dark') document.body.classList.add('dark-mode');
+    if (theme === 'modern') document.body.classList.add('theme-modern');
     var saved = localStorage.getItem('sigejub_active_section');
     if (saved && saved !== 'inicio') {
         document.write('<style id="tmp-section-style">.content-section.active{display:none!important} #' + saved + '{display:block}</style>');
@@ -141,8 +143,9 @@
                 <li class="menu-item" data-target="prestaciones"><i class="fas fa-wallet" size="18"></i> Prestaciones</li>
                 <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
                 <li class="menu-item" data-target="diagramas"><i class="fas fa-diagram-project" size="18"></i> Diagramas</li>
-                @if(Auth::user()->rol === 'admin')
+                @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
                 <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
+                <li class="menu-item" data-target="aprobacion-consejo"><i class="fas fa-stamp" size="18"></i> Aprobación Consejo</li>
                 @endif
 
             </ul>
@@ -181,10 +184,14 @@
                 @include('dashboard.secciones.reportes')
             </div>
 
-            @if(Auth::user()->rol === 'admin')
+            @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
     
             <div id="caja-negra" class="content-section">
                 @include('dashboard.secciones.caja-negra')
+            </div>
+
+            <div id="aprobacion-consejo" class="content-section">
+                @include('dashboard.secciones.aprobacion-consejo')
             </div>
             @endif
 
@@ -222,6 +229,7 @@
         fetch('/trabajadores?per_page=1').catch(function(){}),
         fetch('/expedientes?per_page=1').catch(function(){}),
         fetch('/caja-negra?per_page=1').catch(function(){}),
+        fetch('/expedientes/listos-aprobacion').catch(function(){}),
         fetch('/solicitudes/por-mes').catch(function(){}),
         fetch('/solicitudes/vencimientos').catch(function(){}),
         fetch('/trabajadores-stats/dashboard').catch(function(){}),

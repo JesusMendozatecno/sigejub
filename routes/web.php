@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
 */
 // Rutas API JSON para AJAX (tabla del directorio)
 Route::get('/trabajadores', [TrabajadorController::class, 'index'])->name('trabajadores.index');
+Route::get('/trabajadores/autocomplete', [TrabajadorController::class, 'autocomplete'])->name('trabajadores.autocomplete');
 Route::get('/trabajadores/{id}', [TrabajadorController::class, 'show'])->name('trabajadores.show');
 Route::put('/trabajadores/{id}', [TrabajadorController::class, 'update'])->name('trabajadores.update');
 Route::delete('/trabajadores/{id}', [TrabajadorController::class, 'destroy'])->name('trabajadores.destroy');
@@ -186,10 +187,12 @@ Route::get('/prestaciones/{id}', [PrestacionesController::class, 'show']);
 Route::post('/prestaciones', [PrestacionesController::class, 'store']);
 
 Route::get('/expedientes', [ExpedienteController::class, 'index']);
+Route::get('/expedientes/listos-aprobacion', [ExpedienteController::class, 'listosParaAprobacion']);
 Route::get('/expedientes/buscar-trabajador', [ExpedienteController::class, 'buscarTrabajador']);
 Route::post('/expedientes', [ExpedienteController::class, 'store']);
 Route::get('/expedientes/{id}', [ExpedienteController::class, 'show']);
 Route::put('/expedientes/{id}/notas', [ExpedienteController::class, 'updateNotas']);
+Route::post('/expedientes/{id}/carta-aprobacion', [ExpedienteController::class, 'subirCartaAprobacion']);
 Route::post('/expedientes/{id}/documentos', [ExpedienteController::class, 'subirDocumento']);
 Route::put('/documentos/{id}/estado', [ExpedienteController::class, 'updateDocumentoStatus']);
 Route::post('/documentos/{id}/reemplazar', [ExpedienteController::class, 'reemplazarDocumento']);
