@@ -1,4 +1,8 @@
 {{-- expedientes.blade.php - Sección de expedientes digitales: listado con búsqueda, detalle con documentos, subida/aprobación/rechazo y notas de administrador. --}}
+<style>
+.carta-indicator { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; transition: background .2s; }
+.carta-indicator:hover { background: #e2e8f0; }
+</style>
 <div id="expedientes-lista">
     <header class="section-header">
         <div class="header-info">
@@ -45,6 +49,9 @@
                 <div class="progress-track-mini">
                     <div class="progress-fill-mini" id="progressFillMini" style="width: 0%;"></div>
                 </div>
+            </div>
+            <div class="carta-indicator" id="cartaIndicator" title="Carta de aprobación del consejo" style="cursor:pointer;">
+                <i class="fas fa-scroll" id="cartaIcon" style="font-size:1.3rem;color:#475569;"></i>
             </div>
         </div>
     </div>
@@ -97,21 +104,6 @@
             <div class="documentos-list" id="documentosList">
                 <p class="empty-state" style="padding: 30px;">No hay documentos cargados.</p>
             </div>
-
-            @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
-            <div class="carta-aprobacion-card" id="cartaAprobacionCard" style="display:none;">
-                <h4><i class="fas fa-stamp" size="16"></i> Aprobación de Consejo</h4>
-                <div id="cartaAprobacionInfo"></div>
-                <div id="cartaAprobacionUpload">
-                    <p style="color:#64748b;font-size:0.85rem;">El expediente está completo. Suba la carta de aprobación del consejo.</p>
-                    <form id="formCartaAprobacion">
-                        @csrf
-                        <input type="file" name="carta" accept=".pdf" required>
-                        <button type="submit" class="btn-submit" style="margin-top:8px;">Subir Carta de Aprobación</button>
-                    </form>
-                </div>
-            </div>
-            @endif
 
             <div class="historial-card">
                 <h4><i class="fas fa-wave-square" size="16"></i> Actividad del Expediente</h4>
@@ -212,6 +204,25 @@
             <div class="modal-actions" style="justify-content:center;">
                 <button type="button" class="btn-cancel" id="btnCancelarSubirDoc">Cancelar</button>
                 <button type="submit" class="btn-submit">Subir</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para subir/modificar carta de aprobación -->
+<div id="modalCartaAprobacion" class="modal-overlay">
+    <div class="modal-delete-box" style="text-align:left;max-width:500px;">
+        <h3 style="text-align:center;"><i class="fas fa-scroll"></i> Carta de Aprobación</h3>
+        <p id="cartaModalInfo" style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:12px;"></p>
+        <form id="formCartaAprobacion">
+            @csrf
+            <div class="input-group">
+                <label>ARCHIVO (PDF)</label>
+                <input type="file" name="carta" accept=".pdf" required>
+            </div>
+            <div class="modal-actions" style="justify-content:center;">
+                <button type="button" class="btn-cancel" id="btnCancelarCarta">Cancelar</button>
+                <button type="submit" class="btn-submit">Subir Carta</button>
             </div>
         </form>
     </div>
@@ -366,25 +377,29 @@
     }
 
     function renderCartaAprobacion(exp) {
-        const card = document.getElementById('cartaAprobacionCard');
-        if (!card) return;
+        const indicator = document.getElementById('cartaIndicator');
+        if (!indicator) return;
 
-        const info = document.getElementById('cartaAprobacionInfo');
-        const upload = document.getElementById('cartaAprobacionUpload');
+        const icon = document.getElementById('cartaIcon');
+        const tieneCarta = !!exp.carta_aprobacion;
 
         if (exp.estado_global < 100) {
-            card.style.display = 'none';
+            indicator.style.display = 'none';
             return;
         }
 
-        card.style.display = 'block';
+        indicator.style.display = 'inline-flex';
+        const userRol = '{{ Auth::user()->rol }}';
+        indicator.title = tieneCarta
+            ? (userRol === 'superadmin' ? 'Gestionar carta de aprobación' : 'Ver carta de aprobación')
+            : 'Sin carta de aprobación';
 
-        if (exp.carta_aprobacion) {
-            info.innerHTML = `<p style="color:#16a34a;"><i class="fas fa-check-circle"></i> Carta de aprobación subida. <a href="/storage/${exp.carta_aprobacion}" target="_blank" style="color:#2563eb;">Ver documento</a></p>`;
-            upload.style.display = 'none';
+        if (tieneCarta) {
+            icon.style.color = '#16a34a';
+            icon.className = 'fas fa-check-circle';
         } else {
-            info.innerHTML = '';
-            upload.style.display = 'block';
+            icon.style.color = '#475569';
+            icon.className = 'fas fa-scroll';
         }
     }
 
@@ -693,12 +708,34 @@
             }
         });
 
-        // Carta de aprobación (superadmin)
+        // Carta de aprobación: click en indicador
+        const CURRENT_USER_ROL = '{{ Auth::user()->rol }}';
+        document.getElementById('cartaIndicator')?.addEventListener('click', async function() {
+            if (!expedienteActualId) return;
+            try {
+                const resp = await fetch(`/expedientes/${expedienteActualId}`);
+                const exp = await resp.json();
+                if (CURRENT_USER_ROL === 'superadmin') {
+                    const info = document.getElementById('cartaModalInfo');
+                    info.textContent = exp.carta_aprobacion ? 'Ya existe una carta. Puede reemplazarla subiendo un nuevo archivo.' : 'Suba la carta de aprobación del consejo.';
+                    document.getElementById('modalCartaAprobacion').style.display = 'flex';
+                } else if (exp.carta_aprobacion) {
+                    window.open(`/storage/${exp.carta_aprobacion}`, '_blank');
+                } else {
+                    mostrarToast('El expediente no tiene carta de aprobación aún.', 'info');
+                }
+            } catch (err) {
+                mostrarToast('Error al consultar expediente', 'error');
+            }
+        });
+
+        // Carta de aprobación: submit del formulario (superadmin)
         document.getElementById('formCartaAprobacion')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!expedienteActualId) return;
             const formData = new FormData(e.target);
             const btn = e.target.querySelector('.btn-submit');
+            const origText = btn.textContent;
             btn.disabled = true; btn.textContent = 'Subiendo...';
             try {
                 mostrarCargando('Subiendo carta de aprobación...');
@@ -711,13 +748,22 @@
                 const data = await resp.json();
                 if (!resp.ok) throw data;
                 mostrarToast(data.mensaje, 'success');
+                document.getElementById('modalCartaAprobacion').style.display = 'none';
+                e.target.reset();
                 abrirDetalle(expedienteActualId);
             } catch (err) {
                 mostrarToast(err.mensaje || err.message || 'Error al subir carta', 'error');
             } finally {
                 ocultarCargando();
-                btn.disabled = false; btn.textContent = 'Subir Carta de Aprobación';
+                btn.disabled = false; btn.textContent = origText;
             }
+        });
+
+        // Cerrar modal carta
+        const cerrarCarta = () => document.getElementById('modalCartaAprobacion').style.display = 'none';
+        document.getElementById('btnCancelarCarta')?.addEventListener('click', cerrarCarta);
+        document.getElementById('modalCartaAprobacion')?.addEventListener('click', function(e) {
+            if (e.target === this) cerrarCarta();
         });
 
         // Observador para recargar al cambiar de pestaña

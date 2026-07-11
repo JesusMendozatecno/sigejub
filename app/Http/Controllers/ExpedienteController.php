@@ -173,7 +173,7 @@ class ExpedienteController extends Controller
 
     public function subirCartaAprobacion(Request $request, $id)
     {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403);
+        abort_unless(auth()->user()?->rol === 'superadmin', 403);
 
         $expediente = Expediente::findOrFail($id);
 

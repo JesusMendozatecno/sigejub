@@ -39,11 +39,30 @@
                 <input type="text" name="correo" id="loginEmail" required>
             </div>
 
-            <!-- Campo contraseña -->
-            <div class="input-group">
+            <!-- Campo contraseña con ojo toggle -->
+            <div class="input-group" style="position:relative;">
                 <label>Contraseña</label>
-                <input type="password" name="password" id="loginPassword" required>
+                <input type="password" name="password" id="loginPassword" required style="padding-right:40px;">
+                <button type="button" id="togglePassword" style="position:absolute;right:10px;bottom:10px;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.1rem;padding:4px;">
+                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                </button>
             </div>
+
+            <script>
+            document.getElementById('togglePassword')?.addEventListener('click', function() {
+                var input = document.getElementById('loginPassword');
+                var icon = document.getElementById('togglePasswordIcon');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+            </script>
 
             <!-- Botón de acceso -->
             <button class="btn" id="loginBtn" type="submit">Entrar</button>

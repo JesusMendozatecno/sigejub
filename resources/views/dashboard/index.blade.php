@@ -145,7 +145,6 @@
                 <li class="menu-item" data-target="diagramas"><i class="fas fa-diagram-project" size="18"></i> Diagramas</li>
                 @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
                 <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
-                <li class="menu-item" data-target="aprobacion-consejo"><i class="fas fa-stamp" size="18"></i> Aprobación Consejo</li>
                 @endif
 
             </ul>
@@ -188,10 +187,6 @@
     
             <div id="caja-negra" class="content-section">
                 @include('dashboard.secciones.caja-negra')
-            </div>
-
-            <div id="aprobacion-consejo" class="content-section">
-                @include('dashboard.secciones.aprobacion-consejo')
             </div>
             @endif
 
