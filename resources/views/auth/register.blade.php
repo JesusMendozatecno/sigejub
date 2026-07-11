@@ -101,8 +101,9 @@
                 <label>ROL DEL USUARIO</label>
                 <select name="rol" required>
                     <option value="" disabled selected>Seleccione un rol...</option>
-                    <option value="analista">Analista</option>
+                    <option value="usuario">Usuario</option>
                     <option value="admin">Admin</option>
+                    <option value="superadmin">Superadmin</option>
                 </select>
             </div>
 

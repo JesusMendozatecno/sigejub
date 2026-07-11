@@ -98,6 +98,21 @@
                 <p class="empty-state" style="padding: 30px;">No hay documentos cargados.</p>
             </div>
 
+            @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
+            <div class="carta-aprobacion-card" id="cartaAprobacionCard" style="display:none;">
+                <h4><i class="fas fa-stamp" size="16"></i> Aprobación de Consejo</h4>
+                <div id="cartaAprobacionInfo"></div>
+                <div id="cartaAprobacionUpload">
+                    <p style="color:#64748b;font-size:0.85rem;">El expediente está completo. Suba la carta de aprobación del consejo.</p>
+                    <form id="formCartaAprobacion">
+                        @csrf
+                        <input type="file" name="carta" accept=".pdf" required>
+                        <button type="submit" class="btn-submit" style="margin-top:8px;">Subir Carta de Aprobación</button>
+                    </form>
+                </div>
+            </div>
+            @endif
+
             <div class="historial-card">
                 <h4><i class="fas fa-wave-square" size="16"></i> Actividad del Expediente</h4>
                 <div id="expedienteActividad">
@@ -154,11 +169,11 @@
                 <section class="form-section">
                     <h3><i class="fas fa-upload"></i> Documentos</h3>
                     <p style="font-size:0.85rem;color:#64748b;margin-bottom:15px;">Seleccione los archivos PDF o imágenes para adjuntar al expediente.</p>
-                    <input type="file" name="documentos[]" id="inputDocumentos" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden">
+                    <input type="file" name="documentos[]" id="inputDocumentos" multiple accept=".pdf" class="hidden">
                     <div class="dropzone-docs" id="dropzoneDocs">
                         <i class="fas fa-cloud-arrow-up" size="36"></i>
                         <p>Arrastre los archivos aquí o haga clic para seleccionar</p>
-                        <span>PDF, DOC, JPG hasta 5MB</span>
+                        <span>Solo PDF hasta 5MB</span>
                     </div>
                     <ul class="file-preview-list" id="filePreviewList"></ul>
                 </section>
@@ -192,7 +207,7 @@
             </div>
             <div class="input-group">
                 <label>ARCHIVO</label>
-                <input type="file" name="archivo" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                <input type="file" name="archivo" required accept=".pdf">
             </div>
             <div class="modal-actions" style="justify-content:center;">
                 <button type="button" class="btn-cancel" id="btnCancelarSubirDoc">Cancelar</button>
@@ -294,6 +309,7 @@
 
             actualizarProgresoGlobal(exp.estado_global || 0);
             renderDocumentos(exp.documentos || []);
+            renderCartaAprobacion(exp);
             cargarActividadExpediente();
         } catch (err) {
             console.error('Error al abrir detalle:', err);
@@ -347,6 +363,29 @@
             `;
             container.appendChild(div);
         });
+    }
+
+    function renderCartaAprobacion(exp) {
+        const card = document.getElementById('cartaAprobacionCard');
+        if (!card) return;
+
+        const info = document.getElementById('cartaAprobacionInfo');
+        const upload = document.getElementById('cartaAprobacionUpload');
+
+        if (exp.estado_global < 100) {
+            card.style.display = 'none';
+            return;
+        }
+
+        card.style.display = 'block';
+
+        if (exp.carta_aprobacion) {
+            info.innerHTML = `<p style="color:#16a34a;"><i class="fas fa-check-circle"></i> Carta de aprobación subida. <a href="/storage/${exp.carta_aprobacion}" target="_blank" style="color:#2563eb;">Ver documento</a></p>`;
+            upload.style.display = 'none';
+        } else {
+            info.innerHTML = '';
+            upload.style.display = 'block';
+        }
     }
 
     function cargarActividadExpediente() {
@@ -448,16 +487,36 @@
         dropzone?.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            const noPdf = files.some(f => f.type !== 'application/pdf');
+            if (noPdf) {
+                mostrarToast('Solo se permiten archivos PDF.', 'error');
+                return;
+            }
             inputDocs.files = e.dataTransfer.files;
             inputDocs.dispatchEvent(new Event('change'));
         });
         inputDocs?.addEventListener('change', () => {
             fileList.innerHTML = '';
+            let hayError = false;
             Array.from(inputDocs.files).forEach(f => {
+                if (f.type !== 'application/pdf') {
+                    hayError = true;
+                    const li = document.createElement('li');
+                    li.style.color = '#dc2626';
+                    li.innerHTML = `<i class="fas fa-circle-exclamation"></i> ${f.name} <span>(no es PDF)</span>`;
+                    fileList.appendChild(li);
+                    return;
+                }
                 const li = document.createElement('li');
-                li.innerHTML = `<i class="fas fa-file"></i> ${f.name} <span>(${(f.size/1024).toFixed(1)} KB)</span>`;
+                li.innerHTML = `<i class="fas fa-file-pdf"></i> ${f.name} <span>(${(f.size/1024).toFixed(1)} KB)</span>`;
                 fileList.appendChild(li);
             });
+            if (hayError) {
+                mostrarToast('Solo se permiten archivos PDF.', 'error');
+                inputDocs.value = '';
+                fileList.innerHTML = '';
+            }
         });
 
         // Submit crear expediente
@@ -606,7 +665,7 @@
                 const id = btnReupload.dataset.id;
                 const input = document.createElement('input');
                 input.type = 'file';
-                input.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
+                input.accept = '.pdf';
                 input.onchange = async () => {
                     const file = input.files[0];
                     if (!file) return;
@@ -631,6 +690,33 @@
                     }
                 };
                 input.click();
+            }
+        });
+
+        // Carta de aprobación (superadmin)
+        document.getElementById('formCartaAprobacion')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!expedienteActualId) return;
+            const formData = new FormData(e.target);
+            const btn = e.target.querySelector('.btn-submit');
+            btn.disabled = true; btn.textContent = 'Subiendo...';
+            try {
+                mostrarCargando('Subiendo carta de aprobación...');
+                const resp = await fetch(`/expedientes/${expedienteActualId}/carta-aprobacion`, {
+                    method: 'POST', body: formData,
+                    headers: { 'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw data;
+                mostrarToast(data.mensaje, 'success');
+                abrirDetalle(expedienteActualId);
+            } catch (err) {
+                mostrarToast(err.mensaje || err.message || 'Error al subir carta', 'error');
+            } finally {
+                ocultarCargando();
+                btn.disabled = false; btn.textContent = 'Subir Carta de Aprobación';
             }
         });
 

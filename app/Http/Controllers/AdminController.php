@@ -17,7 +17,7 @@ class AdminController extends Controller
 {
     public function usuarios(Request $request)
     {
-        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $rol = $request->get('rol', '');
         $search = $request->get('search', '');
 
@@ -41,18 +41,18 @@ class AdminController extends Controller
 
     public function showUsuario($id)
     {
-        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $user = User::findOrFail($id);
         return response()->json($user);
     }
 
     public function updateUsuario(Request $request, $id)
     {
-        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $user = User::findOrFail($id);
 
         $request->validate([
-            'rol' => 'required|in:analista,admin',
+            'rol' => 'required|in:usuario,admin,superadmin',
         ]);
 
         $oldRol = $user->rol;
@@ -68,7 +68,7 @@ class AdminController extends Controller
 
     public function actividades(Request $request)
     {
-        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $tipo = $request->get('tipo', '');
         $days = $request->get('days', 7);
 
@@ -89,7 +89,7 @@ class AdminController extends Controller
 
     public function actividadResumen(Request $request)
     {
-        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $days = $request->get('days', 7);
         $tipo = $request->get('tipo', '');
         $since = now()->subDays($days);
@@ -110,7 +110,7 @@ class AdminController extends Controller
 
     public function enviarNotificacion(Request $request)
     {
-        abort_unless(auth()->user()?->rol === 'admin', 403, 'Acceso no autorizado');
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'titulo' => 'required|string|max:255',

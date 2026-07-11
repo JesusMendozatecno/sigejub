@@ -13,7 +13,7 @@ class CajaNegraController extends Controller
 {
     private function verifyAdmin(): void
     {
-        if (auth()->user()?->rol !== 'admin') {
+        if (!in_array(auth()->user()?->rol, ['admin', 'superadmin'])) {
             abort(403, 'Acceso no autorizado');
         }
     }

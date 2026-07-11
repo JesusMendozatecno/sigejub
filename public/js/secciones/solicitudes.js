@@ -6,76 +6,132 @@
 (function() {
     let currentStatus = 'all';
 
-    /* === 1. Cargar trabajadores en el selector desplegable === */
-    async function cargarSelectTrabajadores() {
-        const select = document.getElementById('selectTrabajador');
-        if (!select) return;
+    /* === 1. AUTOCOMPLETE DE TRABAJADORES === */
+    let autocompleteIndex = -1;
+    let trabajadoresCache = [];
+
+    async function cargarAutocomplete(search = '') {
+        const url = search
+            ? `/trabajadores/autocomplete?search=${encodeURIComponent(search)}`
+            : '/trabajadores/autocomplete';
         try {
-            const resp = await fetch('/trabajadores?sin_solicitud_activa=1&per_page=1000');
-            const data = await resp.json();
-            select.innerHTML = '<option value="">Seleccione un trabajador...</option>';
-            (data.data || []).forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = `${t.nombres} ${t.apellidos} — ${t.cedula}`;
-                opt.dataset.nombres = t.nombres;
-                opt.dataset.apellidos = t.apellidos;
-                opt.dataset.cedula = t.cedula;
-                select.appendChild(opt);
-            });
+            const resp = await fetch(url);
+            return await resp.json();
         } catch (err) {
-            console.error('Error al cargar trabajadores:', err);
+            console.error('Error en autocomplete:', err);
+            return [];
         }
     }
 
-    /* === 2.. Buscar trabajador por cédula al escribir === */
-    let timeoutCedula = null;
+    function mostrarAutocomplete(resultados) {
+        const lista = document.getElementById('autocompleteList');
+        if (!lista) return;
+        trabajadoresCache = resultados;
+        autocompleteIndex = -1;
+
+        if (!resultados || resultados.length === 0) {
+            lista.innerHTML = '<div class="autocomplete-empty">Sin resultados</div>';
+            lista.style.display = 'block';
+            return;
+        }
+
+        lista.innerHTML = resultados.map((t, i) =>
+            `<div class="autocomplete-item" data-index="${i}" data-id="${t.id}">
+                <span class="auto-name">${t.nombres} ${t.apellidos}</span>
+                <span class="auto-cedula">${t.cedula}</span>
+            </div>`
+        ).join('');
+        lista.style.display = 'block';
+    }
+
+    function seleccionarTrabajador(trabajador) {
+        document.getElementById('hiddenTrabajadorId').value = trabajador.id;
+        document.getElementById('displayNombreCompleto').value = `${trabajador.nombres} ${trabajador.apellidos}`;
+        document.getElementById('displayCedula').value = trabajador.cedula;
+        document.getElementById('inputBusquedaTrabajador').value = `${trabajador.nombres} ${trabajador.apellidos}`;
+        document.getElementById('autocompleteList').style.display = 'none';
+    }
+
+    function limpiarSeleccion() {
+        document.getElementById('hiddenTrabajadorId').value = '';
+        document.getElementById('displayNombreCompleto').value = '';
+        document.getElementById('displayCedula').value = '';
+    }
+
+    /* === Input: buscar mientras escribe === */
+    let timeoutBusqueda = null;
     document.addEventListener('input', function(e) {
-        if (e.target.id !== 'displayCedula') return;
-        clearTimeout(timeoutCedula);
+        if (e.target.id !== 'inputBusquedaTrabajador') return;
+        clearTimeout(timeoutBusqueda);
 
-        const cedula = e.target.value.trim();
-        if (cedula.length < 3) return;
+        const hiddenId = document.getElementById('hiddenTrabajadorId').value;
+        const nombreActual = document.getElementById('displayNombreCompleto').value;
+        if (hiddenId && e.target.value !== nombreActual) {
+            limpiarSeleccion();
+        }
 
-        timeoutCedula = setTimeout(async () => {
-            try {
-                const resp = await fetch(`/trabajadores?search=${encodeURIComponent(cedula)}&per_page=1`);
-                const data = await resp.json();
-                if (!data.data || data.data.length === 0) return;
+        const val = e.target.value.trim();
+        if (val.length === 0) {
+            timeoutBusqueda = setTimeout(async () => {
+                const r = await cargarAutocomplete();
+                mostrarAutocomplete(r);
+            }, 200);
+            return;
+        }
+        if (val.length < 2) return;
 
-                const t = data.data[0];
-                if (!t.cedula.toLowerCase().includes(cedula.toLowerCase())) return;
-
-                const select = document.getElementById('selectTrabajador');
-                const nombreInput = document.getElementById('displayNombreCompleto');
-
-                Array.from(select.options).forEach(opt => {
-                    if (opt.value == t.id) opt.selected = true;
-                });
-
-                nombreInput.value = (t.nombres || '') + ' ' + (t.apellidos || '');
-                e.target.value = t.cedula;
-            } catch (err) {
-                console.error('Error al buscar cédula:', err);
-            }
-        }, 400);
+        timeoutBusqueda = setTimeout(async () => {
+            const r = await cargarAutocomplete(val);
+            mostrarAutocomplete(r);
+        }, 300);
     });
 
-    /* === 3. Mostrar datos del trabajador al seleccionar del dropdown === */
-    document.addEventListener('change', function(e) {
-        if (e.target.id === 'selectTrabajador') {
-            const selected = e.target.selectedOptions[0];
-            const nombreInput = document.getElementById('displayNombreCompleto');
-            const cedulaInput = document.getElementById('displayCedula');
-            const busquedaInput = document.getElementById('inputBusquedaTrabajador');
-            if (selected && selected.value) {
-                nombreInput.value = (selected.dataset.nombres || '') + ' ' + (selected.dataset.apellidos || '');
-                cedulaInput.value = selected.dataset.cedula || '';
-                if (busquedaInput) busquedaInput.value = '';
-            } else {
-                nombreInput.value = '';
-                cedulaInput.value = '';
+    /* === Click en un item del autocomplete === */
+    document.addEventListener('click', function(e) {
+        const item = e.target.closest('.autocomplete-item');
+        if (!item) return;
+        const idx = parseInt(item.dataset.index);
+        const t = trabajadoresCache[idx];
+        if (t) seleccionarTrabajador(t);
+    });
+
+    /* === Navegación por teclado === */
+    document.addEventListener('keydown', function(e) {
+        if (e.target.id !== 'inputBusquedaTrabajador') return;
+        const lista = document.getElementById('autocompleteList');
+        if (!lista || lista.style.display !== 'block') return;
+
+        const items = lista.querySelectorAll('.autocomplete-item');
+        if (items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (autocompleteIndex < items.length - 1) autocompleteIndex++;
+            items.forEach((el, i) => el.classList.toggle('highlighted', i === autocompleteIndex));
+            if (autocompleteIndex >= 0) items[autocompleteIndex].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (autocompleteIndex > 0) autocompleteIndex--;
+            items.forEach((el, i) => el.classList.toggle('highlighted', i === autocompleteIndex));
+            if (autocompleteIndex >= 0) items[autocompleteIndex].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+            if (autocompleteIndex >= 0 && autocompleteIndex < items.length) {
+                e.preventDefault();
+                const t = trabajadoresCache[autocompleteIndex];
+                if (t) seleccionarTrabajador(t);
             }
+        } else if (e.key === 'Escape') {
+            lista.style.display = 'none';
+        }
+    });
+
+    /* === Cerrar autocomplete al hacer clic fuera === */
+    document.addEventListener('click', function(e) {
+        const input = document.getElementById('inputBusquedaTrabajador');
+        const lista = document.getElementById('autocompleteList');
+        if (!input || !lista) return;
+        if (!input.contains(e.target) && !lista.contains(e.target)) {
+            lista.style.display = 'none';
         }
     });
 
@@ -169,14 +225,23 @@
     });
 
     /* === 7. Modal de nueva solicitud === */
-    window.abrirModalSolicitud = function() {
+    window.abrirModalSolicitud = async function() {
         const modal = document.getElementById('modalSolicitud');
         if (modal) modal.style.display = 'flex';
+        const input = document.getElementById('inputBusquedaTrabajador');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        limpiarSeleccion();
+        const r = await cargarAutocomplete();
+        mostrarAutocomplete(r);
     };
 
     function cerrarModalSolicitud() {
         const modal = document.getElementById('modalSolicitud');
         if (modal) modal.style.display = 'none';
+        document.getElementById('autocompleteList').style.display = 'none';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -339,6 +404,12 @@
             if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Registrando...'; }
 
             try {
+                const hiddenId = document.getElementById('hiddenTrabajadorId').value;
+                if (!hiddenId) {
+                    mostrarToast('Debe seleccionar un trabajador de la lista.', 'error');
+                    if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Registrar Solicitud'; }
+                    return;
+                }
                 mostrarCargando('Registrando solicitud...');
                 const resp = await fetch('/solicitudes', {
                     method: 'POST',
@@ -356,6 +427,8 @@
                 form.reset();
                 document.getElementById('displayNombreCompleto').value = '';
                 document.getElementById('displayCedula').value = '';
+                document.getElementById('hiddenTrabajadorId').value = '';
+                document.getElementById('inputBusquedaTrabajador').value = '';
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
 
@@ -384,7 +457,6 @@
             if (m.target.id === 'solicitudes' && m.target.classList.contains('active')) {
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();
-                cargarSelectTrabajadores();
             }
         });
     });

@@ -40,6 +40,9 @@ function inicializarDashboard() {
     if (window.SIGEJUB_THEME === 'dark') {
         document.body.classList.add('dark-mode');
     }
+    if (window.SIGEJUB_THEME === 'modern') {
+        document.body.classList.add('theme-modern');
+    }
 
     // Notification counter
     cargarContadorNoLeidas();
@@ -156,7 +159,9 @@ window.addEventListener('click', function(e) {
 
 // === GLOBAL THEME CONFIG ===
 window.cambiarTema = async function(tema) {
-    document.body.classList.toggle('dark-mode', tema === 'dark');
+    document.body.classList.remove('dark-mode', 'theme-modern');
+    if (tema === 'dark') document.body.classList.add('dark-mode');
+    if (tema === 'modern') document.body.classList.add('theme-modern');
     var meta = document.querySelector('meta[name="csrf-token"]');
     var token = meta?.content;
     try {

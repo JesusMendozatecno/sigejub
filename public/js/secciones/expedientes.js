@@ -410,7 +410,7 @@
                 const id = btnReupload.dataset.id;
                 const input = document.createElement('input');
                 input.type = 'file';
-                input.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
+                input.accept = '.pdf';
                 input.onchange = async () => {
                     const file = input.files[0];
                     if (!file) return;

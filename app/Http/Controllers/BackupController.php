@@ -14,7 +14,7 @@ class BackupController extends Controller
 {
     private function verifyAdmin(): void
     {
-        abort_unless(auth()->user()?->rol === 'admin', 403, 'Solo administradores.');
+        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Solo administradores.');
     }
 
     public function index()
