@@ -5,9 +5,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -16,11 +16,6 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'nombre',
         'apellido',
@@ -33,6 +28,7 @@ class User extends Authenticatable
         'tema',
         'idioma',
         'color_acento',
+        'tipografia',
         'verificacion_dos_pasos',
         'secreto_2fa',
         'notificacion_correo',
@@ -42,21 +38,11 @@ class User extends Authenticatable
         'ultimo_acceso_ip',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'token_recordar',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -66,5 +52,20 @@ class User extends Authenticatable
             'perfil_publico' => 'boolean',
             'ultimo_acceso' => 'datetime',
         ];
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(Activity::class);
+    }
+
+    public function receivedNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class, 'user_id');
+    }
+
+    public function sentNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class, 'from_user_id');
     }
 }

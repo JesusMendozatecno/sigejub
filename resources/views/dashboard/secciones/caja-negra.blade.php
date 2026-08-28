@@ -467,6 +467,7 @@
         m.forEach(mm => {
             if (mm.target.id === 'caja-negra' && mm.target.classList.contains('active')) {
                 cargarStats();
+                cargarUsuarios();
                 cargarCajaNegra();
             }
         });

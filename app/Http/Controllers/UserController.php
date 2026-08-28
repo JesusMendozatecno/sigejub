@@ -36,7 +36,7 @@ class UserController extends Controller
         ];
 
         $users = [];
-        if ($user->rol === 'admin') {
+        if (in_array($user->rol, ['admin', 'superadmin'])) {
             $users = User::orderBy('created_at', 'desc')->paginate(20);
         }
 
@@ -47,11 +47,11 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'nullable|string|max:255',
+            'nombre' => 'required|string|max:255|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
+            'apellido' => 'nullable|string|max:255|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/',
             'correo' => 'required|string|email|max:255|unique:users,correo,' . $user->id,
-            'telefono' => 'nullable|string|max:20',
-            'fecha_nacimiento' => 'nullable|date',
+            'telefono' => 'nullable|string|max:20|regex:/^[0-9+\-\s]*$/',
+            'fecha_nacimiento' => 'nullable|date|before:today',
         ]);
 
         $user->nombre = $request->nombre;
@@ -122,11 +122,13 @@ class UserController extends Controller
             'tema' => 'in:light,dark,modern',
             'idioma' => 'in:es,en',
             'color_acento' => 'string|max:7',
+            'tipografia' => 'in:sistema,moderna,condensada,mono,serif',
         ]);
 
         if ($request->has('tema')) $user->tema = $request->tema;
         if ($request->has('idioma')) $user->idioma = $request->idioma;
         if ($request->has('color_acento')) $user->color_acento = $request->color_acento;
+        if ($request->has('tipografia')) $user->tipografia = $request->tipografia;
         $user->save();
 
         return response()->json(['mensaje' => 'Configuración actualizada.']);
@@ -240,68 +242,14 @@ class UserController extends Controller
         return response()->json($stats);
     }
 
-    public function adminUsers(Request $request)
-    {
-        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
-        $rol = $request->get('rol', '');
-        $search = $request->get('search', '');
-        $query = User::query();
-        if ($rol) $query->where('rol', $rol);
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nombre', 'like', "%{$search}%")
-                  ->orWhere('correo', 'like', "%{$search}%");
-            });
-        }
-        return response()->json($query->orderBy('created_at', 'desc')->paginate(20));
-    }
-
-    public function adminUpdateUser(Request $request, $id)
-    {
-        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
-        $user = User::findOrFail($id);
-        $request->validate(['rol' => 'required|in:usuario,admin,superadmin']);
-        $oldRol = $user->rol;
-        $user->rol = $request->rol;
-        $user->save();
-        Activity::log('updated', 'usuario', $user->id, "Rol de {$user->nombre} cambiado de {$oldRol} a {$request->rol}");
-        return response()->json(['mensaje' => 'Rol actualizado.']);
-    }
-
-    public function adminDeleteUser($id)
-    {
-        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
-        if ((int)$id === (int)Auth::id()) {
-            return response()->json(['mensaje' => 'No puedes eliminar tu propio usuario.'], 422);
-        }
-        $user = User::findOrFail($id);
-        if ($user->avatar) Storage::disk('public')->delete($user->avatar);
-        $user->delete();
-        return response()->json(['mensaje' => 'Usuario eliminado.']);
-    }
-
-    public function adminActivity()
-    {
-        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
-        $activities = Activity::with('user')->latest()->take(100)->get();
-        return response()->json($activities);
-    }
-
     public function adminGlobalConfig(Request $request)
     {
-        abort_unless(in_array(Auth::user()->rol, ['admin', 'superadmin']), 403);
         $request->validate([
             'app_name' => 'nullable|string|max:255',
             'default_theme' => 'nullable|in:light,dark,modern',
             'maintenance_mode' => 'nullable|boolean',
         ]);
 
-        if ($request->has('app_name')) {
-            updateEnvValue('APP_NAME', $request->app_name);
-        }
-        if ($request->has('default_theme')) {
-            updateEnvValue('APP_DEFAULT_THEME', $request->default_theme);
-        }
         if ($request->has('maintenance_mode')) {
             $mode = $request->boolean('maintenance_mode') ? 'down' : 'up';
             if ($mode === 'down') {
@@ -312,20 +260,5 @@ class UserController extends Controller
         }
 
         return response()->json(['mensaje' => 'Configuración global actualizada.']);
-    }
-}
-
-if (!function_exists('updateEnvValue')) {
-    function updateEnvValue($key, $value)
-    {
-        $path = base_path('.env');
-        if (file_exists($path)) {
-            $escaped = str_replace(['"', '\\'], ['\"', '\\\\'], $value);
-            file_put_contents($path, preg_replace(
-                "/^{$key}=.*/m",
-                "{$key}=\"{$escaped}\"",
-                file_get_contents($path)
-            ));
-        }
     }
 }

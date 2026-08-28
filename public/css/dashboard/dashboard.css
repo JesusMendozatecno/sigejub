@@ -2,36 +2,10 @@
    dashboard.css — Estilos principales del dashboard
    Sidebar fijo, top bar, grid de estadísticas, gráfico de
    barras, actividad reciente, accesos rápidos y vencimientos.
-   Archivo principal que orquesta la vista de inicio.
+   Utiliza variables CSS de base.css para consistencia visual.
    ============================================================ */
 
-:root {
-    --bg-main: #f8fafc;
-    --primary-blue: #002366;
-    --sidebar-text: #64748b;
-    --accent-blue: #2563eb;
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-main);
-    display: flex;
-}
-
 /* === SIDEBAR — Barra lateral izquierda fija === */
-.sidebar {
-    width: 260px;
-    height: 100vh;
-    background: white;
-    border-right: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-}
-
 .sidebar-header {
     padding: 25px;
     display: flex;
@@ -40,19 +14,19 @@ body {
 }
 
 .logo-box {
-    background: var(--primary-blue);
+    background: var(--accent);
     color: white;
     padding: 8px;
     border-radius: 8px;
 }
 
-.sidebar-header h3 { font-size: 14px; color: var(--primary-blue); }
-.sidebar-header span { font-size: 9px; color: #94a3b8; font-weight: bold; }
+.sidebar-header h3 { font-size: 14px; color: var(--accent); }
+.sidebar-header span { font-size: 9px; color: var(--text-muted); font-weight: bold; }
 
 .sidebar-menu ul { list-style: none; padding: 10px; }
 .sidebar-menu li {
     padding: 12px 15px;
-    color: var(--sidebar-text);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -64,14 +38,14 @@ body {
 }
 
 .sidebar-menu li.active {
-    background: #eff6ff;
-    color: var(--accent-blue);
+    background: var(--accent-subtle);
+    color: var(--accent);
     font-weight: 600;
 }
 
 .sidebar-footer { padding: 20px; margin-top: auto; }
 .support-card {
-    background: #f1f5f9;
+    background: var(--bg-surface);
     padding: 15px;
     border-radius: 12px;
     text-align: center;
@@ -82,30 +56,20 @@ body {
     margin-top: 10px;
     width: 100%;
     padding: 8px;
-    border: 1px solid #cbd5e1;
-    background: white;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
     border-radius: 6px;
     cursor: pointer;
 }
 
-/* === MAIN CONTENT — Área principal con margen para el sidebar === */
-.main-content {
-    margin-left: 260px;
-    flex: 1;
-    padding: 0 40px 40px;
-}
+/* === MAIN CONTENT — Ya definido en layout.css con flex-grow, overflow-y: auto, background: var(--bg-body) === */
 
-.top-bar {
-    height: 80px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+/* === TOP BAR — Ya definido en layout.css con height: var(--sidebar-topbar-height) === */
 
 .search-container {
     display: flex;
     align-items: center;
-    background: #f1f5f9;
+    background: var(--bg-surface);
     padding: 10px 20px;
     border-radius: 30px;
     width: 400px;
@@ -117,31 +81,21 @@ body {
     outline: none;
     margin-left: 10px;
     width: 100%;
+    color: var(--text-primary);
 }
 
-.user-info { display: flex; align-items: center; gap: 20px; color: #64748b; }
-.user-profile { display: flex; align-items: center; gap: 10px; border-left: 1px solid #e2e8f0; padding-left: 20px; }
+.user-info { display: flex; align-items: center; gap: 20px; color: var(--text-muted); }
+.user-profile { display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border); padding-left: 20px; }
 .user-profile .text { text-align: right; }
-.user-profile .name { display: block; font-size: 13px; font-weight: bold; color: #1e293b; }
-.user-profile .role { font-size: 11px; color: #64748b; }
+.user-profile .name { display: block; font-size: 13px; font-weight: bold; color: var(--text-primary); }
+.user-profile .role { font-size: 11px; color: var(--text-muted); }
 
 /* === STATS — Encabezado de bienvenida y grid de tarjetas de estadísticas === */
 .welcome-header { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-.welcome-header h1 { font-size: 24px; color: #1e293b; }
-.subtitle { font-size: 14px; color: var(--accent-blue); }
+.welcome-header h1 { font-size: 24px; color: var(--text-primary); }
+.subtitle { font-size: 14px; color: var(--accent); }
 
-.btn-primary {
-    background: var(--primary-blue);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    cursor: pointer;
-}
+/* === BOTONES — Ya definidos en components.css === */
 
 .stats-grid {
     display: grid;
@@ -151,10 +105,10 @@ body {
 }
 
 .stat-card {
-    background: white;
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--shadow-card);
 }
 
 .card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
@@ -164,8 +118,8 @@ body {
 .icon-wrap.green { background: #f0fdf4; color: #22c55e; }
 .icon-wrap.red { background: #fef2f2; color: #ef4444; }
 
-.stat-card p { font-size: 11px; font-weight: bold; color: #94a3b8; letter-spacing: 1px; }
-.stat-card h2 { font-size: 28px; color: var(--primary-blue); margin-top: 5px; }
+.stat-card p { font-size: 11px; font-weight: bold; color: var(--text-muted); letter-spacing: 1px; }
+.stat-card h2 { font-size: 28px; color: var(--accent); margin-top: 5px; }
 
 /* === LAYOUT INFERIOR — Grid de actividad reciente y accesos rápidos === */
 .content-layout {
@@ -176,27 +130,27 @@ body {
 }
 
 .recent-activity, .quick-access {
-    background: white;
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--shadow-card);
 }
 
 .activity-item {
     display: flex;
     align-items: center;
     padding: 15px 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-light);
 }
 
-.activity-icon { margin-right: 15px; color: var(--accent-blue); background: #f1f5f9; padding: 10px; border-radius: 50%; }
-.activity-text p { font-size: 13px; color: #1e293b; }
-.activity-text span { font-size: 11px; color: #94a3b8; }
-.activity-item a { margin-left: auto; font-size: 12px; color: var(--accent-blue); text-decoration: none; font-weight: bold; }
+.activity-icon { margin-right: 15px; color: var(--accent); background: var(--bg-surface); padding: 10px; border-radius: 50%; }
+.activity-text p { font-size: 13px; color: var(--text-primary); }
+.activity-text span { font-size: 11px; color: var(--text-muted); }
+.activity-item a { margin-left: auto; font-size: 12px; color: var(--accent); text-decoration: none; font-weight: bold; }
 
 .access-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
 .access-box {
-    background: #002366;
+    background: var(--accent);
     color: white;
     padding: 20px;
     border-radius: 12px;
@@ -205,12 +159,12 @@ body {
     cursor: pointer;
 }
 
-.access-box:hover { background: #001a4d; }
+.access-box:hover { filter: brightness(0.85); }
 .access-box p { font-size: 10px; font-weight: bold; margin-top: 10px; }
 
 .btn-logout {
-    background: #fee2e2;
-    color: #ef4444;
+    background: var(--error-light);
+    color: var(--error);
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
@@ -218,13 +172,8 @@ body {
     cursor: pointer;
 }
 
-
-
-
 /* ========================================================================
    EXTENSIÓN — Reglas adicionales para el dashboard principal
-   Tendencias, gráfico de barras, accesos rápidos, vencimientos,
-   banner informativo e iconos de actividad con variantes de color.
    ======================================================================== */
 
 /* Colores de texto y estados */
@@ -232,7 +181,7 @@ body {
 .text-green { color: #0ca678 !important; }
 .text-red { color: #fa5252 !important; }
 
-/* === TENDENCIAS — Indicadores de subida/bajada en tarjetas de estadísticas === */
+/* === TENDENCIAS === */
 .trend {
     font-size: 11px;
     font-weight: bold;
@@ -240,16 +189,15 @@ body {
     border-radius: 12px;
 }
 .trend.positive { background: #e6fcf5; color: #0ca678; }
-.trend.neutral { background: #f1f3f5; color: #495057; }
+.trend.neutral { background: var(--bg-surface); color: var(--text-secondary); }
 .trend.negative { background: #fff5f5; color: #fa5252; }
 
 /* === GRÁFICO DE BARRAS === */
-/* Las barras usan position:relative para mostrar el valor encima */
 .chart-container {
-    background: white;
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--shadow-card);
 }
 .chart-header {
     display: flex;
@@ -257,12 +205,16 @@ body {
     align-items: flex-start;
     margin-bottom: 30px;
 }
-.chart-subtitle { font-size: 12px; color: #94a3b8; }
-.chart-toggle { background: #f1f5f9; padding: 4px; border-radius: 8px; }
+.chart-subtitle { font-size: 12px; color: var(--text-muted); }
+.chart-toggle { background: var(--bg-surface); padding: 4px; border-radius: 8px; }
 .chart-toggle button {
-    border: none; padding: 5px 15px; font-size: 12px; border-radius: 6px; cursor: pointer; background: transparent; color: #64748b;
+    border: none; padding: 5px 15px; font-size: 12px; border-radius: 6px;
+    cursor: pointer; background: transparent; color: var(--text-muted);
 }
-.chart-toggle button.active { background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.chart-toggle button.active {
+    background: var(--bg-card); color: var(--text-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
 
 .bar-chart {
     display: flex;
@@ -271,42 +223,46 @@ body {
     height: 160px;
 }
 .bar-group { text-align: center; width: 12%; }
-.bar { background: #f1f5f9; border-radius: 4px; transition: 0.3s; position: relative; }
-.bar-group.active .bar { background: var(--primary-blue); }
-.bar-group span { font-size: 10px; color: #94a3b8; margin-top: 10px; display: block; }
-.bar-group.active span { color: var(--primary-blue); font-weight: bold; }
+.bar { background: var(--bg-surface); border-radius: 4px; transition: 0.3s; position: relative; }
+.bar-group.active .bar { background: var(--accent); }
+.bar-group span { font-size: 10px; color: var(--text-muted); margin-top: 10px; display: block; }
+.bar-group.active span { color: var(--accent); font-weight: bold; }
 .val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 11px; }
 
-/* === ACCESOS RÁPIDOS — Versión oscura sobre fondo azul institucional === */
+/* === ACCESOS RÁPIDOS === */
 .quick-access-dark {
-    background: var(--primary-blue);
+    background: var(--accent);
     padding: 25px;
     border-radius: 16px;
     color: white;
 }
 .quick-access-dark h3 { margin-bottom: 5px; }
-.quick-access-dark p { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 20px; }
+.quick-access-dark p { font-size: 12px; color: rgba(255, 255, 255, 0.7); margin-bottom: 20px; }
 
-/* === VENCIMIENTOS — Tarjetas con borde lateral de color según urgencia === */
-/* .urgent = rojo, .warning = amarillo, default = gris */
-.deadlines-card { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); margin-bottom: 20px; }
+/* === VENCIMIENTOS === */
+.deadlines-card {
+    background: var(--bg-card);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 20px;
+}
 .deadline-item { padding: 12px; border-radius: 0 8px 8px 0; margin-top: 15px; border-left: 4px solid #ccc; }
 .deadline-item.urgent { background: #fff5f5; border-left-color: #fa5252; }
 .deadline-item.warning { background: #fff9db; border-left-color: #f08c00; }
 .deadline-item .tag { font-size: 10px; font-weight: bold; text-transform: uppercase; }
 .deadline-item p { font-size: 13px; font-weight: bold; margin: 4px 0; }
-.deadline-item span { font-size: 11px; color: #64748b; }
+.deadline-item span { font-size: 11px; color: var(--text-muted); }
 
 /* === BANNER INFORMATIVO === */
-.info-banner-dark { background: var(--primary-blue); padding: 20px; border-radius: 16px; color: white; }
+.info-banner-dark { background: var(--accent); padding: 20px; border-radius: 16px; color: white; }
 .info-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .info-head i { color: #ffd43b; }
-.info-banner-dark p { font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.8); }
+.info-banner-dark p { font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.8); }
 
-/* === ICONOS DE ACTIVIDAD — Variantes de color para el timeline de actividad reciente === */
+/* === ICONOS DE ACTIVIDAD === */
 .activity-icon.blue { background: #eff6ff; color: #3b82f6; }
 .activity-icon.green { background: #f0fdf4; color: #22c55e; }
 .activity-icon.orange { background: #fff7ed; color: #d97706; }
 .activity-icon.purple { background: #f3e8ff; color: #7c3aed; }
 .activity-icon.red { background: #fef2f2; color: #dc2626; }
-

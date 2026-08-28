@@ -22,5 +22,17 @@ class DatabaseSeeder extends Seeder
             'nombre' => 'Test User',
             'correo' => 'test@example.com',
         ]);
+
+        // Crear usuario superadmin si no existe
+        if (!User::where('correo', 'superadmin@sigejub.com')->exists()) {
+            User::create([
+                'nombre' => 'Superadmin',
+                'correo' => 'superadmin@sigejub.com',
+                'password' => bcrypt('password'),
+                'rol' => 'superadmin',
+            ]);
+        }
+
+        $this->call(FormulaPrestacionSeeder::class);
     }
 }

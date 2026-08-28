@@ -12,14 +12,17 @@ use ZipArchive;
 
 class BackupController extends Controller
 {
-    private function verifyAdmin(): void
+    private function sanitizeFilename(string $filename): string
     {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Solo administradores.');
+        $filename = basename($filename);
+        if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $filename)) {
+            abort(400, 'Nombre de archivo invalido.');
+        }
+        return $filename;
     }
 
     public function index()
     {
-        $this->verifyAdmin();
         $backups = [];
         $disk = Storage::disk('local');
         if ($disk->exists('backups')) {
@@ -40,7 +43,6 @@ class BackupController extends Controller
 
     public function generar()
     {
-        $this->verifyAdmin();
         set_time_limit(300);
         $timestamp = now()->format('Y-m-d_H-i-s');
         $backupDir = storage_path('app/backups');
@@ -66,31 +68,36 @@ class BackupController extends Controller
             ]);
         } catch (\Exception $e) {
             if (file_exists($dbFile)) unlink($dbFile);
+            \Illuminate\Support\Facades\Log::error('Error al generar respaldo: ' . $e->getMessage());
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Error al generar respaldo: ' . $e->getMessage(),
+                'mensaje' => 'Error al generar el respaldo. Consulte al administrador.',
             ], 500);
         }
     }
 
     public function descargar($archivo)
     {
-        $this->verifyAdmin();
-        $path = storage_path("app/backups/{$archivo}");
-        if (!file_exists($path)) {
+        $archivo = $this->sanitizeFilename($archivo);
+        $backupDir = storage_path('app/backups');
+        $path = $backupDir . '/' . $archivo;
+        $realPath = realpath($path);
+        if (!$realPath || strpos($realPath, $backupDir) !== 0 || !file_exists($realPath)) {
             abort(404, 'Archivo de respaldo no encontrado.');
         }
-        return response()->download($path, $archivo);
+        return response()->download($realPath, $archivo);
     }
 
     public function eliminar($archivo)
     {
-        $this->verifyAdmin();
-        $path = storage_path("app/backups/{$archivo}");
-        if (!file_exists($path)) {
+        $archivo = $this->sanitizeFilename($archivo);
+        $backupDir = storage_path('app/backups');
+        $path = $backupDir . '/' . $archivo;
+        $realPath = realpath($path);
+        if (!$realPath || strpos($realPath, $backupDir) !== 0 || !file_exists($realPath)) {
             return response()->json(['estado' => 'error', 'mensaje' => 'Archivo no encontrado.'], 404);
         }
-        unlink($path);
+        unlink($realPath);
         return response()->json(['estado' => 'success', 'mensaje' => 'Respaldo eliminado.']);
     }
 
@@ -104,15 +111,33 @@ class BackupController extends Controller
         $port = config("database.connections.{$conn}.port");
         $driver = config("database.connections.{$conn}.driver");
 
+        if ($driver === 'sqlite') {
+            // Sin binario CLI para SQLite: usar el respaldo en PHP.
+            $this->backupDatabasePhp($destino);
+            return;
+        }
+
         if ($driver === 'mysql' || $driver === 'mariadb') {
             $bin = env('BACKUP_MYSQLDUMP_PATH') ?: 'mysqldump';
             if ($bin !== 'mysqldump') {
                 $bin = realpath($bin) ?: 'mysqldump';
             }
-            $cmd = "\"{$bin}\" --host={$host} --port={$port} --user={$user} --password={$pass} --routines --events --triggers --add-drop-table --databases {$db} 2>&1";
+            $cmd = escapeshellarg($bin)
+                . ' --host=' . escapeshellarg($host)
+                . ' --port=' . escapeshellarg($port)
+                . ' --user=' . escapeshellarg($user)
+                . ' --password=' . escapeshellarg($pass)
+                . ' --routines --events --triggers --add-drop-table'
+                . ' --databases ' . escapeshellarg($db)
+                . ' 2>&1';
         } elseif ($driver === 'pgsql') {
             $bin = env('BACKUP_PGDUMP_PATH') ?: 'pg_dump';
-            $cmd = "\"{$bin}\" --host={$host} --port={$port} --username={$user} --dbname={$db} --format=plain 2>&1";
+            $cmd = escapeshellarg($bin)
+                . ' --host=' . escapeshellarg($host)
+                . ' --port=' . escapeshellarg($port)
+                . ' --username=' . escapeshellarg($user)
+                . ' --dbname=' . escapeshellarg($db)
+                . ' --format=plain 2>&1';
             putenv("PGPASSWORD={$pass}");
         } else {
             throw new \RuntimeException("Driver {$driver} no soportado para respaldo CLI.");
@@ -132,6 +157,13 @@ class BackupController extends Controller
 
     private function backupDatabasePhp(string $destino): void
     {
+        $driver = config("database.connections." . config('database.default') . ".driver");
+
+        if ($driver === 'pgsql') {
+            $this->backupDatabasePhpPgsql($destino);
+            return;
+        }
+
         $tables = DB::select('SHOW TABLES');
         $key = 'Tables_in_' . config('database.connections.mysql.database');
         $sql = "-- SIGEJUB Database Backup (PHP Fallback)\n-- Generated: " . now() . "\n\n";
@@ -156,6 +188,33 @@ class BackupController extends Controller
                 }
                 $sql .= implode(",\n", $vals) . ";\n\n";
             }
+        }
+        file_put_contents($destino, $sql);
+    }
+
+    private function backupDatabasePhpPgsql(string $destino): void
+    {
+        $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename");
+        $sql = "-- SIGEJUB Database Backup (PHP Fallback PostgreSQL)\n-- Generated: " . now() . "\n";
+        $sql .= "-- Nota: solo datos (INSERTs). La estructura se restaura con php artisan migrate.\n\n";
+        foreach ($tables as $table) {
+            if ($table->tablename === 'migrations') {
+                continue;
+            }
+            $name = $table->tablename;
+            $rows = DB::table($name)->get();
+            if ($rows->count() === 0) {
+                continue;
+            }
+            $cols = implode(', ', array_map(fn ($c) => '"' . $c . '"', array_keys(get_object_vars($rows[0]))));
+            $sql .= "DELETE FROM \"{$name}\";\n";
+            foreach ($rows as $row) {
+                $escaped = array_map(function ($v) {
+                    return $v === null ? 'NULL' : "'" . str_replace("'", "''", $v) . "'";
+                }, get_object_vars($row));
+                $sql .= "INSERT INTO \"{$name}\" ({$cols}) VALUES (" . implode(', ', $escaped) . ");\n";
+            }
+            $sql .= "\n";
         }
         file_put_contents($destino, $sql);
     }

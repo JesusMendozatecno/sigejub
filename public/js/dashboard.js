@@ -36,6 +36,15 @@ window.cachedFetch = async function(url, options) {
     }
 };
 
+window.limpiarCacheSigejub = function() {
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.startsWith('sigejub_cache_')) keys.push(key);
+    }
+    keys.forEach(function(k) { localStorage.removeItem(k); });
+};
+
 function inicializarDashboard() {
     if (window.SIGEJUB_THEME === 'dark') {
         document.body.classList.add('dark-mode');
@@ -43,6 +52,11 @@ function inicializarDashboard() {
     if (window.SIGEJUB_THEME === 'modern') {
         document.body.classList.add('theme-modern');
     }
+
+    var fontClasses = ['font-sistema', 'font-moderna', 'font-condensada', 'font-mono', 'font-serif'];
+    var font = window.SIGEJUB_FONT || 'sistema';
+    document.body.classList.remove.apply(document.body.classList, fontClasses);
+    if (font !== 'sistema') document.body.classList.add('font-' + font);
 
     // Notification counter
     cargarContadorNoLeidas();
@@ -159,9 +173,21 @@ window.addEventListener('click', function(e) {
 
 // === GLOBAL THEME CONFIG ===
 window.cambiarTema = async function(tema) {
+    // Smooth transition: add a class that enables transitions on all elements
+    document.documentElement.classList.add('theme-switching');
+
     document.body.classList.remove('dark-mode', 'theme-modern');
     if (tema === 'dark') document.body.classList.add('dark-mode');
     if (tema === 'modern') document.body.classList.add('theme-modern');
+
+    // Save to localStorage for instant load on next visit
+    try { localStorage.setItem('sigejub_theme', tema); } catch (e) {}
+
+    // Remove transition class after animation completes
+    setTimeout(function() {
+        document.documentElement.classList.remove('theme-switching');
+    }, 400);
+
     var meta = document.querySelector('meta[name="csrf-token"]');
     var token = meta?.content;
     try {

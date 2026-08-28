@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/profile.css') }}?v={{ filemtime(public_path('css/dashboard/profile.css')) }}">
     <style>:root { --accent: {{ $user->color_acento ?? '#1a365d' }}; }</style>
 </head>
-<body>
+<body class="font-{{ $user->tipografia ?? 'sistema' }}">
 <div class="profile-wrapper">
     <div class="profile-header">
         <div class="flex-center gap-3">
@@ -43,7 +43,7 @@
                 <input type="file" id="avatarInput" hidden accept="image/*" onchange="onAvatarSelect(event)">
                 <h2 class="profile-name">{{ $user->nombre }}</h2>
                 <p class="profile-email">{{ $user->correo }}</p>
-                <span class="profile-role {{ $user->rol === 'admin' ? 'role-admin' : ($user->rol === 'superadmin' ? 'role-admin' : 'role-analista') }}">
+                <span class="profile-role {{ $user->rol === 'superadmin' ? 'role-superadmin' : ($user->rol === 'admin' ? 'role-admin' : 'role-analista') }}">
                     {{ $user->rol === 'admin' ? 'Administrador' : ($user->rol === 'superadmin' ? 'Superadmin' : 'Usuario') }}
                 </span>
             </div>
@@ -94,11 +94,11 @@
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Nombre</label>
-                            <input type="text" class="form-input" name="nombre" value="{{ $user->nombre }}" disabled>
+                            <input type="text" class="form-input" name="nombre" value="{{ $user->nombre }}" disabled oninput="this.value=this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,'')">
                         </div>
                         <div class="form-group">
                             <label>Apellido</label>
-                            <input type="text" class="form-input" name="apellido" value="{{ $user->apellido }}" disabled>
+                            <input type="text" class="form-input" name="apellido" value="{{ $user->apellido }}" disabled oninput="this.value=this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,'')">
                         </div>
                     </div>
                     <div class="grid-2">
@@ -108,7 +108,7 @@
                         </div>
                         <div class="form-group">
                             <label>Teléfono</label>
-                            <input type="text" class="form-input" name="telefono" value="{{ $user->telefono }}" disabled>
+                            <input type="text" class="form-input" name="telefono" value="{{ $user->telefono }}" disabled oninput="this.value=this.value.replace(/[^0-9+\-\s]/g,'')">
                         </div>
                     </div>
                     <div class="form-group">
@@ -203,6 +203,18 @@
                     @php $colors = ['#1a365d','#2563eb','#7c3aed','#db2777','#dc2626','#ea580c','#ca8a04','#16a34a','#0d9488']; @endphp
                     @foreach($colors as $c)
                     <div class="color-preset {{ $user->color_acento === $c ? 'selected' : '' }}" style="background:{{ $c }};" data-color="{{ $c }}" onclick="cambiarColor('{{ $c }}')"></div>
+                    @endforeach
+                </div>
+
+                <h4 style="font-size:0.9rem;color:#0f172a;margin:20px 0 8px;">Tipografía</h4>
+                <p style="font-size:0.75rem;color:#64748b;margin:0 0 12px;">Selecciona la fuente del sistema. Se adapta automáticamente a cada tema y conserva el contraste.</p>
+                <div class="font-presets" id="fontPresets">
+                    @php $fonts = ['sistema','moderna','condensada','serif','mono']; $fontNames = ['sistema'=>'Clásica','moderna'=>'Moderna','condensada'=>'Condensada','serif'=>'Serif','mono'=>'Monoespaciada']; @endphp
+                    @foreach($fonts as $f)
+                    <div class="font-option {{ ($user->tipografia ?? 'sistema') === $f ? 'selected' : '' }}" data-font="{{ $f }}" onclick="cambiarTipografia('{{ $f }}')">
+                        <span class="font-specimen {{ 'ff-' . $f }}">Aa</span>
+                        <span class="font-name">{{ $fontNames[$f] }}</span>
+                    </div>
                     @endforeach
                 </div>
 
@@ -363,10 +375,11 @@
 </div>
 
 <script>
-window.SIGEJUB_USER_ID={{ $user->id }};
+window.SIGEJUB_USER_ID={{ $user->id }};window.SIGEJUB_USER_ROL='{{ $user->rol }}';
 window.SIGEJUB_STORAGE_URL='{{ asset("storage") }}';
 window.SIGEJUB_PROFILE_THEME='{{ $user->tema }}';
 window.SIGEJUB_ACCENT_COLOR='{{ $user->color_acento ?? "#1a365d" }}';
+window.SIGEJUB_PROFILE_FONT='{{ $user->tipografia ?? "sistema" }}';
 </script>
 <script defer src="{{ asset('js/profile.js') }}?v={{ filemtime(public_path('js/profile.js')) }}"></script>
 </body>

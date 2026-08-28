@@ -45,9 +45,9 @@ class Activity extends Model
             'descripcion' => $descripcion,
             'direccion_ip' => $request?->ip(),
             'navegador' => $request?->userAgent(),
-            'valores_anteriores' => $valoresAnteriores ? json_encode($valoresAnteriores) : null,
-            'valores_nuevos' => $valoresNuevos ? json_encode($valoresNuevos) : null,
-            'datos_peticion' => $datosPeticion ? json_encode($datosPeticion) : null,
+            'valores_anteriores' => $valoresAnteriores,
+            'valores_nuevos' => $valoresNuevos,
+            'datos_peticion' => $datosPeticion,
         ]);
     }
 }

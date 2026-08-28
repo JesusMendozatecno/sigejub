@@ -1,53 +1,236 @@
 /* ============================================================
-   base.css — Variables CSS globales y reseteos del dashboard
-   Define colores institucionales, scrollbar personalizado
-   y clases utilitarias de color. Es el primer archivo que se
-   carga y establece la paleta del sistema.
+   base.css — Sistema de diseño y variables CSS globales
+   Establece la paleta del sistema, tokens de diseño,
+   reseteos globales, tipografía, utilidades y scrollbar.
+   Los 3 temas (claro, oscuro, moderno) redefinen estas
+   variables bajo body.dark-mode / body.theme-modern.
    ============================================================ */
 
+/* === DESIGN TOKENS — Modo Claro (default) === */
 :root {
-    --bg-main: #f8fafc;
-    --primary-blue: #002366;
-    --sidebar-text: #64748b;
-    --accent-blue: #2563eb;
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    /* Paleta principal */
+    --accent: #1a365d;
+    --accent-light: #3b82f6;
+    --accent-dark: #1e3a8a;
+    --accent-subtle: rgba(26, 54, 93, 0.08);
+    --accent-hover: #2563eb;
+
+    /* Colores de estado */
+    --success: #059669;
+    --success-light: #d1fae5;
+    --success-dark: #047857;
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --warning-dark: #b45309;
+    --error: #dc2626;
+    --error-light: #fee2e2;
+    --error-dark: #b91c1c;
+    --info: #2563eb;
+    --info-light: #dbeafe;
+    --info-dark: #1d4ed8;
+
+    /* Fondos */
+    --bg-body: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --bg-surface: #f8fafc;
+    --bg-sidebar: #ffffff;
+    --bg-topbar: #ffffff;
+    --bg-input: #f8fafc;
+    --bg-input-focus: #ffffff;
+    --bg-overlay: rgba(15, 23, 42, 0.5);
+
+    /* Texto */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-inverse: #ffffff;
+    --text-link: #2563eb;
+
+    /* Bordes */
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --border-focus: #3b82f6;
+    --border-input: #cbd5e1;
+
+    /* Sombras */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+
+    /* Radio */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+    --radius-full: 9999px;
+
+    /* Espaciado */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    /* Tipografía */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.8125rem;
+    --font-size-base: 0.875rem;
+    --font-size-md: 0.9375rem;
+    --font-size-lg: 1.0625rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 2rem;
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+
+    /* Transiciones */
+    --transition-fast: 120ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
+    --transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Sidebar */
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 72px;
+    --sidebar-topbar-height: 65px;
+
+    /* Z-index */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-sidebar: 300;
+    --z-overlay: 400;
+    --z-modal: 500;
+    --z-toast: 9999;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* === RESET GLOBAL === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-main);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    color: var(--text-primary);
+    background-color: var(--bg-body);
     display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+img, svg { display: block; max-width: 100%; }
+a { color: var(--text-link); text-decoration: none; transition: color var(--transition-base); }
+a:hover { color: var(--accent-hover); }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; font-size: inherit; }
+
+/* === SELECCIÓN DE TEXTO === */
+::selection {
+    background: var(--accent);
+    color: white;
+}
+
+/* === FOCUS GLOBAL === */
+:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
 }
 
 /* === CLASES UTILITARIAS DE COLOR === */
-/* Se usan con !important para garantizar que prevalezcan sobre cualquier especificidad */
 .text-orange { color: #f08c00 !important; }
-.text-green { color: #0ca678 !important; }
-.text-red { color: #fa5252 !important; }
-.text-blue-accent { color: #1e3a8a; font-weight: 800; }
+.text-green { color: #059669 !important; }
+.text-red { color: #dc2626 !important; }
+.text-blue-accent { color: var(--accent); font-weight: var(--font-weight-extrabold); }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
 
 /* === GLOBAL SCROLLBAR === */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-    background: rgba(100,116,139,0.25);
-    border-radius: 3px;
-    transition: all 0.25s ease;
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(100,116,139,0.5);
+    background: rgba(148, 163, 184, 0.5);
 }
 ::-webkit-scrollbar-corner { background: transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.3) transparent; }
 
-* { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,0.25) transparent; }
+/* === ANIMACIONES GLOBALES === */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
 
-/* Scrollbar más sutil en modo oscuro */
-body.dark-mode::-webkit-scrollbar-thumb {
-    background: rgba(148,163,184,0.2);
+/* === PREFERS REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
-body.dark-mode::-webkit-scrollbar-thumb:hover {
-    background: rgba(148,163,184,0.4);
+
+/* === SMOOTH THEME SWITCHING === */
+/* Activado por JS al cambiar de tema. Aplica transiciones
+   a todos los elementos para un cambio visual suave. */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    transition: background-color 0.35s ease,
+                color 0.35s ease,
+                border-color 0.35s ease,
+                box-shadow 0.35s ease,
+                fill 0.35s ease !important;
 }
-body.dark-mode { scrollbar-color: rgba(148,163,184,0.2) transparent; }

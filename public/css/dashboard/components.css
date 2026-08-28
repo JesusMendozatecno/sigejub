@@ -1,22 +1,417 @@
 /* ============================================================
    components.css — Componentes reutilizables del dashboard
-   Botones, badges de estado, tablas. Estilos genéricos que
-   se aplican en múltiples secciones del sistema.
+   Botones, badges, tablas, formularios y elementos comunes.
+   Utiliza variables CSS de base.css para consistencia.
    ============================================================ */
 
-/* === BOTONES GENÉRICOS === */
-.btn-primary { background: var(--primary-blue); color: white; padding: 12px 20px; border-radius: 8px; border: none; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
-.btn-logout { background: #fee2e2; color: #ef4444; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-/* Botón con borde, fondo blanco — para acciones secundarias */
-.btn-outline { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; color: #475569; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+/* === BOTONES — Sistema de jerarquía === */
+/* Botón primario (acción principal) */
+.btn-primary {
+    background: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+    line-height: 1;
+}
+.btn-primary:hover {
+    background: var(--accent-dark);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
 
-/* === BADGES DE ESTADO — Pendiente, Aprobado, Rechazado === */
-.badge-status { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
-.badge-status.pending { background: #fff7ed; color: #c2410c; }
-.badge-status.approved { background: #f0fdf4; color: #15803d; }
-.badge-status.rejected { background: #fef2f2; color: #b91c1c; }
+/* Botón primario oscuro (encabezados de sección) */
+.btn-primary-dark {
+    background: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+    line-height: 1;
+}
+.btn-primary-dark:hover {
+    background: var(--accent-dark);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
 
-/* === TABLAS — Estilos base para todas las tablas del sistema === */
-.custom-table { width: 100%; border-collapse: collapse; }
-.custom-table th { text-align: left; padding: 20px 15px; font-size: 11px; color: #64748b; border-bottom: 1px solid #f1f5f9; }
-.custom-table td { padding: 15px; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f8fafc; }
+/* Botón de envío */
+.btn-submit {
+    background: var(--accent);
+    color: white;
+    padding: 10px 24px;
+    border-radius: var(--radius-md);
+    border: none;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+.btn-submit:hover {
+    background: var(--accent-dark);
+    box-shadow: var(--shadow-md);
+}
+
+/* Botón de cancelar */
+.btn-cancel {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 10px 24px;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+.btn-cancel:hover {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-input);
+}
+
+/* Botón outline (secundario) */
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 9px 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+.btn-outline:hover {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-input);
+}
+
+/* Botón de peligro */
+.btn-danger {
+    background: var(--error);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+.btn-danger:hover {
+    background: var(--error-dark);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Botón de cerrar sesión */
+.btn-logout {
+    background: var(--error-light);
+    color: var(--error);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+.btn-logout:hover {
+    background: var(--error);
+    color: white;
+}
+
+/* Botón fantasma (icono) */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-size: var(--font-size-sm);
+}
+.btn-icon:hover {
+    background: var(--bg-surface);
+    color: var(--accent);
+}
+
+/* Botón volver */
+.btn-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+.btn-volver:hover {
+    background: var(--bg-surface);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* === BADGES DE ESTADO === */
+.badge-status {
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1;
+}
+.badge-status.pending {
+    background: var(--warning-light);
+    color: var(--warning-dark);
+}
+.badge-status.approved {
+    background: var(--success-light);
+    color: var(--success-dark);
+}
+.badge-status.rejected {
+    background: var(--error-light);
+    color: var(--error-dark);
+}
+
+/* Badge tipo */
+.badge-type {
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+}
+
+/* === TABLAS === */
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.custom-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.custom-table td {
+    padding: 14px 16px;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-light);
+    transition: background var(--transition-fast);
+}
+
+.custom-table tbody tr {
+    transition: background var(--transition-fast);
+}
+
+.custom-table tbody tr:hover td {
+    background: var(--bg-card-hover);
+}
+
+.custom-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.custom-table .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+/* === FORMULARIOS === */
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-input);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--bg-input);
+    transition: all var(--transition-base);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
+    background: var(--bg-input-focus);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}
+
+.form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-input);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--bg-input);
+    resize: vertical;
+    transition: all var(--transition-base);
+    min-height: 80px;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
+    background: var(--bg-input-focus);
+}
+
+/* === EMPTY STATE === */
+.empty-state {
+    text-align: center;
+    padding: var(--space-10) var(--space-6);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+/* === PAGINATION === */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.pagination button {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.pagination button:hover {
+    background: var(--bg-surface);
+    border-color: var(--border-input);
+    color: var(--text-primary);
+}
+
+.pagination button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+/* === TAB FILTERS === */
+.tab-filters {
+    display: flex;
+    gap: var(--space-1);
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 3px;
+}
+
+.tab-filters button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.tab-filters button:hover {
+    color: var(--text-primary);
+}
+
+.tab-filters button.active {
+    background: var(--bg-card);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* === TOOLTIP === */
+[data-tooltip] {
+    position: relative;
+}
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background: var(--text-primary);
+    color: white;
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-xs);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+    z-index: var(--z-tooltip, 999);
+}
+[data-tooltip]:hover::after {
+    opacity: 1;
+}
+
+/* === DIVIDER === */
+.divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: var(--space-3) 0;
+}

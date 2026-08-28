@@ -9,15 +9,14 @@ use App\Models\User;
 use App\Models\Activity;
 use App\Models\UserNotification;
 use App\Services\DashboardCache;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
     public function usuarios(Request $request)
     {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $rol = $request->get('rol', '');
         $search = $request->get('search', '');
 
@@ -39,36 +38,55 @@ class AdminController extends Controller
         return response()->json($users);
     }
 
-    public function showUsuario($id)
-    {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
-        $user = User::findOrFail($id);
-        return response()->json($user);
-    }
-
     public function updateUsuario(Request $request, $id)
     {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $user = User::findOrFail($id);
+        $currentUser = auth()->user();
 
         $request->validate([
             'rol' => 'required|in:usuario,admin,superadmin',
         ]);
 
+        $nuevoRol = $request->rol;
+
+        // Jerarquía de roles:
+        // - superadmin puede cambiar a cualquiera
+        // - admin solo puede cambiar a 'usuario'
+        // - usuario no puede cambiar roles (no llega aquí por middleware)
+        if ($currentUser->rol === 'admin' && $nuevoRol !== 'usuario') {
+            return response()->json(['mensaje' => 'Solo puedes asignar el rol de Usuario.'], 403);
+        }
+
+        if ($currentUser->rol === 'admin' && $user->rol === 'superadmin') {
+            return response()->json(['mensaje' => 'No puedes modificar el rol de un Superadmin.'], 403);
+        }
+
         $oldRol = $user->rol;
-        $user->rol = $request->rol;
+        $user->rol = $nuevoRol;
         $user->save();
 
         Activity::log('updated', 'usuario', $user->id,
-            "Rol de {$user->nombre} cambiado de {$oldRol} a {$request->rol}"
+            "Rol de {$user->nombre} cambiado de {$oldRol} a {$nuevoRol}"
         );
 
         return response()->json(['mensaje' => 'Permisos actualizados correctamente.']);
     }
 
+    public function deleteUsuario($id)
+    {
+        if ((int)$id === (int)auth()->id()) {
+            return response()->json(['mensaje' => 'No puedes eliminar tu propio usuario.'], 422);
+        }
+        $user = User::findOrFail($id);
+        if ($user->avatar) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+        }
+        $user->delete();
+        return response()->json(['mensaje' => 'Usuario eliminado.']);
+    }
+
     public function actividades(Request $request)
     {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $tipo = $request->get('tipo', '');
         $days = $request->get('days', 7);
 
@@ -87,30 +105,15 @@ class AdminController extends Controller
         return response()->json($activities);
     }
 
-    public function actividadResumen(Request $request)
+    public function actividadReciente()
     {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
-        $days = $request->get('days', 7);
-        $tipo = $request->get('tipo', '');
-        $since = now()->subDays($days);
-
-        $query = Activity::where('created_at', '>=', $since);
-
-        if ($tipo) {
-            $query->where('tipo_entidad', $tipo);
-        }
-
-        $resumen = $query->selectRaw('DATE(created_at) as fecha, tipo_entidad, COUNT(*) as total')
-            ->groupBy('fecha', 'tipo_entidad')
-            ->orderBy('fecha')
-            ->get();
-
-        return response()->json($resumen);
+        return response()->json(
+            Activity::latest()->take(20)->get()
+        );
     }
 
     public function enviarNotificacion(Request $request)
     {
-        abort_unless(in_array(auth()->user()?->rol, ['admin', 'superadmin']), 403, 'Acceso no autorizado');
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'titulo' => 'required|string|max:255',
@@ -120,34 +123,21 @@ class AdminController extends Controller
 
         $receptor = User::findOrFail($request->user_id);
 
-        $notif = UserNotification::create([
-            'user_id' => $request->user_id,
-            'from_user_id' => auth()->id(),
-            'titulo' => $request->titulo,
-            'mensaje' => $request->mensaje,
-            'tipo' => $request->tipo ?? 'info',
-        ]);
-
-        Activity::log('created', 'notificacion', $notif->id,
-            auth()->user()->nombre . " envió notificación a {$receptor->nombre}"
+        NotificationService::send(
+            $request->user_id,
+            $request->titulo,
+            $request->mensaje,
+            $request->tipo ?? 'info'
         );
 
-        try {
-            Mail::raw(
-                "Has recibido un mensaje de " . auth()->user()->nombre . ":\n\n" .
-                "Asunto: {$request->titulo}\n\n" .
-                "{$request->mensaje}\n\n" .
-                "---\nSistema SIGEJUB - Arquitectura de Confianza",
-                function ($message) use ($receptor, $request) {
-                    $message->to($receptor->correo, $receptor->nombre)
-                        ->subject('SIGEJUB - ' . $request->titulo);
-                }
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Error al enviar email de notificación: ' . $e->getMessage());
-        }
-
-        DashboardCache::flushNotifications($request->user_id);
+        NotificationService::sendEmail(
+            $receptor,
+            'SIGEJUB - ' . $request->titulo,
+            "Has recibido un mensaje de " . auth()->user()->nombre . ":\n\n" .
+            "Asunto: {$request->titulo}\n\n" .
+            "{$request->mensaje}\n\n" .
+            "---\nSistema SIGEJUB - Arquitectura de Confianza"
+        );
 
         return response()->json(['mensaje' => 'Notificación enviada correctamente.']);
     }

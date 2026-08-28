@@ -4,10 +4,9 @@ Sistema para la gestión de jubilaciones: trabajadores, solicitudes, expedientes
 
 ## Requisitos
 
-- **PHP** ^8.2 (extensiones: `gd`, `zip`, `intl`, `mbstring`, `curl`, `pdo_mysql`)
+- **PHP** ^8.2 (extensiones: `gd`, `zip`, `intl`, `mbstring`, `curl`, `pdo_mysql`, `pdo_pgsql`)
 - **Composer** (gestor de dependencias PHP)
-- **Node.js** ^20.19 o ^22.12 (con npm)
-- **MySQL / MariaDB**
+- **MySQL / MariaDB** (con phpMyAdmin) **o PostgreSQL** — a elección durante la instalación
 
 ## Instalación rápida (Windows)
 
@@ -25,9 +24,8 @@ El comando `composer setup` ejecuta automáticamente:
 - Crea el archivo `.env` desde `.env.example`
 - Genera la `APP_KEY`
 - Ejecuta las migraciones
-- Instala dependencias frontend (`npm install && npm run build`)
 
-> **Importante:** Antes de ejecutar `composer setup`, asegúrate de que la base de datos MySQL esté corriendo y crea la base de datos (`bd_sigejub`).
+> **Importante:** Antes de ejecutar `composer setup`, asegúrate de que tu gestor de base de datos (MySQL o PostgreSQL) esté corriendo y crea la base de datos (`bd_sigejub`). Configura la conexión en `.env` (`DB_CONNECTION=mysql|pgsql`).
 
 ## Iniciar el servidor
 
@@ -37,13 +35,20 @@ php artisan serve --port=8000
 
 Luego abre `http://localhost:8000` en el navegador.
 
-### Desarrollo con recarga en vivo
+### Desarrollo
 
 ```bash
 composer dev
 ```
 
-Esto inicia simultáneamente: servidor, colas de trabajo, logs y Vite con recarga automática.
+Esto inicia el servidor de desarrollo.
+
+## Linux
+
+```bash
+./setup.sh   # instalación inicial
+./start.sh   # iniciar servidor
+```
 
 ## Instalador gráfico (Windows)
 
@@ -54,16 +59,16 @@ También puedes usar `setup.bat` o `inicio.php` como alternativas.
 
 | Archivo | Descripción |
 |---|---|
-| `start.bat` | Inicia el servidor y abre el navegador |
+| `start.bat` / `start.sh` | Inicia el servidor y abre el navegador |
 | `inicio.php` | Auto-launcher web (funciona con Apache o `php artisan serve`) |
-| `detener.bat` | Detiene el servidor |
+| `detener.bat` / `detener.sh` | Detiene el servidor |
 
 ## Tecnologías
 
 - **Backend:** Laravel 12, PHP 8.2+
-- **Frontend:** Blade, Tailwind CSS v4, Vite
-- **Base de datos:** MySQL / MariaDB
-- **Librerías:** Chart.js, Mermaid.js, DOMPDF (PDF), PhpSpreadsheet (Excel)
+- **Frontend:** Blade, CSS/JS plano servido desde `public/` (sin build)
+- **Base de datos:** MySQL/MariaDB (phpMyAdmin) o PostgreSQL — seleccionable en la instalación
+- **Librerías:** Chart.js, DOMPDF (PDF), PhpSpreadsheet (Excel)
 
 ## Estructura del proyecto
 

@@ -37,4 +37,11 @@ return [
         ],
     ],
 
+    'tasas_cambio' => [
+        'enabled' => env('TASAS_API_ENABLED', false),
+        'url' => env('TASAS_API_URL', ''),
+        'moneda_origen' => env('TASAS_MONEDA_ORIGEN', 'USD'),
+        'moneda_destino' => env('TASAS_MONEDA_DESTINO', 'VES'),
+    ],
+
 ];

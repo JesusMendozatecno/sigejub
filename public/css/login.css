@@ -1,167 +1,434 @@
 /* ============================================================
-   login.css — Estilos para la página de inicio de sesión
-   Define el layout centrado, la tarjeta blanca, inputs y botón
-   de acceso. Diseño limpio y profesional con azul institucional.
+   login.css — Página de inicio de sesión SIGEJUB
+   Split layout: panel info izquierda + formulario derecha.
+   Soporte completo para 3 temas: light, dark, modern.
    ============================================================ */
 
-/* =========================
-   CONFIGURACIÓN GLOBAL
-   ========================= */
-* {
+/* === DESIGN TOKENS === */
+:root {
+    --login-bg: #f8fafc;
+    --login-surface: #ffffff;
+    --login-surface-alt: #f1f5f9;
+    --login-primary: #1a365d;
+    --login-primary-hover: #0f2340;
+    --login-primary-light: rgba(26, 54, 93, 0.08);
+    --login-text: #1e293b;
+    --login-text-secondary: #475569;
+    --login-text-muted: #94a3b8;
+    --login-border: #e2e8f0;
+    --login-input-bg: #f4f7fa;
+    --login-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --login-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+    --login-radius: 12px;
+    --login-radius-sm: 8px;
+    --login-transition: 0.3s ease;
+    --login-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1a365d 100%);
+    --login-success: #16a34a;
+    --login-error: #dc2626;
+}
+
+body.dark-mode {
+    --login-bg: #0b1120;
+    --login-surface: #1e293b;
+    --login-surface-alt: #1a2332;
+    --login-primary: #60a5fa;
+    --login-primary-hover: #93c5fd;
+    --login-primary-light: rgba(96, 165, 250, 0.1);
+    --login-text: #f1f5f9;
+    --login-text-secondary: #cbd5e1;
+    --login-text-muted: #64748b;
+    --login-border: #334155;
+    --login-input-bg: #0f172a;
+    --login-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    --login-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+    --login-gradient: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+}
+
+body.theme-modern {
+    --login-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --login-surface: rgba(255, 255, 255, 0.1);
+    --login-surface-alt: rgba(255, 255, 255, 0.05);
+    --login-primary: #ffffff;
+    --login-primary-hover: rgba(255, 255, 255, 0.9);
+    --login-primary-light: rgba(255, 255, 255, 0.12);
+    --login-text: #ffffff;
+    --login-text-secondary: rgba(255, 255, 255, 0.85);
+    --login-text-muted: rgba(255, 255, 255, 0.55);
+    --login-border: rgba(255, 255, 255, 0.15);
+    --login-input-bg: rgba(255, 255, 255, 0.08);
+    --login-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    --login-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.3);
+    --login-gradient: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7c3aed 100%);
+}
+
+/* === RESET === */
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    /* Fondo con gradiente sutil: blanco puro al centro, gris muy claro en bordes */
-    background: radial-gradient(circle at center, #ffffff 0%, #e9eff5 100%);
-    height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--login-bg);
+    min-height: 100vh;
+    display: flex;
+    color: var(--login-text);
+}
+
+body.theme-modern {
+    background: var(--login-bg);
+    background-attachment: fixed;
+}
+
+/* === SPLIT LAYOUT === */
+.login-split {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* === LEFT PANEL (INFO) === */
+.login-info {
+    flex: 1;
+    background: var(--login-gradient);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 48px;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-info::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.login-info-content {
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.login-info-logo {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 28px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.login-info-logo img {
+    width: 44px;
+    height: 44px;
+}
+
+.login-info-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.login-info-subtitle {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 40px;
+    line-height: 1.5;
+}
+
+.login-info-features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+}
+
+.login-info-feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.login-info-feature-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+}
+
+.login-info-feature-text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.4;
+}
+
+.login-info-feature-text strong {
+    display: block;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+/* === RIGHT PANEL (FORM) === */
+.login-form-panel {
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 40px 24px;
+    background: var(--login-surface);
+    transition: background var(--login-transition);
 }
 
-/* =========================
-   CONTENEDORES PRINCIPALES
-   ========================= */
-.login-container, .register-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.login-form-wrapper {
     width: 100%;
     max-width: 400px;
 }
 
-/* Títulos fuera de la tarjeta — estilo "Gestión Retiro" */
-h2 {
-    color: #002366; /* Azul marino institucional */
-    margin-bottom: 5px;
-    font-size: 22px;
-    text-align: center;
+.login-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--login-text-muted);
+    text-decoration: none;
+    margin-bottom: 32px;
+    transition: color var(--login-transition);
 }
 
-p {
-    color: #666;
+.login-back:hover {
+    color: var(--login-primary);
+}
+
+.login-back i {
+    font-size: 12px;
+}
+
+.login-form-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--login-text);
+    margin-bottom: 6px;
+}
+
+.login-form-subtitle {
     font-size: 14px;
-    margin-bottom: 20px;
-    text-align: center;
+    color: var(--login-text-muted);
+    margin-bottom: 32px;
 }
 
-/* =========================
-   TARJETA (CARD)
-   ========================= */
-/* .card para login, register-container form para registro */
-.card, .register-container form {
-    background: white;
-    padding: 40px;
-    width: 100%;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+/* === INPUT GROUPS === */
+.login-input-group {
+    margin-bottom: 18px;
 }
 
-/* =========================
-   INPUTS Y GRUPOS
-   ========================= */
-.input-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-.input-group label {
+.login-input-group label {
     display: block;
-    font-size: 11px;
-    font-weight: bold;
-    color: #444;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--login-text-secondary);
     text-transform: uppercase;
-    margin-bottom: 5px;
     letter-spacing: 0.5px;
+    margin-bottom: 6px;
 }
 
-input, select {
+.login-input {
     width: 100%;
-    padding: 12px 15px;
-    background-color: #f4f7fa; /* Gris muy claro de la imagen */
-    border: 1px solid #e1e5ee;
-    border-radius: 8px;
+    padding: 13px 16px;
+    background: var(--login-input-bg);
+    border: 1px solid var(--login-border);
+    border-radius: var(--login-radius-sm);
     font-size: 14px;
-    color: #333;
-    transition: all 0.3s ease;
+    color: var(--login-text);
+    font-family: inherit;
+    transition: all var(--login-transition);
 }
 
-input:focus, select:focus {
+.login-input:focus {
     outline: none;
-    border-color: #002366;
-    background-color: #fff;
+    border-color: var(--login-primary);
+    background: var(--login-surface);
+    box-shadow: 0 0 0 3px var(--login-primary-light);
 }
 
-/* Estilo para los inputs del registro que no tienen .input-group */
-.register-container input, .register-container select {
-    margin-bottom: 15px;
+.login-input::placeholder {
+    color: var(--login-text-muted);
 }
 
-/* =========================
-   BOTONES
-   ========================= */
-.btn, .register-container button {
-    width: 100%;
-    padding: 14px;
-    background: #002366; /* Azul oscuro de la imagen */
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-    margin-top: 10px;
+body.theme-modern .login-input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
 }
 
-.btn:hover, .register-container button:hover {
-    background: #001a4d;
+/* === PASSWORD TOGGLE === */
+.login-password-wrapper {
+    position: relative;
 }
 
-/* =========================
-   ENLACES INFERIORES
-   ========================= */
-a {
-    color: #002366;
-    text-decoration: none;
-    font-weight: 600;
+.login-password-wrapper .login-input {
+    padding-right: 44px;
 }
 
-a:hover {
-    text-decoration: underline;
-}
-/* =========================
-   BOTÓN DE VOLVER (FLECHA)
-   ========================= */
-/* Botón circular con flecha, posicionado absoluto en la tarjeta */
-.btn-back {
+.login-toggle-password {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    color: #64748b; /* Gris suave de tu paleta */
-    text-decoration: none;
-    transition: all 0.3s ease;
+    right: 4px;
+    bottom: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--login-text-muted);
+    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background: #f1f5f9; /* Fondo muy claro */
+    transition: color var(--login-transition);
+    border-radius: 6px;
 }
 
-.btn-back:hover {
-    color: #002366; /* El azul marino de tu proyecto */
-    background: #e2e8f0;
-    transform: translateX(-3px); /* Efecto sutil de retroceso */
+.login-toggle-password:hover {
+    color: var(--login-primary);
+    background: var(--login-primary-light);
 }
 
-/* Asegura que la tarjeta tenga position: relative para el posicionamiento del btn-back */
-.card, .register-container {
-    position: relative;
-    padding-top: 50px; /* Espacio extra para que la flecha no tape el título */
+/* === REMEMBER ME === */
+.login-remember {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.login-remember label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--login-text-secondary);
+    cursor: pointer;
+}
+
+.login-remember input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--login-primary);
+    cursor: pointer;
+}
+
+.login-forgot {
+    font-size: 13px;
+    color: var(--login-primary);
+    font-weight: 500;
+    transition: opacity var(--login-transition);
+}
+
+.login-forgot:hover {
+    opacity: 0.8;
+}
+
+/* === SUBMIT BUTTON === */
+.login-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--login-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--login-radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--login-transition);
+    font-family: inherit;
+}
+
+.login-submit:hover {
+    background: var(--login-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.login-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+body.theme-modern .login-submit {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.theme-modern .login-submit:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* === REGISTER LINK === */
+.login-register-link {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--login-text-muted);
+}
+
+.login-register-link a {
+    color: var(--login-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity var(--login-transition);
+}
+
+.login-register-link a:hover {
+    opacity: 0.8;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .login-split {
+        flex-direction: column;
+    }
+
+    .login-info {
+        display: none;
+    }
+
+    .login-form-panel {
+        min-height: 100vh;
+        padding: 24px;
+    }
+
+    .login-form-wrapper {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-form-panel {
+        padding: 20px 16px;
+    }
+
+    .login-form-title {
+        font-size: 22px;
+    }
 }

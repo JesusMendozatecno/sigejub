@@ -166,20 +166,19 @@
         }
 
         try {
-            const [cTrab, cPend, cAprob, cRech, cMes, cVenc] = await Promise.all([
+            const [cTrab, cStats, cMes, cVenc] = await Promise.all([
                 cachedFetch('/trabajadores?per_page=1'),
-                cachedFetch('/solicitudes?estado=pending&per_page=1'),
-                cachedFetch('/solicitudes?estado=approved&per_page=1'),
-                cachedFetch('/solicitudes?estado=rejected&per_page=1'),
+                cachedFetch('/solicitudes/estadisticas'),
                 cachedFetch('/solicitudes/por-mes'),
                 cachedFetch('/solicitudes/vencimientos'),
             ]);
 
+            const stats = cStats.data;
             const data = {
                 totalTrab: cTrab.data.total || 0,
-                totalPend: cPend.data.total || 0,
-                totalAprob: cAprob.data.total || 0,
-                totalRech: cRech.data.total || 0,
+                totalPend: stats.pendiente || 0,
+                totalAprob: stats.aprobado || 0,
+                totalRech: stats.rechazado || 0,
                 porMes: cMes.data,
                 vencimientos: cVenc.data,
             };

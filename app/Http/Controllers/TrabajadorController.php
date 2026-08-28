@@ -54,9 +54,14 @@ class TrabajadorController extends Controller
             }
         }
 
-        $trabajadores = $query->orderBy('apellidos', 'asc')
-                              ->orderBy('nombres', 'asc')
-                              ->paginate($request->get('per_page', 10));
+        // Filtro por asignación (Manual / Nomina)
+        if ($asignacion = $request->get('asignacion')) {
+            $query->where('asignacion', $asignacion);
+        }
+
+        $trabajadores = $query->orderBy('nombres', 'asc')
+                              ->orderBy('apellidos', 'asc')
+                              ->paginate(min($request->get('per_page', 10), 100));
 
         return response()->json($trabajadores);
     }
@@ -67,6 +72,7 @@ class TrabajadorController extends Controller
      */
     public function autocomplete(Request $request)
     {
+        // Mostrar trabajadores sin solicitud activa o con solicitud rechazada
         $query = Trabajador::query()->whereDoesntHave('solicitudes', function ($q) {
             $q->whereIn('estado', ['pendiente', 'revision', 'aprobado']);
         });
@@ -79,7 +85,7 @@ class TrabajadorController extends Controller
         }
 
         $trabajadores = $query->orderBy('created_at', 'desc')
-                              ->take(10)
+                              ->take(20)
                               ->get(['id', 'nombres', 'apellidos', 'cedula']);
 
         return response()->json($trabajadores);
@@ -111,6 +117,7 @@ class TrabajadorController extends Controller
             'nivel_instruccion' => $trabajador->nivel_instruccion,
             'numero_hijos' => $trabajador->numero_hijos,
             'hijos_discapacidad' => $trabajador->hijos_discapacidad,
+            'actividad_universitaria' => (bool) $trabajador->actividad_universitaria,
             'cuenta_bancaria' => $trabajador->cuenta_bancaria,
             'estatus' => $trabajador->estatus,
             'porcentaje_antiguedad' => $trabajador->porcentaje_antiguedad,
@@ -127,32 +134,43 @@ class TrabajadorController extends Controller
     {
         try {
             $validated = $request->validate([
-                'cedula' => 'required|unique:trabajadores,cedula',
-                'nombres' => 'required|string|max:100',
-                'apellidos' => 'required|string|max:100',
+                'cedula' => 'required|unique:trabajadores,cedula|regex:/^[VEJPG]-?\d{5,10}$/i',
+                'nombres' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
+                'apellidos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
                 'genero' => 'required|in:M,F',
-                'cargo' => 'required|string',
-                'unidad_departamento' => 'required|string',
-                'grado_nivel' => 'required|string|max:50',
+                'cargo' => 'required|string|max:150',
+                'cargo_id' => 'nullable|integer|exists:cargos,id',
+                'unidad_departamento' => 'required|string|max:150',
+                'grado_nivel' => 'required|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
                 'fecha_ingreso' => 'required|date',
                 'fecha_nacimiento' => 'required|date',
-                'anos_servicio_externo' => 'nullable|integer',
-                'nivel_instruccion' => 'nullable|integer',
-                'cuenta_bancaria' => 'nullable|string|max:20',
-                'numero_hijos' => 'nullable|integer',
-                'hijos_discapacidad' => 'nullable|integer',
-                'porcentaje_antiguedad' => 'nullable|numeric',
-                'porcentaje_caja_ahorro' => 'nullable|numeric',
+                'anos_servicio_externo' => 'nullable|integer|min:0|max:60',
+                'nivel_instruccion' => 'nullable|integer|min:1|max:5',
+                'cuenta_bancaria' => 'nullable|string|digits:20',
+                'numero_hijos' => 'nullable|integer|min:0',
+                'hijos_discapacidad' => 'nullable|integer|min:0',
+                'actividad_universitaria' => 'nullable|boolean',
+                'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
+                'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
             ]);
 
             $datos = $validated;
 
-            // --- VALORES POR DEFECTO PARA CAMPOS OPCIONALES ---
+            if (!empty($datos['cargo_id']) && empty($datos['cargo'])) {
+                $cargo = \App\Models\Cargo::find($datos['cargo_id']);
+                if ($cargo) {
+                    $datos['cargo'] = $cargo->nombre;
+                }
+            }
+
             $datos['numero_hijos'] = $datos['numero_hijos'] ?? 0;
             $datos['hijos_discapacidad'] = $datos['hijos_discapacidad'] ?? 0;
+            $datos['actividad_universitaria'] = $datos['actividad_universitaria'] ?? false;
             $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
+            $datos['anos_servicio_externo'] = $datos['anos_servicio_externo'] ?? 0;
+            $datos['nivel_instruccion'] = $datos['nivel_instruccion'] ?? 1;
+            $datos['asignacion'] = 'Manual';
 
-            // --- CÁLCULOS AUTOMÁTICOS ---
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
             $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
             $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
@@ -173,9 +191,10 @@ class TrabajadorController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al crear trabajador: ' . $e->getMessage());
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Error en la base de datos: ' . $e->getMessage()
+                'mensaje' => 'Error interno al registrar el trabajador.'
             ], 500);
         }
     }
@@ -189,32 +208,42 @@ class TrabajadorController extends Controller
             $trabajador = Trabajador::findOrFail($id);
 
             $validated = $request->validate([
-                'cedula' => 'required|unique:trabajadores,cedula,' . $trabajador->id,
-                'nombres' => 'required|string|max:100',
-                'apellidos' => 'required|string|max:100',
+                'cedula' => 'required|unique:trabajadores,cedula,' . $trabajador->id . '|regex:/^[VEJPG]-?\d{5,10}$/i',
+                'nombres' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
+                'apellidos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
                 'genero' => 'required|in:M,F',
-                'cargo' => 'required|string',
-                'unidad_departamento' => 'required|string',
-                'grado_nivel' => 'required|string|max:50',
+                'cargo' => 'required|string|max:150',
+                'cargo_id' => 'nullable|integer|exists:cargos,id',
+                'unidad_departamento' => 'required|string|max:150',
+                'grado_nivel' => 'required|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
                 'fecha_ingreso' => 'required|date',
                 'fecha_nacimiento' => 'required|date',
-                'anos_servicio_externo' => 'nullable|integer',
-                'nivel_instruccion' => 'nullable|integer',
-                'cuenta_bancaria' => 'nullable|string|max:20',
-                'numero_hijos' => 'nullable|integer',
-                'hijos_discapacidad' => 'nullable|integer',
-                'porcentaje_antiguedad' => 'nullable|numeric',
-                'porcentaje_caja_ahorro' => 'nullable|numeric',
+                'anos_servicio_externo' => 'nullable|integer|min:0|max:60',
+                'nivel_instruccion' => 'nullable|integer|min:1|max:5',
+                'cuenta_bancaria' => 'nullable|string|digits:20',
+                'numero_hijos' => 'nullable|integer|min:0',
+                'hijos_discapacidad' => 'nullable|integer|min:0',
+                'actividad_universitaria' => 'nullable|boolean',
+                'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
+                'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
             ]);
 
             $datos = $validated;
 
-            // --- VALORES POR DEFECTO PARA CAMPOS OPCIONALES ---
+            if (!empty($datos['cargo_id']) && empty($datos['cargo'])) {
+                $cargo = \App\Models\Cargo::find($datos['cargo_id']);
+                if ($cargo) {
+                    $datos['cargo'] = $cargo->nombre;
+                }
+            }
+
             $datos['numero_hijos'] = $datos['numero_hijos'] ?? 0;
             $datos['hijos_discapacidad'] = $datos['hijos_discapacidad'] ?? 0;
+            $datos['actividad_universitaria'] = $datos['actividad_universitaria'] ?? false;
             $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
+            $datos['anos_servicio_externo'] = $datos['anos_servicio_externo'] ?? ($request->anos_servicio_externo ?? 0);
+            $datos['nivel_instruccion'] = $datos['nivel_instruccion'] ?? 1;
 
-            // Recalcular si cambió fecha de nacimiento o ingreso
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
             $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
             $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
@@ -236,9 +265,10 @@ class TrabajadorController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al actualizar trabajador: ' . $e->getMessage());
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Error al actualizar: ' . $e->getMessage()
+                'mensaje' => 'Error interno al actualizar el trabajador.'
             ], 500);
         }
     }
@@ -291,14 +321,15 @@ class TrabajadorController extends Controller
                 "Se dio de baja al trabajador {$trabajador->nombres} {$trabajador->apellidos}");
 
             return response()->json([
-                'status' => 'success',
+                'estado' => 'success',
                 'mensaje' => 'Trabajador eliminado correctamente.'
             ]);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al eliminar trabajador: ' . $e->getMessage());
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Error al eliminar: ' . $e->getMessage()
+                'mensaje' => 'Error interno al eliminar el trabajador.'
             ], 500);
         }
     }

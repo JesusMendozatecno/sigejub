@@ -59,11 +59,12 @@
     <div class="detalle-grid">
         <aside class="detalle-sidebar">
             <div class="perfil-expediente">
-                <div class="foto-expediente" id="fotoExpediente">
+                <div class="foto-expediente" id="fotoExpediente" style="cursor:pointer;" title="Cambiar foto carnet">
                     <img src="" alt="Foto" id="imgFotoCarnet">
                     <div class="foto-placeholder" id="fotoPlaceholder">
                         <i class="fas fa-user" size="48"></i>
                     </div>
+                    <input type="file" id="inputEditFotoCarnet" accept="image/*" class="hidden">
                 </div>
                 <h2 id="detalleNombre"></h2>
                 <span class="detalle-cedula" id="detalleCedula"></span>
@@ -101,6 +102,11 @@
                 <button class="btn-subir-doc" id="btnSubirDoc"><i class="fas fa-upload" size="16"></i> Subir Documento</button>
             </div>
 
+            <div id="docsRequeridos" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;">
+                <h4 style="font-size:0.85rem;color:#0f172a;margin:0 0 10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-clipboard-check" style="color:#2563eb;"></i> Documentos Requeridos para Aprobación</h4>
+                <div id="checklistRequeridos" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
+            </div>
+
             <div class="documentos-list" id="documentosList">
                 <p class="empty-state" style="padding: 30px;">No hay documentos cargados.</p>
             </div>
@@ -129,7 +135,7 @@
                 <section class="form-section">
                     <h3><i class="fas fa-search"></i> Buscar Trabajador</h3>
                     <div class="busqueda-cedula-row">
-                        <input type="text" id="inputBuscarCedula" placeholder="Ingrese la cédula (V-00000000)" required>
+                        <input type="text" id="inputBuscarCedula" placeholder="Ingrese la cédula (V-00000000)" required pattern="[VEJPGvejpg]-?\d{5,10}" title="Formato: V-12345678" onkeypress="if(!/[VEJPGvejpg0-9\-]/.test(event.key))event.preventDefault()">
                         <button type="button" class="btn-submit" id="btnBuscarTrabajador">Buscar</button>
                     </div>
                     <div id="resultadoBusqueda" class="hidden">
@@ -158,18 +164,6 @@
                     </div>
                 </section>
 
-                <section class="form-section">
-                    <h3><i class="fas fa-upload"></i> Documentos</h3>
-                    <p style="font-size:0.85rem;color:#64748b;margin-bottom:15px;">Seleccione los archivos PDF o imágenes para adjuntar al expediente.</p>
-                    <input type="file" name="documentos[]" id="inputDocumentos" multiple accept=".pdf" class="hidden">
-                    <div class="dropzone-docs" id="dropzoneDocs">
-                        <i class="fas fa-cloud-arrow-up" size="36"></i>
-                        <p>Arrastre los archivos aquí o haga clic para seleccionar</p>
-                        <span>Solo PDF hasta 5MB</span>
-                    </div>
-                    <ul class="file-preview-list" id="filePreviewList"></ul>
-                </section>
-
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" id="btnCancelarExpediente">Cancelar</button>
                     <button type="submit" class="btn-submit" id="btnSubmitExpediente">Crear Expediente</button>
@@ -182,7 +176,7 @@
 <div id="modalSubirDocumento" class="modal-overlay">
     <div class="modal-delete-box" style="text-align:left;max-width:500px;">
         <h3 style="text-align:center;">Subir Documento</h3>
-        <form id="formSubirDocumento">
+        <form id="formSubirDocumento" enctype="multipart/form-data">
             @csrf
             <div class="input-group">
                 <label>NOMBRE DEL DOCUMENTO</label>
@@ -199,7 +193,7 @@
             </div>
             <div class="input-group">
                 <label>ARCHIVO</label>
-                <input type="file" name="archivo" required accept=".pdf">
+                <input type="file" name="archivo" required accept=".pdf,.jpg,.jpeg,.png">
             </div>
             <div class="modal-actions" style="justify-content:center;">
                 <button type="button" class="btn-cancel" id="btnCancelarSubirDoc">Cancelar</button>
@@ -218,7 +212,7 @@
             @csrf
             <div class="input-group">
                 <label>ARCHIVO (PDF)</label>
-                <input type="file" name="carta" accept=".pdf" required>
+                <input type="file" name="carta" accept=".pdf,.jpg,.jpeg,.png" required>
             </div>
             <div class="modal-actions" style="justify-content:center;">
                 <button type="button" class="btn-cancel" id="btnCancelarCarta">Cancelar</button>
@@ -251,7 +245,8 @@
         if (!grid) return;
         try {
             const result = await cachedFetch('/expedientes', { ttl: 60000 });
-            const data = result.data;
+            const raw = result.data;
+            const data = Array.isArray(raw) ? raw : (raw.data || []);
             grid.innerHTML = '';
             if (!data.length) {
                 grid.innerHTML = '<p class="empty-state">No hay expedientes registrados. Cree el primero.</p>';
@@ -319,6 +314,7 @@
             document.getElementById('notasAdminInput').value = exp.notas_admin || '';
 
             actualizarProgresoGlobal(exp.estado_global || 0);
+            renderChecklistRequeridos(exp.documentos || []);
             renderDocumentos(exp.documentos || []);
             renderCartaAprobacion(exp);
             cargarActividadExpediente();
@@ -407,6 +403,28 @@
         // Placeholder para actividad del expediente
     }
 
+    const DOCS_REQUERIDOS = [
+        'Cédula de Identidad',
+        'Oficio de Solicitud',
+        'Punto de Cuenta',
+        'Constancia de Trabajo',
+        'Recibo de Nómina',
+        'Informe Médico',
+    ];
+
+    function renderChecklistRequeridos(documentos) {
+        const container = document.getElementById('checklistRequeridos');
+        if (!container) return;
+        const nombresSubidos = documentos.map(d => d.nombre);
+        let html = '';
+        DOCS_REQUERIDOS.forEach(nombre => {
+            const tiene = nombresSubidos.includes(nombre);
+            const icono = tiene ? '<i class="fas fa-check-circle" style="color:#16a34a;"></i>' : '<i class="fas fa-circle" style="color:#d1d5db;"></i>';
+            html += '<div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:' + (tiene ? '#16a34a' : '#64748b') + ';">' + icono + ' ' + nombre + '</div>';
+        });
+        container.innerHTML = html;
+    }
+
     window.volverALista = function() {
         document.getElementById('expediente-detalle').classList.add('hidden');
         document.getElementById('expedientes-lista').classList.remove('hidden');
@@ -425,7 +443,6 @@
             document.getElementById('resultadoBusqueda').classList.add('hidden');
             document.getElementById('errorBusqueda').classList.add('hidden');
             document.getElementById('formCrearExpediente').reset();
-            document.getElementById('filePreviewList').innerHTML = '';
         });
 
         // Cerrar modal crear
@@ -492,45 +509,34 @@
             }
         });
 
-        // Dropzone documentos
-        const dropzone = document.getElementById('dropzoneDocs');
-        const inputDocs = document.getElementById('inputDocumentos');
-        const fileList = document.getElementById('filePreviewList');
-        dropzone?.addEventListener('click', () => inputDocs.click());
-        dropzone?.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
-        dropzone?.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-        dropzone?.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files);
-            const noPdf = files.some(f => f.type !== 'application/pdf');
-            if (noPdf) {
-                mostrarToast('Solo se permiten archivos PDF.', 'error');
-                return;
-            }
-            inputDocs.files = e.dataTransfer.files;
-            inputDocs.dispatchEvent(new Event('change'));
+        // Editar foto carnet desde el detalle
+        document.getElementById('fotoExpediente')?.addEventListener('click', () => {
+            document.getElementById('inputEditFotoCarnet').click();
         });
-        inputDocs?.addEventListener('change', () => {
-            fileList.innerHTML = '';
-            let hayError = false;
-            Array.from(inputDocs.files).forEach(f => {
-                if (f.type !== 'application/pdf') {
-                    hayError = true;
-                    const li = document.createElement('li');
-                    li.style.color = '#dc2626';
-                    li.innerHTML = `<i class="fas fa-circle-exclamation"></i> ${f.name} <span>(no es PDF)</span>`;
-                    fileList.appendChild(li);
-                    return;
-                }
-                const li = document.createElement('li');
-                li.innerHTML = `<i class="fas fa-file-pdf"></i> ${f.name} <span>(${(f.size/1024).toFixed(1)} KB)</span>`;
-                fileList.appendChild(li);
-            });
-            if (hayError) {
-                mostrarToast('Solo se permiten archivos PDF.', 'error');
-                inputDocs.value = '';
-                fileList.innerHTML = '';
+        document.getElementById('inputEditFotoCarnet')?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !expedienteActualId) return;
+            const formData = new FormData();
+            formData.append('foto_carnet', file);
+            try {
+                mostrarCargando('Actualizando foto carnet...');
+                const resp = await fetch(`/expedientes/${expedienteActualId}/foto-carnet`, {
+                    method: 'POST', body: formData,
+                    headers: { 'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw data;
+                document.getElementById('imgFotoCarnet').src = '/storage/' + data.foto_carnet;
+                document.getElementById('imgFotoCarnet').classList.remove('hidden');
+                document.getElementById('fotoPlaceholder').classList.add('hidden');
+                mostrarToast(data.mensaje, 'success');
+            } catch (err) {
+                mostrarToast(err.mensaje || 'Error al actualizar foto', 'error');
+            } finally {
+                ocultarCargando();
+                e.target.value = '';
             }
         });
 
@@ -680,7 +686,7 @@
                 const id = btnReupload.dataset.id;
                 const input = document.createElement('input');
                 input.type = 'file';
-                input.accept = '.pdf';
+                input.accept = '.pdf,.jpg,.jpeg,.png';
                 input.onchange = async () => {
                     const file = input.files[0];
                     if (!file) return;

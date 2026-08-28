@@ -10,6 +10,7 @@
     let trabajadorSeleccionadoId = null;   // ID del trabajador en edición/visualización
     let filaSeleccionadaDOM = null;        // Referencia a la fila <tr> para animaciones
     let modoEdicionActivo = false;         // true = modo edición, false = solo lectura
+    let paginaActualTrabajadores = 1;
 
     // ============================================
     // REFERENCIAS AL DOM — Modal principal y formulario
@@ -24,6 +25,11 @@
     // Referencias al modal de confirmación de eliminación
     const modalEliminar = document.getElementById('modalEliminarConfirm');
     const deleteWorkerName = document.getElementById('deleteWorkerName');
+
+    // Referencias al modal de agregar catálogo
+    const modalCatalogo = document.getElementById('modalAgregarCatalogo');
+    let catalogoTipoActual = '';  // 'cargo' o 'grado'
+    let catalogoSelectRef = null;
 
     // ============================================
     // INICIALIZACIÓN — Eventos al cargar el DOM
@@ -47,6 +53,10 @@
 
                 form.reset();
                 habilitarCamposFormulario(true);  // Todos los campos editables
+
+                // Cargar opciones de catálogos
+                cargarOpcionesCatalogo('cargo', 'selectCargo');
+                cargarOpcionesCatalogo('grado', 'selectGradoNivel');
 
                 modalTitle.innerHTML = "Registrar<br>Nuevo<br>Trabajador";
                 modalDescription.textContent = "Complete el expediente institucional para iniciar el cálculo de antigüedad.";
@@ -103,6 +113,37 @@
                 if (btnSubmit) btnSubmit.disabled = true;
 
                 const formData = new FormData(this);
+
+                // Combinar tipo_documento + cédula en un solo campo
+                const tipoDoc = document.getElementById('selectTipoDocumento');
+                const inputCed = document.getElementById('inputCedula');
+                if (tipoDoc && inputCed && inputCed.value) {
+                    formData.delete('cedula');
+                    formData.append('cedula', tipoDoc.value + '-' + inputCed.value);
+                }
+
+                // Manejar checkbox actividad_universitaria (unchecked = no enviado)
+                const checkAct = document.getElementById('checkActividadUniversitaria');
+                formData.delete('actividad_universitaria');
+                formData.append('actividad_universitaria', checkAct && checkAct.checked ? '1' : '0');
+
+                // Resolver cargo_id desde el select
+                const selectCargo = document.getElementById('selectCargo');
+                if (selectCargo && selectCargo.value) {
+                    formData.delete('cargo_id');
+                    formData.append('cargo_id', selectCargo.value);
+                } else {
+                    formData.delete('cargo_id');
+                }
+
+                // Asegurar numero_hijos y hijos_discapacidad si los grupos están ocultos
+                if (!document.getElementById('checkTieneHijos')?.checked) {
+                    formData.set('numero_hijos', '0');
+                }
+                if (!document.getElementById('checkHijosDiscapacidad')?.checked) {
+                    formData.set('hijos_discapacidad', '0');
+                }
+
                 let url = '/trabajadores';  // Ruta por defecto: creación
 
                 // Si está en modo edición, cambia la URL y agrega spoofing de método PUT
@@ -127,7 +168,14 @@
                     if (!response.ok) throw data;
 
                     mostrarToast(data.mensaje || 'Operación completada con éxito.', 'success');
+                    if (window.limpiarCacheSigejub) window.limpiarCacheSigejub();
                     form.reset();
+                    // Resetear checkboxes manualmente (form.reset no resetea checkboxes personalizados)
+                    document.getElementById('checkTieneHijos').checked = false;
+                    toggleHijosFields();
+                    document.getElementById('checkHijosDiscapacidad').checked = false;
+                    toggleHijosDiscapacidadFields();
+                    document.getElementById('checkActividadUniversitaria').checked = false;
                     cerrarTodoModal();
                     cargarTrabajadores();  // Refresca la tabla sin recargar la página
 
@@ -153,10 +201,13 @@
         // FILTROS REACTIVOS — Cambian la consulta de la tabla en tiempo real
         // ============================================
         const selEstatus = document.getElementById('filtroEstatus');
-        if (selEstatus) selEstatus.addEventListener('change', () => cargarTrabajadores(selEstatus.value));
+        if (selEstatus) selEstatus.addEventListener('change', () => cargarTrabajadores(selEstatus.value, selNomina?.value || '', selAsignacion?.value || ''));
 
         const selNomina = document.getElementById('filtroNomina');
-        if (selNomina) selNomina.addEventListener('change', () => cargarTrabajadores(selEstatus?.value || '', selNomina.value));
+        if (selNomina) selNomina.addEventListener('change', () => cargarTrabajadores(selEstatus?.value || '', selNomina.value, selAsignacion?.value || ''));
+
+        const selAsignacion = document.getElementById('filtroAsignacion');
+        if (selAsignacion) selAsignacion.addEventListener('change', () => cargarTrabajadores(selEstatus?.value || '', selNomina?.value || '', selAsignacion.value));
 
         // ============================================
         // CONFIRMACIÓN DE ELIMINACIÓN — Botón "Sí, eliminar"
@@ -164,18 +215,124 @@
         if (btnSiEliminar) {
             btnSiEliminar.addEventListener('click', ejecutarBajaTrabajador);
         }
+
+        // ============================================
+        // MODAL CATÁLOGO — Eventos de cancelar y guardar
+        // ============================================
+        const btnCancelarCatalogo = document.getElementById('btnCancelarCatalogo');
+        const btnGuardarCatalogo = document.getElementById('btnGuardarCatalogo');
+        if (btnCancelarCatalogo) btnCancelarCatalogo.addEventListener('click', cerrarModalCatalogo);
+        if (btnGuardarCatalogo) btnGuardarCatalogo.addEventListener('click', guardarCatalogo);
+        if (modalCatalogo) {
+            window.addEventListener('click', (e) => { if (e.target === modalCatalogo) cerrarModalCatalogo(); });
+        }
+
     });
 
     // ============================================
-    // CARGAR TRABAJADORES — Tabla dinámica con filtros
-    // GET /trabajadores?estatus=...&nomina=...
+    // CARGAR OPCS DE CATÁLOGO — Carga opciones desde /master/{tipo} y agrega "Agregar nuevo"
     // ============================================
-    async function cargarTrabajadores(estatus = '', nomina = '') {
+    async function cargarOpcionesCatalogo(tipo, selectId, selectedValue) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        try {
+            const res = await fetch(`/master/${tipo}?solo_activos=1&per_page=100`);
+            const data = await res.json();
+            const items = data.data || [];
+            select.innerHTML = '<option value="" disabled selected>Seleccione...</option>';
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                if (tipo === 'cargo') {
+                    opt.value = item.id;
+                    opt.textContent = item.codigo + ' — ' + item.nombre;
+                    opt.dataset.nombre = item.nombre;
+                    if (selectedValue && item.nombre === selectedValue) opt.selected = true;
+                } else {
+                    opt.value = item.nombre;
+                    opt.textContent = item.codigo + ' — ' + item.nombre;
+                    if (selectedValue && item.nombre === selectedValue) opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        } catch (err) {
+            console.error('Error cargando catálogo ' + tipo + ':', err);
+            select.innerHTML = '<option value="" disabled>Error al cargar</option>';
+        }
+    }
+
+    function seleccionarValorCatalogo(selectId, valor) {
+        const select = document.getElementById(selectId);
+        if (!select || !valor) return;
+        const opciones = Array.from(select.options);
+        const match = opciones.find(o => o.dataset && o.dataset.nombre === valor) || opciones.find(o => o.value === valor);
+        if (match) {
+            select.value = match.value;
+        } else {
+            // Si no existe en el catálogo, agregarlo temporalmente y seleccionarlo
+            const opt = document.createElement('option');
+            opt.value = valor;
+            opt.textContent = valor;
+            opt.selected = true;
+            select.insertBefore(opt, select.options[select.options.length - 1]); // antes de "Agregar nuevo"
+        }
+    }
+
+    // ============================================
+    // MODAL AGREGAR CATÁLOGO — Abrir, guardar, cerrar
+    // ============================================
+    function abrirModalCatalogo(tipo, selectRef) {
+        catalogoTipoActual = tipo;
+        catalogoSelectRef = selectRef;
+        const titulo = document.getElementById('tituloModalCatalogo');
+        if (titulo) titulo.innerHTML = `<i class="fas fa-plus-circle"></i> Agregar Nuevo ${tipo === 'cargo' ? 'Cargo' : 'Grado'}`;
+        document.getElementById('inputNombreCatalogo').value = '';
+        document.getElementById('inputCodigoCatalogo').value = '';
+        if (modalCatalogo) modalCatalogo.style.display = 'flex';
+    }
+
+    function cerrarModalCatalogo() {
+        if (modalCatalogo) modalCatalogo.style.display = 'none';
+        // Restaurar el select al valor anterior
+        if (catalogoSelectRef) {
+            catalogoSelectRef.value = catalogoSelectRef.options[0]?.value || '';
+        }
+    }
+
+    async function guardarCatalogo() {
+        const nombre = document.getElementById('inputNombreCatalogo').value.trim();
+        const codigo = document.getElementById('inputCodigoCatalogo').value.trim();
+        if (!nombre || !codigo) {
+            mostrarToast('Nombre y código son obligatorios.', 'error');
+            return;
+        }
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch(`/master/${catalogoTipoActual}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: JSON.stringify({ nombre, codigo, activo: true })
+            });
+            const data = await res.json();
+            if (!res.ok) throw data;
+            mostrarToast(data.mensaje || 'Guardado.', 'success');
+            cerrarModalCatalogo();
+            // Recargar opciones y seleccionar la nueva
+            await cargarOpcionesCatalogo(catalogoTipoActual, catalogoSelectRef?.id, nombre);
+        } catch (err) {
+            mostrarToast(err.mensaje || (err.errores ? Object.values(err.errores).flat().join(', ') : 'Error'), 'error');
+        }
+    }
+    // GET /trabajadores?estatus=...&asignacion=...
+    // ============================================
+    async function cargarTrabajadores(estatus = '', nomina = '', asignacion = '', pagina) {
         const tbody = document.getElementById('tbodyTrabajadores');
         if (!tbody) return;
 
+        if (pagina !== undefined) paginaActualTrabajadores = pagina;
+        else paginaActualTrabajadores = 1;
+
         try {
-            const url = `/trabajadores?estatus=${estatus}&nomina=${nomina}`;
+            const url = `/trabajadores?estatus=${estatus}&asignacion=${asignacion}&page=${paginaActualTrabajadores}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error('Error al consultar servidores');
             const data = await response.json();
@@ -189,15 +346,24 @@
                 const tr = document.createElement('tr');
                 tr.dataset.id = t.id;
 
-                const tdId = document.createElement('td'); tdId.textContent = t.id;
                 const tdNombre = document.createElement('td');
                 const strong = document.createElement('strong'); strong.textContent = `${t.nombres} ${t.apellidos}`;
                 tdNombre.appendChild(strong);
-                const tdCedula = document.createElement('td'); tdCedula.textContent = t.cedula;
+                const tdCedula = document.createElement('td');
+                const cedulaParts = (t.cedula || '').split('-');
+                const tipoDoc = cedulaParts.length > 1 ? cedulaParts[0] : '';
+                const numDoc = cedulaParts.length > 1 ? cedulaParts.slice(1).join('-') : t.cedula;
+                tdCedula.innerHTML = `<span style="color:#6366f1;font-weight:700;">${escaparHTML(tipoDoc)}</span> ${escaparHTML(numDoc)}`;
                 const tdCargo = document.createElement('td'); tdCargo.textContent = t.cargo;
                 const tdTipo = document.createElement('td');
                 const typeTag = document.createElement('span'); typeTag.className = 'type-tag'; typeTag.textContent = t.unidad_departamento;
                 tdTipo.appendChild(typeTag);
+                const tdAsignacion = document.createElement('td');
+                const asigTag = document.createElement('span'); asigTag.className = 'type-tag';
+                asigTag.textContent = t.asignacion || '—';
+                if (t.asignacion === 'Nomina') asigTag.style.background = '#dbeafe';
+                else if (t.asignacion === 'Manual') asigTag.style.background = '#fef3c7';
+                tdAsignacion.appendChild(asigTag);
                 const tdEstatus = document.createElement('td');
                 const statusPill = document.createElement('span');
                 const esActivo = t.estatus === 'activo';
@@ -224,14 +390,39 @@
                 div.appendChild(btnEliminar);
                 tdAcciones.appendChild(div);
 
-                tr.append(tdId, tdNombre, tdCedula, tdCargo, tdTipo, tdEstatus, tdAcciones);
+                tr.append(tdNombre, tdCedula, tdCargo, tdTipo, tdAsignacion, tdEstatus, tdAcciones);
                 tbody.appendChild(tr);
-
             });
+
+            renderPaginacionTrabajadores(data);
 
         } catch (err) {
             console.error('Error render-table:', err);
         }
+    }
+
+    function renderPaginacionTrabajadores(data) {
+        const container = document.querySelector('.table-footer .pagination');
+        if (!container) return;
+        if (data.last_page <= 1) { container.innerHTML = ''; return; }
+        var html = '';
+        if (data.current_page > 1) {
+            html += '<button type="button" data-page="' + (data.current_page - 1) + '">&laquo;</button>';
+        }
+        for (var i = 1; i <= data.last_page; i++) {
+            html += '<button type="button" data-page="' + i + '"' + (i === data.current_page ? ' class="active"' : '') + '>' + i + '</button>';
+        }
+        if (data.current_page < data.last_page) {
+            html += '<button type="button" data-page="' + (data.current_page + 1) + '">&raquo;</button>';
+        }
+        container.innerHTML = html;
+        container.querySelectorAll('button[data-page]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var f = document.getElementById('filtroEstatus');
+                var a = document.getElementById('filtroAsignacion');
+                cargarTrabajadores(f ? f.value : '', '', a ? a.value : '', parseInt(this.dataset.page));
+            });
+        });
     }
 
     // ============================================
@@ -249,20 +440,43 @@
             if (!res.ok) throw new Error('No se pudo obtener la información del trabajador');
             const t = await res.json();
 
+            // Cargar opciones de catálogos antes de poblar
+            await Promise.all([
+                cargarOpcionesCatalogo('cargo', 'selectCargo', t.cargo),
+                cargarOpcionesCatalogo('grado', 'selectGradoNivel', t.grado_nivel)
+            ]);
+
             // Puebla todos los campos del formulario con los datos del servidor
-            document.getElementById('inputCedula').value = t.cedula;
+            const cedulaParts = (t.cedula || '').split('-');
+            const tipoDoc = cedulaParts.length > 1 ? cedulaParts[0] : 'V';
+            const numDoc = cedulaParts.length > 1 ? cedulaParts.slice(1).join('-') : t.cedula;
+            document.getElementById('selectTipoDocumento').value = tipoDoc;
+            document.getElementById('inputCedula').value = numDoc;
             document.getElementById('selectGenero').value = t.genero;
             document.getElementById('inputNombres').value = t.nombres;
             document.getElementById('inputApellidos').value = t.apellidos;
             document.getElementById('inputFechaNacimiento').value = t.fecha_nacimiento;
-            document.getElementById('inputCargo').value = t.cargo;
+            seleccionarValorCatalogo('selectCargo', t.cargo);
             document.getElementById('inputUnidadDepartamento').value = t.unidad_departamento;
-            document.getElementById('inputGradoNivel').value = t.grado_nivel;
+            seleccionarValorCatalogo('selectGradoNivel', t.grado_nivel);
             document.getElementById('inputFechaIngreso').value = t.fecha_ingreso;
             document.getElementById('inputAnosExterno').value = t.anos_servicio_externo;
             document.getElementById('inputPorcentajeAntiguedad').value = t.porcentaje_antiguedad;
             document.getElementById('selectNivelInstruccion').value = t.nivel_instruccion;
             document.getElementById('inputCuentaBancaria').value = t.cuenta_bancaria || '';
+
+            // Poblar campos de hijos y actividad universitaria
+            const tieneHijos = parseInt(t.numero_hijos) > 0;
+            document.getElementById('checkTieneHijos').checked = tieneHijos;
+            toggleHijosFields();
+            if (tieneHijos) document.getElementById('inputNumeroHijos').value = t.numero_hijos;
+
+            const tieneHijosDisc = parseInt(t.hijos_discapacidad) > 0;
+            document.getElementById('checkHijosDiscapacidad').checked = tieneHijosDisc;
+            toggleHijosDiscapacidadFields();
+            if (tieneHijosDisc) document.getElementById('inputHijosDiscapacidad').value = t.hijos_discapacidad;
+
+            document.getElementById('checkActividadUniversitaria').checked = t.actividad_universitaria ? true : false;
 
             habilitarCamposFormulario(false);  // Deshabilita todos los campos (solo lectura)
 
