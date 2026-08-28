@@ -55,6 +55,15 @@ class TasaCambioController extends Controller
         ]);
     }
 
+    /**
+     * Estado actual de la tasa para el frontend (inicio y tasas-cambio).
+     * Incluye indicador de frescura 🟢🟡🔴.
+     */
+    public function estado()
+    {
+        return response()->json(TasaCambioService::obtenerEstadoTasa());
+    }
+
     public function store(Request $request)
     {
         try {
@@ -81,7 +90,10 @@ class TasaCambioController extends Controller
                 'observacion' => $request->observacion,
                 'usuario_id' => auth()->id(),
                 'activa' => true,
+                'fecha_consulta' => now()->toDateTimeString(),
             ]);
+
+            TasaCambioService::limpiarCache();
 
             Activity::log('created', 'tasa_cambio', $tasa->id,
                 "Se registró tasa de cambio manual: {$tasa->tasa} {$tasa->moneda_destino}/{$tasa->moneda_origen}");

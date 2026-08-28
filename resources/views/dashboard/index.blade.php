@@ -48,7 +48,7 @@
         .dashboard-render-zone > .content-section > * { background: white; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
     </style>
 </head>
-<body class="font-{{ auth()->user()->tipografia ?? 'sistema' }}">
+<body>
 @include('partials.loading-overlay')
 <script>document.getElementById('loading-overlay').classList.add('active');</script>
 <script>
@@ -220,7 +220,7 @@
 
 </div>
 
-<script>window.SIGEJUB_THEME='{{ auth()->user()->tema }}'; window.SIGEJUB_ROL='{{ auth()->user()->rol }}'; window.SIGEJUB_FONT='{{ auth()->user()->tipografia ?? "sistema" }}';</script>
+<script>window.SIGEJUB_THEME='{{ auth()->user()->tema }}'; window.SIGEJUB_ROL='{{ auth()->user()->rol }}';</script>
 <script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
 <script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>

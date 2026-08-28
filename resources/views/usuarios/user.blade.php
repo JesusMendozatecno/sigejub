@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/profile.css') }}?v={{ filemtime(public_path('css/dashboard/profile.css')) }}">
     <style>:root { --accent: {{ $user->color_acento ?? '#1a365d' }}; }</style>
 </head>
-<body class="font-{{ $user->tipografia ?? 'sistema' }}">
+<body>
 <div class="profile-wrapper">
     <div class="profile-header">
         <div class="flex-center gap-3">
@@ -206,18 +206,6 @@
                     @endforeach
                 </div>
 
-                <h4 style="font-size:0.9rem;color:#0f172a;margin:20px 0 8px;">Tipografía</h4>
-                <p style="font-size:0.75rem;color:#64748b;margin:0 0 12px;">Selecciona la fuente del sistema. Se adapta automáticamente a cada tema y conserva el contraste.</p>
-                <div class="font-presets" id="fontPresets">
-                    @php $fonts = ['sistema','moderna','condensada','serif','mono']; $fontNames = ['sistema'=>'Clásica','moderna'=>'Moderna','condensada'=>'Condensada','serif'=>'Serif','mono'=>'Monoespaciada']; @endphp
-                    @foreach($fonts as $f)
-                    <div class="font-option {{ ($user->tipografia ?? 'sistema') === $f ? 'selected' : '' }}" data-font="{{ $f }}" onclick="cambiarTipografia('{{ $f }}')">
-                        <span class="font-specimen {{ 'ff-' . $f }}">Aa</span>
-                        <span class="font-name">{{ $fontNames[$f] }}</span>
-                    </div>
-                    @endforeach
-                </div>
-
                 <hr style="border:0;border-top:1px solid #f1f5f9;margin:24px 0;">
 
                 <h4 style="font-size:0.9rem;color:#0f172a;margin:0 0 12px;">Notificaciones</h4>
@@ -379,7 +367,6 @@ window.SIGEJUB_USER_ID={{ $user->id }};window.SIGEJUB_USER_ROL='{{ $user->rol }}
 window.SIGEJUB_STORAGE_URL='{{ asset("storage") }}';
 window.SIGEJUB_PROFILE_THEME='{{ $user->tema }}';
 window.SIGEJUB_ACCENT_COLOR='{{ $user->color_acento ?? "#1a365d" }}';
-window.SIGEJUB_PROFILE_FONT='{{ $user->tipografia ?? "sistema" }}';
 </script>
 <script defer src="{{ asset('js/profile.js') }}?v={{ filemtime(public_path('js/profile.js')) }}"></script>
 </body>

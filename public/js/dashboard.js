@@ -53,11 +53,6 @@ function inicializarDashboard() {
         document.body.classList.add('theme-modern');
     }
 
-    var fontClasses = ['font-sistema', 'font-moderna', 'font-condensada', 'font-mono', 'font-serif'];
-    var font = window.SIGEJUB_FONT || 'sistema';
-    document.body.classList.remove.apply(document.body.classList, fontClasses);
-    if (font !== 'sistema') document.body.classList.add('font-' + font);
-
     // Notification counter
     cargarContadorNoLeidas();
     setInterval(cargarContadorNoLeidas, 30000);

@@ -20,11 +20,13 @@ class TasaCambio extends Model
         'observacion',
         'usuario_id',
         'activa',
+        'fecha_consulta',
     ];
 
     protected $casts = [
         'tasa' => 'decimal:4',
         'activa' => 'boolean',
+        'fecha_consulta' => 'datetime',
     ];
 
     public function usuario()

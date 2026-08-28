@@ -28,7 +28,6 @@ class User extends Authenticatable
         'tema',
         'idioma',
         'color_acento',
-        'tipografia',
         'verificacion_dos_pasos',
         'secreto_2fa',
         'notificacion_correo',

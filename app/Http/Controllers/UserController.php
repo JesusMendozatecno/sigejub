@@ -122,13 +122,11 @@ class UserController extends Controller
             'tema' => 'in:light,dark,modern',
             'idioma' => 'in:es,en',
             'color_acento' => 'string|max:7',
-            'tipografia' => 'in:sistema,moderna,condensada,mono,serif',
         ]);
 
         if ($request->has('tema')) $user->tema = $request->tema;
         if ($request->has('idioma')) $user->idioma = $request->idioma;
         if ($request->has('color_acento')) $user->color_acento = $request->color_acento;
-        if ($request->has('tipografia')) $user->tipografia = $request->tipografia;
         $user->save();
 
         return response()->json(['mensaje' => 'Configuración actualizada.']);

@@ -230,6 +230,7 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/tasas-cambio', [App\Http\Controllers\TasaCambioController::class, 'index'])->name('tasas.index');
     Route::get('/tasas-cambio/actual', [App\Http\Controllers\TasaCambioController::class, 'actual'])->name('tasas.actual');
+    Route::get('/tasas-cambio/estado', [App\Http\Controllers\TasaCambioController::class, 'estado'])->name('tasas.estado');
     Route::get('/tasas-cambio/historial', [App\Http\Controllers\TasaCambioController::class, 'historial'])->name('tasas.historial');
 });
 

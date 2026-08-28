@@ -11,7 +11,6 @@ function inicializarPerfil() {
     if (window.SIGEJUB_PROFILE_THEME === 'modern') {
         document.body.classList.add('theme-modern');
     }
-    aplicarTipografia(window.SIGEJUB_PROFILE_FONT || 'sistema');
     document.documentElement.style.setProperty('--accent', window.SIGEJUB_ACCENT_COLOR || '#1a365d');
     if (document.getElementById('tab-actividad')?.classList.contains('active')) cargarActividad();
 }
@@ -265,22 +264,6 @@ async function cerrarOtrasSesiones() {
         mostrarToast(d.mensaje, 'success');
         cargarSesiones();
     } catch (err) { mostrarToast('Error', 'error'); }
-}
-
-var FONT_CLASSES = ['font-sistema', 'font-moderna', 'font-condensada', 'font-mono', 'font-serif'];
-function aplicarTipografia(font) {
-    document.body.classList.remove.apply(document.body.classList, FONT_CLASSES);
-    if (font && font !== 'sistema') document.body.classList.add('font-' + font);
-}
-
-async function cambiarTipografia(font) {
-    document.querySelectorAll('.font-option').forEach(function(el) { el.classList.remove('selected'); });
-    document.querySelector('.font-option[data-font="' + font + '"]')?.classList.add('selected');
-    aplicarTipografia(font);
-    try {
-        await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ tipografia: font }) });
-        mostrarToast('Tipografía actualizada', 'success');
-    } catch (err) {}
 }
 
 // === TAB: CONFIGURACIÓN ===

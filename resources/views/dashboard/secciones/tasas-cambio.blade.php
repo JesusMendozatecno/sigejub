@@ -35,7 +35,8 @@ body.dark-mode .historial-table td{color:#e2e8f0;border-bottom-color:#334155;}
 body.dark-mode .historial-table tr:hover td{background:#1e293b;}
 body.dark-mode .modal-tasa-box{background:#1e293b;}
 body.dark-mode .modal-tasa-box h3{color:#f1f5f9;}
-body.dark-mode .modal-tasa-box .input-group input,body.dark-mode .modal-tasa-box .input-group textarea,body.dark-mode .modal-tasa-box .input-group select{background:#0f172a;border-color:#334155;color:#e2e8f0;}
+body.dark-mode .modal-tasa-box input,body.dark-mode .modal-tasa-box textarea,body.dark-mode .modal-tasa-box select{background:#0f172a;border-color:#334155;color:#e2e8f0;}
+body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
 </style>
 
 <header class="section-header">
@@ -60,13 +61,19 @@ body.dark-mode .modal-tasa-box .input-group input,body.dark-mode .modal-tasa-box
                 <p class="tasa-meta" id="tasaMetaActual"></p>
             </div>
         </div>
-        <div class="tasa-actions" id="tasaAdminActions" style="display:none;">
-            <button class="tasa-btn tasa-btn-success" id="btnSincronizarTasa">
-                <i class="fas fa-sync-alt"></i> Sincronizar API
-            </button>
-            <button class="tasa-btn tasa-btn-primary" id="btnRegistrarTasa2">
-                <i class="fas fa-edit"></i> Registrar Manual
-            </button>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div id="tasaEstadoBadge" style="display:none;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;background:#f1f5f9;color:#475569;">
+                <span id="tasaEstadoDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#94a3b8;"></span>
+                <span id="tasaEstadoLabel">—</span>
+            </div>
+            <div class="tasa-actions" id="tasaAdminActions" style="display:none;">
+                <button class="tasa-btn tasa-btn-success" id="btnSincronizarTasa">
+                    <i class="fas fa-sync-alt"></i> Sincronizar API
+                </button>
+                <button class="tasa-btn tasa-btn-primary" id="btnRegistrarTasa2">
+                    <i class="fas fa-edit"></i> Registrar Manual
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -136,19 +143,42 @@ body.dark-mode .modal-tasa-box .input-group input,body.dark-mode .modal-tasa-box
 (function(){
     let currentPage = 1;
 
+    function aplicarIndicadorEstado(data) {
+        const badge = document.getElementById('tasaEstadoBadge');
+        const dot = document.getElementById('tasaEstadoDot');
+        const label = document.getElementById('tasaEstadoLabel');
+        if (!badge || !dot || !label) return;
+
+        badge.style.display = 'inline-flex';
+        const estados = {
+            actualizada: { color: '#4ade80', bg: 'rgba(74,222,128,0.15)', txt: '#166534', label: '🟢 Actualizada' },
+            disponible: { color: '#facc15', bg: 'rgba(250,204,21,0.15)', txt: '#92400e', label: '🟡 Última disponible' },
+            desactualizada: { color: '#f87171', bg: 'rgba(248,113,113,0.15)', txt: '#991b1b', label: '🔴 Desactualizada' },
+            no_disponible: { color: '#f87171', bg: 'rgba(248,113,113,0.15)', txt: '#991b1b', label: '🔴 No disponible' },
+        };
+        const cfg = estados[data.estado] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.15)', txt: '#475569', label: data.etiqueta || '—' };
+        dot.style.background = cfg.color;
+        badge.style.background = cfg.bg;
+        badge.style.color = cfg.txt;
+        label.textContent = cfg.label;
+    }
+
     async function cargarTasaActual() {
         try {
-            const resp = await fetch('/tasas-cambio/actual');
+            const resp = await fetch('/tasas-cambio/estado');
             const data = await resp.json();
             const valorEl = document.getElementById('tasaValorActual');
             const metaEl = document.getElementById('tasaMetaActual');
-            if (data.success && data.tasa) {
-                valorEl.textContent = '1 USD = ' + parseFloat(data.tasa.tasa).toLocaleString('es-VE', {minimumFractionDigits:4}) + ' ' + data.tasa.moneda_destino;
-                metaEl.textContent = data.tasa.fecha + ' · ' + (data.tasa.fuente || 'N/A') + ' · ' + (data.tasa.usuario || 'Sistema');
+
+            if (data.disponible && data.tasa) {
+                const t = data.tasa;
+                valorEl.textContent = '1 USD = ' + parseFloat(t.valor).toLocaleString('es-VE', {minimumFractionDigits:4}) + ' ' + t.moneda_destino;
+                metaEl.textContent = t.fecha + ' · ' + (t.fuente || 'BCV/Monitor') + ' · Tipo: ' + t.tipo;
             } else {
                 valorEl.textContent = 'Sin tasa registrada';
                 metaEl.textContent = data.mensaje || 'Registre una tasa para comenzar.';
             }
+            aplicarIndicadorEstado(data);
         } catch(e) {
             document.getElementById('tasaValorActual').textContent = 'Error al cargar';
         }
