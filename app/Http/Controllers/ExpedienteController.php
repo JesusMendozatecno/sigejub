@@ -9,22 +9,33 @@ use App\Models\Expediente;
 use App\Models\Trabajador;
 use App\Models\Solicitud;
 use App\Models\Activity;
+use App\Services\NotificationService;
+use App\Services\ValidationService;
 use Illuminate\Http\Request;
 
 class ExpedienteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = min((int) $request->get('per_page', 10), 100);
         $expedientes = Expediente::with('trabajador', 'solicitud', 'documentos')
             ->latest()
-            ->get();
+            ->paginate($perPage);
         return response()->json($expedientes);
     }
 
     public function buscarTrabajador(Request $request)
     {
         $cedula = $request->get('cedula');
+        $cedula = trim($cedula);
+
+        // Buscar coincidencia exacta primero
         $trabajador = Trabajador::where('cedula', $cedula)->first();
+
+        // Si no encontró, intentar sin el prefijo (V-, E-, etc.)
+        if (!$trabajador) {
+            $trabajador = Trabajador::where('cedula', 'like', "%{$cedula}%")->first();
+        }
 
         if (!$trabajador) {
             return response()->json(['error' => 'Trabajador no encontrado'], 404);
@@ -52,9 +63,24 @@ class ExpedienteController extends Controller
             'trabajador_id' => 'required|exists:trabajadores,id',
             'solicitud_id' => 'required|exists:solicitudes,id',
             'foto_carnet' => 'nullable|image|max:2048',
-            'documentos' => 'nullable|array',
-            'documentos.*' => 'file|mimes:pdf|max:5120',
         ]);
+
+        // Validación de negocio: solicitud debe estar aprobada
+        $solicitud = Solicitud::findOrFail($validated['solicitud_id']);
+        if ($solicitud->estado !== 'aprobado') {
+            return response()->json([
+                'estado' => 'error',
+                'mensaje' => 'Solo se puede crear expediente con solicitud aprobada.',
+            ], 422);
+        }
+
+        // Validación de negocio: trabajador no debe tener expediente
+        if (!ValidationService::trabajadorSinExpediente($validated['trabajador_id'])) {
+            return response()->json([
+                'estado' => 'error',
+                'mensaje' => 'Este trabajador ya tiene un expediente creado.',
+            ], 422);
+        }
 
         if ($request->hasFile('foto_carnet')) {
             $validated['foto_carnet'] = $request->file('foto_carnet')->store('expedientes/fotos', 'public');
@@ -64,17 +90,6 @@ class ExpedienteController extends Controller
 
         $expediente = Expediente::create($validated);
 
-        if ($request->hasFile('documentos')) {
-            foreach ($request->file('documentos') as $file) {
-                $path = $file->store('expedientes/documentos', 'public');
-                $expediente->documentos()->create([
-                    'nombre' => $file->getClientOriginalName(),
-                    'archivo' => $path,
-                    'estado' => 'en_revision',
-                ]);
-            }
-        }
-
         $trabajador = $expediente->trabajador;
         Activity::log('created', 'expediente', $expediente->id,
             "Se creó el expediente de {$trabajador->nombres} {$trabajador->apellidos}");
@@ -82,7 +97,7 @@ class ExpedienteController extends Controller
         return response()->json([
             'estado' => 'success',
             'mensaje' => 'Expediente creado exitosamente.',
-            'expediente' => $expediente->load('trabajador', 'documentos'),
+            'expediente' => $expediente->load('trabajador'),
         ]);
     }
 
@@ -100,13 +115,51 @@ class ExpedienteController extends Controller
             'nota_rechazo' => 'nullable|string',
         ]);
 
-        $documento->update($validated);
+        $previo = $documento->estado;
 
+        if ($validated['estado'] === 'rechazado') {
+            $expediente = Expediente::with('trabajador')->find($documento->expediente_id);
+            if ($expediente && $expediente->trabajador) {
+                $nombre = "{$expediente->trabajador->nombres} {$expediente->trabajador->apellidos}";
+                NotificationService::documentoRechazado(
+                    $expediente->id,
+                    $documento->nombre,
+                    $nombre
+                );
+            }
+            $expedienteId = $documento->expediente_id;
+            $documento->delete();
+            $this->recalcularEstadoGlobal($expedienteId);
+            return response()->json([
+                'estado' => 'success',
+                'mensaje' => 'Documento rechazado y eliminado.',
+            ]);
+        }
+
+        $documento->update($validated);
         $this->recalcularEstadoGlobal($documento->expediente_id);
 
         return response()->json([
             'estado' => 'success',
             'mensaje' => 'Estado del documento actualizado.',
+        ]);
+    }
+
+    public function updateFotoCarnet(Request $request, $id)
+    {
+        $expediente = Expediente::findOrFail($id);
+
+        $request->validate([
+            'foto_carnet' => 'required|image|max:2048',
+        ]);
+
+        $path = $request->file('foto_carnet')->store('expedientes/fotos', 'public');
+        $expediente->update(['foto_carnet' => $path]);
+
+        return response()->json([
+            'estado' => 'success',
+            'mensaje' => 'Foto carnet actualizada.',
+            'foto_carnet' => $path,
         ]);
     }
 
@@ -116,7 +169,7 @@ class ExpedienteController extends Controller
 
         $validated = $request->validate([
             'nombre' => 'required|string',
-            'archivo' => 'required|file|mimes:pdf|max:5120',
+            'archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
         $path = $request->file('archivo')->store('expedientes/documentos', 'public');
@@ -140,7 +193,7 @@ class ExpedienteController extends Controller
         $documento = \App\Models\Documento::findOrFail($id);
 
         $validated = $request->validate([
-            'archivo' => 'required|file|mimes:pdf|max:5120',
+            'archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
         $path = $request->file('archivo')->store('expedientes/documentos', 'public');
@@ -166,6 +219,7 @@ class ExpedienteController extends Controller
             ->where('estado_global', 100)
             ->whereNull('carta_aprobacion')
             ->latest()
+            ->take(20)
             ->get();
 
         return response()->json($expedientes);
@@ -178,15 +232,18 @@ class ExpedienteController extends Controller
         $expediente = Expediente::findOrFail($id);
 
         $request->validate([
-            'carta' => 'required|file|mimes:pdf|max:5120',
+            'carta' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
         $path = $request->file('carta')->store('expedientes/cartas', 'public');
         $expediente->update(['carta_aprobacion' => $path]);
 
         $trabajador = $expediente->trabajador;
+        $nombre = "{$trabajador->nombres} {$trabajador->apellidos}";
         Activity::log('updated', 'expediente', $expediente->id,
-            "Se subió la carta de aprobación del consejo para {$trabajador->nombres} {$trabajador->apellidos}");
+            "Se subió la carta de aprobación del consejo para {$nombre}");
+
+        NotificationService::cartaAprobacionSubida($expediente->id, $nombre);
 
         return response()->json([
             'estado' => 'success',
@@ -211,7 +268,7 @@ class ExpedienteController extends Controller
 
     private function recalcularEstadoGlobal($expedienteId)
     {
-        $expediente = Expediente::with('documentos')->findOrFail($expedienteId);
+        $expediente = Expediente::with('documentos', 'trabajador')->findOrFail($expedienteId);
         $total = $expediente->documentos->count();
         if ($total === 0) {
             $expediente->update(['estado_global' => 0]);
@@ -219,6 +276,15 @@ class ExpedienteController extends Controller
         }
         $aprobados = $expediente->documentos->where('estado', 'aprobado')->count();
         $porcentaje = round(($aprobados / $total) * 100);
+
+        $previo = $expediente->estado_global;
         $expediente->update(['estado_global' => $porcentaje]);
+
+        // Notificar cuando el expediente alcanza 100% por primera vez
+        if ($previo < 100 && $porcentaje === 100) {
+            $t = $expediente->trabajador;
+            $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$expediente->trabajador_id}";
+            NotificationService::expedienteListo($expediente->id, $nombre);
+        }
     }
 }

@@ -18,7 +18,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['admin', 'analista'])->default('analista');
+            // Valores finales de rol; las migraciones posteriores actualizan
+            // bases de datos legacy (analista -> usuario).
+            $table->enum('role', ['usuario', 'admin', 'superadmin'])->default('usuario');
             $table->rememberToken();
             $table->timestamps();
         });

@@ -12,7 +12,9 @@
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}?v={{ filemtime(public_path('css/dashboard/dark-mode.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/modern-theme.css') }}?v={{ filemtime(public_path('css/dashboard/modern-theme.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/responsive.css') }}?v={{ filemtime(public_path('css/dashboard/responsive.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <script defer src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -38,8 +40,8 @@
         .notif-item .notif-time { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
         .notif-item .notif-title { font-size: 0.8rem; font-weight: 600; color: #0f172a; }
         .notif-item .notif-msg { font-size: 0.78rem; color: #475569; margin-top: 2px; line-height: 1.3; }
-        body { background: #2563eb url('{{ asset("img/bg/dashboard-bg.jpg") }}') center/cover fixed no-repeat; }
-        body.dark-mode { background: #0f172a url('{{ asset("img/bg/dashboard-bg.jpg") }}') center/cover fixed no-repeat; background-blend-mode: overlay; }
+        body { background: var(--bg-body) url('{{ asset("img/bg/dashboard-bg.jpg") }}') center/cover fixed no-repeat; }
+        body.dark-mode { background: var(--bg-body) url('{{ asset("img/bg/dashboard-bg.jpg") }}') center/cover fixed no-repeat; background-blend-mode: overlay; }
         .app-container > .sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
         body.dark-mode .app-container > .sidebar { background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); }
         .main-content .dashboard-render-zone > .content-section { background: transparent; }
@@ -142,9 +144,14 @@
                 <li class="menu-item" data-target="nomina"><i class="fas fa-file-invoice-dollar" size="18"></i> Nómina</li>
                 <li class="menu-item" data-target="prestaciones"><i class="fas fa-wallet" size="18"></i> Prestaciones</li>
                 <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
-                <li class="menu-item" data-target="diagramas"><i class="fas fa-diagram-project" size="18"></i> Diagramas</li>
+                <li class="menu-item" data-target="formulas"><i class="fas fa-square-root-variable" size="18"></i> Fórmulas</li>
+                <li class="menu-item" data-target="tasas-cambio"><i class="fas fa-dollar-sign" size="18"></i> Tasa de Cambio</li>
                 @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
+                <li class="menu-item" data-target="cargos-grados"><i class="fas fa-address-card" size="18"></i> Cargos y Grados</li>
                 <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
+                @endif
+                @if(Auth::user()->rol === 'superadmin')
+                <li class="menu-item" data-target="primas"><i class="fas fa-coins" size="18"></i> Primas</li>
                 @endif
 
             </ul>
@@ -183,23 +190,37 @@
                 @include('dashboard.secciones.reportes')
             </div>
 
+            <div id="formulas" class="content-section">
+                @include('dashboard.secciones.formulas')
+            </div>
+
+            <div id="tasas-cambio" class="content-section">
+                @include('dashboard.secciones.tasas-cambio')
+            </div>
+
             @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
-    
+
+            <div id="cargos-grados" class="content-section">
+                @include('dashboard.secciones.cargos-grados')
+            </div>
+
             <div id="caja-negra" class="content-section">
                 @include('dashboard.secciones.caja-negra')
             </div>
             @endif
 
-            <div id="diagramas" class="content-section">
-                @include('dashboard.secciones.diagramas')
+            @if(Auth::user()->rol === 'superadmin')
+            <div id="primas" class="content-section">
+                @include('dashboard.secciones.primas')
             </div>
+            @endif
 
         </div>
     </main>
 
 </div>
 
-<script>window.SIGEJUB_THEME='{{ auth()->user()->tema }}';</script>
+<script>window.SIGEJUB_THEME='{{ auth()->user()->tema }}'; window.SIGEJUB_ROL='{{ auth()->user()->rol }}';</script>
 <script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
 <script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>
@@ -253,5 +274,52 @@
 @if($errors->any())
     <script>mostrarToast('{{ $errors->first() }}', 'error');</script>
 @endif
+
+<script>
+/* === Validación global: bloquear valores negativos en inputs numéricos === */
+document.addEventListener('input', function(e) {
+    if (e.target.type === 'number' && parseFloat(e.target.value) < 0) {
+        e.target.value = 0;
+    }
+});
+document.addEventListener('keypress', function(e) {
+    if (e.target.type === 'number' && (e.key === '-' || e.key === 'Minus')) {
+        e.preventDefault();
+    }
+});
+
+/* === Auto-cierre de 3 minutos en vistas de detalle === */
+(function() {
+    let inactivityTimer = null;
+    const TIMEOUT_MS = 180000;
+    const SECCIONES_DETALLE = ['expediente-detalle', 'prestacion-detalle'];
+    const LISTAS = { 'expediente-detalle': 'expedientes-lista', 'prestacion-detalle': 'prestaciones-lista' };
+
+    function resetTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(function() {
+            let algunaVisible = false;
+            SECCIONES_DETALLE.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el && !el.classList.contains('hidden')) {
+                    el.classList.add('hidden');
+                    algunaVisible = true;
+                    const listaId = LISTAS[id];
+                    const lista = document.getElementById(listaId);
+                    if (lista) lista.classList.remove('hidden');
+                }
+            });
+            if (algunaVisible) {
+                mostrarToast('Sesión inactiva: se cerró el detalle automáticamente.', 'info');
+            }
+        }, TIMEOUT_MS);
+    }
+
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(function(evt) {
+        document.addEventListener(evt, resetTimer, { passive: true });
+    });
+    resetTimer();
+})();
+</script>
 </body>
 </html>

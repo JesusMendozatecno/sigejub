@@ -1,4 +1,14 @@
 {{-- inicio.blade.php - Página de inicio del dashboard: tarjetas de estadísticas, gráfico de solicitudes por mes, vencimientos próximos y feed de actividad reciente. --}}
+<style>
+    .tasa-dolar-card{display:flex;align-items:center;gap:20px;background:linear-gradient(135deg,#1a365d,#1e3a8a);border-radius:16px;padding:24px;color:#fff;flex-wrap:wrap;}
+    .tasa-dolar-icon{font-size:2.2rem;opacity:0.75;}
+    .tasa-dolar-info{flex:1;min-width:220px;}
+    .tasa-dolar-label{font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin:0 0 4px;}
+    .tasa-dolar-info h2{font-size:2rem;font-weight:800;margin:0;line-height:1;}
+    .tasa-dolar-meta{font-size:0.72rem;opacity:0.65;margin-top:6px;}
+    .tasa-dolar-status{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;}
+    body.dark-mode .tasa-dolar-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid #334155;}
+</style>
 <header class="welcome-header">
     <div class="welcome-text">
         <p class="subtitle"></p>
@@ -42,6 +52,21 @@
         <h2 id="inicioRechazadas" class="text-red">—</h2>
     </div>
 </section>
+
+<div id="tasaDolarSection" style="display:none; margin-top:16px;">
+    <div class="tasa-dolar-card">
+        <div class="tasa-dolar-icon"><i class="fas fa-dollar-sign"></i></div>
+        <div class="tasa-dolar-info">
+            <p class="tasa-dolar-label">TASA DEL DÓLAR</p>
+            <h2 id="tasaDolarValor">—</h2>
+            <p class="tasa-dolar-meta" id="tasaDolarMeta"></p>
+        </div>
+        <div class="tasa-dolar-status" id="tasaDolarBadge">
+            <span id="tasaDolarDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#94a3b8;"></span>
+            <span id="tasaDolarEstado">—</span>
+        </div>
+    </div>
+</div>
 
 <div class="content-layout" style="align-items: start; grid-template-columns: 1.3fr 1fr;">
     <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -166,20 +191,19 @@
         }
 
         try {
-            const [cTrab, cPend, cAprob, cRech, cMes, cVenc] = await Promise.all([
+            const [cTrab, cStats, cMes, cVenc] = await Promise.all([
                 cachedFetch('/trabajadores?per_page=1'),
-                cachedFetch('/solicitudes?estado=pending&per_page=1'),
-                cachedFetch('/solicitudes?estado=approved&per_page=1'),
-                cachedFetch('/solicitudes?estado=rejected&per_page=1'),
+                cachedFetch('/solicitudes/estadisticas'),
                 cachedFetch('/solicitudes/por-mes'),
                 cachedFetch('/solicitudes/vencimientos'),
             ]);
 
+            const stats = cStats.data;
             const data = {
                 totalTrab: cTrab.data.total || 0,
-                totalPend: cPend.data.total || 0,
-                totalAprob: cAprob.data.total || 0,
-                totalRech: cRech.data.total || 0,
+                totalPend: stats.pendiente || 0,
+                totalAprob: stats.aprobado || 0,
+                totalRech: stats.rechazado || 0,
                 porMes: cMes.data,
                 vencimientos: cVenc.data,
             };
@@ -265,15 +289,74 @@
         }
     }
 
+    async function cargarTasaDolar() {
+        const section = document.getElementById('tasaDolarSection');
+        if (!section) return;
+        try {
+            const resp = await fetch('/tasas-cambio/estado');
+            const data = await resp.json();
+
+            if (!data.disponible || !data.tasa) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            const t = data.tasa;
+
+            const valorEl = document.getElementById('tasaDolarValor');
+            if (valorEl) {
+                valorEl.textContent = 'Bs. ' + parseFloat(t.valor).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            const metaEl = document.getElementById('tasaDolarMeta');
+            if (metaEl) metaEl.textContent = (t.fuente || '') + ' · ' + (t.fecha || '');
+
+            const dot = document.getElementById('tasaDolarDot');
+            const badge = document.getElementById('tasaDolarBadge');
+            const estado = document.getElementById('tasaDolarEstado');
+            if (!dot || !badge || !estado) return;
+
+            switch (data.estado) {
+                case 'actualizada':
+                    dot.style.background = '#4ade80';
+                    badge.style.background = 'rgba(74,222,128,0.2)';
+                    badge.style.color = '#166534';
+                    estado.textContent = 'Actualizada';
+                    break;
+                case 'disponible':
+                    dot.style.background = '#facc15';
+                    badge.style.background = 'rgba(250,204,21,0.2)';
+                    badge.style.color = '#92400e';
+                    estado.textContent = 'Última disponible';
+                    break;
+                case 'desactualizada':
+                    dot.style.background = '#f87171';
+                    badge.style.background = 'rgba(248,113,113,0.2)';
+                    badge.style.color = '#991b1b';
+                    estado.textContent = 'Desactualizada';
+                    break;
+                default:
+                    dot.style.background = '#94a3b8';
+                    badge.style.background = 'rgba(148,163,184,0.2)';
+                    badge.style.color = '#475569';
+                    estado.textContent = data.etiqueta || '—';
+            }
+        } catch (err) {
+            console.error('Error al cargar tasa del dólar:', err);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         cargarEstadisticasInicio();
         cargarActividades();
+        cargarTasaDolar();
     });
 
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {
             if (m.target.id === 'inicio' && m.target.classList.contains('active')) {
                 cargarEstadisticasInicio();
+                cargarTasaDolar();
             }
         });
     });

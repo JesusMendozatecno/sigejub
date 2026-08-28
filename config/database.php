@@ -1,7 +1,7 @@
 <?php
 // Configuración de bases de datos.
-// Soporta SQLite, MySQL, MariaDB, PostgreSQL y SQL Server.
-// Por defecto usa SQLite (configurable vía DB_CONNECTION en .env).
+// Soporta MySQL/MariaDB y PostgreSQL (selección del gestor vía DB_CONNECTION en .env).
+// El instalador y los scripts de setup escriben estos valores automáticamente.
 
 use Illuminate\Support\Str;
 use Pdo\Mysql;
@@ -90,12 +90,14 @@ return [
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
+            // Prioriza las variables *_PGSQL heredadas; si no existen,
+            // usa el bloque estándar DB_* que escribe el instalador.
+            'host' => env('DB_HOST_PGSQL', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DB_PORT_PGSQL', env('DB_PORT', '5432')),
+            'database' => env('DB_DATABASE_PGSQL', env('DB_DATABASE', 'bd-sigejub')),
+            'username' => env('DB_USERNAME_PGSQL', env('DB_USERNAME', 'postgres')),
+            'password' => env('DB_PASSWORD_PGSQL', env('DB_PASSWORD', '')),
+            'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',

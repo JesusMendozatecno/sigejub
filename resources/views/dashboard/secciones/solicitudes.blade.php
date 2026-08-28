@@ -155,7 +155,6 @@
                         <label>TIPO DE JUBILACIÓN</label>
                         <select name="tipo_jubilacion">
                             <option value="">Seleccione...</option>
-                            <option value="Edad Avanzada">Edad Avanzada</option>
                             <option value="Antigüedad">Antigüedad</option>
                             <option value="Invalidez">Invalidez</option>
                             <option value="Especial">Especial</option>
@@ -517,17 +516,15 @@ function escaparHTML(str) {
     // === 4. CARGAR MÉTRICAS ===
     async function cargarMetricas() {
         try {
-            const cTotal = await cachedFetch('/solicitudes?per_page=1', { ttl: 60000 });
+            const [cTotal, cStats] = await Promise.all([
+                cachedFetch('/solicitudes?per_page=1', { ttl: 60000 }),
+                cachedFetch('/solicitudes/estadisticas', { ttl: 60000 }),
+            ]);
+            const stats = cStats.data;
             document.getElementById('metricTotal').textContent = cTotal.data.total || 0;
-
-            const cPend = await cachedFetch('/solicitudes?estado=pending&per_page=1', { ttl: 60000 });
-            document.getElementById('metricPendientes').textContent = cPend.data.total || 0;
-
-            const cAprob = await cachedFetch('/solicitudes?estado=approved&per_page=1', { ttl: 60000 });
-            document.getElementById('metricAprobadas').textContent = cAprob.data.total || 0;
-
-            const cRech = await cachedFetch('/solicitudes?estado=rejected&per_page=1', { ttl: 60000 });
-            document.getElementById('metricRechazadas').textContent = cRech.data.total || 0;
+            document.getElementById('metricPendientes').textContent = stats.pendiente || 0;
+            document.getElementById('metricAprobadas').textContent = stats.aprobado || 0;
+            document.getElementById('metricRechazadas').textContent = stats.rechazado || 0;
         } catch (err) {
             console.error('Error al cargar métricas:', err);
         }

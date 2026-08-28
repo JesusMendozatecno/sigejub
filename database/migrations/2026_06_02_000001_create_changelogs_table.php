@@ -11,13 +11,13 @@ return new class extends Migration
     {
         Schema::create('changelogs', function (Blueprint $table) {
             $table->id();
-            $table->string('author_name');
-            $table->string('author_email');
-            $table->string('commit_hash', 40)->unique();
-            $table->text('commit_message');
-            $table->text('description')->nullable();
-            $table->string('type')->default('change');
-            $table->string('section')->nullable();
+            $table->string('nombre_autor');
+            $table->string('correo_autor');
+            $table->string('hash_commit', 40)->unique();
+            $table->text('mensaje_commit');
+            $table->text('descripcion')->nullable();
+            $table->string('tipo')->default('change');
+            $table->string('seccion')->nullable();
             $table->timestamps();
         });
     }

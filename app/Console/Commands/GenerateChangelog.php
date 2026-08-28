@@ -19,7 +19,12 @@ class GenerateChangelog extends Command
         $lastEntry = Changelog::latest('created_at')->first();
         $since = $lastEntry ? $lastEntry->created_at->subDay()->format('Y-m-d') : '2026-01-01';
 
-        $cmd = 'git -C ' . escapeshellarg($basePath) . ' log --since="' . $since . '" --format="%H|||%an|||%ae|||%s|||%ad" --date=format:"%Y-%m-%d %H:%M:%S"';
+        // Un solo proceso git para todos los commits (%b = cuerpo, %x00 separa registros).
+        // Evita ejecutar git por commit, lo que provocaba timeouts en /documentacion.
+        $cmd = 'git -C ' . escapeshellarg($basePath)
+            . ' log --since="' . $since . '"'
+            . ' --format="%H|||%an|||%ae|||%s|||%ad|||%b%x00"'
+            . ' --date=format:"%Y-%m-%d %H:%M:%S"';
         $output = shell_exec($cmd);
 
         if (!$output) {
@@ -27,11 +32,11 @@ class GenerateChangelog extends Command
             return 0;
         }
 
-        $lines = array_filter(explode("\n", trim($output)));
+        $records = array_filter(explode("\x00", (string) $output), fn ($r) => trim((string) $r) !== '');
         $count = 0;
 
-        foreach ($lines as $line) {
-            $parts = explode('|||', $line);
+        foreach ($records as $record) {
+            $parts = explode('|||', trim($record));
             if (count($parts) < 4) continue;
 
             $hash = trim($parts[0]);
@@ -39,6 +44,7 @@ class GenerateChangelog extends Command
             $email = trim($parts[2]);
             $message = trim($parts[3]);
             $date = isset($parts[4]) ? trim($parts[4]) : now()->toDateTimeString();
+            $body = isset($parts[5]) ? trim($parts[5]) : '';
 
             if (Changelog::where('hash_commit', $hash)->exists()) continue;
 
@@ -49,7 +55,7 @@ class GenerateChangelog extends Command
                 'correo_autor' => $email,
                 'hash_commit' => $hash,
                 'mensaje_commit' => $message,
-                'descripcion' => $this->getCommitDescription($hash),
+                'descripcion' => $body,
                 'tipo' => $this->detectType($message),
                 'seccion' => $section,
                 'created_at' => Carbon::parse($date),
@@ -97,12 +103,5 @@ class GenerateChangelog extends Command
             }
         }
         return null;
-    }
-
-    private function getCommitDescription(string $hash): string
-    {
-        $basePath = base_path();
-        $cmd = 'git -C ' . escapeshellarg($basePath) . ' log -1 --format="%b" ' . escapeshellarg($hash);
-        return trim(shell_exec($cmd) ?? '');
     }
 }

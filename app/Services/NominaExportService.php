@@ -1,7 +1,4 @@
 <?php
-// Servicio de exportación de nómina a Excel.
-// Lee una plantilla .xlsx predefinida (ADM.CONT. NOVIEMBRE 2025.xlsx) y llena las filas con datos
-// de trabajadores y sus cálculos de nómina. Preserva fórmulas y formato del template.
 
 namespace App\Services;
 
@@ -9,97 +6,150 @@ use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Models\Trabajador;
-use App\Models\Nomina;
+use App\Models\NominaTrabajador;
 
 class NominaExportService
 {
     protected string $templatePath;
     protected string $outputPath;
 
+    protected array $mapTipoNomina = [
+        1 => 'DOC',
+    ];
+
     public function __construct()
     {
-        $this->templatePath = storage_path('app/templates/plantilla_nomina.xlsx');
+        $this->templatePath = base_path('documentos/Formatos - Encabezados de nominas1.xlsx');
         $this->outputPath = storage_path('app/templates/export_temp.xlsx');
     }
 
-    public function exportar(?string $periodo = null): string
+    public function exportar(?string $periodo = null, ?string $tipo = null): string
     {
         $spreadsheet = IOFactory::load($this->templatePath);
-        $sheet = $spreadsheet->getSheetByName('ADM.CONT.') ?? $spreadsheet->getSheet(1);
 
-        $dataRowStart = 8;
+        $trabajadores = Trabajador::with('tipoContrato')
+            ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->get();
 
-        $trabajadores = Trabajador::with('nominas')->get();
+        $pivotQuery = NominaTrabajador::query()
+            ->join('nominas', 'nominas.id', '=', 'nomina_trabajador.nomina_id')
+            ->select('nomina_trabajador.*', 'nominas.periodo');
 
-        $row = $dataRowStart;
-        $contador = 1;
+        if ($periodo) {
+            $pivotQuery->where('nominas.periodo', $periodo);
+        }
+
+        $pivots = $pivotQuery->get()->groupBy('trabajador_id');
+
+        $grupos = [
+            'ADM' => [],
+            'DOC' => [],
+            'OBREROS' => [],
+        ];
 
         foreach ($trabajadores as $t) {
-            $nomina = $t->nominas->first();
+            $nominaPivot = $pivots->get($t->id)?->sortByDesc('periodo')->first();
+            $sheetName = $this->determinarTipoNomina($t);
+            $grupos[$sheetName][] = ['trabajador' => $t, 'nomina' => $nominaPivot];
+        }
 
-            $sheet->setCellValueExplicit("A{$row}", $contador, 's');
-            $sheet->setCellValueExplicit("B{$row}", $t->cedula, 's');
-            $sheet->setCellValue("C{$row}", trim($t->apellidos . ' ' . $t->nombres));
-            $sheet->setCellValue("D{$row}", $t->apellidos);
-            $sheet->setCellValue("E{$row}", $t->nombres);
-            $sheet->setCellValueExplicit("F{$row}", $t->cuenta_bancaria ?? '', 's');
-            $sheet->setCellValue("G{$row}", $t->genero);
-            $sheet->setCellValue("H{$row}", $t->grado_nivel);
-            $sheet->setCellValue("I{$row}", '');
-            $sheet->setCellValue("J{$row}", $t->tabulador ?? '');
-            $sheet->setCellValue("K{$row}", $t->cargo);
-            $sheet->setCellValue("L{$row}", $t->es_jefe_coordinador ? 'SI' : 'NO');
-            $sheet->setCellValue("M{$row}", $t->porcentaje_prima_cargo ?? '');
-            $sheet->setCellValue("N{$row}", $t->fecha_nacimiento ? Carbon::parse($t->fecha_nacimiento)->format('d/m/Y') : '');
-            $sheet->setCellValue("O{$row}", $t->edad);
-            $sheet->setCellValue("P{$row}", $t->fecha_ingreso ? Carbon::parse($t->fecha_ingreso)->format('d/m/Y') : '');
-            $sheet->setCellValue("Q{$row}", $t->anos_servicio_inst);
-            $sheet->setCellValue("R{$row}", $t->anos_servicio_externo);
-            $sheet->setCellValue("S{$row}", $t->total_anos_servicio);
-            $sheet->setCellValue("T{$row}", $t->porcentaje_antiguedad);
-            $sheet->setCellValue("U{$row}", $t->porcentaje_caja_ahorro);
-            $sheet->setCellValue("V{$row}", $t->numero_hijos);
-            $sheet->setCellValue("W{$row}", $t->hijos_discapacidad);
-            $sheet->setCellValue("X{$row}", '');
-            $sheet->setCellValue("Y{$row}", $t->nivel_educativo_texto ?? '');
-            $sheet->setCellValue("Z{$row}", '');
-            $sheet->setCellValue("AA{$row}", $t->afiliacion_sifaiuty ?? '');
+        foreach ($grupos as $sheetName => $items) {
+            if ($tipo && $sheetName !== $tipo) continue;
 
-            if ($nomina) {
-                $sheet->setCellValue("AB{$row}", $nomina->isr ?? 0);
-                $sheet->setCellValue("AC{$row}", $nomina->horas_extras ?? 0);
-                $sheet->setCellValue("AD{$row}", $nomina->sueldo_base ?? 0);
-                $sheet->setCellValue("AE{$row}", $nomina->prima_familiar ?? 0);
-                $sheet->setCellValue("AF{$row}", $nomina->prima_hijo ?? 0);
-                $sheet->setCellValue("AG{$row}", $nomina->prima_hijos_discapacidad ?? 0);
-                $sheet->setCellValue("AH{$row}", $nomina->prima_actividad_universitaria ?? 0);
-                $sheet->setCellValue("AI{$row}", $nomina->prima_profesionalizacion ?? 0);
-                $sheet->setCellValue("AJ{$row}", $nomina->prima_responsabilidad ?? 0);
-                $sheet->setCellValue("AK{$row}", $nomina->complemento_prima_responsabilidad ?? 0);
-                $sheet->setCellValue("AL{$row}", $nomina->prima_antiguedad ?? 0);
-                $sheet->setCellValue("AM{$row}", $nomina->horas_extras ?? 0);
-                $sheet->setCellValue("AN{$row}", $nomina->total_asignacion ?? 0);
-                $sheet->setCellValue("AO{$row}", $nomina->sso ?? 0);
-                $sheet->setCellValue("AP{$row}", $nomina->lpf ?? 0);
-                $sheet->setCellValue("AQ{$row}", $nomina->faov ?? 0);
-                $sheet->setCellValue("AR{$row}", $nomina->aporte_ipasme ?? 0);
-                $sheet->setCellValue("AS{$row}", $nomina->aporte_caja_ahorro ?? 0);
-                $sheet->setCellValue("AT{$row}", $nomina->prestamo_caja_ahorro ?? 0);
-                $sheet->setCellValue("AU{$row}", $t->afiliacion_sifaiuty ?? '');
-                $sheet->setCellValue("AV{$row}", $nomina->total_deduccion ?? 0);
-                $sheet->setCellValue("AW{$row}", $nomina->neto_a_cobrar ?? 0);
+            $sheet = $spreadsheet->getSheetByName($sheetName);
+            if (!$sheet) continue;
+
+            $headerRow = $sheetName === 'DOC' ? 6 : 4;
+            $dataStartRow = $sheetName === 'DOC' ? 7 : 5;
+
+            $row = $dataStartRow;
+            $contador = 1;
+
+            foreach ($items as $item) {
+                $t = $item['trabajador'];
+                $n = $item['nomina'];
+
+                $fechaIngreso = $t->fecha_ingreso ? Carbon::parse($t->fecha_ingreso)->format('d/m/Y') : '';
+                $sueldoBase = $n ? (float) $n->sueldo_base : (float) ($t->sueldo_base ?? 0);
+
+                $colSueldo = $sheetName === 'DOC' ? 'Q' : ($sheetName === 'OBREROS' ? 'Q' : 'P');
+                $colPF = $sheetName === 'DOC' ? 'S' : ($sheetName === 'OBREROS' ? 'R' : 'Q');
+                $colPH = $sheetName === 'DOC' ? 'T' : ($sheetName === 'OBREROS' ? 'S' : 'R');
+                $colPHD = $sheetName === 'DOC' ? 'U' : ($sheetName === 'OBREROS' ? 'T' : 'S');
+                $colPAU = $sheetName === 'DOC' ? 'V' : ($sheetName === 'OBREROS' ? 'U' : 'T');
+                $colPP = $sheetName === 'DOC' ? 'W' : ($sheetName === 'OBREROS' ? 'V' : 'U');
+                $colPCR = $sheetName === 'DOC' ? 'X' : ($sheetName === 'OBREROS' ? 'W' : 'V');
+                $colCPCR = $sheetName === 'DOC' ? 'Y' : ($sheetName === 'OBREROS' ? 'X' : 'W');
+                $colPA = $sheetName === 'DOC' ? 'Z' : ($sheetName === 'OBREROS' ? 'Y' : 'X');
+                $colTA = $sheetName === 'DOC' ? 'AA' : ($sheetName === 'OBREROS' ? 'Z' : 'Y');
+
+                $sheet->setCellValue("A{$row}", $contador);
+                $sheet->setCellValue("B{$row}", $t->cedula ?? '');
+                $sheet->setCellValue("C{$row}", trim(($t->apellidos ?? '') . ' ' . ($t->nombres ?? '')));
+                $sheet->setCellValue("D{$row}", $t->genero ?? '');
+                $sheet->setCellValue("E{$row}", $t->numero_hijos ?? 0);
+                $sheet->setCellValue("F{$row}", $t->hijos_discapacidad ?? 0);
+                $sheet->setCellValue("G{$row}", $t->nivel_educativo_texto ?? '');
+                $mapaGrados = [5 => 5, 4 => 4, 3 => 3, 2 => 2, 1 => 1];
+                $sheet->setCellValue("H{$row}", $mapaGrados[(int) ($t->nivel_instruccion ?? 2)] ?? 2);
+                $sheet->setCellValue("I{$row}", $fechaIngreso);
+                $sheet->setCellValue("J{$row}", $t->anos_servicio_inst ?? 0);
+                $sheet->setCellValue("K{$row}", $t->anos_servicio_externo ?? 0);
+                $sheet->setCellValue("L{$row}", $t->total_anos_servicio ?? 0);
+                $sheet->setCellValue("M{$row}", $t->porcentaje_antiguedad ?? 0);
+                $sheet->setCellValue("N{$row}", $t->es_jefe_coordinador ? '7' : '');
+
+                if ($sheetName === 'DOC') {
+                    $sheet->setCellValue("O{$row}", $t->cargo ?? '');
+                    $sheet->setCellValue("P{$row}", $t->dedicacion ?? '');
+                } elseif ($sheetName === 'OBREROS') {
+                    $sheet->setCellValue("O{$row}", $t->cargo ?? '');
+                    $sheet->setCellValue("P{$row}", $t->grado_cargo ?? '');
+                } else {
+                    $sheet->setCellValue("O{$row}", $t->cargo ?? '');
+                }
+                $sheet->setCellValue("{$colSueldo}{$row}", $sueldoBase);
+
+                if ($n) {
+                    $sheet->setCellValue("{$colPF}{$row}", (float) ($n->prima_familiar ?? 0));
+                    $sheet->setCellValue("{$colPH}{$row}", (float) ($n->prima_hijo ?? 0));
+                    $sheet->setCellValue("{$colPHD}{$row}", (float) ($n->prima_hijos_discapacidad ?? 0));
+                    $sheet->setCellValue("{$colPAU}{$row}", (float) ($n->prima_actividad_universitaria ?? 0));
+                    $sheet->setCellValue("{$colPP}{$row}", (float) ($n->prima_profesionalizacion ?? 0));
+                    $sheet->setCellValue("{$colPCR}{$row}", (float) ($n->prima_responsabilidad ?? 0));
+                    $sheet->setCellValue("{$colCPCR}{$row}", (float) ($n->complemento_prima_responsabilidad ?? 0));
+                    $sheet->setCellValue("{$colPA}{$row}", (float) ($n->prima_antiguedad ?? 0));
+                    $sheet->setCellValue("{$colTA}{$row}", (float) ($n->total_asignacion ?? 0));
+                } else {
+                    foreach ([$colPF, $colPH, $colPHD, $colPAU, $colPP, $colPCR, $colCPCR, $colPA, $colTA] as $c) {
+                        $sheet->setCellValue("{$c}{$row}", 0);
+                    }
+                }
+
+                $contador++;
+                $row++;
             }
 
-            $contador++;
-            $row++;
+            $maxCol = match($sheetName) { 'DOC' => 'AA', 'OBREROS' => 'Z', default => 'Y' };
+            $lastRow = $sheet->getHighestRow();
+            for ($r = $row; $r <= $lastRow; $r++) {
+                for ($c = 'A'; $c <= $maxCol; $c++) {
+                    $sheet->setCellValue("{$c}{$r}", '');
+                }
+            }
         }
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($this->outputPath);
-
         $spreadsheet->disconnectWorksheets();
         unset($spreadsheet);
 
         return $this->outputPath;
+    }
+
+    protected function determinarTipoNomina($trabajador): string
+    {
+        return ($this->mapTipoNomina[$trabajador->tipo_contrato_id] ?? 'ADM');
     }
 }

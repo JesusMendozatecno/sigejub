@@ -131,12 +131,11 @@ async function cargarCharts() {
 
     // Chart: Solicitudes por estatus
     try {
-        var r = await fetch('/solicitudes?per_page=1&estado=approved');
-        var aprobadas = (await r.json()).total || 0;
-        r = await fetch('/solicitudes?per_page=1&estado=rejected');
-        var rechazadas = (await r.json()).total || 0;
-        r = await fetch('/solicitudes?per_page=1&estado=pending');
-        var pendientes = (await r.json()).total || 0;
+        var r = await fetch('/solicitudes/estadisticas');
+        var stats = (await r.json());
+        var pendientes = stats.pendiente || 0;
+        var aprobadas = stats.aprobado || 0;
+        var rechazadas = stats.rechazado || 0;
 
         if (chartSolicitudesInstance) chartSolicitudesInstance.destroy();
         var ctx = document.getElementById('chartSolicitudesCanvas');
@@ -193,7 +192,6 @@ async function cargarCharts() {
 
 (function() {
     cargarStats();
-    cargarCharts();
 
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(m) {

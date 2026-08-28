@@ -37,4 +37,14 @@ return [
         ],
     ],
 
+    'tasas_cambio' => [
+        'enabled' => env('TASAS_API_ENABLED', false),
+        'url' => env('TASAS_API_URL', ''),
+        'api_key' => env('TASAS_API_KEY', ''),
+        'moneda_origen' => env('TASAS_MONEDA_ORIGEN', 'USD'),
+        'moneda_destino' => env('TASAS_MONEDA_DESTINO', 'VES'),
+        'cache_ttl' => env('TASAS_CACHE_TTL', 600),
+        'intervalo_minutos' => env('TASAS_INTERVALO_MINUTOS', 60),
+    ],
+
 ];

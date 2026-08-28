@@ -1,255 +1,507 @@
 /* ============================================================
-   register.css — Estilos del formulario de registro
-   Grid de 2 columnas, validación visual, indicador de fortaleza
-   de contraseña y wrapper para teléfono/país. Responsive.
+   register.css — Página de registro SIGEJUB
+   Split layout: panel info izquierda + formulario derecha.
+   Grid 2 columnas para campos, validación visual, password
+   strength. Soporte completo para 3 temas: light, dark, modern.
    ============================================================ */
 
-* {
+/* === DESIGN TOKENS === */
+:root {
+    --reg-bg: #f8fafc;
+    --reg-surface: #ffffff;
+    --reg-surface-alt: #f1f5f9;
+    --reg-primary: #1a365d;
+    --reg-primary-hover: #0f2340;
+    --reg-primary-light: rgba(26, 54, 93, 0.08);
+    --reg-text: #1e293b;
+    --reg-text-secondary: #475569;
+    --reg-text-muted: #94a3b8;
+    --reg-border: #e2e8f0;
+    --reg-input-bg: #f4f7fa;
+    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --reg-radius: 12px;
+    --reg-radius-sm: 8px;
+    --reg-transition: 0.3s ease;
+    --reg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1a365d 100%);
+    --reg-success: #16a34a;
+    --reg-success-bg: #f0fdf4;
+    --reg-error: #dc2626;
+    --reg-error-bg: #fef2f2;
+    --reg-warning: #f59e0b;
+}
+
+body.dark-mode {
+    --reg-bg: #0b1120;
+    --reg-surface: #1e293b;
+    --reg-surface-alt: #1a2332;
+    --reg-primary: #60a5fa;
+    --reg-primary-hover: #93c5fd;
+    --reg-primary-light: rgba(96, 165, 250, 0.1);
+    --reg-text: #f1f5f9;
+    --reg-text-secondary: #cbd5e1;
+    --reg-text-muted: #64748b;
+    --reg-border: #334155;
+    --reg-input-bg: #0f172a;
+    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    --reg-gradient: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+    --reg-success-bg: #052e16;
+    --reg-error-bg: #450a0a;
+}
+
+body.theme-modern {
+    --reg-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --reg-surface: rgba(255, 255, 255, 0.1);
+    --reg-surface-alt: rgba(255, 255, 255, 0.05);
+    --reg-primary: #ffffff;
+    --reg-primary-hover: rgba(255, 255, 255, 0.9);
+    --reg-primary-light: rgba(255, 255, 255, 0.12);
+    --reg-text: #ffffff;
+    --reg-text-secondary: rgba(255, 255, 255, 0.85);
+    --reg-text-muted: rgba(255, 255, 255, 0.55);
+    --reg-border: rgba(255, 255, 255, 0.15);
+    --reg-input-bg: rgba(255, 255, 255, 0.08);
+    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    --reg-gradient: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7c3aed 100%);
+    --reg-success-bg: rgba(22, 163, 74, 0.15);
+    --reg-error-bg: rgba(220, 38, 38, 0.15);
+}
+
+/* === RESET === */
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background: radial-gradient(circle at center, #ffffff 0%, #e9eff5 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--reg-bg);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
+    color: var(--reg-text);
 }
 
-.register-container {
+body.theme-modern {
+    background: var(--reg-bg);
+    background-attachment: fixed;
+}
+
+/* === SPLIT LAYOUT === */
+.register-split {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* === LEFT PANEL (INFO) === */
+.register-info {
+    flex: 0 0 42%;
+    background: var(--reg-gradient);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 560px;
-}
-
-h2 {
-    color: #002366;
-    margin-bottom: 4px;
-    font-size: 22px;
-    text-align: center;
-}
-
-p {
-    color: #666;
-    font-size: 14px;
-    text-align: center;
-}
-
-.register-container form {
-    background: white;
-    padding: 28px 32px;
-    width: 100%;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-}
-
-/* Grid de 2 columnas para el formulario de registro */
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-}
-
-/* Elementos que ocupan todo el ancho (ej: botón submit) */
-.form-grid .full-width {
-    grid-column: 1 / -1;
-}
-
-.input-group {
-    text-align: left;
-}
-
-.input-group label {
-    display: block;
-    font-size: 10px;
-    font-weight: 700;
-    color: #444;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-}
-
-input, select {
-    width: 100%;
-    padding: 10px 13px;
-    background-color: #f4f7fa;
-    border: 1px solid #e1e5ee;
-    border-radius: 8px;
-    font-size: 13px;
-    color: #333;
-    transition: all 0.3s ease;
-    outline: none;
-}
-
-input:focus, select:focus {
-    border-color: #002366;
-    background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(0,35,102,0.08); /* Anillo sutil alrededor del input enfocado */
-}
-
-.register-container button[type="submit"] {
-    width: 100%;
-    padding: 12px;
-    background: #002366;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-    margin-top: 6px;
-}
-
-.register-container button:hover {
-    background: #001a4d;
-}
-
-a {
-    color: #002366;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-.btn-back {
-    color: #64748b;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background: #f1f5f9;
-    margin-bottom: 8px;
-}
-
-.btn-back:hover {
-    color: #002366;
-    background: #e2e8f0;
-    transform: translateX(-3px);
-}
-
-/* === PHONE WRAPPER — Input de teléfono + código de país === */
-/* Flex para tener selector de país al lado del número */
-.phone-wrapper {
-    display: flex;
-    gap: 6px;
-}
-
-.country-code-select {
-    width: 90px;
-    flex-shrink: 0;
-    padding: 10px 6px;
-    font-size: 12px;
-}
-
-.phone-wrapper input {
-    flex: 1;
-}
-
-/* === PASSWORD WRAPPER — Icono de ojo para mostrar/ocultar contraseña === */
-/* El input tiene padding-right para dejar espacio al ícono */
-.password-wrapper {
+    align-items: center;
+    padding: 60px 48px;
     position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.password-wrapper input {
-    padding-right: 40px;
-}
-
-.toggle-password {
-    position: absolute;
-    right: 6px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #94a3b8;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-    line-height: 1;
-}
-
-.toggle-password:hover {
-    color: #002366;
-}
-
-/* === PASSWORD STRENGTH — Barra de fortaleza de contraseña === */
-/* Barra animada que cambia de ancho/color según la seguridad */
-.password-strength {
-    height: 4px;
-    background: #e2e8f0;
-    border-radius: 2px;
-    margin-top: 6px;
     overflow: hidden;
 }
 
-.strength-bar {
+.register-info::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.register-info-content {
+    max-width: 380px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.register-info-logo {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 28px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.register-info-logo img {
+    width: 44px;
+    height: 44px;
+}
+
+.register-info-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.register-info-subtitle {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 40px;
+    line-height: 1.5;
+}
+
+.register-info-features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+}
+
+.register-info-feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.register-info-feature-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+}
+
+.register-info-feature-text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.4;
+}
+
+.register-info-feature-text strong {
+    display: block;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+/* === RIGHT PANEL (FORM) === */
+.register-form-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 24px;
+    overflow-y: auto;
+    background: var(--reg-surface);
+    transition: background var(--reg-transition);
+}
+
+.register-form-wrapper {
+    width: 100%;
+    max-width: 520px;
+    padding: 20px 0;
+}
+
+.register-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--reg-text-muted);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color var(--reg-transition);
+}
+
+.register-back:hover {
+    color: var(--reg-primary);
+}
+
+.register-back i {
+    font-size: 12px;
+}
+
+.register-form-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--reg-text);
+    margin-bottom: 6px;
+}
+
+.register-form-subtitle {
+    font-size: 14px;
+    color: var(--reg-text-muted);
+    margin-bottom: 28px;
+}
+
+/* === FORM SECTIONS === */
+.register-section {
+    margin-bottom: 28px;
+}
+
+.register-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--reg-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--reg-border);
+}
+
+/* === FORM GRID === */
+.register-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.register-form-grid .reg-full-width {
+    grid-column: 1 / -1;
+}
+
+/* === INPUT GROUPS === */
+.register-input-group {
+    text-align: left;
+}
+
+.register-input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--reg-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.register-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--reg-input-bg);
+    border: 1px solid var(--reg-border);
+    border-radius: var(--reg-radius-sm);
+    font-size: 14px;
+    color: var(--reg-text);
+    font-family: inherit;
+    transition: all var(--reg-transition);
+    outline: none;
+}
+
+.register-input:focus {
+    border-color: var(--reg-primary);
+    background: var(--reg-surface);
+    box-shadow: 0 0 0 3px var(--reg-primary-light);
+}
+
+.register-input::placeholder {
+    color: var(--reg-text-muted);
+}
+
+body.theme-modern .register-input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+/* === PHONE WRAPPER === */
+.register-phone-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+.register-country-select {
+    width: 90px;
+    flex-shrink: 0;
+    padding: 12px 6px;
+    font-size: 12px;
+}
+
+.register-phone-wrapper .register-input {
+    flex: 1;
+}
+
+/* === PASSWORD WRAPPER === */
+.register-password-wrapper {
+    position: relative;
+}
+
+.register-password-wrapper .register-input {
+    padding-right: 44px;
+}
+
+.register-toggle-password {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--reg-text-muted);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--reg-transition);
+    border-radius: 6px;
+}
+
+.register-toggle-password:hover {
+    color: var(--reg-primary);
+    background: var(--reg-primary-light);
+}
+
+/* === PASSWORD STRENGTH === */
+.register-password-strength {
+    height: 4px;
+    background: var(--reg-border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.register-strength-bar {
     height: 100%;
     width: 0%;
     border-radius: 2px;
-    transition: all 0.3s ease;
+    transition: all var(--reg-transition);
 }
 
-/* === VALIDATION MESSAGES — Mensajes de validación en tiempo real === */
-.validation-msg {
+/* === VALIDATION === */
+.register-validation {
     display: block;
     font-size: 11px;
-    margin-top: 3px;
+    margin-top: 4px;
     min-height: 16px;
+    line-height: 16px;
 }
 
-.valid-msg {
-    color: #16a34a;
+.register-validation.valid { color: var(--reg-success); }
+.register-validation.error { color: var(--reg-error); }
+
+.register-input.valid {
+    border-color: var(--reg-success);
+    background-color: var(--reg-success-bg);
 }
 
-.error-msg {
-    color: #dc2626;
+.register-input.invalid {
+    border-color: var(--reg-error);
+    background-color: var(--reg-error-bg);
 }
 
-input.valid {
-    border-color: #16a34a;
-    background-color: #f0fdf4;
+/* === SUBMIT BUTTON === */
+.register-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--reg-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--reg-radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--reg-transition);
+    font-family: inherit;
+    margin-top: 8px;
 }
 
-input.invalid {
-    border-color: #dc2626;
-    background-color: #fef2f2;
+.register-submit:hover {
+    background: var(--reg-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* === RESPONSIVE — Pantallas pequeñas <= 500px === */
-/* Grid pasa a 1 columna, inputs apilados */
-@media (max-width: 500px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
+.register-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+body.theme-modern .register-submit {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.theme-modern .register-submit:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* === LOGIN LINK === */
+.register-login-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--reg-text-muted);
+}
+
+.register-login-link a {
+    color: var(--reg-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity var(--reg-transition);
+}
+
+.register-login-link a:hover {
+    opacity: 0.8;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
+    .register-info {
+        flex: 0 0 36%;
     }
-    .register-container form {
-        padding: 20px 16px;
-    }
-    .register-container {
-        max-width: 100%;
-    }
-    .phone-wrapper {
+}
+
+@media (max-width: 768px) {
+    .register-split {
         flex-direction: column;
     }
-    .country-code-select {
+
+    .register-info {
+        display: none;
+    }
+
+    .register-form-panel {
+        min-height: 100vh;
+        padding: 24px;
+    }
+
+    .register-form-wrapper {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .register-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .register-form-panel {
+        padding: 16px;
+    }
+
+    .register-form-title {
+        font-size: 22px;
+    }
+
+    .register-phone-wrapper {
+        flex-direction: column;
+    }
+
+    .register-country-select {
         width: 100%;
     }
 }

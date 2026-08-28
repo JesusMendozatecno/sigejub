@@ -43,7 +43,7 @@ class PostgreSQLTest extends TestCase
 
     public function test_has_admin_user(): void
     {
-        $user = DB::table('users')->where('role', 'admin')->first();
+        $user = DB::table('users')->where('rol', 'admin')->first();
         $this->assertNotNull($user, "Debe existir al menos un administrador");
     }
 

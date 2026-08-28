@@ -1,51 +1,108 @@
 /* ============================================================
    notifications.css — Estilos del dropdown de notificaciones
    y badge de contador en el header del dashboard.
+   Utiliza variables CSS de base.css para consistencia visual.
    ============================================================ */
 
-/* Botón campana de notificaciones */
+/* === BOTÓN CAMPANA === */
 .notif-trigger {
     position: relative;
     padding: 6px;
-    border-radius: 8px;
-    transition: background 0.2s;
+    border-radius: var(--radius-md);
+    transition: background var(--transition-base);
+    color: var(--text-muted);
 }
-.notif-trigger:hover { background: #f1f5f9; }
 
-/* Badge contador de no leídas (oculto por defecto) */
-.notif-badge { display: none; }
-.notif-badge.show { display: flex !important; }
+.notif-trigger:hover {
+    background: var(--bg-surface);
+}
 
-/* Cada elemento de la lista de notificaciones */
+/* === BADGE CONTADOR === */
+.notif-badge {
+    display: none;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--error);
+    color: white;
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    min-width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.notif-badge.show {
+    display: flex !important;
+}
+
+/* === DROPDOWN MENU === */
+.notif-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 340px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    z-index: var(--z-dropdown);
+    padding: var(--space-3);
+}
+
+.notif-menu > div:first-child {
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.notif-menu > div:first-child strong {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+}
+
+/* === CADA NOTIFICACIÓN === */
 .notif-item {
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--transition-fast);
     margin-bottom: 2px;
+    border-left: 3px solid transparent;
 }
-.notif-item:hover { background: #f8fafc; }
+
+.notif-item:hover {
+    background: var(--bg-surface);
+}
+
 .notif-item.unread {
-    background: #eff6ff;
-    border-left: 3px solid #2563eb;
+    background: var(--info-light);
+    border-left-color: var(--info);
 }
 
-/* Marca de tiempo dentro de cada notificación */
-.notif-item .notif-time {
-    font-size: 0.7rem;
-    color: #94a3b8;
-    margin-top: 2px;
-}
-
-/* Título y mensaje de cada notificación */
 .notif-item .notif-title {
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #0f172a;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    line-height: 1.3;
 }
+
 .notif-item .notif-msg {
     font-size: 0.78rem;
-    color: #475569;
+    color: var(--text-secondary);
     margin-top: 2px;
     line-height: 1.3;
+}
+
+.notif-item .notif-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 2px;
 }

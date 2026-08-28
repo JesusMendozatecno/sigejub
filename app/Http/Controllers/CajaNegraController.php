@@ -11,16 +11,8 @@ use Illuminate\Http\Request;
 
 class CajaNegraController extends Controller
 {
-    private function verifyAdmin(): void
-    {
-        if (!in_array(auth()->user()?->rol, ['admin', 'superadmin'])) {
-            abort(403, 'Acceso no autorizado');
-        }
-    }
-
     public function index(Request $request)
     {
-        $this->verifyAdmin();
         $query = Activity::with('user');
 
         if ($userId = $request->get('user_id')) {
@@ -47,21 +39,19 @@ class CajaNegraController extends Controller
             $query->where('created_at', '<=', $to . ' 23:59:59');
         }
 
-        $activities = $query->latest()->paginate($request->get('per_page', 50));
+        $activities = $query->latest()->paginate(min($request->get('per_page', 50), 100));
 
         return response()->json($activities);
     }
 
     public function show($id)
     {
-        $this->verifyAdmin();
         $activity = Activity::with('user')->findOrFail($id);
         return response()->json($activity);
     }
 
     public function stats()
     {
-        $this->verifyAdmin();
         $total = Activity::count();
         $today = Activity::whereDate('created_at', today())->count();
         $byAction = Activity::selectRaw('accion, COUNT(*) as total')
@@ -77,7 +67,6 @@ class CajaNegraController extends Controller
 
     public function exportar(Request $request)
     {
-        $this->verifyAdmin();
         $query = Activity::with('user');
 
         if ($from = $request->get('from')) {
@@ -94,7 +83,6 @@ class CajaNegraController extends Controller
 
     public function usuarios()
     {
-        $this->verifyAdmin();
         return response()->json(User::select('id', 'nombre', 'correo')->orderBy('nombre')->get());
     }
 }

@@ -1,4 +1,7 @@
 <?php
+// Migración: Agregar SoftDeletes a la tabla solicitudes.
+// Permite bajas lógicas de solicitudes sin eliminar datos físicos.
+// La columna deleted_at se crea nullable; null = activa, timestamp = eliminada.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

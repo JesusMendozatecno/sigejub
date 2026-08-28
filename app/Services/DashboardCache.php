@@ -32,17 +32,4 @@ class DashboardCache
         Cache::forget(self::key('notificaciones', $userId));
         Cache::forget(self::key('notificaciones.no_leidas', $userId));
     }
-
-    public static function flushAll(): void
-    {
-        $keys = [
-            'stats.trabajadores',
-            'solicitudes.por_mes',
-            'solicitudes.vencimientos',
-            'actividades.recientes',
-        ];
-        foreach ($keys as $k) {
-            Cache::forget(self::key($k));
-        }
-    }
 }

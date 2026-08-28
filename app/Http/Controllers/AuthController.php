@@ -21,6 +21,11 @@ class AuthController extends Controller
     // 🔐 LOGIN (AJAX + JSON)
     public function login(Request $request)
     {
+        $request->validate([
+            'correo' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
         $credentials = $request->only('correo', 'password');
 
         if (Auth::attempt($credentials)) {
@@ -64,13 +69,12 @@ class AuthController extends Controller
  public function register(Request $request)
 {
     $request->validate([
-        'nombre' => 'required|string|max:255',
-        'apellido' => 'required|string|max:255',
+        'nombre' => 'required|string|max:255|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
+        'apellido' => 'required|string|max:255|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
         'correo' => 'required|string|email|max:255|unique:users',
-        'telefono' => 'required|string|max:20',
-        'fecha_nacimiento' => 'required|date',
+        'telefono' => 'required|string|max:20|regex:/^[0-9+\-\s]+$/',
+        'fecha_nacimiento' => 'required|date|before:today',
             'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
-            'rol' => 'required|in:usuario,admin,superadmin',
     ]);
 
     $user = User::create([
@@ -80,7 +84,7 @@ class AuthController extends Controller
         'telefono' => $request->telefono,
         'fecha_nacimiento' => $request->fecha_nacimiento,
         'password' => Hash::make($request->password),
-        'rol' => $request->rol,
+        'rol' => 'usuario',
     ]);
 
     Activity::log('created', 'usuario', $user->id,

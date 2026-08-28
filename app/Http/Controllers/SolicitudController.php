@@ -10,6 +10,9 @@ use App\Models\Solicitud;
 use App\Models\Trabajador;
 use App\Models\Activity;
 use App\Services\DashboardCache;
+use App\Services\WorkflowService;
+use App\Services\NotificationService;
+use App\Services\ValidationService;
 use Illuminate\Support\Facades\Cache;
 // use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -37,7 +40,7 @@ class SolicitudController extends Controller
         }
 
         $solicitudes = $query->orderBy('created_at', 'desc')
-                             ->paginate($request->get('per_page', 10));
+                             ->paginate(min($request->get('per_page', 10), 100));
 
         return response()->json($solicitudes);
     }
@@ -45,7 +48,14 @@ class SolicitudController extends Controller
     public function porMes()
     {
         $datos = Cache::remember(DashboardCache::key('solicitudes.por_mes'), DashboardCache::TTL_STATS, function () {
-            $meses = Solicitud::selectRaw('MONTH(fecha_solicitud) as mes, count(*) as total')
+            $driver = \DB::getDriverName();
+            $mesExpr = match ($driver) {
+                'pgsql' => "EXTRACT(MONTH FROM fecha_solicitud)::int",
+                'sqlite' => "CAST(strftime('%m', fecha_solicitud) AS INTEGER)",
+                default => 'MONTH(fecha_solicitud)',
+            };
+
+            $meses = Solicitud::selectRaw("{$mesExpr} as mes, count(*) as total")
                 ->whereYear('fecha_solicitud', now()->year)
                 ->groupBy('mes')
                 ->orderBy('mes')
@@ -95,6 +105,25 @@ class SolicitudController extends Controller
         return response()->json($data);
     }
 
+    public function estadisticas()
+    {
+        $data = Cache::remember(DashboardCache::key('solicitudes.estadisticas'), DashboardCache::TTL_STATS, function () {
+            $counts = Solicitud::selectRaw('estado, count(*) as total')
+                ->groupBy('estado')
+                ->pluck('total', 'estado');
+
+            return [
+                'pendiente' => $counts->get('pendiente', 0),
+                'revision' => $counts->get('revision', 0),
+                'aprobado' => $counts->get('aprobado', 0),
+                'rechazado' => $counts->get('rechazado', 0),
+                'total' => array_sum($counts->toArray()),
+            ];
+        });
+
+        return response()->json($data);
+    }
+
     public function exportarPDF(Request $request)
     {
         $query = Solicitud::with('trabajador');
@@ -124,6 +153,39 @@ class SolicitudController extends Controller
                 'observaciones' => 'nullable|string',
             ]);
 
+            // Verificar si tiene solicitud rechazada → reutilizar
+            $solicitudRechazada = Solicitud::where('trabajador_id', $validated['trabajador_id'])
+                ->where('estado', 'rechazado')
+                ->first();
+
+            if ($solicitudRechazada) {
+                $solicitudRechazada->update([
+                    'fecha_solicitud' => $validated['fecha_solicitud'],
+                    'periodo' => $validated['periodo'] ?? $solicitudRechazada->periodo,
+                    'tipo_jubilacion' => $validated['tipo_jubilacion'] ?? $solicitudRechazada->tipo_jubilacion,
+                    'observaciones' => $validated['observaciones'] ?? $solicitudRechazada->observaciones,
+                    'estado' => 'pendiente',
+                ]);
+
+                $t = $solicitudRechazada->load('trabajador')->trabajador;
+                $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$validated['trabajador_id']}";
+                Activity::log('updated', 'solicitud', $solicitudRechazada->id,
+                    "Se reutilizó solicitud rechazada para {$nombre}, estado cambiado a pendiente");
+
+                return response()->json([
+                    'estado' => 'success',
+                    'mensaje' => 'Solicitud rechazada reutilizada y activada exitosamente.',
+                ]);
+            }
+
+            // Validación de negocio: no crear solicitud si ya hay una activa
+            if (!ValidationService::trabajadorSinSolicitudActiva($validated['trabajador_id'])) {
+                return response()->json([
+                    'estado' => 'error',
+                    'mensaje' => 'Este trabajador ya tiene una solicitud activa (pendiente, en revisión o aprobada).',
+                ], 422);
+            }
+
             $validated['estado'] = 'pendiente';
 
             $solicitud = Solicitud::create($validated);
@@ -143,9 +205,10 @@ class SolicitudController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al crear solicitud: ' . $e->getMessage());
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Error al registrar: ' . $e->getMessage()
+                'mensaje' => 'Error interno al registrar la solicitud.'
             ], 500);
         }
     }
@@ -172,6 +235,20 @@ class SolicitudController extends Controller
 
             $validated = $request->validate($rules);
 
+            // Validar transición de máquina de estados
+            if (isset($validated['estado']) && $validated['estado'] !== $solicitud->estado) {
+                $oldEstado = $solicitud->estado;
+                $newEstado = $validated['estado'];
+
+                if (!WorkflowService::canSolicitudTransition($oldEstado, $newEstado)) {
+                    $permitidos = WorkflowService::allowedSolicitudTransitions($oldEstado);
+                    return response()->json([
+                        'estado' => 'error',
+                        'mensaje' => "No se puede cambiar de '{$oldEstado}' a '{$newEstado}'. Transiciones permitidas: " . implode(', ', $permitidos ?: ['ninguna']),
+                    ], 422);
+                }
+            }
+
             $oldEstado = $solicitud->estado;
             $solicitud->update($validated);
 
@@ -179,15 +256,18 @@ class SolicitudController extends Controller
             $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$solicitud->trabajador_id}";
 
             $desc = "Se actualizó la solicitud de {$nombre}";
-            if ($request->has('estado') && $request->estado !== $oldEstado) {
-                $accion = match ($request->estado) {
-                    'aprobado' => 'Aprobó',
-                    'rechazado' => 'Rechazó',
-                    'revision' => 'Puso en revisión',
-                    default => 'Cambió estado a'
-                };
-                $desc = "{$accion} la solicitud de {$nombre}";
+            if (isset($validated['estado']) && $validated['estado'] !== $oldEstado) {
+                $desc = WorkflowService::solicitudTransitionLabel($oldEstado, $validated['estado']) . " la solicitud de {$nombre}";
+
+                // Enviar notificación automática al cambiar de estado
+                NotificationService::solicitudTransition(
+                    $solicitud->id,
+                    $oldEstado,
+                    $validated['estado'],
+                    $nombre
+                );
             }
+
             Activity::log('updated', 'solicitud', $solicitud->id, $desc);
 
             return response()->json([
@@ -200,9 +280,10 @@ class SolicitudController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al actualizar solicitud: ' . $e->getMessage());
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Error al actualizar: ' . $e->getMessage()
+                'mensaje' => 'Error interno al actualizar la solicitud.'
             ], 500);
         }
     }
@@ -223,9 +304,10 @@ class SolicitudController extends Controller
                 'mensaje' => 'Solicitud eliminada correctamente.'
             ]);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al eliminar solicitud: ' . $e->getMessage());
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Error al eliminar: ' . $e->getMessage()
+                'mensaje' => 'Error interno al eliminar la solicitud.'
             ], 500);
         }
     }

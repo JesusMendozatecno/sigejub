@@ -5,6 +5,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Solicitud extends Model
@@ -22,8 +24,13 @@ class Solicitud extends Model
         'estado',
     ];
 
-    public function trabajador()
+    public function trabajador(): BelongsTo
     {
         return $this->belongsTo(Trabajador::class);
+    }
+
+    public function expediente(): HasOne
+    {
+        return $this->hasOne(Expediente::class);
     }
 }

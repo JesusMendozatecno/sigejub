@@ -352,12 +352,30 @@ async function cargarAdminUsuarios() {
     var search = document.getElementById('adminSearch').value;
     var rol = document.getElementById('adminRoleFilter').value;
     var tbody = document.getElementById('adminUsersBody');
+    var myRol = window.SIGEJUB_USER_ROL || 'usuario';
     try {
         var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&rol=' + rol);
         var data = await r.json();
         if (!data.data || !data.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Sin usuarios</td></tr>'; return; }
         tbody.innerHTML = data.data.map(function(u) {
-            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.nombre.charAt(0).toUpperCase()) + '</div>' + u.nombre + '</div></td><td>' + u.correo + '</td><td><select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(' + u.id + ', this.value)"><option value="analista"' + (u.rol === 'analista' ? ' selected' : '') + '>Analista</option><option value="admin"' + (u.rol === 'admin' ? ' selected' : '') + '>Admin</option></select></td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.nombre.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i class="fas fa-message"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(' + u.id + ')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
+            var roleSelect = '';
+            if (myRol === 'superadmin') {
+                roleSelect = '<select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(' + u.id + ', this.value)">' +
+                    '<option value="usuario"' + (u.rol === 'usuario' ? ' selected' : '') + '>Usuario</option>' +
+                    '<option value="admin"' + (u.rol === 'admin' ? ' selected' : '') + '>Admin</option>' +
+                    '<option value="superadmin"' + (u.rol === 'superadmin' ? ' selected' : '') + '>Superadmin</option></select>';
+            } else if (myRol === 'admin') {
+                if (u.rol === 'superadmin') {
+                    roleSelect = '<span style="font-size:0.75rem;color:#94a3b8;">Superadmin</span>';
+                } else {
+                    roleSelect = '<select class="form-input" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="cambiarRolUsuario(' + u.id + ', this.value)">' +
+                        '<option value="usuario"' + (u.rol === 'usuario' ? ' selected' : '') + '>Usuario</option>' +
+                        '<option value="admin"' + (u.rol === 'admin' ? ' selected' : '') + '>Admin</option></select>';
+                }
+            } else {
+                roleSelect = '<span style="font-size:0.75rem;color:#94a3b8;">' + u.rol + '</span>';
+            }
+            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.nombre.charAt(0).toUpperCase()) + '</div>' + u.nombre + '</div></td><td>' + u.correo + '</td><td>' + roleSelect + '</td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.nombre.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i class="fas fa-message"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(' + u.id + ')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
         }).join('');
     } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Error al cargar</td></tr>'; }
 }

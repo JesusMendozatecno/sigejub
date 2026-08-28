@@ -63,6 +63,7 @@ namespace SIGEJUB_Installer
         private string dbName = "bd-sigejub";
         private string dbUser = "root";
         private string dbPass = "";
+        private string dbEngine = "mysql";
         private int selectedPort = 8000;
 
         public InstallerForm()
@@ -189,8 +190,8 @@ namespace SIGEJUB_Installer
             });
 
             logBox.AppendText(" Bienvenido al instalador de SIGEJUB\n");
-            logBox.AppendText(" Requisitos: PHP 8.2+, Composer, MySQL\n");
-            logBox.AppendText(" Puedes configurar la BD antes de instalar.\n\n");
+            logBox.AppendText(" Requisitos: PHP 8.2+, Composer, MySQL o PostgreSQL\n");
+            logBox.AppendText(" Puedes configurar la BD y el gestor antes de instalar.\n\n");
         }
 
         private Icon LoadIcon()
@@ -207,44 +208,88 @@ namespace SIGEJUB_Installer
             var frm = new Form
             {
                 Text = "Base de Datos",
-                Size = new Size(360, 260),
+                Size = new Size(380, 350),
                 StartPosition = FormStartPosition.CenterParent,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false, MinimizeBox = false,
                 ShowInTaskbar = false
             };
 
-            var lbl = new Label
+            var lblEngine = new Label
             {
-                Text = "Valores por defecto (XAMPP): dejar vacio",
+                Text = "Gestor de base de datos:",
                 Location = new Point(12, 12),
                 Size = new Size(320, 20),
                 ForeColor = Color.FromArgb(100, 116, 139)
             };
 
-            int y = 40;
+            var rdoMysql = new RadioButton
+            {
+                Text = "MySQL / MariaDB (phpMyAdmin)",
+                Location = new Point(16, 34),
+                Size = new Size(230, 22),
+                Checked = dbEngine == "mysql",
+                Font = new Font("Segoe UI", 9)
+            };
+            var rdoPgsql = new RadioButton
+            {
+                Text = "PostgreSQL",
+                Location = new Point(250, 34),
+                Size = new Size(110, 22),
+                Checked = dbEngine == "pgsql",
+                Font = new Font("Segoe UI", 9)
+            };
+
+            var lbl = new Label
+            {
+                Text = "Valores por defecto: dejar vacío",
+                Location = new Point(12, 60),
+                Size = new Size(320, 20),
+                ForeColor = Color.FromArgb(100, 116, 139)
+            };
+
+            int y = 86;
             var txtHost = AddField(frm, "Host:", ref y, dbHost);
             var txtPort = AddField(frm, "Puerto:", ref y, dbPort);
             var txtDb = AddField(frm, "BD:", ref y, dbName);
             var txtUser = AddField(frm, "Usuario:", ref y, dbUser);
             var txtPass = AddField(frm, "Clave:", ref y, dbPass, true);
 
-            var btnOk = new Button { Text = "Guardar", Location = new Point(160, y + 10),
+            EventHandler engineChanged = (s, e) =>
+            {
+                if (rdoMysql.Checked)
+                {
+                    txtPort.Text = "3306";
+                    txtUser.Text = "root";
+                }
+                else
+                {
+                    txtPort.Text = "5432";
+                    txtUser.Text = "postgres";
+                }
+            };
+            rdoMysql.CheckedChanged += engineChanged;
+            rdoPgsql.CheckedChanged += engineChanged;
+
+            var btnOk = new Button { Text = "Guardar", Location = new Point(180, y + 10),
                 Size = new Size(80, 28), DialogResult = DialogResult.OK };
-            var btnCancel = new Button { Text = "Cancelar", Location = new Point(250, y + 10),
+            var btnCancel = new Button { Text = "Cancelar", Location = new Point(270, y + 10),
                 Size = new Size(80, 28), DialogResult = DialogResult.Cancel };
 
-            frm.Controls.AddRange(new Control[] { lbl, btnOk, btnCancel });
+            frm.Controls.AddRange(new Control[] {
+                lblEngine, rdoMysql, rdoPgsql, lbl, btnOk, btnCancel
+            });
             frm.AcceptButton = btnOk;
 
             if (frm.ShowDialog() == DialogResult.OK)
             {
+                dbEngine = rdoPgsql.Checked ? "pgsql" : "mysql";
                 dbHost = string.IsNullOrWhiteSpace(txtHost.Text) ? "127.0.0.1" : txtHost.Text;
-                dbPort = string.IsNullOrWhiteSpace(txtPort.Text) ? "3306" : txtPort.Text;
+                dbPort = string.IsNullOrWhiteSpace(txtPort.Text) ? (dbEngine == "pgsql" ? "5432" : "3306") : txtPort.Text;
                 dbName = string.IsNullOrWhiteSpace(txtDb.Text) ? "bd-sigejub" : txtDb.Text;
-                dbUser = string.IsNullOrWhiteSpace(txtUser.Text) ? "root" : txtUser.Text;
+                dbUser = string.IsNullOrWhiteSpace(txtUser.Text) ? (dbEngine == "pgsql" ? "postgres" : "root") : txtUser.Text;
                 dbPass = txtPass.Text;
-                AppendLog("[OK] Configuracion de BD guardada", Color.Cyan);
+                AppendLog("[OK] Configuracion guardada. Gestor: " + (dbEngine == "pgsql" ? "PostgreSQL" : "MySQL/MariaDB"), Color.Cyan);
             }
         }
 
@@ -368,13 +413,19 @@ namespace SIGEJUB_Installer
             else AppendLog("[OK] .env existe", Color.Green);
 
             string env = File.ReadAllText(envPath, Encoding.UTF8);
+            env = RemoveEnvLine(env, "DB_HOST_PGSQL");
+            env = RemoveEnvLine(env, "DB_PORT_PGSQL");
+            env = RemoveEnvLine(env, "DB_DATABASE_PGSQL");
+            env = RemoveEnvLine(env, "DB_USERNAME_PGSQL");
+            env = RemoveEnvLine(env, "DB_PASSWORD_PGSQL");
+            env = ReplaceEnv(env, "DB_CONNECTION", dbEngine);
             env = ReplaceEnv(env, "DB_HOST", dbHost);
             env = ReplaceEnv(env, "DB_PORT", dbPort);
             env = ReplaceEnv(env, "DB_DATABASE", dbName);
             env = ReplaceEnv(env, "DB_USERNAME", dbUser);
             env = ReplaceEnv(env, "DB_PASSWORD", dbPass);
             File.WriteAllText(envPath, env, Encoding.UTF8);
-            AppendLog("[OK] BD configurada en .env", Color.Green);
+            AppendLog("[OK] BD configurada en .env (" + (dbEngine == "pgsql" ? "PostgreSQL" : "MySQL/MariaDB") + ")", Color.Green);
             SetProgress(42);
 
             // ─── 4: composer install ─────────────────
@@ -396,7 +447,7 @@ namespace SIGEJUB_Installer
 
             // ─── 6: migrate ──────────────────────────
             AppendLog("[6/7] Ejecutando migraciones...", Color.Yellow);
-            AppendLog("      (La BD debe existir en MySQL)", Color.Gray);
+            AppendLog("      (La BD debe existir en " + (dbEngine == "pgsql" ? "PostgreSQL" : "MySQL") + ")", Color.Gray);
             if (!RunCmd("php", "artisan migrate --force --no-ansi", out output))
                 AppendLog("[ADVERTENCIA] Migraciones: " + output.Substring(0, Math.Min(300, output.Length)), Color.Orange);
             else
@@ -428,7 +479,7 @@ namespace SIGEJUB_Installer
                 {
                     string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     string appPath = Application.StartupPath;
-                    string batPath = Path.Combine(appPath, "iniciar.bat");
+                    string vbsPath = Path.Combine(appPath, "sigejub-start.vbs");
                     string lnkPath = Path.Combine(desktop, "SIGEJUB.lnk");
                     AppendLog("Creando acceso directo en: " + desktop, Color.Gray);
 
@@ -439,7 +490,7 @@ namespace SIGEJUB_Installer
                     File.WriteAllText(vbs,
                         "Set ws = CreateObject(\"WScript.Shell\")\n" +
                         "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
-                        "sc.TargetPath = \"" + batPath + "\"\n" +
+                        "sc.TargetPath = \"" + vbsPath + "\"\n" +
                         "sc.WorkingDirectory = \"" + appPath + "\"\n" +
                         "sc.WindowStyle = 7\n" +
                         "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
@@ -469,14 +520,20 @@ namespace SIGEJUB_Installer
             btnInstall.Click -= BtnInstall_Click;
             btnInstall.Click += (s2, e2) =>
             {
-                Process.Start("http://localhost:" + selectedPort);
-                Process.Start(new ProcessStartInfo
+                string vbsLaunch = Path.Combine(Application.StartupPath, "sigejub-start.vbs");
+                if (File.Exists(vbsLaunch))
+                    Process.Start(vbsLaunch);
+                else
                 {
-                    FileName = "php",
-                    Arguments = "artisan serve --port=" + selectedPort,
-                    WorkingDirectory = Application.StartupPath,
-                    UseShellExecute = true
-                });
+                    Process.Start("http://localhost:" + selectedPort);
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "php",
+                        Arguments = "artisan serve --port=" + selectedPort,
+                        WorkingDirectory = Application.StartupPath,
+                        UseShellExecute = true
+                    });
+                }
                 this.Close();
             };
             btnInstall.Enabled = true;
@@ -501,6 +558,16 @@ namespace SIGEJUB_Installer
                     lines[i] = key + "=" + value;
             }
             return string.Join("\n", lines);
+        }
+
+        private string RemoveEnvLine(string content, string key)
+        {
+            var lines = content.Split('\n');
+            var result = new System.Collections.Generic.List<string>();
+            foreach (var line in lines)
+                if (!line.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
+                    result.Add(line);
+            return string.Join("\n", result);
         }
 
         private int FindFreePort()
