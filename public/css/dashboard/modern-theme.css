@@ -663,3 +663,34 @@ body.theme-modern .toast.warning {
     border-color: #f59e0b !important;
     color: #92400e !important;
 }
+
+/* ── Botones / franjas con blanco fijo → paleta del tema moderno ── */
+body.theme-modern .btn-white,
+body.theme-modern .btn-outline-full,
+body.theme-modern .btn-add-small {
+    background: var(--bg-input) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+body.theme-modern .btn-white:hover,
+body.theme-modern .btn-outline-full:hover,
+body.theme-modern .btn-add-small:hover {
+    background: var(--bg-input-focus) !important;
+}
+
+body.theme-modern .filters-bar-card,
+body.theme-modern .doc-checklist-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .modal-container,
+body.theme-modern .modal-form-content {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .cn-stat-week i { background: #fef3c7 !important; color: #ea580c !important; }
+body.theme-modern .toggle-switch { background: #cbd5e1 !important; }
+body.theme-modern .toggle-switch.active { background: var(--accent) !important; }

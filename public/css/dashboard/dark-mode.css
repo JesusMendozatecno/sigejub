@@ -6,39 +6,40 @@
 
 /* ── VARIABLES MODO OSCURAS ── */
 body.dark-mode {
-    /* Superficies */
-    --bg-body: #0f172a;
-    --bg-card: #1e293b;
-    --bg-surface: #334155;
-    --bg-card-hover: #263548;
+    /* Superficies — fondo muy oscuro, tarjetas un tono más claro
+       y bordes visibles para diferenciar los cuadros */
+    --bg-body: #0b1120;
+    --bg-card: #1a2436;
+    --bg-surface: #27344b;
+    --bg-card-hover: #212c40;
 
     /* Sidebar y topbar */
-    --bg-sidebar: #1e293b;
-    --bg-topbar: #1e293b;
+    --bg-sidebar: #111a2b;
+    --bg-topbar: #111a2b;
 
     /* Formularios */
-    --bg-input: #334155;
-    --bg-input-focus: #334155;
-    --bg-overlay: rgba(15, 23, 42, 0.8);
+    --bg-input: #232f45;
+    --bg-input-focus: #2c3b55;
+    --bg-overlay: rgba(5, 8, 16, 0.8);
 
-    /* Bordes */
-    --border: #334155;
-    --border-light: #263548;
-    --border-input: #475569;
+    /* Bordes — más claros para delimitar cada cuadro */
+    --border: #33465f;
+    --border-light: #233249;
+    --border-input: #475a78;
 
     /* Texto */
     --text-primary: #f1f5f9;
     --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
+    --text-muted: #9aa8bd;
 
     /* Acento */
     --accent-hover: #1e3a8a;
 
     /* Sombras */
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.55);
 
     /* Transiciones suaves al entrar en dark mode */
     transition: background var(--transition-slow), color var(--transition-slow);
@@ -341,6 +342,43 @@ body.dark-mode .pagination button {
    (cajas de alerta / plazos) para no perder el significado */
 body.dark-mode .deadline-item.urgent { background: #4c1d1d !important; border-left-color: #fca5a5 !important; }
 body.dark-mode .deadline-item.warning { background: #3d2e00 !important; border-left-color: #fbbf24 !important; }
+
+/* ── Botones que usaban blanco fijo → superficie oscura ── */
+body.dark-mode .btn-white,
+body.dark-mode .btn-outline-full,
+body.dark-mode .btn-add-small {
+    background: var(--bg-input) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+body.dark-mode .btn-white:hover,
+body.dark-mode .btn-outline-full:hover,
+body.dark-mode .btn-add-small:hover {
+    background: var(--bg-input-focus) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Franjas / barras de filtros con blanco → card oscura ── */
+body.dark-mode .filters-bar-card,
+body.dark-mode .doc-checklist-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary);
+}
+
+/* ── Modales con blanco → card oscura ── */
+body.dark-mode .modal-container,
+body.dark-mode .modal-form-content {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+/* ── Componentes semánticos → versiones oscuras ── */
+body.dark-mode .cn-stat-week i { background: #3d2e00 !important; color: #fbbf24 !important; }
+body.dark-mode .btn-reupload { background: #3d2e00 !important; color: #fbbf24 !important; }
+body.dark-mode .btn-reupload:hover { background: #d97706 !important; color: #ffffff !important; }
+body.dark-mode .toggle-switch { background: #475a78 !important; }
+body.dark-mode .toggle-switch.active { background: var(--accent) !important; }
 
 /* Contenedores que usan background blanco en inline (blades) */
 body.dark-mode [style*="background:white"],
