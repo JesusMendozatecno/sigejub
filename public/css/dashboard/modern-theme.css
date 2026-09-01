@@ -12,17 +12,23 @@ body.theme-modern {
     --accent-light: #a5b4fc;
     --accent-dark: #4f46e5;
 
-    /* Superficies */
-    --bg-body: #eef0f4;
-    --bg-card: #f8f9fc;
-    --bg-card-hover: #f1f3f8;
+    /* Superficies — fondo con matiz azulado, cards sin blanco puro */
+    --bg-body: #eaeef6;
+    --bg-card: #f8fafd;
+    --bg-card-hover: #f0f3fa;
     --bg-sidebar: #0f172a;
-    --bg-surface: #eef0f4;
-    --bg-input: #eef0f4;
-    --bg-input-focus: #ffffff;
+    --bg-surface: #eaeef6;
+    --bg-input: #eef1f8;
+    --bg-input-focus: #fbfcff;
 
     /* Bordes */
-    --border: #e2e8f0;
+    --border: #dde5f0;
+
+    /* Texto — mejor contraste */
+    --text-primary: #0f172a;
+    --text-secondary: #3f4f6b;
+    --text-muted: #7d8ca6;
+    --text-inverse: #ffffff;
 
     /* Sombras */
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -108,8 +114,8 @@ body.theme-modern .search-wrapper {
 }
 
 body.theme-modern .search-wrapper:focus-within {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    background: var(--bg-input-focus);
 }
 
 /* ── STAT CARDS — Elevated with top accent ── */
@@ -168,7 +174,7 @@ body.theme-modern .metrics-row .metric-card {
 }
 
 body.theme-modern .metrics-row .metric-card:hover {
-    background: white;
+    background: var(--bg-card-hover);
     box-shadow: var(--shadow-md);
 }
 
@@ -199,8 +205,8 @@ body.theme-modern .form-input {
 }
 
 body.theme-modern .form-input:focus {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    background: var(--bg-input-focus);
 }
 
 body.theme-modern .input-group label {
@@ -215,7 +221,7 @@ body.theme-modern select.form-input {
 }
 
 body.theme-modern select.form-input:focus {
-    background: white;
+    background: var(--bg-input-focus);
 }
 
 /* ── BOTONES — Elevated with shadow ── */
@@ -351,7 +357,7 @@ body.theme-modern .expediente-card:hover {
     border-color: var(--accent);
     box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
     transform: translateY(-2px);
-    background: white;
+    background: var(--bg-card-hover);
 }
 
 body.theme-modern .ec-avatar {
@@ -579,4 +585,81 @@ body.theme-modern .toast-container .toast {
 /* ── NOTIF BADGE ── */
 body.theme-modern .notif-badge {
     background: var(--error) !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   CORRECCIÓN DE BLANCOS HARCODEDOS EN MÓDULOS
+   Los blades usan `background: white` fijo. En el tema moderno los
+   mapeamos a su paleta (gris azulado) para eliminar el blanco puro
+   y mantener la estética coherente.
+   ────────────────────────────────────────────────────────────── */
+body.theme-modern .backup-item .btn-bk-download,
+body.theme-modern .cn-btn-pag,
+body.theme-modern .cn-toolbar,
+body.theme-modern .cn-stat-card,
+body.theme-modern .cn-table-wrap,
+body.theme-modern .formula-card,
+body.theme-modern .formula-detalle-card,
+body.theme-modern .table-wrapper-nomina,
+body.theme-modern .prestacion-card,
+body.theme-modern .prestacion-info-superior,
+body.theme-modern .prestacion-col-izq,
+body.theme-modern .prestacion-col-der,
+body.theme-modern .modal-resultado-box,
+body.theme-modern .modal-tasa-box,
+body.theme-modern .doc-tabs,
+body.theme-modern .doc-section,
+body.theme-modern .doc-empty {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--shadow-card) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern [style*="background:white"],
+body.theme-modern [style*="background: white"] {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .notif-menu {
+    background: var(--bg-card) !important;
+}
+
+body.theme-modern .dashboard-render-zone > .content-section > * {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+/* Tab activo de módulos: respeta fondo de card */
+body.theme-modern .nomina-tab.active,
+body.theme-modern .cg-tab.active {
+    background: var(--bg-card) !important;
+    color: var(--accent-dark) !important;
+}
+
+/* Inputs / botones con blanco fijo → fondo input */
+body.theme-modern .pct-toggle button,
+body.theme-modern .cn-search-wrap input,
+body.theme-modern .cn-date-range input[type=date],
+body.theme-modern .fila-sueldo input,
+body.theme-modern .dropdown-menu,
+body.theme-modern .dropdown-panel {
+    background: var(--bg-input) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .cn-search-wrap input:focus,
+body.theme-modern .cn-date-range input[type=date]:focus,
+body.theme-modern .fila-sueldo input:focus {
+    background: var(--bg-input-focus) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Toast warning — fondo coherente */
+body.theme-modern .toast.warning {
+    background: #fef3c7 !important;
+    border-color: #f59e0b !important;
+    color: #92400e !important;
 }

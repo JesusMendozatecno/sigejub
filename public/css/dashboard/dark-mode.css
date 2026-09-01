@@ -260,3 +260,146 @@ body.dark-mode .admin-table td, body.dark-mode .admin-table th { color: inherit 
 body.dark-mode .report-table td, body.dark-mode .report-table th { color: inherit !important; }
 body.dark-mode .mini-table td, body.dark-mode .mini-table th { color: inherit !important; }
 body.dark-mode .doc-info h4, body.dark-mode .doc-info span, body.dark-mode .doc-item .doc-info span, body.dark-mode .doc-item .doc-info strong { color: inherit !important; }
+
+/* ──────────────────────────────────────────────────────────────
+   OVERRIDES GLOBALES — Corrige blancos "hardcodeados" en blades
+   Múltiples módulos usan `background: white` fijo (no variable).
+   Estos overrides los mapean a los tokens oscuros para que todo
+   el dashboard se vea oscuro de forma coherente.
+   ────────────────────────────────────────────────────────────── */
+
+/* ── AUDITORÍA: TODAS las tarjetas/contenedores con blanco fijo
+   del dashboard.min.css se mapean al color de card oscuro.
+   Estas clases tenían `background: white` duro que rompía el
+   tema oscuro. ── */
+body.dark-mode .stat-card,
+body.dark-mode .metric-card,
+body.dark-mode .metric-card-styled,
+body.dark-mode .metric-card-simple,
+body.dark-mode .metric-card-wide,
+body.dark-mode .chart-card,
+body.dark-mode .expediente-card,
+body.dark-mode .perfil-expediente,
+body.dark-mode .documentos-list,
+body.dark-mode .mini-table,
+body.dark-mode .form-card,
+body.dark-mode .global-progress-mini,
+body.dark-mode .estado-global-card,
+body.dark-mode .recent-activity,
+body.dark-mode .historial-card,
+body.dark-mode .info-detalle-card,
+body.dark-mode .notas-admin-card,
+body.dark-mode .docs-card,
+body.dark-mode .backup-item .btn-bk-download,
+body.dark-mode .cn-btn-pag,
+body.dark-mode .cn-toolbar,
+body.dark-mode .cn-stat-card,
+body.dark-mode .cn-table-wrap,
+body.dark-mode .cg-tab.active,
+body.dark-mode .formula-card,
+body.dark-mode .formula-detalle-card,
+body.dark-mode .nomina-tab.active,
+body.dark-mode .table-wrapper-nomina,
+body.dark-mode .prestacion-card,
+body.dark-mode .prestacion-info-superior,
+body.dark-mode .prestacion-col-izq,
+body.dark-mode .prestacion-col-der,
+body.dark-mode .tasa-btn-primary,
+body.dark-mode .modal-resultado-box,
+body.dark-mode .modal-tasa-box,
+body.dark-mode .doc-tabs,
+body.dark-mode .doc-section,
+body.dark-mode .doc-empty {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--shadow-card) !important;
+    color: var(--text-primary);
+}
+
+/* Tarjetas con fondo blanco y layout flex de ancho completo */
+body.dark-mode .metric-box-white,
+body.dark-mode .metric-card-styled {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+/* INPUTS / superficies que usaban blanco → superficie oscura */
+body.dark-mode .filter-group,
+body.dark-mode .filter-group-sm select,
+body.dark-mode .search-wrapper,
+body.dark-mode .data-table-container,
+body.dark-mode .chart-container,
+body.dark-mode .worker-selector-card,
+body.dark-mode .income-structure-card,
+body.dark-mode .pagination button {
+    background: var(--bg-surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary);
+}
+
+/* Disparadores de colores semánticos → versiones oscuras
+   (cajas de alerta / plazos) para no perder el significado */
+body.dark-mode .deadline-item.urgent { background: #4c1d1d !important; border-left-color: #fca5a5 !important; }
+body.dark-mode .deadline-item.warning { background: #3d2e00 !important; border-left-color: #fbbf24 !important; }
+
+/* Contenedores que usan background blanco en inline (blades) */
+body.dark-mode [style*="background:white"],
+body.dark-mode [style*="background: white"] {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary);
+}
+
+/* Notificaciones dropdown inline blanco */
+body.dark-mode .notif-menu {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+/* Contacto de render zone (contenedores que forzaban blanco) */
+body.dark-mode .dashboard-render-zone > .content-section > * {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+/* Botones / inputs que usaban blanco fijo → superficie oscura */
+body.dark-mode .pct-toggle button,
+body.dark-mode .btn-cancel,
+body.dark-mode .btn-back,
+body.dark-mode .cn-search-wrap input,
+body.dark-mode .cn-date-range input[type=date],
+body.dark-mode .fila-sueldo input,
+body.dark-mode #labelTieneHijos,
+body.dark-mode #labelHijosDiscapacidad,
+body.dark-mode input[type=checkbox]:not(:checked) + label,
+body.dark-mode [style*="background:white"] input,
+body.dark-mode [style*="background: white"] input {
+    background: var(--bg-input) !important;
+    color: var(--text-primary);
+}
+
+/* Labels de trabajadores (checkbox chips) */
+body.dark-mode .trabajadores-checkbox-label {
+    background: var(--bg-input) !important;
+    border-color: var(--border) !important;
+}
+
+/* Tab activo de módulos (nomina, cargos-grados) — texto coherente */
+body.dark-mode .nomina-tab.active,
+body.dark-mode .cg-tab.active {
+    color: var(--text-primary) !important;
+}
+
+/* Borde de inputs de fecha/rango que forzaban blanco en focus */
+body.dark-mode .cn-search-wrap input:focus,
+body.dark-mode .cn-date-range input[type=date]:focus,
+body.dark-mode .fila-sueldo input:focus {
+    background: var(--bg-input-focus) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Toast warning (fondo claro fijo) */
+body.dark-mode .toast.warning {
+    background: #3d2e00 !important;
+    border-color: #92400e !important;
+}

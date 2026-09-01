@@ -269,9 +269,19 @@ body {
     background: var(--bg-card);
 }
 .theme-option:hover { border-color: #cbd5e1; }
-.theme-option.selected { border-color: var(--accent); background: var(--bg-surface); }
+.theme-option.selected {
+    border-color: var(--accent) !important;
+    background: var(--accent) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+}
+.theme-option.selected i,
+.theme-option.selected span {
+    color: #ffffff !important;
+}
 .theme-option i { font-size: 1.4rem; display: block; margin-bottom: 6px; }
 .theme-option span { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+.theme-option.selected i { color: #ffffff; }
+.theme-option.selected span { color: #ffffff; }
 
 /* === SESIONES ACTIVAS === */
 .session-item {
