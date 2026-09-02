@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Nomina;
 use App\Models\Trabajador;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class NominaController extends Controller
 {
     public function index(Request $request)
     {
         $periodo = $request->get('periodo');
+        $anio = $request->get('anio');
+        if ($anio) {
+            $periodo = $anio;
+        }
 
         $nomina = null;
         if ($periodo) {
@@ -23,6 +28,7 @@ class NominaController extends Controller
             ->orderBy('apellidos', 'asc')
             ->orderBy('nombres', 'asc')
             ->get()
+            ->when($anio, fn($rows) => $rows->filter(fn($t) => $nomina && $nomina->trabajadores->contains('id', $t->id)))
             ->map(function ($t) use ($nomina) {
                 $pivot = null;
                 if ($nomina) {
@@ -60,7 +66,8 @@ class NominaController extends Controller
                     'prima_antiguedad' => $pivot ? (float) $pivot->prima_antiguedad : 0,
                     'total_asignacion' => $pivot ? (float) $pivot->total_asignacion : 0,
                 ];
-            });
+            })
+            ->values();
 
         return response()->json([
             'trabajadores' => $trabajadores,
@@ -68,5 +75,26 @@ class NominaController extends Controller
             'nomina_codigo' => $nomina?->codigo,
             'nomina_estado' => $nomina?->estado,
         ]);
+    }
+
+    public function anios()
+    {
+        $anios = DB::table('nominas as n')
+            ->leftJoin('nomina_trabajador as nt', 'nt.nomina_id', '=', 'n.id')
+            ->select('n.periodo', 'n.id')
+            ->selectRaw('COUNT(nt.trabajador_id) as total_trabajadores')
+            ->groupBy('n.periodo', 'n.id')
+            ->orderByDesc('n.periodo')
+            ->get()
+            ->groupBy('periodo')
+            ->map(function ($items, $periodo) {
+                return [
+                    'anio' => $periodo,
+                    'total_trabajadores' => $items->sum('total_trabajadores'),
+                ];
+            })
+            ->values();
+
+        return response()->json(['anios' => $anios]);
     }
 }

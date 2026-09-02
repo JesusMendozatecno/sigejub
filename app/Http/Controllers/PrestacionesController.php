@@ -89,6 +89,8 @@ class PrestacionesController extends Controller
                 'es_jefe_coordinador' => (bool) $trabajador->es_jefe_coordinador,
                 'cesta_ticket' => (float) ($trabajador->cesta_ticket ?? 0),
                 'sugau' => (float) ($trabajador->sugau ?? 0),
+                'nivel_educativo_texto' => $trabajador->nivel_educativo_texto,
+                'nivel_instruccion_id' => $trabajador->nivel_instruccion_id,
             ],
             'expediente' => [
                 'foto_carnet' => $expediente->foto_carnet,

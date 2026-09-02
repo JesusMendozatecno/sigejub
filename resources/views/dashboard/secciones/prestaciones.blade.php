@@ -234,12 +234,47 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     let porcentajeActual = 100;
     let ultimoCalculo = null;
 
+    // Escala de profesionalización por nivel académico (se aplica siempre el mayor, sin sumar).
+    const NIVELES_PROFESIONALIZACION = [
+        { nivel: 25, ids: [7], nombres: ['doctor', 'doctorado', 'phd'] },
+        { nivel: 20, ids: [6], nombres: ['magister', 'magister'] },
+        { nivel: 15, ids: [5], nombres: ['especialista', 'especializacion'] },
+        { nivel: 13, ids: [3, 4], nombres: ['licenciado', 'licenciatura', 'lic', 'ingeniero', 'ingenieria', 'ing'] },
+        { nivel: 11, ids: [2], nombres: ['tsu', 'tecnico superior universitario'] },
+    ];
+
+    // Devuelve { nivel: porcentaje, etiqueta: string } para el nivel académico del trabajador,
+    // o null si no corresponde a ninguno de la escala (p.ej. Bachiller o sin nivel).
+    function profesionalizacionDeTrabajador(t) {
+        const id = parseInt(t.nivel_instruccion_id, 10);
+        const texto = String(t.nivel_educativo_texto || '').toLowerCase();
+        let mejor = null;
+        for (const e of NIVELES_PROFESIONALIZACION) {
+            const porId = e.ids.includes(id);
+            const porNombre = e.nombres.some(n => texto.includes(n));
+            if (porId || porNombre) {
+                if (!mejor || e.nivel > mejor.nivel) mejor = e;
+            }
+        }
+        if (!mejor) return null;
+        return { nivel: mejor.nivel, etiqueta: texto || (mejor.nivel + '%') };
+    }
+
     const PRIMA_CONFIG = {
         PRIMA_HIJO: { workerField: 'numero_hijos', calc: (v, t) => (t.numero_hijos || 0) * v, label: 'Número de hijos' },
         PRIMA_HIJOS_DISCAPACIDAD: { workerField: 'hijos_discapacidad', calc: (v, t) => (t.hijos_discapacidad || 0) * v, label: 'Hijos con discapacidad' },
         PRIMA_ACTIVIDAD_UNIVERSITARIA: { workerField: 'actividad_universitaria', calc: (v, t) => t.actividad_universitaria ? v : 0, label: 'Actividad universitaria' },
         PRIMA_FAMILIAR: { workerField: 'porcentaje_antiguedad', calc: (v, t) => v * (t.total_anos_servicio || 0), label: 'Antigüedad' },
-        PRIMA_PROFESIONALIZACION: { workerField: 'prima_profesionalizacion', calc: (v, t) => v, label: 'Profesionalización' },
+        PRIMA_PROFESIONALIZACION: {
+            workerField: 'prima_profesionalizacion',
+            calc: (v, t) => {
+                const prof = profesionalizacionDeTrabajador(t);
+                // Utiliza la base de datos del trabajador ANTES de la prima (sueldo_base del trabajador).
+                const base = parseFloat(t.sueldo_base) || 0;
+                return prof ? base * (prof.nivel / 100) : 0;
+            },
+            label: 'Profesionalización'
+        },
         PRIMA_RESPONSABILIDAD: { workerField: 'es_jefe_coordinador', calc: (v, t) => t.es_jefe_coordinador ? v : 0, label: 'Responsabilidad' },
         CESTA_TICKET: { workerField: 'cesta_ticket', calc: (v, t) => v, label: 'Cesta Ticket' },
     };
@@ -423,7 +458,15 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             }
             totalPrimas += monto;
             detalles.push({ codigo: p.codigo, nombre: p.nombre, valor_unitario: p.valor, monto });
-            if (monto > 0) {
+            if (p.codigo === 'PRIMA_PROFESIONALIZACION') {
+                const prof = profesionalizacionDeTrabajador(datosTrabajador);
+                const base = parseFloat(datosTrabajador.sueldo_base) || 0;
+                if (monto > 0 && prof) {
+                    resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + ' · ' + escaparHTML(prof.etiqueta) + ' (' + prof.nivel + '%) sobre base ' + fmtBs(base) + '</span><span class="r-value">' + fmtBs(monto) + '</span></div>');
+                } else {
+                    resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + '</span><span class="r-value" style="color:#d97706;">+ ' + fmtBs(monto) + ' · nivel no aplica (0%)</span></div>');
+                }
+            } else if (monto > 0) {
                 resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + '</span><span class="r-value">' + fmtBs(monto) + '</span></div>');
             }
         });

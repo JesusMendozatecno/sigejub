@@ -26,6 +26,31 @@
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
     };
+    window.cachedFetch = async function(url, options) {
+        options = options || {};
+        var ttl = options.ttl || 60000;
+        var cacheKey = 'sigejub_cache_' + url;
+        var cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            try {
+                var parsed = JSON.parse(cached);
+                if (Date.now() - parsed.ts < ttl) {
+                    return { data: parsed.data, fromCache: true };
+                }
+            } catch (e) {}
+        }
+        try {
+            var resp = await fetch(url);
+            var data = await resp.json();
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: data }));
+            return { data: data, fromCache: false };
+        } catch (e) {
+            if (cached) {
+                try { return { data: JSON.parse(cached).data, fromCache: true }; } catch (e2) {}
+            }
+            throw e;
+        }
+    };
     </script>
 
     <style>

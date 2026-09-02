@@ -248,29 +248,7 @@
                     </div>
                 </section>
 
-                <section class="form-section">
-                    <h3><i class="fas fa-building"></i> Datos Institucionales</h3>
-                    <div class="form-row-2">
-                        <div class="input-group">
-                            <label>CARGO ACTUAL</label>
-                            <select name="cargo" id="selectCargo" required>
-                                <option value="" disabled selected>Cargando...</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>UNIDAD O DEPARTAMENTO</label>
-                            <input type="text" name="unidad_departamento" id="inputUnidadDepartamento" required placeholder="Ej: Dirección de Recursos Humanos">
-                        </div>
-                    </div>
-                    <div class="form-row-2">
-                        <div class="input-group">
-                            <label>GRADO / NIVEL</label>
-                            <select name="grado_nivel" id="selectGradoNivel" required>
-                                <option value="" disabled selected>Cargando...</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
+        
 
                 <div class="modal-actions">
                     <button type="submit" class="btn-submit" id="btnSubmitTrabajador">Registrar Trabajador</button>

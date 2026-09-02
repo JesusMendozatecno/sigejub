@@ -12,7 +12,8 @@ class NominaExportController extends Controller
     {
         $fecha = now()->format('Y-m');
         $tipo = $request->get('tipo_nomina');
-        $path = $service->exportar(tipo: $tipo);
+        $anio = $request->get('anio');
+        $path = $service->exportar(periodo: $anio, tipo: $tipo);
 
         $prefix = match($tipo) {
             'DOC' => 'DOC',
@@ -29,10 +30,12 @@ class NominaExportController extends Controller
     {
         $request->validate([
             'archivo' => 'required|file|mimes:xlsx,xls|max:10240',
+            'anio' => 'required|digits:4',
         ]);
 
         try {
             $file = $request->file('archivo');
+            $anio = $request->input('anio');
 
             $tempDir = storage_path('app/temp');
             if (!is_dir($tempDir)) {
@@ -42,18 +45,26 @@ class NominaExportController extends Controller
             $filename = 'nomina_import_' . uniqid() . '.xlsx';
             $file->move($tempDir, $filename);
 
-            $results = $service->importar($tempDir . '/' . $filename);
+            $results = $service->importar($tempDir . '/' . $filename, $anio);
 
             @unlink($tempDir . '/' . $filename);
 
-            $mensaje = "Importación completada: {$results['registrados']} registrados, {$results['actualizados']} actualizados, {$results['omitidos']} omitidos.";
+            $msg = "Año de la nómina: {$anio}<br>";
+            $msg .= "Trabajadores encontrados: {$results['encontrados']}<br>";
+            $msg .= "Trabajadores nuevos registrados: {$results['nuevos']}<br>";
+            $msg .= "Trabajadores ya registrados: {$results['ya_existentes']}<br>";
+            $msg .= "Trabajadores omitidos: {$results['omitidos']}";
+
+            if ($results['nuevos'] === 0 && $results['encontrados'] > 0) {
+                $msg .= "<br><br><em>No se agregaron registros porque todos los trabajadores ya se encuentran registrados en la Nómina {$anio}.</em>";
+            }
             if (!empty($results['errores'])) {
-                $mensaje .= " " . count($results['errores']) . " error(es) encontrados.";
+                $msg .= '<br>' . count($results['errores']) . " error(es) encontrados.";
             }
 
             return response()->json([
                 'estado' => 'success',
-                'mensaje' => $mensaje,
+                'mensaje' => $msg,
                 'datos' => $results,
             ]);
         } catch (\Exception $e) {

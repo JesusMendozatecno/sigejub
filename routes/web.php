@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/trabajadores-stats/dashboard', [TrabajadorController::class, 'dashboardStats']);
     Route::get('/exportar/nomina', [NominaExportController::class, 'exportar'])->name('exportar.nomina');
     Route::post('/importar/nomina', [NominaExportController::class, 'importar'])->name('importar.nomina');
+    Route::get('/nomina/anios', [NominaController::class, 'anios'])->name('nomina.anios');
     Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
 });
 

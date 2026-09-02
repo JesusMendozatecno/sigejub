@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Nomina;
 use App\Models\Trabajador;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
@@ -15,14 +17,38 @@ class NominaImportService
         'OBREROS' => ['headerRow' => 4, 'dataStart' => 5, 'cols' => 'Z'],
     ];
 
-    public function importar(string $filePath): array
+    public function importar(string $filePath, ?string $anio = null): array
     {
+        $anio = $anio ?: (string) now()->year;
+
+        $nomina = Nomina::where('periodo', $anio)->first();
+        if (!$nomina) {
+            $nomina = Nomina::create([
+                'codigo' => 'NOM-' . $anio,
+                'periodo' => $anio,
+                'estado' => 'borrador',
+                'total_general' => 0,
+            ]);
+        }
+
+        $cedulasExistentes = DB::table('nomina_trabajador')
+            ->join('trabajadores', 'trabajadores.id', '=', 'nomina_trabajador.trabajador_id')
+            ->where('nomina_trabajador.nomina_id', $nomina->id)
+            ->pluck('trabajadores.cedula')
+            ->map(fn($c) => $this->normalizarCedula((string) $c))
+            ->unique()
+            ->flip();
+
         $spreadsheet = IOFactory::load($filePath);
 
         $results = [
+            'anio' => $anio,
+            'encontrados' => 0,
+            'nuevos' => 0,
+            'ya_existentes' => 0,
+            'omitidos' => 0,
             'registrados' => 0,
             'actualizados' => 0,
-            'omitidos' => 0,
             'errores' => [],
         ];
 
@@ -46,6 +72,15 @@ class NominaImportService
                     continue;
                 }
 
+                $cedulaNormalizada = $this->normalizarCedula($cedula);
+                $results['encontrados']++;
+
+                if (isset($cedulasExistentes[$cedulaNormalizada])) {
+                    $results['ya_existentes']++;
+                    $results['omitidos']++;
+                    continue;
+                }
+
                 try {
                     $parsed = $this->parseNombreCompleto($nombreCompleto);
                     if (!$parsed) {
@@ -54,20 +89,32 @@ class NominaImportService
                     }
 
                     $data = $this->mapearFila($sheet, $row, $sheetName, $cedula, $parsed['nombres'], $parsed['apellidos']);
+                    $pivotData = $data['_pivot'] ?? [];
+                    unset($data['_pivot']);
 
                     $existente = Trabajador::where('cedula', $cedula)->first();
                     if ($existente) {
                         $existente->update($data);
+                        $trabajador = $existente;
                         $results['actualizados']++;
                     } else {
-                        Trabajador::create($data);
+                        $trabajador = Trabajador::create($data);
                         $results['registrados']++;
                     }
+
+                    $nomina->trabajadores()->attach($trabajador->id, $pivotData);
+                    $cedulasExistentes[$cedulaNormalizada] = true;
+                    $results['nuevos']++;
                 } catch (\Exception $e) {
                     $results['errores'][] = "{$sheetName} Fila {$row} ({$cedula}): " . $e->getMessage();
                 }
             }
         }
+
+        $totalGeneral = (float) DB::table('nomina_trabajador')
+            ->where('nomina_id', $nomina->id)
+            ->sum('total_asignacion');
+        $nomina->update(['total_general' => $totalGeneral]);
 
         $spreadsheet->disconnectWorksheets();
         unset($spreadsheet);
@@ -186,6 +233,18 @@ class NominaImportService
             'dedicacion' => $dedicacion,
             'grado_cargo' => $gradoCargo,
             'asignacion' => 'Nomina',
+            '_pivot' => [
+                'sueldo_base' => $sueldoMensual,
+                'prima_familiar' => $primaFamiliar,
+                'prima_hijo' => $primaHijo,
+                'prima_hijos_discapacidad' => $primaHijosDisc,
+                'prima_actividad_universitaria' => $primaActUniv,
+                'prima_profesionalizacion' => $primaProf,
+                'prima_responsabilidad' => $primaCargoResp,
+                'complemento_prima_responsabilidad' => $compPrimaResp,
+                'prima_antiguedad' => $primaAntiguedad,
+                'total_asignacion' => $totalAsignacion,
+            ],
         ];
     }
 
@@ -232,6 +291,11 @@ class NominaImportService
         if (in_array($v, ['M', 'MASCULINO', 'HOMBRE', 'MALE'])) return 'M';
         if (in_array($v, ['F', 'FEMENINO', 'MUJER', 'FEMALE'])) return 'F';
         return '';
+    }
+
+    protected function normalizarCedula(string $cedula): string
+    {
+        return preg_replace('/[^0-9]/', '', trim($cedula));
     }
 
     protected function parseDecimal($value): float

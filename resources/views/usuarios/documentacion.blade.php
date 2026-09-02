@@ -24,6 +24,11 @@
         .doc-tab.active { background: var(--accent); color: white; }
         .doc-tab-content { display: none; }
         .doc-tab-content.active { display: block; }
+        .doc-content-scroll { max-height: calc(100vh - 170px); overflow-y: auto; padding-right: 6px; }
+        .doc-content-scroll::-webkit-scrollbar { width: 8px; }
+        .doc-content-scroll::-webkit-scrollbar-track { background: transparent; }
+        .doc-content-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        body.dark-mode .doc-content-scroll::-webkit-scrollbar-thumb { background: #475569; }
 
         .doc-section { background: white; border-radius: 16px; padding: 32px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
         .doc-section h2 { font-size: 1.2rem; color: #0f172a; font-weight: 700; margin: 0 0 16px; display: flex; align-items: center; gap: 10px; }
@@ -86,7 +91,7 @@
     </div>
 
     <!-- TAB: INFORMACIÓN DEL SISTEMA -->
-    <div class="doc-tab-content active" id="tab-info">
+    <div class="doc-tab-content active doc-content-scroll" id="tab-info">
         <div class="doc-section">
             <h2><i class="fas fa-circle-info" style="color:var(--accent);"></i> Información General</h2>
             <p><strong>SIGEJUB</strong> (Sistema Integral de Gestión de Jubilaciones) es una plataforma web desarrollada para la <strong>Universidad Politécnica Territorial de Yaracuy (UPTYAB)</strong> que automatiza y centraliza la gestión de expedientes, solicitudes de jubilación, cálculos de prestaciones sociales y nómina del personal docente, administrativo y obrero.</p>
@@ -95,43 +100,47 @@
             <p>
                 <span class="tag tag-blue">PHP 8.4</span>
                 <span class="tag tag-purple">Laravel 12</span>
-                <span class="tag tag-green">MySQL / SQLite</span>
+                <span class="tag tag-green">MySQL (MariaDB)</span>
                 <span class="tag tag-orange">JavaScript (ES6+)</span>
                 <span class="tag tag-blue">HTML5 / CSS3</span>
-                <span class="tag tag-purple">Tailwind CSS</span>
-                <span class="tag tag-green">Font Awesome 6</span>
-                <span class="tag tag-orange">Chart.js</span>
-                <span class="tag tag-blue">Mermaid.js</span>
-                <span class="tag tag-purple">PhpSpreadsheet</span>
-                <span class="tag tag-orange">Cropper.js</span>
+                <span class="tag tag-green">Blade (Motor de plantillas)</span>
+                <span class="tag tag-orange">Font Awesome 6</span>
+                <span class="tag tag-blue">Chart.js</span>
+                <span class="tag tag-purple">DomPDF</span>
+                <span class="tag tag-orange">PhpSpreadsheet</span>
+                <span class="tag tag-blue">Cropper.js</span>
                 <span class="tag tag-red">Apache (XAMPP)</span>
             </p>
 
-            <h3>Lenguajes</h3>
+            <h3>Lenguajes y librerías</h3>
             <ul>
-                <li><strong>Backend:</strong> PHP 8.4 (Laravel 12 Framework)</li>
-                <li><strong>Frontend:</strong> JavaScript (ES6+), HTML5, CSS3</li>
-                <li><strong>Base de Datos:</strong> MySQL (MariaDB) o SQLite</li>
+                <li><strong>Backend:</strong> PHP 8.4 (Laravel 12 Framework) con Eloquent ORM</li>
+                <li><strong>Frontend:</strong> JavaScript vanilla (ES6+), HTML5, CSS3 — sin frameworks de frontend</li>
+                <li><strong>Base de Datos:</strong> MySQL (MariaDB)</li>
                 <li><strong>Plantillas:</strong> Blade (motor de plantillas de Laravel)</li>
+                <li><strong>Gráficos:</strong> Chart.js (<code>public/js/chartjs/chart.umd.min.js</code>)</li>
+                <li><strong>PDF:</strong> DomPDF (comprobantes de prestaciones y exportaciones)</li>
+                <li><strong>Excel:</strong> PhpSpreadsheet (<code>phpoffice/phpspreadsheet</code>) para importación/exportación de nómina</li>
+                <li><strong>Recorte de imágenes:</strong> Cropper.js (avatar de perfil)</li>
             </ul>
 
             <h3>Estructura del Sistema</h3>
             <p>El sistema sigue el patrón <strong>MVC (Modelo-Vista-Controlador)</strong> de Laravel:</p>
             <ul>
-                <li><strong>app/Models/</strong> — Modelos Eloquent (Trabajador, User, Solicitud, Nomina, etc.)</li>
-                <li><strong>app/Http/Controllers/</strong> — Controladores (Auth, User, Trabajador, Solicitud, Admin, etc.)</li>
-                <li><strong>app/Services/</strong> — Servicios (NominaExportService, DashboardCache)</li>
-                <li><strong>resources/views/</strong> — Vistas Blade (dashboard, auth, usuarios, partials)</li>
-                <li><strong>public/js/</strong> — JavaScript del lado del cliente</li>
-                <li><strong>public/css/</strong> — Estilos CSS</li>
-                <li><strong>database/migrations/</strong> — Migraciones de base de datos</li>
-                <li><strong>routes/web.php</strong> — Definición de rutas web</li>
+                <li><strong>app/Models/</strong> — Modelos Eloquent (User, Trabajador, Solicitud, Expediente, Nomina, Prestacion, TasaCambio, FormulaPrestacion, Prima, Cargo, Area, Grado, NivelInstruccion, TipoContrato, Sueldo, TipoJubilacion, Activity, Changelog, etc.)</li>
+                <li><strong>app/Http/Controllers/</strong> — Controladores (Auth, User/Trabajador/Solicitud/Expediente/Prestaciones/Nomina/NominaExport/Admin/CajaNegra/MasterData/TasaCambio/FormulaPrestacion/Backup/Changelog)</li>
+                <li><strong>app/Services/</strong> — Servicios (NotificationService, ValidationService)</li>
+                <li><strong>database/migrations/</strong> — Migraciones de base de datos (incluye tablas maestras)</li>
+                <li><strong>routes/web.php</strong> — Definición de rutas web (web + API AJAX)</li>
+                <li><strong>resources/views/</strong> — Vistas Blade (dashboard/secciones, auth, usuarios, partials, pdf)</li>
+                <li><strong>public/js/dashboard.js</strong> — Lógica principal del panel (vanilla JS)</li>
+                <li><strong>public/css/dashboard/</strong> — Estilos CSS del panel</li>
             </ul>
         </div>
     </div>
 
     <!-- TAB: ARQUITECTURA -->
-    <div class="doc-tab-content" id="tab-arquitectura">
+    <div class="doc-tab-content doc-content-scroll" id="tab-arquitectura">
         <div class="doc-section">
             <h2><i class="fas fa-sitemap" style="color:var(--accent);"></i> Arquitectura del Sistema</h2>
             <p>Diagrama de la arquitectura general del sistema:</p>
@@ -140,41 +149,47 @@
 │                   NAVEGADOR WEB                       │
 │  ┌──────────┐  ┌──────────┐  ┌───────────────────┐  │
 │  │Dashboard │  │  Perfil   │  │  Documentación    │  │
-│  │ (Blade)  │  │ (Blade)  │  │  (Blade + Info)   │  │
+│  │ (Blade)  │  │ (Blade)  │  │  (Blade + Changelog)│  │
 │  └─────┬────┘  └────┬─────┘  └────────┬──────────┘  │
 │        │            │                 │              │
 │  ┌─────┴────────────┴─────────────────┴──────────┐  │
-│  │              JavaScript (Fetch API)            │  │
+│  │            JavaScript (Fetch API)             │  │
 │  │   AJAX — JSON — CSRF Token — Session Cookie   │  │
 │  └─────────────────────┬─────────────────────────┘  │
 └────────────────────────┼────────────────────────────┘
-                         │ HTTP (Apache :8081)
+                         │ HTTP (Apache :80)
 ┌────────────────────────┼────────────────────────────┐
-│                LARAVEL (PHP 8.4)                     │
+│               LARAVEL (PHP 8.4)                     │
 │  ┌─────────────────────┴─────────────────────────┐  │
 │  │              routes/web.php                     │  │
 │  └──────┬──────────┬──────────┬──────────────────┘  │
 │         │          │          │                      │
 │  ┌──────┴──┐ ┌─────┴─────┐ ┌─┴──────────────┐      │
-│  │Controllers│ │ Middleware │ │ Services       │      │
-│  │ Auth,User │ │ auth,csrf │ │ NominaExport,  │      │
-│  │ Trabajador│ │ inactividad│ │ DashboardCache │      │
-│  │ Solicitud │ │ throttle  │ └────────────────┘      │
-│  │ Admin,etc │ └───────────┘                         │
+│  │Controllers│ │ Middleware │ │   Services     │      │
+│  │ Auth,User │ │ auth,csrf │ │ Notification,  │      │
+│  │ Trabajador│ │ role,     │ │ Validation     │      │
+│  │ Solicitud │ │ inactivity│ └────────────────┘      │
+│  │ Expedient │ └───────────┘                        │
+│  │ Nomina,etc│                                     │
 │  └──────┬──┘                                         │
 │         │ Eloquent ORM                               │
 │  ┌──────┴──────────────────────────────────────┐     │
-│  │              Models (Eloquent)               │     │
+│  │            Models (Eloquent)                 │     │
 │  │  User, Trabajador, Solicitud,               │     │
-│  │  Nomina, Activity,                           │     │
-│  │  UserNotification                            │     │
+│  │  Expediente, Nomina, Prestacion,            │     │
+│  │  TasaCambio, FormulaPrestacion, Prima,      │     │
+│  │  Activity, Changelog, ...                   │     │
 │  └──────┬──────────────────────────────────────┘     │
 │         │                                            │
 │  ┌──────┴──────────────────────────────────────┐     │
-│  │          Base de Datos (MySQL/SQLite)        │     │
+│  │       Base de Datos (MySQL / MariaDB)        │     │
 │  │  users, trabajadores, solicitudes,           │     │
-│  │  expedientes, nominas, prestaciones_sociales │     │
-│  │  activities, notifications,                  │     │
+│  │  expedientes, documentos, nominas,           │     │
+│  │  nomina_trabajador, prestaciones, primas,    │     │
+│  │  tasas_cambio, formulas_prestaciones,        │     │
+│  │  cargos, areas, grados, niveles_instruccion, │     │
+│  │  sueldos, tipos_contrato, tipos_jubilacion,  │     │
+│  │  activities, notifications, changelogs,      │     │
 │  │  sessions                                    │     │
 │  └─────────────────────────────────────────────┘     │
 └─────────────────────────────────────────────────────┘
@@ -182,9 +197,9 @@
 
             <h3>Flujo de Datos</h3>
             <ol>
-                <li>El navegador realiza peticiones HTTP (GET/POST/PUT/DELETE) al servidor Apache en puerto 8081</li>
+                <li>El navegador realiza peticiones HTTP (GET/POST/PUT/DELETE) al servidor Apache</li>
                 <li>Laravel enruta la petición al controlador correspondiente según <code>routes/web.php</code></li>
-                <li>Los middlewares verifican autenticación, CSRF, inactividad y permisos</li>
+                <li>Los middlewares verifican autenticación, CSRF, rol y tiempo de inactividad</li>
                 <li>El controlador interactúa con los Models vía Eloquent ORM para leer/escribir en la BD</li>
                 <li>Las respuestas se devuelven como JSON (para AJAX) o vistas Blade (para navegación directa)</li>
                 <li>El frontend JavaScript procesa las respuestas JSON y actualiza el DOM dinámicamente</li>
@@ -193,70 +208,104 @@
     </div>
 
     <!-- TAB: MÓDULOS -->
-    <div class="doc-tab-content" id="tab-modulos">
+    <div class="doc-tab-content doc-content-scroll" id="tab-modulos">
         <div class="doc-section">
             <h2><i class="fas fa-puzzle-piece" style="color:var(--accent);"></i> Módulos del Sistema</h2>
 
             <table class="doc-table">
                 <thead><tr><th>Módulo</th><th>Descripción</th><th>Controlador</th><th>Ruta Principal</th></tr></thead>
                 <tbody>
-                    <tr><td><strong>Autenticación</strong></td><td>Login, registro, logout, recuperación de contraseña</td><td>AuthController</td><td>/login, /register</td></tr>
-                    <tr><td><strong>Dashboard</strong></td><td>Panel principal con resumen de datos y acceso rápido a módulos</td><td>AuthController@dashboard</td><td>/dashboard</td></tr>
-                    <tr><td><strong>Trabajadores</strong></td><td>CRUD completo de trabajadores, directorio, filtros, búsqueda</td><td>TrabajadorController</td><td>/trabajadores</td></tr>
-                    <tr><td><strong>Solicitudes</strong></td><td>Gestión de solicitudes de jubilación con estatus y filtros</td><td>SolicitudController</td><td>/solicitudes</td></tr>
-                    <tr><td><strong>Expedientes</strong></td><td>Expedientes digitales con documentos, notas y aprobaciones</td><td>ExpedienteController</td><td>/expedientes</td></tr>
-                    <tr><td><strong>Prestaciones</strong></td><td>Cálculo y visualización de prestaciones sociales según LOTTT</td><td>PrestacionesController</td><td>/prestaciones</td></tr>
-                    <tr><td><strong>Nómina</strong></td><td>Exportación de planilla de nómina en Excel con PhpSpreadsheet</td><td>NominaExportController</td><td>/exportar/nomina</td></tr>
+                    <tr><td><strong>Inicio</strong></td><td>Panel principal con estadísticas y acceso rápido a los módulos</td><td>AuthController@dashboard</td><td>/dashboard</td></tr>
+                    <tr><td><strong>Autenticación</strong></td><td>Login, registro, logout y protección por throttle</td><td>AuthController</td><td>/login, /register</td></tr>
+                    <tr><td><strong>Trabajadores</strong></td><td>CRUD completo de trabajadores, autocompletado y estadísticas</td><td>TrabajadorController</td><td>/trabajadores</td></tr>
+                    <tr><td><strong>Solicitudes</strong></td><td>Gestión de solicitudes de jubilación con estatus, por mes y exportación PDF</td><td>SolicitudController</td><td>/solicitudes</td></tr>
+                    <tr><td><strong>Expedientes</strong></td><td>Expedientes digitales con documentos, notas, carta de aprobación y foto de carnet</td><td>ExpedienteController</td><td>/expedientes</td></tr>
+                    <tr><td><strong>Nómina</strong></td><td>Importar/exportar planilla de nómina en Excel y organización por años</td><td>NominaController, NominaExportController</td><td>/nomina</td></tr>
+                    <tr><td><strong>Prestaciones</strong></td><td>Cálculo de prestaciones sociales según LOTTT, guardado y comprobante PDF</td><td>PrestacionesController</td><td>/prestaciones</td></tr>
                     <tr><td><strong>Reportes</strong></td><td>Estadísticas generales del sistema con métricas en tiempo real</td><td>(AJAX a varios)</td><td>/reportes</td></tr>
-                    <tr><td><strong>Perfil</strong></td><td>Gestión de cuenta, avatar, seguridad, sesiones, actividad</td><td>UserController</td><td>/perfil</td></tr>
-                    <tr><td><strong>Admin</strong></td><td>Panel de administración: usuarios, permisos, actividad global</td><td>AdminController, UserController</td><td>/usuarios</td></tr>
-                    <tr><td><strong>Historial</strong></td><td>Caja Negra: auditoría completa de cambios del sistema</td><td>CajaNegraController</td><td>/caja-negra</td></tr>
-                    <tr><td><strong>Documentación</strong></td><td>Documentación completa del sistema</td><td>ChangelogController</td><td>/documentacion</td></tr>
+                    <tr><td><strong>Fórmulas</strong></td><td>Definición y administración de fórmulas para el cálculo de prestaciones</td><td>FormulaPrestacionController</td><td>/formulas-prestaciones</td></tr>
+                    <tr><td><strong>Tasa de Cambio</strong></td><td>Consulta y sincronización de la tasa de cambio (VES/USD)</td><td>TasaCambioController</td><td>/tasas-cambio</td></tr>
+                    <tr><td><strong>Cargos y Grados</strong></td><td>Tablas maestras: cargos, áreas, grados, niveles, sueldos y tipos de contrato</td><td>MasterDataController</td><td>/master/{tipo}</td></tr>
+                    <tr><td><strong>Primas</strong></td><td>Administración de las primas aplicables en el cálculo salarial</td><td>(sección del dashboard)</td><td>/dashboard</td></tr>
+                    <tr><td><strong>Historial (Caja Negra)</strong></td><td>Auditoría completa de cambios y generación de copias de seguridad</td><td>CajaNegraController, BackupController</td><td>/caja-negra, /backups</td></tr>
+                    <tr><td><strong>Perfil</strong></td><td>Gestión de cuenta, avatar, seguridad, sesiones y actividad del usuario</td><td>UserController</td><td>/perfil</td></tr>
+                    <tr><td><strong>Usuarios (Admin)</strong></td><td>Administración de usuarios y actividad global del sistema</td><td>AdminController</td><td>/usuarios</td></tr>
+                    <tr><td><strong>Documentación</strong></td><td>Documentación del sistema y changelog generado desde git log</td><td>ChangelogController</td><td>/documentacion</td></tr>
                 </tbody>
             </table>
 
             <h3>Base de Datos</h3>
-            <p>Tablas principales del sistema:</p>
+            <p>Tablas principales del sistema (MySQL / MariaDB):</p>
             <table class="doc-table">
-                <thead><tr><th>Tabla</th><th>Propósito</th><th>Columnas Clave</th></tr></thead>
+                <thead><tr><th>Tabla</th><th>Propósito</th></tr></thead>
                 <tbody>
-                    <tr><td><code>users</code></td><td>Usuarios del sistema</td><td>nombre, correo, password, rol, avatar, tema</td></tr>
-                    <tr><td><code>trabajadores</code></td><td>Registro de empleados UPTYAB</td><td>cedula, nombres, apellidos, cargo, sueldo_base, fecha_ingreso</td></tr>
-                    <tr><td><code>solicitudes</code></td><td>Solicitudes de jubilación</td><td>trabajador_id, tipo, estatus, fecha_solicitud</td></tr>
-                    <tr><td><code>expedientes</code></td><td>Expedientes digitales</td><td>trabajador_id, notas, estatus</td></tr>
-                    <tr><td><code>nominas</code></td><td>Cálculos mensuales de nómina</td><td>trabajador_id, sueldo_base, total_asignacion, total_deduccion, neto_a_cobrar</td></tr>
-                    <tr><td><code>prestaciones_sociales</code></td><td>Cálculo de prestaciones LOTTT</td><td>trabajador_id, antiguedad_dias, salario_integral, total_prestaciones</td></tr>
-                    <tr><td><code>activities</code></td><td>Bitácora de actividad</td><td>user_id, accion, tipo_entidad, entidad_id, descripcion</td></tr>
-                    <tr><td><code>sessions</code></td><td>Sesiones de usuario</td><td>user_id, last_activity, user_agent, ip_address</td></tr>
+                    <tr><td><code>users</code></td><td>Usuarios del sistema (rol: usuario, admin, superadmin)</td></tr>
+                    <tr><td><code>trabajadores</code></td><td>Registro de empleados UPTYAB (con campos de salario, años de servicio y primas)</td></tr>
+                    <tr><td><code>solicitudes</code></td><td>Solicitudes de jubilación</td></tr>
+                    <tr><td><code>expedientes</code></td><td>Expedientes digitales (con carta de aprobación y notas)</td></tr>
+                    <tr><td><code>documentos</code></td><td>Documentos adjuntos por expediente</td></tr>
+                    <tr><td><code>nominas</code> / <code>nomina_trabajador</code></td><td>Nóminas mensuales y detalle por trabajador (pivot)</td></tr>
+                    <tr><td><code>prestaciones</code></td><td>Cálculo de prestaciones sociales (monto, sueldo integral, total primas, tasa)</td></tr>
+                    <tr><td><code>primas</code></td><td>Catálogo de primas aplicables (familiar, hijo, profesionalización, etc.)</td></tr>
+                    <tr><td><code>tasas_cambio</code></td><td>Registro de tasas de cambio (VES/USD)</td></tr>
+                    <tr><td><code>formulas_prestaciones</code></td><td>Fórmulas parametrizadas para el cálculo de prestaciones</td></tr>
+                    <tr><td><code>cargos</code>, <code>areas</code>, <code>grados</code></td><td>Tablas maestras de cargos, áreas y grados</td></tr>
+                    <tr><td><code>niveles_instruccion</code>, <code>tipos_contrato</code>, <code>tipos_jubilacion</code></td><td>Catálogos de nivel académico, tipo de contrato y tipo de jubilación</td></tr>
+                    <tr><td><code>sueldos</code></td><td>Sueldos parametrizados por grado y nivel de instrucción</td></tr>
+                    <tr><td><code>activities</code></td><td>Caja negra: bitácora de actividad del sistema</td></tr>
+                    <tr><td><code>notifications</code></td><td>Notificaciones del sistema y del usuario</td></tr>
+                    <tr><td><code>changelogs</code></td><td>Registro de cambios (changelog) generado desde git log</td></tr>
+                    <tr><td><code>sessions</code></td><td>Sesiones de usuario</td></tr>
                 </tbody>
             </table>
 
             <h3>API JSON Endpoints</h3>
-            <p>El sistema expone múltiples endpoints AJAX para consumo desde el frontend:</p>
+            <p>El sistema expone múltiples endpoints AJAX para consumo desde el frontend (todos requieren autenticación):</p>
             <table class="doc-table">
                 <thead><tr><th>Endpoint</th><th>Método</th><th>Descripción</th></tr></thead>
                 <tbody>
-                    <tr><td><code>/trabajadores</code></td><td>GET</td><td>Lista paginada de trabajadores</td></tr>
+                    <tr><td><code>/trabajadores</code></td><td>GET/POST</td><td>Lista paginada y creación de trabajadores</td></tr>
+                    <tr><td><code>/trabajadores/autocomplete</code></td><td>GET</td><td>Autocompletado de trabajadores</td></tr>
                     <tr><td><code>/trabajadores/{id}</code></td><td>GET/PUT/DELETE</td><td>CRUD individual de trabajador</td></tr>
                     <tr><td><code>/trabajadores-stats/dashboard</code></td><td>GET</td><td>Estadísticas de trabajadores</td></tr>
                     <tr><td><code>/solicitudes</code></td><td>GET/POST</td><td>Lista y creación de solicitudes</td></tr>
                     <tr><td><code>/solicitudes/por-mes</code></td><td>GET</td><td>Solicitudes agrupadas por mes</td></tr>
                     <tr><td><code>/solicitudes/vencimientos</code></td><td>GET</td><td>Próximos vencimientos</td></tr>
+                    <tr><td><code>/solicitudes/estadisticas</code></td><td>GET</td><td>Estadísticas de solicitudes</td></tr>
+                    <tr><td><code>/solicitudes/exportar</code></td><td>GET</td><td>Exporta solicitudes a PDF</td></tr>
                     <tr><td><code>/expedientes</code></td><td>GET/POST</td><td>Lista y creación de expedientes</td></tr>
                     <tr><td><code>/expedientes/buscar-trabajador</code></td><td>GET</td><td>Búsqueda de trabajador para expediente</td></tr>
+                    <tr><td><code>/expedientes/listos-aprobacion</code></td><td>GET</td><td>Expedientes listos para aprobación</td></tr>
+                    <tr><td><code>/expedientes/{id}/documentos</code></td><td>POST</td><td>Sube documento al expediente</td></tr>
+                    <tr><td><code>/expedientes/{id}/carta-aprobacion</code></td><td>POST</td><td>Sube carta de aprobación</td></tr>
+                    <tr><td><code>/expedientes/{id}/foto-carnet</code></td><td>POST</td><td>Actualiza foto de carnet</td></tr>
+                    <tr><td><code>/nomina</code></td><td>GET</td><td>Nómina (con filtro por año)</td></tr>
+                    <tr><td><code>/nomina/anios</code></td><td>GET</td><td>Años disponibles en la nómina</td></tr>
                     <tr><td><code>/exportar/nomina</code></td><td>GET</td><td>Descarga planilla Excel de nómina</td></tr>
+                    <tr><td><code>/importar/nomina</code></td><td>POST</td><td>Importa nómina desde Excel</td></tr>
+                    <tr><td><code>/prestaciones</code></td><td>GET/POST</td><td>Lista y guardado de prestaciones</td></tr>
+                    <tr><td><code>/prestaciones/{id}</code></td><td>GET</td><td>Detalle del trabajador para cálculo</td></tr>
+                    <tr><td><code>/prestaciones/{id}/comprobante</code></td><td>POST</td><td>Genera comprobante PDF de prestaciones</td></tr>
+                    <tr><td><code>/formulas-prestaciones</code></td><td>GET/POST</td><td>Lista y creación de fórmulas</td></tr>
+                    <tr><td><code>/tasas-cambio</code></td><td>GET/POST</td><td>Lista y creación de tasas de cambio</td></tr>
+                    <tr><td><code>/tasas-cambio/actual</code></td><td>GET</td><td>Tasa de cambio actual</td></tr>
+                    <tr><td><code>/tasas-cambio/sincronizar</code></td><td>POST</td><td>Sincroniza tasa desde proveedor</td></tr>
+                    <tr><td><code>/master/{tipo}</code></td><td>GET/POST/PUT/DELETE</td><td>CRUD de tablas maestras (cargos, grados, etc.)</td></tr>
                     <tr><td><code>/caja-negra</code></td><td>GET</td><td>Historial de auditoría</td></tr>
+                    <tr><td><code>/caja-negra-data/estadisticas</code></td><td>GET</td><td>Estadísticas de la caja negra</td></tr>
+                    <tr><td><code>/backups</code></td><td>GET/POST</td><td>Lista y generación de copias de seguridad</td></tr>
                     <tr><td><code>/usuarios</code></td><td>GET</td><td>Lista de usuarios (admin)</td></tr>
                     <tr><td><code>/actividades</code></td><td>GET</td><td>Actividad reciente del sistema</td></tr>
                     <tr><td><code>/notificaciones</code></td><td>GET</td><td>Notificaciones del usuario</td></tr>
                     <tr><td><code>/actividad/ping</code></td><td>POST</td><td>Keep-alive de sesión</td></tr>
+                    <tr><td><code>/documentacion/api</code></td><td>GET</td><td>Lista de cambios (changelog)</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <!-- TAB: SEGURIDAD -->
-    <div class="doc-tab-content" id="tab-seguridad">
+    <div class="doc-tab-content doc-content-scroll" id="tab-seguridad">
         <div class="doc-section">
             <h2><i class="fas fa-shield" style="color:var(--accent);"></i> Seguridad del Sistema</h2>
 
@@ -270,9 +319,9 @@
 
             <h3>Autorización y Roles</h3>
             <ul>
-                <li>Dos roles: <strong>admin</strong> (acceso completo, panel de administración) y <strong>analista</strong> (gestión de trabajadores/solicitudes/expedientes)</li>
-                <li>Verificación de rol en cada controlador: <code>abort_unless(auth()->user()?->rol === 'admin', 403)</code></li>
-                <li>Las vistas de administración solo se renderizan si el usuario es admin</li>
+                <li>Tres roles: <strong>superadmin</strong> y <strong>admin</strong> (acceso completo y panel de administración) y <strong>usuario</strong> (gestión de trabajadores/solicitudes/expedientes)</li>
+                <li>Verificación de rol en rutas y controladores: middleware <code>role:admin,superadmin</code> para las áreas de administración</li>
+                <li>Las vistas de administración solo se renderizan si el usuario es admin/superadmin</li>
             </ul>
 
             <h3>CSRF (Cross-Site Request Forgery)</h3>
@@ -302,10 +351,11 @@
             <h3>Seguridad Adicional</h3>
             <ul>
                 <li><strong>APP_KEY</strong> única en .env para encriptación de cookies y sesiones</li>
-                <li>Archivos de avatar almacenados en <code>storage/app/public/</code> y servidos vía symlink</li>
-                <li>Sistema de logging de actividad (Caja Negra) para auditoría de cambios</li>
+                <li>Archivos (avatares, fotografías, documentos) almacenados en <code>storage/app/public/</code> y servidos vía symlink</li>
+                <li>Sistema de logging de actividad <strong>Caja Negra</strong> (<code>activities</code>) para auditoría de cambios</li>
                 <li><strong>Soft delete</strong> en trabajadores (columna <code>deleted_at</code>) para prevenir pérdida de datos</li>
-                <li><strong>SQLite</strong> como base de datos portátil opcional sin configuración de servidor</li>
+                <li><strong>Copias de seguridad</strong> (backups) generables desde el panel para respaldo de la base de datos</li>
+                <li><strong>Autenticación 2FA</strong> y opción de <strong>"Cerrar otras sesiones"</strong> desde el perfil del usuario</li>
             </ul>
         </div>
     </div>
