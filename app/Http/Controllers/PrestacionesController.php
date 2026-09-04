@@ -40,6 +40,8 @@ class PrestacionesController extends Controller
                     'total_anos_servicio' => $t->total_anos_servicio,
                     'cargo' => $t->cargo,
                     'unidad_departamento' => $t->unidad_departamento,
+                    'nivel_educativo_texto' => $t->nivel_educativo_texto,
+                    'nivel_instruccion_id' => $t->nivel_instruccion_id,
                     'foto_carnet' => $exp->foto_carnet,
                     'expediente_id' => $exp->id,
                     'solicitud_id' => $exp->solicitud_id,

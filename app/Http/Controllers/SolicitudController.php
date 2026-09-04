@@ -164,13 +164,13 @@ class SolicitudController extends Controller
                     'periodo' => $validated['periodo'] ?? $solicitudRechazada->periodo,
                     'tipo_jubilacion' => $validated['tipo_jubilacion'] ?? $solicitudRechazada->tipo_jubilacion,
                     'observaciones' => $validated['observaciones'] ?? $solicitudRechazada->observaciones,
-                    'estado' => 'pendiente',
+                    'estado' => 'revision',
                 ]);
 
                 $t = $solicitudRechazada->load('trabajador')->trabajador;
                 $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$validated['trabajador_id']}";
                 Activity::log('updated', 'solicitud', $solicitudRechazada->id,
-                    "Se reutilizó solicitud rechazada para {$nombre}, estado cambiado a pendiente");
+                    "Se reutilizó solicitud rechazada para {$nombre}, estado cambiado a revisión");
 
                 return response()->json([
                     'estado' => 'success',
@@ -186,7 +186,7 @@ class SolicitudController extends Controller
                 ], 422);
             }
 
-            $validated['estado'] = 'pendiente';
+            $validated['estado'] = 'revision';
 
             $solicitud = Solicitud::create($validated);
 

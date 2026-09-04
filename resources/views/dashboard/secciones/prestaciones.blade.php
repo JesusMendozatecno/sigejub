@@ -13,6 +13,7 @@
 .prestacion-card .pc-info .pc-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
 .prestacion-card .pc-anios { font-size: 0.75rem; font-weight: 700; color: #1e3a8a; background: #eff6ff; padding: 3px 10px; border-radius: 10px; }
 .prestacion-card .pc-badge { font-size: 0.68rem; font-weight: 700; color: #1e40af; background: #dbeafe; padding: 3px 10px; border-radius: 10px; }
+.prestacion-card .pc-titulo { font-size: 0.7rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 3px 10px; border-radius: 10px; display: inline-flex; align-items: center; gap: 5px; }
 .prestacion-card .pc-monto { font-size: 0.75rem; font-weight: 700; color: #16a34a; background: #ecfdf5; padding: 3px 10px; border-radius: 10px; }
 
 .prestacion-detalle-layout { display: flex; flex-direction: column; gap: 16px; height: calc(100vh - 200px); overflow: hidden; }
@@ -99,6 +100,7 @@ body.dark-mode .prestacion-card .pc-info strong { color: #f1f5f9; }
 body.dark-mode .prestacion-card .pc-cedula { color: #94a3b8; }
 body.dark-mode .prestacion-card .pc-anios { background: #1e3a5f; color: #93c5fd; }
 body.dark-mode .prestacion-card .pc-badge { background: #1e3a5f; color: #93c5fd; }
+body.dark-mode .prestacion-card .pc-titulo { background: #14532d; color: #86efac; }
 body.dark-mode .prestacion-card .pc-monto { background: #14532d; color: #86efac; }
 body.dark-mode .prestacion-info-superior { background: #1e293b; border-color: #334155; }
 body.dark-mode .worker-mini-card h4 { color: #f1f5f9; }
@@ -153,6 +155,9 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             <div class="prestacion-actions-bar">
                 <span class="badge-st" id="badgeEdad" style="background:#eff6ff;color:#1e40af;">—</span>
                 <span class="badge-st" id="badgeTipo" style="background:#ecfdf5;color:#059669;">—</span>
+                <span class="badge-st" id="badgeTitulo" style="background:#f0fdf4;color:#166534;display:none;">
+                    <i class="fas fa-graduation-cap"></i> <span id="badgeTituloTexto"></span>
+                </span>
                 <button class="btn-prestacion btn-prestacion-info hidden" id="btnGenerarComprobante">
                     <i class="fas fa-file-invoice"></i> Comprobante
                 </button>
@@ -248,6 +253,7 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     function profesionalizacionDeTrabajador(t) {
         const id = parseInt(t.nivel_instruccion_id, 10);
         const texto = String(t.nivel_educativo_texto || '').toLowerCase();
+        const legacy = parseInt(t.nivel_instruccion, 10);
         let mejor = null;
         for (const e of NIVELES_PROFESIONALIZACION) {
             const porId = e.ids.includes(id);
@@ -256,8 +262,13 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                 if (!mejor || e.nivel > mejor.nivel) mejor = e;
             }
         }
+        if (!mejor && legacy > 0) {
+            // Respaldo con el código legacy (0-5): 1=TSU, 2=Lic/Ing, 3=Esp, 4=Mag, 5=Doc
+            const porLegacy = { 1: 11, 2: 13, 3: 15, 4: 20, 5: 25 };
+            if (porLegacy[legacy]) mejor = { nivel: porLegacy[legacy], etiqueta: String(porLegacy[legacy]) + '%' };
+        }
         if (!mejor) return null;
-        return { nivel: mejor.nivel, etiqueta: texto || (mejor.nivel + '%') };
+        return { nivel: mejor.nivel, etiqueta: texto || (mejor.etiqueta || (mejor.nivel + '%')) };
     }
 
     const PRIMA_CONFIG = {
@@ -309,11 +320,19 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                 if (t.tiene_prestacion && t.monto) {
                     montoHtml = '<span class="pc-monto">Bs. ' + parseFloat(t.monto).toFixed(2) + '</span>';
                 }
+                let titulo = '';
+                const profTarjeta = profesionalizacionDeTrabajador(t);
+                if (profTarjeta) {
+                    const texto = String(t.nivel_educativo_texto || '').trim();
+                    const nom = texto ? texto : (profTarjeta.etiqueta !== String(profTarjeta.nivel) ? profTarjeta.etiqueta : 'Profesional');
+                    titulo = '<span class="pc-titulo"><i class="fas fa-graduation-cap"></i> ' + escaparHTML(nom) + ' · ' + profTarjeta.nivel + '%</span>';
+                }
                 card.innerHTML = `
                     <div class="pc-foto">${foto ? '<img src="'+foto+'" alt="">' : '<div class="pc-avatar"><i class="fas fa-user" size="28"></i></div>'}</div>
                     <div class="pc-info">
                         <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
                         <span class="pc-cedula">${escaparHTML(t.cedula)} · ${escaparHTML(t.cargo)}</span>
+                        ${titulo ? `<div class="pc-row">${titulo}</div>` : ''}
                         <div class="pc-row">
                             <span class="pc-anios">${escaparHTML(t.total_anos_servicio) || 0} años</span>
                             <span class="pc-badge">${escaparHTML(t.tipo_jubilacion)}</span>
@@ -352,6 +371,18 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
 
             document.getElementById('badgeEdad').textContent = (datosTrabajador.edad || '—') + ' AÑOS';
             document.getElementById('badgeTipo').textContent = data.solicitud.tipo_jubilacion || '—';
+
+            // Mostrar título académico y su porcentaje de profesionalización
+            const badgeTitulo = document.getElementById('badgeTitulo');
+            const prof = profesionalizacionDeTrabajador(datosTrabajador);
+            const tituloTexto = String(datosTrabajador.nivel_educativo_texto || '').trim();
+            if (prof) {
+                const tituloFinal = tituloTexto ? tituloTexto : (prof.etiqueta !== String(prof.nivel) ? prof.etiqueta : 'Profesional');
+                document.getElementById('badgeTituloTexto').textContent = tituloFinal + ' · ' + prof.nivel + '%';
+                badgeTitulo.style.display = 'inline-flex';
+            } else {
+                badgeTitulo.style.display = 'none';
+            }
 
             // Mostrar botón comprobante solo si ya hay prestación guardada
             const btnComp = document.getElementById('btnGenerarComprobante');

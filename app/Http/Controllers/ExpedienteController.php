@@ -15,6 +15,15 @@ use Illuminate\Http\Request;
 
 class ExpedienteController extends Controller
 {
+    public const DOCS_REQUERIDOS = [
+        'Cédula de Identidad',
+        'Oficio de Solicitud',
+        'Punto de Cuenta',
+        'Constancia de Trabajo',
+        'Recibo de Nómina',
+        'Informe Médico',
+    ];
+
     public function index(Request $request)
     {
         $perPage = min((int) $request->get('per_page', 10), 100);
@@ -169,13 +178,36 @@ class ExpedienteController extends Controller
 
         $validated = $request->validate([
             'nombre' => 'required|string',
-            'archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:102400',
         ]);
+
+        $nombre = $validated['nombre'];
+
+        // Solo se permiten los 6 documentos requeridos
+        if (!in_array($nombre, self::DOCS_REQUERIDOS, true)) {
+            return response()->json([
+                'estado' => 'error',
+                'mensaje' => "Tipo de documento no válido. Solo se admiten: " . implode(', ', self::DOCS_REQUERIDOS) . '.',
+            ], 422);
+        }
+
+        // No se puede subir un documento del mismo tipo mientras exista uno en revisión o aprobado
+        $duplicado = $expediente->documentos()
+            ->where('nombre', $nombre)
+            ->whereIn('estado', ['en_revision', 'aprobado'])
+            ->exists();
+
+        if ($duplicado) {
+            return response()->json([
+                'estado' => 'error',
+                'mensaje' => "Ya existe un documento de tipo \"{$nombre}\" en revisión o aprobado. Debe esperar a que sea rechazado para subirlo de nuevo.",
+            ], 422);
+        }
 
         $path = $request->file('archivo')->store('expedientes/documentos', 'public');
 
         $expediente->documentos()->create([
-            'nombre' => $validated['nombre'],
+            'nombre' => $nombre,
             'archivo' => $path,
             'estado' => 'en_revision',
         ]);
@@ -232,7 +264,7 @@ class ExpedienteController extends Controller
         $expediente = Expediente::findOrFail($id);
 
         $request->validate([
-            'carta' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'carta' => 'required|file|mimes:pdf,jpg,jpeg,png|max:102400',
         ]);
 
         $path = $request->file('carta')->store('expedientes/cartas', 'public');
@@ -248,6 +280,7 @@ class ExpedienteController extends Controller
         return response()->json([
             'estado' => 'success',
             'mensaje' => 'Carta de aprobación subida correctamente.',
+            'archivo' => $path,
         ]);
     }
 
@@ -269,12 +302,16 @@ class ExpedienteController extends Controller
     private function recalcularEstadoGlobal($expedienteId)
     {
         $expediente = Expediente::with('documentos', 'trabajador')->findOrFail($expedienteId);
-        $total = $expediente->documentos->count();
-        if ($total === 0) {
-            $expediente->update(['estado_global' => 0]);
-            return;
+
+        $aprobados = 0;
+        foreach (self::DOCS_REQUERIDOS as $tipo) {
+            $doc = $expediente->documentos->firstWhere('nombre', $tipo);
+            if ($doc && $doc->estado === 'aprobado') {
+                $aprobados++;
+            }
         }
-        $aprobados = $expediente->documentos->where('estado', 'aprobado')->count();
+
+        $total = count(self::DOCS_REQUERIDOS);
         $porcentaje = round(($aprobados / $total) * 100);
 
         $previo = $expediente->estado_global;

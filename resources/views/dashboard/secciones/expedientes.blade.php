@@ -43,13 +43,6 @@
             <span>Volver a Expedientes</span>
         </button>
         <div class="detalle-header-right">
-            <div class="global-progress-mini" id="globalProgressMini">
-                <span class="progress-label">EXPEDIENTE</span>
-                <span class="progress-value" id="progressValueText">0%</span>
-                <div class="progress-track-mini">
-                    <div class="progress-fill-mini" id="progressFillMini" style="width: 0%;"></div>
-                </div>
-            </div>
             <div class="carta-indicator" id="cartaIndicator" title="Carta de aprobación del consejo" style="cursor:pointer;">
                 <i class="fas fa-scroll" id="cartaIcon" style="font-size:1.3rem;color:#475569;"></i>
             </div>
@@ -188,7 +181,6 @@
                     <option value="Constancia de Trabajo">Constancia de Trabajo</option>
                     <option value="Recibo de Nómina">Recibo de Nómina</option>
                     <option value="Informe Médico">Informe Médico</option>
-                    <option value="Otro">Otro</option>
                 </select>
             </div>
             <div class="input-group">
@@ -208,6 +200,12 @@
     <div class="modal-delete-box" style="text-align:left;max-width:500px;">
         <h3 style="text-align:center;"><i class="fas fa-scroll"></i> Carta de Aprobación</h3>
         <p id="cartaModalInfo" style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:12px;"></p>
+        <div id="cartaActualVista" style="display:none;text-align:center;margin-bottom:14px;padding:10px;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc;">
+            <button type="button" id="btnVerCartaActual" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-weight:600;cursor:pointer;">
+                <i class="fas fa-eye" size="14"></i> Ver carta actual
+            </button>
+            <p style="margin:8px 0 0;font-size:0.78rem;color:#64748b;">Verifíquela y, si hay un error, cámbiela abajo.</p>
+        </div>
         <form id="formCartaAprobacion">
             @csrf
             <div class="input-group">
@@ -216,7 +214,7 @@
             </div>
             <div class="modal-actions" style="justify-content:center;">
                 <button type="button" class="btn-cancel" id="btnCancelarCarta">Cancelar</button>
-                <button type="submit" class="btn-submit">Subir Carta</button>
+                <button type="submit" class="btn-submit">Subir/Reemplazar Carta</button>
             </div>
         </form>
     </div>
@@ -225,6 +223,7 @@
 <script>
 (function() {
     let expedienteActualId = null;
+    let expedienteDocsActuales = [];
 
     const ICONOS_DOC = {
         'Cédula de Identidad': 'fa-user-check',
@@ -314,6 +313,7 @@
             document.getElementById('notasAdminInput').value = exp.notas_admin || '';
 
             actualizarProgresoGlobal(exp.estado_global || 0);
+            expedienteDocsActuales = (exp.documentos || []).filter(d => d.estado !== 'rechazado');
             renderChecklistRequeridos(exp.documentos || []);
             renderDocumentos(exp.documentos || []);
             renderCartaAprobacion(exp);
@@ -326,8 +326,6 @@
     }
 
     function actualizarProgresoGlobal(porcentaje) {
-        document.getElementById('progressValueText').textContent = `${porcentaje}%`;
-        document.getElementById('progressFillMini').style.width = `${porcentaje}%`;
         document.getElementById('egPorcentaje').textContent = `${porcentaje}%`;
         document.getElementById('egFill').style.width = `${porcentaje}%`;
 
@@ -415,12 +413,22 @@
     function renderChecklistRequeridos(documentos) {
         const container = document.getElementById('checklistRequeridos');
         if (!container) return;
-        const nombresSubidos = documentos.map(d => d.nombre);
         let html = '';
         DOCS_REQUERIDOS.forEach(nombre => {
-            const tiene = nombresSubidos.includes(nombre);
-            const icono = tiene ? '<i class="fas fa-check-circle" style="color:#16a34a;"></i>' : '<i class="fas fa-circle" style="color:#d1d5db;"></i>';
-            html += '<div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:' + (tiene ? '#16a34a' : '#64748b') + ';">' + icono + ' ' + nombre + '</div>';
+            const doc = documentos.find(d => d.nombre === nombre);
+            const tiene = !!doc;
+            let icono = '<i class="fas fa-circle" style="color:#d1d5db;"></i>';
+            let color = '#64748b';
+            let etiqueta = '';
+            if (doc && doc.estado === 'aprobado') {
+                icono = '<i class="fas fa-check-circle" style="color:#16a34a;"></i>';
+                color = '#16a34a';
+            } else if (tiene) {
+                icono = '<i class="fas fa-circle-notch fa-spin" style="color:#f59e0b;"></i>';
+                color = '#f59e0b';
+                etiqueta = ' (en revisión)';
+            }
+            html += '<div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:' + color + ';">' + icono + ' ' + nombre + etiqueta + '</div>';
         });
         container.innerHTML = html;
     }
@@ -576,6 +584,11 @@
             if (!expedienteActualId) return;
             document.getElementById('modalSubirDocumento').style.display = 'flex';
             document.getElementById('formSubirDocumento').reset();
+            const select = document.getElementById('selectNombreDocumento');
+            const ocupados = expedienteDocsActuales.map(d => d.nombre);
+            Array.from(select.options).forEach(opt => {
+                opt.disabled = ocupados.includes(opt.value);
+            });
         });
         document.getElementById('btnCancelarSubirDoc')?.addEventListener('click', () => {
             document.getElementById('modalSubirDocumento').style.display = 'none';
@@ -723,7 +736,15 @@
                 const exp = await resp.json();
                 if (CURRENT_USER_ROL === 'superadmin') {
                     const info = document.getElementById('cartaModalInfo');
-                    info.textContent = exp.carta_aprobacion ? 'Ya existe una carta. Puede reemplazarla subiendo un nuevo archivo.' : 'Suba la carta de aprobación del consejo.';
+                    const vistaCarta = document.getElementById('cartaActualVista');
+                    const btnVerCarta = document.getElementById('btnVerCartaActual');
+                    info.textContent = exp.carta_aprobacion ? 'Ya existe una carta. Puede verla y, si hay un error, reemplazarla.' : 'Suba la carta de aprobación del consejo.';
+                    if (exp.carta_aprobacion) {
+                        vistaCarta.style.display = 'block';
+                        btnVerCarta.onclick = () => window.open(`/storage/${exp.carta_aprobacion}`, '_blank');
+                    } else {
+                        vistaCarta.style.display = 'none';
+                    }
                     document.getElementById('modalCartaAprobacion').style.display = 'flex';
                 } else if (exp.carta_aprobacion) {
                     window.open(`/storage/${exp.carta_aprobacion}`, '_blank');
@@ -756,6 +777,9 @@
                 mostrarToast(data.mensaje, 'success');
                 document.getElementById('modalCartaAprobacion').style.display = 'none';
                 e.target.reset();
+                if (data.archivo) {
+                    window.open(`/storage/${data.archivo}`, '_blank');
+                }
                 abrirDetalle(expedienteActualId);
             } catch (err) {
                 mostrarToast(err.mensaje || err.message || 'Error al subir carta', 'error');

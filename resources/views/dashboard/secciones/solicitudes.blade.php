@@ -37,7 +37,7 @@
         <h2>Listado de Solicitudes</h2>
         <div class="tab-filters" id="statusFilters">
             <button class="active" data-status="all">Todas</button>
-            <button data-status="pending">Pendientes</button>
+            <button data-status="revision">En Revisión</button>
             <button data-status="approved">Aprobadas</button>
             <button data-status="rejected">Rechazadas</button>
         </div>
@@ -76,7 +76,7 @@
     <div class="metric-card">
         <div class="metric-icon orange"><i class="fas fa-hourglass"></i></div>
         <div class="metric-data">
-            <h3 id="metricPendientes">0</h3>
+            <h3 id="metricRevision">0</h3>
             <p>ESPERANDO REVISIÓN</p>
         </div>
     </div>
@@ -140,15 +140,20 @@
                         </div>
                         <div class="input-group">
                             <label>PERIODO</label>
-                            <select name="periodo">
-                                <option value="">Seleccione...</option>
-                                <option value="2024-A">2024 - A</option>
-                                <option value="2024-B">2024 - B</option>
-                                <option value="2025-A">2025 - A</option>
-                                <option value="2025-B">2025 - B</option>
-                                <option value="2026-A">2026 - A</option>
-                                <option value="2026-B">2026 - B</option>
-                            </select>
+                            <input type="hidden" name="periodo" id="periodoComb">
+                            <div style="display:flex;gap:8px;">
+                                <select name="periodo_anio" id="periodoAnio" required style="max-height:180px;">
+                                    @php $anioActual = (int) date('Y'); @endphp
+                                    @for ($a = $anioActual; $a >= 1900; $a--)
+                                        <option value="{{ $a }}" @if ($a === $anioActual) selected @endif>{{ $a }}</option>
+                                    @endfor
+                                </select>
+                                <select name="periodo_semestre" id="periodoSemestre" required>
+                                    <option value="">Semestre...</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="input-group">
@@ -212,7 +217,6 @@
                     <div class="input-group">
                         <label>NUEVO ESTATUS</label>
                         <select name="estado" id="editEstado" required>
-                            <option value="pendiente">Pendiente</option>
                             <option value="revision">En Revisión</option>
                             <option value="aprobado">Aprobado</option>
                             <option value="rechazado">Rechazado</option>
@@ -481,8 +485,8 @@ function escaparHTML(str) {
                 const fecha = s.fecha_solicitud ? new Date(s.fecha_solicitud + 'T12:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
                 const periodo = s.periodo || '—';
 
-                const badgeClass = s.estado === 'pendiente' ? 'pending' : (s.estado === 'aprobado' ? 'approved' : 'rejected');
-                const badgeText = s.estado.charAt(0).toUpperCase() + s.estado.slice(1);
+                const badgeClass = s.estado === 'revision' ? 'revision' : (s.estado === 'aprobado' ? 'approved' : 'rejected');
+                const badgeText = s.estado === 'revision' ? 'En Revisión' : (s.estado.charAt(0).toUpperCase() + s.estado.slice(1));
 
                 const tipoJub = s.tipo_jubilacion || '—';
                 const fila = document.createElement('tr');
@@ -498,7 +502,6 @@ function escaparHTML(str) {
                     <td>${escaparHTML(fecha)}</td>
                     <td><span class="badge-status ${escaparHTML(badgeClass)}">${escaparHTML(badgeText)}</span></td>
                     <td class="actions">
-                        <i class="fas fa-eye btn-icon btn-ver-solicitud" title="Ver Detalle" data-id="${escaparHTML(String(s.id))}"></i>
                         <i class="fas fa-pen btn-icon btn-editar-solicitud" title="Editar" data-id="${escaparHTML(String(s.id))}"></i>
                     </td>
                 `;
@@ -522,7 +525,7 @@ function escaparHTML(str) {
             ]);
             const stats = cStats.data;
             document.getElementById('metricTotal').textContent = cTotal.data.total || 0;
-            document.getElementById('metricPendientes').textContent = stats.pendiente || 0;
+            document.getElementById('metricRevision').textContent = stats.revision || 0;
             document.getElementById('metricAprobadas').textContent = stats.aprobado || 0;
             document.getElementById('metricRechazadas').textContent = stats.rechazado || 0;
         } catch (err) {
@@ -673,6 +676,10 @@ function escaparHTML(str) {
     if (formCreate) {
         formCreate.addEventListener('submit', async function(e) {
             e.preventDefault();
+            const anioSel = this.querySelector('[name="periodo_anio"]').value;
+            const semSel = this.querySelector('[name="periodo_semestre"]').value;
+            const periodoComb = this.querySelector('#periodoComb');
+            periodoComb.value = (anioSel && semSel) ? anioSel + '-' + semSel : '';
             const formData = new FormData(this);
             const btnSubmit = this.querySelector('.btn-submit');
             if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Registrando...'; }
