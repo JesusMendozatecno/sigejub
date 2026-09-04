@@ -38,6 +38,7 @@
                 <th>CÓDIGO</th>
                 <th>NOMBRE</th>
                 <th>VALOR</th>
+                <th>EN BS</th>
                 <th>FECHA VIGENCIA</th>
                 <th>ESTADO</th>
                 <th>ACCIONES</th>
@@ -66,15 +67,9 @@
                 <label>NOMBRE</label>
                 <input type="text" name="nombre" id="primaNombre" placeholder="Ej: Prima de Antigüedad" required>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="input-group">
-                    <label>VALOR (Bs.)</label>
-                    <input type="number" name="valor" id="primaValor" step="0.01" min="0" inputmode="decimal" placeholder="0.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
-                </div>
-                <div class="input-group">
-                    <label>MONTO (Bs.)</label>
-                    <input type="number" name="monto" id="primaMonto" step="0.01" min="0" inputmode="decimal" placeholder="0.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
-                </div>
+            <div class="input-group">
+                <label>VALOR ($)</label>
+                <input type="number" name="valor" id="primaValor" step="0.01" min="0" inputmode="decimal" placeholder="0.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
             </div>
             <div class="input-group">
                 <label>FECHA DE VIGENCIA</label>
@@ -111,6 +106,18 @@
 <script>
 (function() {
     let currentPage = 1;
+    let primaTasaDia = 0;
+
+    // Obtiene la tasa del día (USD -> VES) desde /tasas-cambio/estado.
+    async function cargarTasaDia() {
+        try {
+            const resp = await fetch('/tasas-cambio/estado');
+            const data = await resp.json();
+            primaTasaDia = (data.disponible && data.tasa && data.tasa.valor) ? parseFloat(data.tasa.valor) : 0;
+        } catch (e) {
+            primaTasaDia = 0;
+        }
+    }
 
     async function cargarPrimas(page = 1) {
         const search = document.getElementById('buscadorPrimas')?.value || '';
@@ -120,13 +127,14 @@
         if (estado !== '') url += `&solo_activos=${estado}`;
 
         try {
+            await cargarTasaDia();
             const resp = await fetch(url);
             const data = await resp.json();
             const tbody = document.getElementById('tbodyPrimas');
             if (!tbody) return;
 
             if (!data.data || data.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#94a3b8;">No hay primas registradas.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#94a3b8;">No hay primas registradas.</td></tr>';
                 document.getElementById('primasCounter').textContent = 'Mostrando 0 primas';
                 return;
             }
@@ -136,12 +144,16 @@
                     ? '<span class="badge-status approved">Activa</span>'
                     : '<span class="badge-status rejected">Inactiva</span>';
                 const fecha = p.fecha_vigencia ? new Date(p.fecha_vigencia).toLocaleDateString('es-ES') : '—';
-                const valor = parseFloat(p.valor || 0).toLocaleString('es-VE', { minimumFractionDigits: 2 });
+                const valorNum = parseFloat(p.valor || 0);
+                const enBs = primaTasaDia > 0 ? (valorNum * primaTasaDia) : 0;
+                const valorTxt = valorNum.toLocaleString('es-VE', { minimumFractionDigits: 2 });
+                const enBsTxt = primaTasaDia > 0 ? enBs.toLocaleString('es-VE', { minimumFractionDigits: 2 }) : '—';
                 return `<tr>
                     <td>${(i + 1) + ((data.current_page - 1) * data.per_page)}</td>
                     <td><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.8rem;">${escaparHTML(p.codigo)}</code></td>
                     <td>${escaparHTML(p.nombre)}</td>
-                    <td><strong>Bs. ${valor}</strong></td>
+                    <td><strong>$ ${valorTxt}</strong></td>
+                    <td><strong class="celdaEnBs" data-usd="${valorNum}">Bs. ${enBsTxt}</strong></td>
                     <td>${fecha}</td>
                     <td>${badge}</td>
                     <td class="actions">
@@ -181,7 +193,6 @@
                 document.getElementById('primaCodigo').value = p.codigo;
                 document.getElementById('primaNombre').value = p.nombre;
                 document.getElementById('primaValor').value = p.valor || '';
-                document.getElementById('primaMonto').value = p.monto || '';
                 document.getElementById('primaFechaVigencia').value = p.fecha_vigencia ? p.fecha_vigencia.split('T')[0] : '';
                 document.getElementById('primaActivo').value = p.activo ? '1' : '0';
                 document.getElementById('modalPrima').style.display = 'flex';
@@ -270,5 +281,18 @@
     });
     const seccion = document.getElementById('primas');
     if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
+
+    // Actualiza la columna EN BS con la tasa del día cada 30s mientras la sección esté activa.
+    setInterval(async () => {
+        const sec = document.getElementById('primas');
+        if (!sec || !sec.classList.contains('active')) return;
+        const anterior = primaTasaDia;
+        await cargarTasaDia();
+        if (primaTasaDia === anterior) return;
+        document.querySelectorAll('.celdaEnBs').forEach(el => {
+            const usd = parseFloat(el.dataset.usd || 0);
+            el.textContent = primaTasaDia > 0 ? 'Bs. ' + (usd * primaTasaDia).toLocaleString('es-VE', { minimumFractionDigits: 2 }) : '—';
+        });
+    }, 30000);
 })();
 </script>

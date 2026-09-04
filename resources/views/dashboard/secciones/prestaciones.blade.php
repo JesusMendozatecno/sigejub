@@ -54,6 +54,11 @@
 .pct-toggle button { padding: 6px 14px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; color: #64748b; }
 .pct-toggle button.active { background: #1a365d; color: white; border-color: #1a365d; }
 .pct-toggle button span { display: block; font-size: 0.6rem; opacity: 0.7; }
+.moneda-toggle { display: inline-flex; gap: 3px; margin: 2px 0 8px; }
+.moneda-toggle button { padding: 5px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: #64748b; }
+.moneda-toggle button.active { background: #16a34a; color: white; border-color: #16a34a; }
+body.dark-mode .moneda-toggle button { background: #1e293b; border-color: #334155; color: #94a3b8; }
+body.dark-mode .moneda-toggle button.active { background: #16a34a; color: white; border-color: #16a34a; }
 
 .btn-prestacion { padding: 10px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; transition: all 0.2s; }
 .btn-prestacion-primario { background: #1a365d; color: white; }
@@ -167,12 +172,20 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         <div class="prestacion-cuerpo">
             <div class="prestacion-col-izq">
                 <div class="subtitulo-sec"><i class="fas fa-coins"></i> Sueldo Base</div>
+                <div class="moneda-toggle" id="monedaSueldoToggle">
+                    <button type="button" class="active" data-moneda="Bs">Bs.</button>
+                    <button type="button" data-moneda="USD">$</button>
+                </div>
                 <div class="fila-sueldo">
-                    <label>SUELDO BASE MENSUAL (Bs.)</label>
+                    <label id="lblSueldoBase">SUELDO BASE MENSUAL (Bs.)</label>
                     <input type="number" step="0.01" min="0" id="inputSueldoBase" value="0.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
                 </div>
 
                 <div class="subtitulo-sec" style="margin-top:12px;"><i class="fas fa-calculator"></i> Primas Aplicables</div>
+                <div class="moneda-toggle" id="monedaPrimasToggle">
+                    <button type="button" class="active" data-moneda="Bs">Bs.</button>
+                    <button type="button" data-moneda="USD">$</button>
+                </div>
                 <div id="primasContainer" style="max-height:280px;overflow-y:auto;"><p style="color:#94a3b8;font-size:0.8rem;">Cargando primas...</p></div>
 
                 <div class="pct-area">
@@ -238,6 +251,9 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     let primasDisponibles = [];
     let porcentajeActual = 100;
     let ultimoCalculo = null;
+    let sueldoBaseMoneda = 'Bs';
+    let primaMoneda = 'Bs';
+    let tasaActual = 0;
 
     // Escala de profesionalización por nivel académico (se aplica siempre el mayor, sin sumar).
     const NIVELES_PROFESIONALIZACION = [
@@ -291,6 +307,40 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     };
 
     function fmtBs(v) { return 'Bs. ' + v.toFixed(2).replace('.', ','); }
+
+    // Conversión de moneda: el cálculo interno SIEMPRE trabaja en Bs.
+    // tasaActual = Bs por USD. El valor de referencia de cada prima está en dólares ($).
+    function simboloMoneda(moneda) { return moneda === 'USD' ? '$' : 'Bs.'; }
+    // Convierte un número (interpretado en `moneda`) a su equivalente en Bolívares.
+    function aBs(numero, moneda) {
+        const v = parseFloat(numero) || 0;
+        if (moneda === 'USD' && tasaActual > 0) return v * tasaActual;
+        return v;
+    }
+    // Presenta un monto que está en Bolívares dentro de la moneda deseada.
+    function fmtEnMoneda(montoBs, moneda) {
+        const m = parseFloat(montoBs) || 0;
+        if (moneda === 'USD' && tasaActual > 0) return '$' + (m / tasaActual).toFixed(2).replace('.', ',');
+        return fmtBs(m);
+    }
+
+    function bindMonedaToggle(toggleId, cb) {
+        const cont = document.getElementById(toggleId);
+        if (!cont) return;
+        cont.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                cont.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                cb(this.dataset.moneda);
+            });
+        });
+    }
+    function syncSueldoBaseUI() {
+        document.getElementById('lblSueldoBase').textContent = 'SUELDO BASE MENSUAL (' + simboloMoneda(sueldoBaseMoneda) + ')';
+        document.getElementById('inputSueldoBase').placeholder = sueldoBaseMoneda === 'USD' ? '0.00 $' : '0.00 Bs.';
+    }
+    bindMonedaToggle('monedaSueldoToggle', (m) => { sueldoBaseMoneda = m; syncSueldoBaseUI(); renderPrimas(primasDisponibles, datosTrabajador); });
+    bindMonedaToggle('monedaPrimasToggle', (m) => { primaMoneda = m; renderPrimas(primasDisponibles, datosTrabajador); });
 
     document.querySelectorAll('.pct-toggle button').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -432,11 +482,14 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
 
             const tasaDetalle = document.getElementById('tasaDetallePrestacion');
             if (data.prestacion && data.prestacion.tasa_utilizada) {
+                tasaActual = parseFloat(data.prestacion.tasa_utilizada) || 0;
                 const tFecha = data.prestacion.fecha_tasa_utilizada ? new Date(data.prestacion.fecha_tasa_utilizada).toLocaleDateString('es-VE') : '—';
                 tasaDetalle.innerHTML = '<strong style="color:#0f172a;">' + parseFloat(data.prestacion.tasa_utilizada).toLocaleString('es-VE', {minimumFractionDigits:4}) + ' ' + (data.prestacion.moneda_tasa || 'VES/USD') + '</strong><br><span style="font-size:0.68rem;">Congelada: ' + tFecha + ' · ' + (data.prestacion.fuente_tasa || '—') + '</span>';
             } else if (data.tasa_actual) {
+                tasaActual = parseFloat(data.tasa_actual.tasa) || 0;
                 tasaDetalle.innerHTML = '<strong style="color:#0f172a;">' + parseFloat(data.tasa_actual.tasa).toLocaleString('es-VE', {minimumFractionDigits:4}) + ' VES/USD</strong><br><span style="font-size:0.68rem;">' + data.tasa_actual.fecha + ' · ' + (data.tasa_actual.fuente || '—') + '</span>';
             } else {
+                tasaActual = 0;
                 tasaDetalle.innerHTML = '<span style="color:#94a3b8;">Sin tasa registrada</span>';
             }
         } catch (err) {
@@ -450,24 +503,41 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     function renderPrimas(primas, t) {
         const container = document.getElementById('primasContainer');
         container.innerHTML = '';
+        if (!t) return;
+        if (tasaActual <= 0) {
+            container.innerHTML = '<p style="color:#d97706;font-size:0.78rem;">Registre la tasa del dólar para poder trabajar en dólares.</p>';
+        }
         primas.forEach(p => {
             const config = PRIMA_CONFIG[p.codigo] || {};
             const row = document.createElement('div');
             row.className = 'prima-row';
+            const esProf = p.codigo === 'PRIMA_PROFESIONALIZACION';
             let inputHtml = '';
             if (config.calc) {
                 const autoVal = config.calc(p.valor, t);
                 const isNa = autoVal === 0 && !t[config.workerField];
-                inputHtml = '<div class="prima-auto' + (isNa ? ' na' : '') + '">Bs. ' + autoVal.toFixed(2) + '</div>';
+                const autoBs = esProf ? autoVal : (autoVal * (tasaActual > 0 ? tasaActual : 0));
+                const autoDisplay = primaMoneda === 'USD'
+                    ? '$' + (esProf ? (tasaActual > 0 ? autoVal / tasaActual : 0) : autoVal).toFixed(2)
+                    : 'Bs. ' + autoBs.toFixed(2);
+                inputHtml = '<div class="prima-auto' + (isNa ? ' na' : '') + '">' + autoDisplay + '</div>';
             } else {
                 inputHtml = '<div class="prima-auto na">—</div>';
+            }
+            let valorUnitarioDisplay;
+            if (esProf) {
+                valorUnitarioDisplay = parseFloat(p.valor).toFixed(2) + '%';
+            } else if (primaMoneda === 'USD') {
+                valorUnitarioDisplay = '$' + parseFloat(p.valor).toFixed(2);
+            } else {
+                valorUnitarioDisplay = 'Bs. ' + (parseFloat(p.valor) * (tasaActual > 0 ? tasaActual : 0)).toFixed(2);
             }
             row.innerHTML = `
                 <div class="prima-info">
                     <div class="prima-nombre">${escaparHTML(p.nombre)}</div>
                     <div class="prima-codigo">${escaparHTML(p.codigo)}</div>
                 </div>
-                <div class="prima-valor">Bs. ${parseFloat(p.valor).toFixed(2)}<span>valor unitario</span></div>
+                <div class="prima-valor">${valorUnitarioDisplay}<span>valor unitario</span></div>
                 <div>${inputHtml}</div>`;
             container.appendChild(row);
         });
@@ -476,7 +546,9 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     document.getElementById('btnCalcularPrestacion').addEventListener('click', function() {
         if (!datosTrabajador || !primasDisponibles.length) return;
 
-        const sueldoBase = parseFloat(document.getElementById('inputSueldoBase').value) || 0;
+        const sueldoBaseInput = parseFloat(document.getElementById('inputSueldoBase').value) || 0;
+        const sueldoBase = aBs(sueldoBaseInput, sueldoBaseMoneda); // siempre en Bs
+        const monedaResumen = sueldoBaseMoneda; // moneda de presentación del resultado
         let totalPrimas = 0;
         const detalles = [];
         const resumenHtml = [];
@@ -485,20 +557,25 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             const config = PRIMA_CONFIG[p.codigo] || {};
             let monto = 0;
             if (config.calc) {
+                // config.calc devuelve el monto en la moneda de referencia de cada prima.
+                // Las primas estándar tienen su valor en dólares ($) -> se convierten a Bs.
+                // PRIMA_PROFESIONALIZACION se calcula sobre el sueldo_base del trabajador (en Bs), ya está en Bs.
                 monto = config.calc(p.valor, datosTrabajador);
+                if (p.codigo !== 'PRIMA_PROFESIONALIZACION' && tasaActual > 0) monto = monto * tasaActual;
             }
+            const montoDisplay = fmtEnMoneda(monto, monedaResumen);
             totalPrimas += monto;
             detalles.push({ codigo: p.codigo, nombre: p.nombre, valor_unitario: p.valor, monto });
             if (p.codigo === 'PRIMA_PROFESIONALIZACION') {
                 const prof = profesionalizacionDeTrabajador(datosTrabajador);
                 const base = parseFloat(datosTrabajador.sueldo_base) || 0;
                 if (monto > 0 && prof) {
-                    resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + ' · ' + escaparHTML(prof.etiqueta) + ' (' + prof.nivel + '%) sobre base ' + fmtBs(base) + '</span><span class="r-value">' + fmtBs(monto) + '</span></div>');
+                    resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + ' · ' + escaparHTML(prof.etiqueta) + ' (' + prof.nivel + '%) sobre base ' + fmtEnMoneda(base, monedaResumen) + '</span><span class="r-value">' + montoDisplay + '</span></div>');
                 } else {
-                    resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + '</span><span class="r-value" style="color:#d97706;">+ ' + fmtBs(monto) + ' · nivel no aplica (0%)</span></div>');
+                    resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + '</span><span class="r-value" style="color:#d97706;">+ ' + montoDisplay + ' · nivel no aplica (0%)</span></div>');
                 }
             } else if (monto > 0) {
-                resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + '</span><span class="r-value">' + fmtBs(monto) + '</span></div>');
+                resumenHtml.push('<div class="resumen-item"><span class="r-label">' + escaparHTML(p.nombre) + '</span><span class="r-value">' + montoDisplay + '</span></div>');
             }
         });
 
@@ -511,15 +588,15 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         document.getElementById('sidebarPrimasResumen').innerHTML = resumenHtml.length
             ? resumenHtml.join('')
             : '<p style="color:#94a3b8;font-size:0.8rem;">Sin primas activas</p>';
-        document.getElementById('totalPrestacionDisplay').textContent = fmtBs(totalPrestaciones);
+        document.getElementById('totalPrestacionDisplay').textContent = fmtEnMoneda(totalPrestaciones, monedaResumen);
 
         // Mostrar modal con resultado
-        document.getElementById('mrSueldoBase').textContent = fmtBs(sueldoBase);
-        document.getElementById('mrTotalPrimas').textContent = fmtBs(totalPrimas);
-        document.getElementById('mrSueldoIntegral').textContent = fmtBs(sueldoIntegral);
+        document.getElementById('mrSueldoBase').textContent = fmtEnMoneda(sueldoBase, monedaResumen);
+        document.getElementById('mrTotalPrimas').textContent = fmtEnMoneda(totalPrimas, monedaResumen);
+        document.getElementById('mrSueldoIntegral').textContent = fmtEnMoneda(sueldoIntegral, monedaResumen);
         document.getElementById('mrPorcentaje').textContent = porcentajeActual + '%';
         document.getElementById('mrAnios').textContent = datosTrabajador.total_anos_servicio || 0;
-        document.getElementById('mrTotal').textContent = fmtBs(totalPrestaciones);
+        document.getElementById('mrTotal').textContent = fmtEnMoneda(totalPrestaciones, monedaResumen);
         document.getElementById('modalResultado').classList.add('active');
     });
 

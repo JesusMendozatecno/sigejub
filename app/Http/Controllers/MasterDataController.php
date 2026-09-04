@@ -18,7 +18,7 @@ class MasterDataController extends Controller
         'grado' => ['table' => 'grados', 'label' => 'Grado'],
         'nivel-instruccion' => ['table' => 'niveles_instruccion', 'label' => 'Nivel de Instrucción'],
         'tipo-contrato' => ['table' => 'tipos_contrato', 'label' => 'Tipo de Contrato'],
-        'prima' => ['table' => 'primas', 'label' => 'Prima', 'extra_fields' => ['monto', 'valor', 'fecha_vigencia']],
+        'prima' => ['table' => 'primas', 'label' => 'Prima', 'extra_fields' => ['valor', 'fecha_vigencia']],
         'tipo-jubilacion' => ['table' => 'tipos_jubilacion', 'label' => 'Tipo de Jubilación'],
     ];
 
