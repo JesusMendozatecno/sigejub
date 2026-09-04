@@ -135,7 +135,7 @@ class TasaCambioController extends Controller
     {
         $query = TasaCambio::with('usuario')->orderBy('created_at', 'desc');
 
-        $tasas = $query->paginate(min($request->get('per_page', 20), 100));
+        $tasas = $query->paginate((int) $request->get('per_page', 10));
 
         return response()->json($tasas);
     }

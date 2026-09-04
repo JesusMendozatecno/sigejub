@@ -20,6 +20,14 @@
 .badge-tipo{font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:10px;}
 .badge-auto{background:#dbeafe;color:#1e40af;}
 .badge-manual{background:#fef3c7;color:#92400e;}
+.hist-pag-btn{min-width:32px;height:32px;padding:0 10px;border:1px solid #e2e8f0;background:white;border-radius:8px;font-size:0.78rem;font-weight:600;color:#64748b;cursor:pointer;transition:all 0.15s;}
+.hist-pag-btn:hover{background:#f1f5f9;color:#1a365d;}
+.hist-pag-btn.active{background:#1a365d;color:white;border-color:#1a365d;}
+.hist-pag-dots{min-width:28px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#94a3b8;font-weight:700;}
+body.dark-mode .hist-pag-btn{background:#1e293b;border-color:#334155;color:#94a3b8;}
+body.dark-mode .hist-pag-btn:hover{background:#334155;color:#f1f5f9;}
+body.dark-mode .hist-pag-btn.active{background:#1e40af;border-color:#1e40af;color:white;}
+body.dark-mode .hist-pag-dots{color:#64748b;}
 .modal-tasa{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:5000;}
 .modal-tasa.active{display:flex;}
 .modal-tasa-box{background:white;border-radius:16px;padding:28px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
@@ -99,8 +107,9 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
             </tbody>
         </table>
     </div>
-    <div class="table-footer">
+    <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <span id="tasasCounter">Mostrando 0 registros</span>
+        <div class="hist-pagination" id="tasasPagination" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
     </div>
 </div>
 
@@ -185,7 +194,7 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
     }
 
     async function cargarHistorial(page) {
-        page = page || 1;
+        page = page || currentPage || 1;
         try {
             const resp = await fetch('/tasas-cambio/historial?page=' + page);
             const data = await resp.json();
@@ -193,6 +202,7 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
             if (!data.data || data.data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94a3b8;">No hay registros de tasas.</td></tr>';
                 document.getElementById('tasasCounter').textContent = 'Mostrando 0 registros';
+                document.getElementById('tasasPagination').innerHTML = '';
                 return;
             }
             tbody.innerHTML = data.data.map(function(t) {
@@ -210,11 +220,37 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
                     '<td>' + escaparHTML(usuario) + '</td>' +
                     '</tr>';
             }).join('');
-            document.getElementById('tasasCounter').textContent = 'Mostrando ' + data.data.length + ' de ' + data.total + ' registros';
+            const perPage = data.per_page || data.data.length;
+            const desde = ((data.current_page - 1) * perPage) + 1;
+            const hasta = Math.min(data.current_page * perPage, data.total);
+            document.getElementById('tasasCounter').textContent = 'Mostrando ' + desde + '–' + hasta + ' de ' + data.total + ' registros';
             currentPage = data.current_page;
+            renderHistPagination(data);
         } catch(e) {
             console.error('Error historial tasas:', e);
         }
+    }
+
+    function renderHistPagination(data) {
+        const cont = document.getElementById('tasasPagination');
+        if (!cont) return;
+        if (data.last_page <= 1) { cont.innerHTML = ''; return; }
+        const cur = data.current_page;
+        const last = data.last_page;
+        let html = '';
+        if (cur > 1) html += '<button data-p="' + (cur - 1) + '" class="hist-pag-btn" title="Anterior">‹</button>';
+        for (let i = 1; i <= last; i++) {
+            if (i === 1 || i === last || (i >= cur - 2 && i <= cur + 2)) {
+                html += '<button data-p="' + i + '" class="hist-pag-btn' + (i === cur ? ' active' : '') + '">' + i + '</button>';
+            } else if (i === cur - 3 || i === cur + 3) {
+                html += '<span class="hist-pag-dots">…</span>';
+            }
+        }
+        if (cur < last) html += '<button data-p="' + (cur + 1) + '" class="hist-pag-btn" title="Siguiente">›</button>';
+        cont.innerHTML = html;
+        cont.querySelectorAll('button').forEach(function(b) {
+            b.addEventListener('click', function() { cargarHistorial(parseInt(this.dataset.p, 10)); });
+        });
     }
 
     function abrirModal() {
