@@ -510,3 +510,33 @@ body.dark-mode .solicitudes-table tbody tr:hover td,
 body.dark-mode .report-table tbody tr:hover td {
     background: var(--bg-card-hover) !important;
 }
+
+/* ── Campos desplegables (selects) — fondo blanco → oscuro ── */
+body.dark-mode select,
+body.dark-mode select.form-input,
+body.dark-mode .form-input,
+body.dark-mode select.form-control,
+body.dark-mode select.input-group select,
+body.dark-mode select[class] {
+    background: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-input, var(--border)) !important;
+}
+
+/* Opciones del menú desplegable en temas oscuros */
+body.dark-mode select option,
+body.dark-mode select.form-input option {
+    background: #1a2436 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Select dentro de cualquier contenedor del dashboard en oscuro */
+body.dark-mode .form-group select,
+body.dark-mode .input-group select,
+body.dark-mode .filter-group select,
+body.dark-mode .filter-group-sm select,
+body.dark-mode .filters-bar-card select,
+body.dark-mode select.form-input option:checked {
+    background: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+}

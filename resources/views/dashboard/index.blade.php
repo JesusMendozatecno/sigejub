@@ -57,6 +57,8 @@
         :root { --accent: {{ auth()->user()->color_acento ?? '#1a365d' }}; }
         .notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
         .notif-trigger:hover { background: #f1f5f9; }
+        .theme-toggle-btn:hover { background: #f1f5f9; color: #1e293b !important; }
+        body.dark-mode .theme-toggle-btn:hover { background: #334155; color: #e2e8f0 !important; }
         .notif-badge { display: none; }
         .notif-badge.show { display: flex !important; }
         .notif-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; margin-bottom: 2px; }
@@ -103,6 +105,9 @@
     </div>
 
     <div class="header-actions">
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleHeaderTheme()" title="Cambiar tema de la página" style="background:none;border:none;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;transition:background 0.2s, color 0.2s;">
+            <i id="themeToggleIcon" class="fas fa-moon" size="18"></i>
+        </button>
         <div class="notif-dropdown" id="notifDropdown">
             <button class="notif-trigger" onclick="toggleNotifDropdown()" style="background:none;border:none;color:#64748b;cursor:pointer;display:flex;align-items:center;position:relative;">
                 <i class="fas fa-bell" size="20"></i>
@@ -345,6 +350,23 @@ document.addEventListener('keypress', function(e) {
     });
     resetTimer();
 })();
+
+/* === Toggle rápido de tema (sol/luna) en el header === */
+function syncHeaderThemeIcon() {
+    var icon = document.getElementById('themeToggleIcon');
+    if (!icon) return;
+    var isDark = document.body.classList.contains('dark-mode');
+    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+}
+window.toggleHeaderTheme = function() {
+    var isDark = document.body.classList.contains('dark-mode');
+    // Alternar entre claro y oscuro (si el usuario está en moderno, pasa a claro)
+    var el = document.getElementById('themeToggleBtn');
+    if (el) { el.style.pointerEvents = 'none'; setTimeout(function(){ el.style.pointerEvents = ''; }, 400); }
+    window.cambiarTema(isDark ? 'light' : 'dark');
+    syncHeaderThemeIcon();
+};
+document.addEventListener('DOMContentLoaded', syncHeaderThemeIcon);
 </script>
 </body>
 </html>
