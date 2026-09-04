@@ -441,3 +441,72 @@ body.dark-mode .toast.warning {
     background: #3d2e00 !important;
     border-color: #92400e !important;
 }
+
+/* ── Iconos / badges que quedaban como "cuadro claro" en oscuro ──
+   Círculos y pills de estado con fondo #fff7ed / #fff5f5 (naranja/rojo
+   claros) se mapean a versiones oscuras para que no destaquen en blanco
+   sobre las tarjetas oscuras. */
+body.dark-mode .activity-icon.orange,
+body.dark-mode .dept-icon.orange,
+body.dark-mode .metric-icon.orange,
+body.dark-mode .icon-wrap.orange,
+body.dark-mode .doc-icon.pending,
+body.dark-mode .ec-badge.pendiente {
+    background: #3d2e00 !important;
+    color: #fbbf24 !important;
+    border-color: #78350f !important;
+}
+
+/* Tendencia negativa (fondo rojo claro) → rojo oscuro */
+body.dark-mode .trend.negative {
+    background: #4c1d1d !important;
+    color: #fca5a5 !important;
+}
+
+/* Badge de estado pendiente si usa variables claras → ámbar oscuro */
+body.dark-mode .badge-status.pending,
+body.dark-mode .badge-status.approved,
+body.dark-mode .badge-type.admin {
+    filter: brightness(0.75) saturate(0.9);
+}
+
+/* Tabs activos que forzaban blanco en contenedores de cálculo */
+body.dark-mode .percent-toggle button.active {
+    background: var(--bg-surface) !important;
+    color: var(--accent) !important;
+    border-color: var(--border) !important;
+}
+
+/* ── Encabezados y filas de tabla (cuadro claro sobre códigos/números) ──
+   Los thead con fondo #f8fafc y los hovers #fafbfc quedaban claros
+   sobre las tarjetas oscuras. Se mapean a superficie oscura. */
+body.dark-mode .cn-table th,
+body.dark-mode .custom-table thead th,
+body.dark-mode .admin-table thead th,
+body.dark-mode .solicitudes-table thead th,
+body.dark-mode .report-table thead th,
+body.dark-mode .mini-table thead th,
+body.dark-mode .historial-table th {
+    background: var(--bg-surface) !important;
+    color: var(--text-muted) !important;
+    border-bottom-color: var(--border) !important;
+}
+
+/* Filas de tabla: bordes y hover coherentes con el tema oscuro */
+body.dark-mode .cn-table td,
+body.dark-mode .custom-table td,
+body.dark-mode .admin-table td,
+body.dark-mode .solicitudes-table td,
+body.dark-mode .report-table td,
+body.dark-mode .mini-table td {
+    border-bottom-color: var(--border) !important;
+    background: transparent !important;
+}
+
+body.dark-mode .cn-table tbody tr:hover td,
+body.dark-mode .custom-table tbody tr:hover td,
+body.dark-mode .admin-table tbody tr:hover td,
+body.dark-mode .solicitudes-table tbody tr:hover td,
+body.dark-mode .report-table tbody tr:hover td {
+    background: var(--bg-card-hover) !important;
+}
