@@ -22,7 +22,7 @@ namespace SIGEJUB_Installer
         }
     }
 
-    // â”€â”€ Paleta de colores reutilizable â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Paleta de colores reutilizable
     public static class P
     {
         public static readonly Color Navy   = Color.FromArgb(15, 23, 42);
@@ -37,7 +37,7 @@ namespace SIGEJUB_Installer
         public static readonly Color Green  = Color.FromArgb(22, 163, 74);
     }
 
-    // â”€â”€ BotÃ³n moderno (redondeado, con hover) â”€â”€â”€â”€â”€â”€
+    // Botón moderno (redondeado, con hover)
     public class RoundBtn : Button
     {
         public bool IsPrimary { get; set; }
@@ -59,7 +59,7 @@ namespace SIGEJUB_Installer
             var rc = new Rectangle(0, 0, Width - 1, Height - 1);
             using (var path = Rounded(rc, 10))
             {
-                var bg = Parent == null ? BackColor : BackColor;
+                var bg = BackColor;
                 if (IsPrimary)
                 {
                     bg = P.Indigo;
@@ -84,12 +84,11 @@ namespace SIGEJUB_Installer
         }
     }
 
-    // â”€â”€ Panel de pasos (sidebar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Panel de pasos (sidebar)
     public class StepsPanel : Panel
     {
         public List<string> Items = new List<string>();
         public int Current = 0;
-        private Color[] tints = { Color.FromArgb(129, 140, 248), Color.FromArgb(129, 140, 248), Color.FromArgb(129, 140, 248), Color.FromArgb(129, 140, 248) };
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
@@ -116,11 +115,11 @@ namespace SIGEJUB_Installer
                             g.DrawLine(pen, 50, cy - stepH + 44, 50, cy + 6);
                     }
                     var circle = new Rectangle(36, cy, 28, 28);
-                    using (var b = new SolidBrush(active ? P.Indigo : (done ? Color.FromArgb(30, 41, 59) : Color.FromArgb(30, 41, 59))))
+                    using (var b = new SolidBrush(active ? P.Indigo : Color.FromArgb(30, 41, 59)))
                         g.FillEllipse(b, circle);
                     using (var pen = new Pen(done || active ? P.Indigo : Color.FromArgb(71, 85, 105), 1.5f))
                         g.DrawEllipse(pen, circle);
-                    string num = done ? "âœ“" : (i + 1).ToString();
+                    string num = done ? "\u2713" : (i + 1).ToString();
                     using (var b = new SolidBrush(active || done ? Color.White : Color.FromArgb(148, 163, 184)))
                         g.DrawString(num, new Font("Segoe UI", 10, FontStyle.Bold), b, circle.X + 8, circle.Y + 5);
                     using (var b = new SolidBrush(active ? Color.White : Color.FromArgb(148, 163, 184)))
@@ -131,13 +130,13 @@ namespace SIGEJUB_Installer
         public void RefreshSteps() { Invalidate(); }
     }
 
-    // â”€â”€ Instalador principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Instalador principal
     public class InstallerForm : Form
     {
         private StepsPanel steps;
         private Panel content;
         private Panel currentPage;
-        private RoundBtn btnBack, btnNext;
+        private RoundBtn btnBack, btnNext, btnStart;
         private Label lblTitle;
 
         private int step = 0;
@@ -149,7 +148,7 @@ namespace SIGEJUB_Installer
         private const int STEP_COUNT   = 4;
 
         // Config
-        private string installPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + "\\SIGEJUB";
+        private string installPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "SIGEJUB");
         private bool createShortcut = true;
         private string dbHost = "127.0.0.1";
         private string dbPort = "3306";
@@ -159,7 +158,7 @@ namespace SIGEJUB_Installer
         private string dbEngine = "mysql";
         private int selectedPort = 8000;
 
-        // Controles de pÃ¡gina
+        // Controles de página
         private TextBox txtPath;
         private CheckBox chkShortcut;
         private RadioButton rdoMysql, rdoPgsql;
@@ -169,68 +168,95 @@ namespace SIGEJUB_Installer
         private Label lblStatus, lblDoneUrl;
         private bool installing = false;
 
+        // Debounce para el redimensionado
+        private System.Windows.Forms.Timer resizeTimer;
+
         private string SourceRoot = null;
 
         public InstallerForm()
         {
-            // Detectar la raÃ­z de la app (carpeta del exe)
+            // Detectar la raíz de la app (carpeta del exe)
             SourceRoot = Application.StartupPath;
             if (File.Exists(Path.Combine(SourceRoot, "artisan"))) { }
             else if (File.Exists(Path.Combine(SourceRoot, "app", "artisan"))) SourceRoot = Path.Combine(SourceRoot, "app");
             else if (File.Exists(Path.Combine(SourceRoot, "..", "artisan"))) SourceRoot = Path.GetFullPath(Path.Combine(SourceRoot, ".."));
 
             this.Text = "SIGEJUB - Instalador";
-            this.Size = new Size(940, 600);
-            this.MinimumSize = new Size(860, 560);
+            this.Size = new Size(980, 620);
+            this.MinimumSize = new Size(880, 580);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
             this.MaximizeBox = false;
             this.Icon = LoadIcon();
             this.BackColor = P.Bg;
+            this.DoubleBuffered = true;
 
-            steps = new StepsPanel { Dock = DockStyle.Left, Width = 300 };
-            steps.Items = new List<string> { "Bienvenida", "Carpeta de instalaciÃ³n", "Base de datos", "InstalaciÃ³n" };
+            steps = new StepsPanel { Dock = DockStyle.Left, Width = 270 };
+            steps.Items = new List<string> { "Bienvenida", "Carpeta de instalación", "Base de datos", "Instalación" };
             steps.Current = 0;
 
-            content = new Panel { Dock = DockStyle.Fill, BackColor = P.Bg, Padding = new Padding(8) };
+            content = new Panel { Dock = DockStyle.Fill, BackColor = P.Bg };
 
             this.Controls.Add(steps);
             this.Controls.Add(content);
 
             // Botones inferiores
-            btnBack = new RoundBtn { Text = "AtrÃ¡s", IsPrimary = false, Width = 110, AutoSize = false };
+            btnBack = new RoundBtn { Text = "Atrás", IsPrimary = false, Width = 110 };
             btnBack.BackColor = P.Bg; btnBack.ForeColor = P.Muted; btnBack.Font = new Font("Segoe UI", 10);
-            btnNext = new RoundBtn { Text = "Siguiente", IsPrimary = true, Width = 140, AutoSize = false };
+            btnNext = new RoundBtn { Text = "Siguiente", IsPrimary = true, Width = 140 };
             btnBack.Click += (s, e) => Go(step - 1);
             btnNext.Click += (s, e) => Next();
             content.Controls.Add(btnBack);
             content.Controls.Add(btnNext);
 
-            // Los botones se anclan abajo-derecha para que sigan el redimensionado
-            btnBack.Anchor = AnchorStyles.Right | AnchorStyles.Bottom;
-            btnNext.Anchor = AnchorStyles.Right | AnchorStyles.Bottom;
+            btnStart = new RoundBtn { Text = "Iniciar SIGEJUB", IsPrimary = true, Width = 180, Height = 44 };
+            btnStart.Click += (s, e) => DoStart();
+            content.Controls.Add(btnStart);
 
-            // Renderizamos tras el primer layout (cuando content ya tiene su tamaÃ±o real)
+            // Renderizamos tras el primer layout (cuando content ya tiene su tamaño real)
             this.Load += (s, e) => ShowPage(STEP_WELCOME);
 
-            // Al redimensionar, re-maquetamos botones y pÃ¡ginas estÃ¡ticas
-            this.Resize += (s, e) => Relayout();
+            // Debounce del redimensionado: re-maqueta página estática
+            resizeTimer = new System.Windows.Forms.Timer { Interval = 120 };
+            resizeTimer.Tick += (s, e) => { resizeTimer.Stop(); RebuildStaticPage(); };
+            this.Resize += (s, e) =>
+            {
+                RepositionButtons();
+                if (IsStaticStep) { resizeTimer.Stop(); resizeTimer.Start(); }
+            };
         }
 
-        // Indica si la pÃ¡gina actual es de contenido estÃ¡tico (reconstruible)
+        // Indica si la página actual es de contenido estático (reconstruible)
         private bool IsStaticStep
         {
             get { return step == STEP_WELCOME || step == STEP_FOLDER || step == STEP_DB || step == STEP_DONE; }
         }
 
-        // Re-maqueta tras un cambio de tamaÃ±o de la ventana
-        private void Relayout()
+        private void RepositionButtons()
         {
-            if (content == null || currentPage == null) return;
+            if (content == null) return;
             if (content.ClientSize.Width <= 0 || content.ClientSize.Height <= 0) return;
-            btnNext.Location = new Point(content.ClientSize.Width - 160, content.ClientSize.Height - 58);
-            btnBack.Location = new Point(content.ClientSize.Width - 290, content.ClientSize.Height - 58);
-            // Reconstruir pÃ¡ginas estÃ¡ticas para que los campos/tarjetas se adapten al nuevo tamaÃ±o
+            int w = content.ClientSize.Width;
+            int h = content.ClientSize.Height;
+            btnNext.Location = new Point(w - 160, h - 58);
+            btnBack.Location = new Point(w - 290, h - 58);
+            btnStart.Location = new Point(w - 200, h - 64);
+            btnNext.BringToFront();
+            btnBack.BringToFront();
+            btnStart.BringToFront();
+        }
+
+        private void RebuildStaticPage()
+        {
+            if (content == null) return;
+            if (content.ClientSize.Width <= 0 || content.ClientSize.Height <= 0) return;
+            if (!IsStaticStep) return;
+            // Guardar estado de los inputs a variables de clase
+            if (step == STEP_FOLDER && txtPath != null && !txtPath.IsDisposed) installPath = txtPath.Text.Trim();
+            if (step == STEP_DB && txtHost != null && !txtHost.IsDisposed) ReadDb();
+            this.SuspendLayout();
+            ShowPage(step);
+            this.ResumeLayout(true);
         }
 
         private void Next()
@@ -281,10 +307,13 @@ namespace SIGEJUB_Installer
         {
             foreach (Control c in content.Controls)
             {
-                if (c == btnBack || c == btnNext) continue;
+                if (c == btnBack || c == btnNext || c == btnStart) continue;
                 c.Dispose();
             }
             content.Controls.Clear();
+            content.Controls.Add(btnStart);
+            content.Controls.Add(btnBack);
+            content.Controls.Add(btnNext);
         }
 
         private void ShowPage(int s)
@@ -305,36 +334,32 @@ namespace SIGEJUB_Installer
 
             btnBack.Visible = (s != STEP_WELCOME && s != STEP_DONE);
             btnNext.Visible = (s != STEP_DONE);
+            btnStart.Visible = (s == STEP_DONE);
             if (s == STEP_WELCOME) { btnNext.Text = "Siguiente"; }
             else if (s == STEP_FOLDER) { btnNext.Text = "Siguiente"; }
             else if (s == STEP_DB) { btnNext.Text = "Instalar"; }
             else if (s == STEP_INSTALL) { btnNext.Text = "Instalando..."; btnNext.Enabled = false; }
             btnBack.Enabled = !(s == STEP_INSTALL || s == STEP_DONE);
 
-            // Reposicionar botones
-            btnNext.Location = new Point(content.ClientSize.Width - 160, content.ClientSize.Height - 58);
-            btnBack.Location = new Point(content.ClientSize.Width - 290, content.ClientSize.Height - 58);
-            btnNext.BringToFront();
-            btnBack.BringToFront();
+            RepositionButtons();
 
             if (s == STEP_INSTALL) StartInstall();
         }
 
-        // Ancho Ãºtil para las pÃ¡ginas (respetando margen y botones inferiores)
+        // Ancho/alto útil para las páginas (respetando margen y botones inferiores)
         private int ContentW { get { return Math.Max(1, content.ClientSize.Width - 8); } }
         private int ContentH { get { return Math.Max(1, content.ClientSize.Height - 8); } }
 
-        // â”€â”€ PÃGINA 0: BIENVENIDA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── PÁGINA 0: BIENVENIDA ───
         private void BuildWelcome()
         {
-            var h = MakeHeader("Â¡Bienvenido a SIGEJUB!", "Sistema Integral de GestiÃ³n de Jubilaciones");
+            var h = MakeHeader("¡Bienvenido a SIGEJUB!", "Sistema Integral de Gestión de Jubilaciones");
             currentPage.Controls.Add(h);
 
             var card = new Panel
             {
                 BackColor = P.Card, Location = new Point(18, 96),
                 Size = new Size(ContentW - 36, ContentH - 176),
-                Padding = new Padding(24),
                 Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom
             };
             card.Paint += (s, e) =>
@@ -343,33 +368,33 @@ namespace SIGEJUB_Installer
                 using (var p = new Pen(P.Border, 1)) { g.DrawRectangle(p, 0, 0, card.Width - 1, card.Height - 1); }
             };
 
-            var inner = new Panel { BackColor = P.Card, Location = new Point(24, 24), Size = new Size(card.Width - 48, card.Height - 48) };
+            var inner = new Panel { BackColor = P.Card, Location = new Point(24, 24), Size = new Size(card.Width - 48, card.Height - 48), Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom };
 
             var lbl1 = new Label
             {
-                Text = "Este asistente instalarÃ¡ SIGEJUB en tu equipo.", AutoSize = false,
+                Text = "Este asistente instalará SIGEJUB en tu equipo.", AutoSize = false,
                 Location = new Point(0, 0), Size = new Size(inner.Width, 28),
-                Font = new Font("Segoe UI", 11), ForeColor = P.Text
+                Font = new Font("Segoe UI", 11), ForeColor = P.Text, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
             var lbl2 = new Label
             {
-                Text = "Durante la instalaciÃ³n:", AutoSize = false,
+                Text = "Durante la instalación:", AutoSize = false,
                 Location = new Point(0, 36), Size = new Size(inner.Width, 24),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = P.Navy
+                Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = P.Navy, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
             inner.Controls.Add(lbl1); inner.Controls.Add(lbl2);
 
             string[] puntos = {
-                "â€¢ Se copiarÃ¡n los archivos de la aplicaciÃ³n a la carpeta de tu elecciÃ³n.",
-                "â€¢ Se verificarÃ¡ PHP 8.2+ y Composer en tu sistema.",
-                "â€¢ Se configurarÃ¡ la base de datos (MySQL / MariaDB o PostgreSQL).",
-                "â€¢ Se instalarÃ¡ un acceso directo en el escritorio.",
-                "â€¢ Se generarÃ¡ una URL local para comenzar a usar el sistema."
+                "• Se copiarán los archivos de la aplicación a la carpeta de tu elección.",
+                "• Se verificará PHP 8.2+ y Composer en tu sistema.",
+                "• Se configurará la base de datos (MySQL / MariaDB o PostgreSQL).",
+                "• Se instalará un acceso directo en el escritorio.",
+                "• Se generará una URL local para comenzar a usar el sistema."
             };
             int y = 66;
             foreach (var pt in puntos)
             {
-                var l = new Label { Text = pt, AutoSize = false, Location = new Point(0, y), Size = new Size(inner.Width, 24), Font = new Font("Segoe UI", 10), ForeColor = P.Muted };
+                var l = new Label { Text = pt, AutoSize = false, Location = new Point(0, y), Size = new Size(inner.Width, 24), Font = new Font("Segoe UI", 10), ForeColor = P.Muted, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
                 inner.Controls.Add(l); y += 28;
             }
 
@@ -377,7 +402,7 @@ namespace SIGEJUB_Installer
             {
                 Text = "Requisitos: PHP 8.2+ y Composer instalados. La base de datos debe existir en el servidor.",
                 AutoSize = false, Location = new Point(0, y + 12), Size = new Size(inner.Width, 40),
-                Font = new Font("Segoe UI", 9, FontStyle.Italic), ForeColor = Color.FromArgb(180, 83, 9)
+                Font = new Font("Segoe UI", 9, FontStyle.Italic), ForeColor = Color.FromArgb(180, 83, 9), Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
             inner.Controls.Add(req);
 
@@ -385,10 +410,10 @@ namespace SIGEJUB_Installer
             currentPage.Controls.Add(card);
         }
 
-        // â”€â”€ PÃGINA 1: CARPETA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── PÁGINA 1: CARPETA ───
         private void BuildFolder()
         {
-            var h = MakeHeader("Elige dÃ³nde instalar", "Selecciona la carpeta donde se copiarÃ¡ la aplicaciÃ³n.");
+            var h = MakeHeader("Elige dónde instalar", "Selecciona la carpeta donde se copiará la aplicación.");
             currentPage.Controls.Add(h);
 
             var card = new Panel { BackColor = P.Card, Location = new Point(18, 96), Size = new Size(ContentW - 36, ContentH - 176), Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom };
@@ -396,21 +421,21 @@ namespace SIGEJUB_Installer
 
             var lbl = new Label
             {
-                Text = "Carpeta de instalaciÃ³n:", Location = new Point(24, 24), Size = new Size(200, 22),
+                Text = "Carpeta de instalación:", Location = new Point(24, 24), Size = new Size(200, 22),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = P.Navy
             };
             txtPath = new TextBox
             {
                 Text = installPath, Location = new Point(24, 52), Size = new Size(card.Width - 150, 30),
-                Font = new Font("Segoe UI", 10), BorderStyle = BorderStyle.FixedSingle
+                Font = new Font("Segoe UI", 10), BorderStyle = BorderStyle.FixedSingle, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
             txtPath.TextChanged += (s, e) => { installPath = txtPath.Text.Trim(); };
-            var btnBrowse = new RoundBtn { Text = "Examinar...", IsPrimary = false, Width = 96, Height = 32, Location = new Point(card.Width - 122, 50), Font = new Font("Segoe UI", 9) };
+            var btnBrowse = new RoundBtn { Text = "Examinar...", IsPrimary = false, Width = 96, Height = 32, Location = new Point(card.Width - 122, 50), Font = new Font("Segoe UI", 9), Anchor = AnchorStyles.Top | AnchorStyles.Right };
             btnBrowse.BackColor = P.Bg; btnBrowse.ForeColor = P.Navy;
             btnBrowse.Click += (s, e) => {
                 using (var fbd = new FolderBrowserDialog())
                 {
-                    fbd.Description = "Selecciona la carpeta de instalaciÃ³n de SIGEJUB";
+                    fbd.Description = "Selecciona la carpeta de instalación de SIGEJUB";
                     fbd.SelectedPath = Directory.Exists(installPath) ? installPath : Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
                     if (fbd.ShowDialog(this) == DialogResult.OK)
                     {
@@ -422,8 +447,8 @@ namespace SIGEJUB_Installer
 
             var lblSpace = new Label
             {
-                Text = "La carpeta destino se crearÃ¡ automÃ¡ticamente si no existe.", AutoSize = false,
-                Location = new Point(24, 92), Size = new Size(400, 20), Font = new Font("Segoe UI", 9), ForeColor = P.Muted
+                Text = "La carpeta destino se creará automáticamente si no existe.", AutoSize = false,
+                Location = new Point(24, 92), Size = new Size(400, 20), Font = new Font("Segoe UI", 9), ForeColor = P.Muted, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
 
             chkShortcut = new CheckBox
@@ -440,7 +465,7 @@ namespace SIGEJUB_Installer
 
         private bool ValidateFolder()
         {
-            if (string.IsNullOrWhiteSpace(installPath)) { MessageBox.Show("Ingresa una carpeta de instalaciÃ³n vÃ¡lida.", "SIGEJUB", MessageBoxButtons.OK, MessageBoxIcon.Warning); return false; }
+            if (string.IsNullOrWhiteSpace(installPath)) { MessageBox.Show("Ingresa una carpeta de instalación válida.", "SIGEJUB", MessageBoxButtons.OK, MessageBoxIcon.Warning); return false; }
             try
             {
                 string full = Path.GetFullPath(installPath);
@@ -456,10 +481,10 @@ namespace SIGEJUB_Installer
             }
         }
 
-        // â”€â”€ PÃGINA 2: BD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── PÁGINA 2: BD ───
         private void BuildDb()
         {
-            var h = MakeHeader("ConfiguraciÃ³n de la base de datos", "Indica el gestor y las credenciales de tu servidor de BD.");
+            var h = MakeHeader("Configuración de la base de datos", "Indica el gestor y las credenciales de tu servidor de BD.");
             currentPage.Controls.Add(h);
 
             var card = new Panel { BackColor = P.Card, Location = new Point(18, 96), Size = new Size(ContentW - 36, ContentH - 176), Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom };
@@ -468,31 +493,31 @@ namespace SIGEJUB_Installer
             var lblEngine = new Label { Text = "Gestor de base de datos:", Location = new Point(24, 24), Size = new Size(220, 22), Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = P.Navy };
             rdoMysql = new RadioButton { Text = "MySQL / MariaDB", Location = new Point(24, 52), Size = new Size(150, 24), Checked = dbEngine == "mysql", Font = new Font("Segoe UI", 10) };
             rdoPgsql = new RadioButton { Text = "PostgreSQL", Location = new Point(180, 52), Size = new Size(150, 24), Checked = dbEngine == "pgsql", Font = new Font("Segoe UI", 10) };
-            rdoMysql.CheckedChanged += (s, e) => { if (rdoMysql.Checked) { dbEngine = "mysql"; txtPort.Text = "3306"; txtUser.Text = "root"; } };
-            rdoPgsql.CheckedChanged += (s, e) => { if (rdoPgsql.Checked) { dbEngine = "pgsql"; txtPort.Text = "5432"; txtUser.Text = "postgres"; } };
+            rdoMysql.CheckedChanged += (s, e) => { if (rdoMysql.Checked) { dbEngine = "mysql"; if (txtPort != null) txtPort.Text = "3306"; if (txtUser != null) txtUser.Text = "root"; } };
+            rdoPgsql.CheckedChanged += (s, e) => { if (rdoPgsql.Checked) { dbEngine = "pgsql"; if (txtPort != null) txtPort.Text = "5432"; if (txtUser != null) txtUser.Text = "postgres"; } };
 
             int y = 96;
             var lblHost = new Label { Text = "Host:", Location = new Point(24, y + 4), Size = new Size(120, 22), ForeColor = P.Muted };
-            txtHost = new TextBox { Text = dbHost, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle };
+            txtHost = new TextBox { Text = dbHost, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
             y += 34;
             var lblPort = new Label { Text = "Puerto:", Location = new Point(24, y + 4), Size = new Size(120, 22), ForeColor = P.Muted };
             txtPort = new TextBox { Text = dbPort, Location = new Point(150, y), Size = new Size(120, 26), BorderStyle = BorderStyle.FixedSingle };
             y += 34;
             var lblDb = new Label { Text = "Nombre de la BD:", Location = new Point(24, y + 4), Size = new Size(120, 22), ForeColor = P.Muted };
-            txtDb = new TextBox { Text = dbName, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle };
+            txtDb = new TextBox { Text = dbName, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
             y += 34;
             var lblUser = new Label { Text = "Usuario:", Location = new Point(24, y + 4), Size = new Size(120, 22), ForeColor = P.Muted };
-            txtUser = new TextBox { Text = dbUser, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle };
+            txtUser = new TextBox { Text = dbUser, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
             y += 34;
             var lblPass = new Label { Text = "Clave:", Location = new Point(24, y + 4), Size = new Size(120, 22), ForeColor = P.Muted };
-            txtPass = new TextBox { Text = dbPass, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle, PasswordChar = '*' };
+            txtPass = new TextBox { Text = dbPass, Location = new Point(150, y), Size = new Size(card.Width - 190, 26), BorderStyle = BorderStyle.FixedSingle, PasswordChar = '*' , Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
             y += 30;
 
             var nota = new Label
             {
                 Text = "La base de datos debe existir en el servidor. Dejar en blanco usa los valores por defecto.",
                 AutoSize = false, Location = new Point(24, y + 6), Size = new Size(card.Width - 60, 40),
-                Font = new Font("Segoe UI", 9, FontStyle.Italic), ForeColor = Color.FromArgb(180, 83, 9)
+                Font = new Font("Segoe UI", 9, FontStyle.Italic), ForeColor = Color.FromArgb(180, 83, 9), Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
 
             card.Controls.AddRange(new Control[] { lblEngine, rdoMysql, rdoPgsql, lblHost, txtHost, lblPort, txtPort, lblDb, txtDb, lblUser, txtUser, lblPass, txtPass, nota });
@@ -508,7 +533,7 @@ namespace SIGEJUB_Installer
             dbPass = txtPass.Text;
         }
 
-        // â”€â”€ PÃGINA 3: INSTALACIÃ“N / PROGRESO â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── PÁGINA 3: INSTALACIÓN / PROGRESO ───
         private void BuildInstall()
         {
             var h = MakeHeader("Instalando SIGEJUB...", "Esto puede tardar unos minutos. No cierres la ventana.");
@@ -518,28 +543,31 @@ namespace SIGEJUB_Installer
             {
                 Location = new Point(18, 96), Size = new Size(ContentW - 36, ContentH - 210),
                 ReadOnly = true, BackColor = P.Navy, ForeColor = Color.FromArgb(226, 232, 240),
-                Font = new Font("Consolas", 9.5f), BorderStyle = BorderStyle.FixedSingle
+                Font = new Font("Consolas", 9.5f), BorderStyle = BorderStyle.FixedSingle,
+                Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom
             };
             progressBar = new ProgressBar
             {
                 Location = new Point(18, ContentH - 108), Size = new Size(ContentW - 36, 24),
-                Minimum = 0, Maximum = 100, Value = 0, Style = ProgressBarStyle.Continuous
+                Minimum = 0, Maximum = 100, Value = 0, Style = ProgressBarStyle.Continuous,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
             };
             lblStatus = new Label
             {
                 Text = "Preparando...", Location = new Point(18, ContentH - 78),
-                Size = new Size(ContentW - 36, 22), ForeColor = P.Muted, Font = new Font("Segoe UI", 9)
+                Size = new Size(ContentW - 36, 22), ForeColor = P.Muted, Font = new Font("Segoe UI", 9),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
             };
             currentPage.Controls.Add(logBox);
             currentPage.Controls.Add(progressBar);
             currentPage.Controls.Add(lblStatus);
-            logBox.AppendText("  Preparando instalaciÃ³n en: " + installPath + "\n\n");
+            logBox.AppendText("  Preparando instalación en: " + installPath + "\n\n");
         }
 
-        // â”€â”€ PÃGINA 4: FINALIZAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── PÁGINA 4: FINALIZAR ───
         private void BuildDone()
         {
-            var h = MakeHeader("InstalaciÃ³n completada", "SIGEJUB ha sido instalado correctamente.");
+            var h = MakeHeader("Instalación completada", "SIGEJUB ha sido instalado correctamente.");
             currentPage.Controls.Add(h);
 
             var card = new Panel { BackColor = P.Card, Location = new Point(18, 96), Size = new Size(ContentW - 36, ContentH - 176), Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom };
@@ -547,13 +575,13 @@ namespace SIGEJUB_Installer
 
             var check = new Label
             {
-                Text = "âœ“", Font = new Font("Segoe UI", 44, FontStyle.Bold),
+                Text = "\u2713", Font = new Font("Segoe UI", 44, FontStyle.Bold),
                 ForeColor = P.Green, Location = new Point(24, 24), Size = new Size(80, 80),
                 TextAlign = ContentAlignment.MiddleCenter
             };
             lblDoneUrl = new Label
             {
-                Text = "El sistema quedÃ³ instalado en:\n" + installPath, AutoSize = false,
+                Text = "El sistema quedó instalado en:\n" + installPath, AutoSize = false,
                 Location = new Point(120, 40), Size = new Size(card.Width - 160, 50),
                 Font = new Font("Segoe UI", 11), ForeColor = P.Text
             };
@@ -568,22 +596,27 @@ namespace SIGEJUB_Installer
             card.Controls.Add(lblDoneUrl);
             card.Controls.Add(lblUrl);
             currentPage.Controls.Add(card);
+        }
 
-            btnBack.Visible = false;
-
-            // botÃ³n Iniciar
-            var btnStart = new RoundBtn { Text = "Iniciar SIGEJUB", IsPrimary = true, Width = 180, Height = 44 };
-            btnStart.Location = new Point(ContentW - 200, ContentH - 60);
-            btnStart.Click += (s, e) => {
-                string vbs = Path.Combine(installPath, "sigejub-start.vbs");
-                if (File.Exists(vbs)) Process.Start(vbs);
-                else { Process.Start("http://localhost:" + selectedPort); Process.Start(new ProcessStartInfo { FileName = "php", Arguments = "artisan serve --port=" + selectedPort, WorkingDirectory = installPath, UseShellExecute = true }); }
+        private void DoStart()
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = "php", Arguments = "artisan serve --port=" + selectedPort, WorkingDirectory = installPath, UseShellExecute = true });
                 this.Close();
-            };
-            content.Controls.Add(btnStart);
-            btnStart.BringToFront();
-
-            btnNext.Visible = false;
+                return;
+            }
+            catch
+            {
+                // Fallback: si php no está disponible, abrir el vbs de arranque o la URL
+                string vbs = Path.Combine(installPath, "sigejub-start.vbs");
+                if (File.Exists(vbs))
+                {
+                    try { Process.Start(vbs); this.Close(); return; } catch { }
+                }
+                try { Process.Start("http://localhost:" + selectedPort); } catch { }
+                this.Close();
+            }
         }
 
         private void StartInstall()
@@ -599,21 +632,21 @@ namespace SIGEJUB_Installer
         {
             try
             {
-                AppendLog("Iniciando instalaciÃ³n en: " + installPath, Color.Yellow);
+                AppendLog("Iniciando instalación en: " + installPath, Color.Yellow);
                 SetProgress(2);
 
-                // â”€â”€ 1: Copiar archivos de la app â”€â”€â”€
-                AppendLog("[1/8] Copiando archivos de la aplicaciÃ³n...", Color.Yellow);
+                // ── 1: Copiar archivos de la app ──
+                AppendLog("[1/8] Copiando archivos de la aplicación...", Color.Yellow);
                 CopyDirectory(SourceRoot, installPath);
                 SetProgress(12);
                 AppendLog("[OK] Archivos copiados a " + installPath, Color.Green);
 
-                // â”€â”€ 2: PHP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── 2: PHP ──
                 AppendLog("[2/8] Verificando PHP...", Color.Yellow);
                 string output;
                 if (!RunCmd("where", "php", out output))
                 {
-                    AppendLog("[ERROR] PHP no encontrado en PATH. Instala PHP 8.2+ y agrÃ©galo al PATH.", Color.Red);
+                    AppendLog("[ERROR] PHP no encontrado en PATH. Instala PHP 8.2+ y agrégalo al PATH.", Color.Red);
                     FinishWithError(); return;
                 }
                 string phpVer = "";
@@ -621,7 +654,7 @@ namespace SIGEJUB_Installer
                 AppendLog("[OK] PHP " + phpVer + " encontrado", Color.Green);
                 SetProgress(20);
 
-                // â”€â”€ 3: Composer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── 3: Composer ──
                 AppendLog("[3/8] Verificando Composer...", Color.Yellow);
                 if (!RunCmd("where", "composer", out output))
                 {
@@ -631,7 +664,7 @@ namespace SIGEJUB_Installer
                 AppendLog("[OK] Composer encontrado", Color.Green);
                 SetProgress(28);
 
-                // â”€â”€ 4: .env â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── 4: .env ──
                 AppendLog("[4/8] Configurando .env...", Color.Yellow);
                 string envPath = Path.Combine(installPath, ".env");
                 string envExample = Path.Combine(installPath, ".env.example");
@@ -641,9 +674,9 @@ namespace SIGEJUB_Installer
                     else { AppendLog("[ERROR] Falta .env.example", Color.Red); FinishWithError(); return; }
                 }
                 string env = File.ReadAllText(envPath, Encoding.UTF8);
-                env = RemoveEnvLine(env, "DB_HOST_PGSQL"); env = RemoveEnvLine(env, "DB_PORT_PGSQL");
-                env = RemoveEnvLine(env, "DB_DATABASE_PGSQL"); env = RemoveEnvLine(env, "DB_USERNAME_PGSQL");
-                env = RemoveEnvLine(env, "DB_PASSWORD_PGSQL");
+                env = RemoveEnvLine(env, "DB_CONNECTION_PGSQL"); env = RemoveEnvLine(env, "DB_HOST_PGSQL");
+                env = RemoveEnvLine(env, "DB_PORT_PGSQL"); env = RemoveEnvLine(env, "DB_DATABASE_PGSQL");
+                env = RemoveEnvLine(env, "DB_USERNAME_PGSQL"); env = RemoveEnvLine(env, "DB_PASSWORD_PGSQL");
                 env = ReplaceEnv(env, "DB_CONNECTION", dbEngine);
                 env = ReplaceEnv(env, "DB_HOST", dbHost);
                 env = ReplaceEnv(env, "DB_PORT", dbPort);
@@ -654,7 +687,7 @@ namespace SIGEJUB_Installer
                 AppendLog("[OK] BD configurada en .env (" + (dbEngine == "pgsql" ? "PostgreSQL" : "MySQL/MariaDB") + ")", Color.Green);
                 SetProgress(38);
 
-                // â”€â”€ 5: composer install â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── 5: composer install ──
                 AppendLog("[5/8] Instalando dependencias (esto puede tardar)...", Color.Yellow);
                 if (!RunCmdIn("composer", "install --no-interaction --no-ansi --no-progress", installPath, out output))
                     AppendLog("[ADVERTENCIA] composer: " + Truncate(output, 200), Color.Orange);
@@ -662,21 +695,21 @@ namespace SIGEJUB_Installer
                     AppendLog("[OK] Dependencias instaladas", Color.Green);
                 SetProgress(52);
 
-                // â”€â”€ 6: key â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── 6: key ──
                 AppendLog("[6/8] Generando APP_KEY...", Color.Yellow);
                 if (!RunCmdIn("php", "artisan key:generate --force --no-ansi", installPath, out output))
                     AppendLog("[ADVERTENCIA] key: " + Truncate(output, 200), Color.Orange);
                 else AppendLog("[OK] APP_KEY generada", Color.Green);
                 SetProgress(64);
 
-                // â”€â”€ 7: migrar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── 7: migrar ──
                 AppendLog("[7/8] Ejecutando migraciones...", Color.Yellow);
                 if (!RunCmdIn("php", "artisan migrate --force --no-ansi", installPath, out output))
                     AppendLog("[ADVERTENCIA] Migraciones: " + Truncate(output, 250), Color.Orange);
                 else AppendLog("[OK] Migraciones ejecutadas", Color.Green);
                 SetProgress(78);
 
-                // â”€â”€ 8: finalizar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── 8: finalizar ──
                 AppendLog("[8/8] Finalizando...", Color.Yellow);
                 RunCmdIn("php", "artisan optimize:clear --no-ansi", installPath, out output);
                 string pubStorage = Path.Combine(installPath, "public", "storage");
@@ -694,11 +727,11 @@ namespace SIGEJUB_Installer
                 if (createShortcut) CreateShortcut(installPath);
                 SetProgress(100);
 
-                // SVB de arranque
+                // VBS de arranque
                 WriteLaunchVbs(installPath);
 
                 AppendLog("", Color.White);
-                AppendLog("  âœ“ INSTALACIÃ“N COMPLETADA", Color.Cyan);
+                AppendLog("  \u2713 INSTALACIÓN COMPLETADA", Color.Cyan);
                 AppendLog("  Puerto: " + selectedPort, Color.Cyan);
                 AppendLog("  URL:    http://localhost:" + selectedPort, Color.Cyan);
 
@@ -717,8 +750,8 @@ namespace SIGEJUB_Installer
 
         private void FinishWithError()
         {
-            AppendLog("[ERROR] InstalaciÃ³n cancelada.", Color.Red);
-            SetStatus("Error durante la instalaciÃ³n");
+            AppendLog("[ERROR] Instalación cancelada.", Color.Red);
+            SetStatus("Error durante la instalación");
             this.Invoke(new Action(() =>
             {
                 installing = false;
@@ -727,7 +760,7 @@ namespace SIGEJUB_Installer
             }));
         }
 
-        // â”€â”€ Copia de directorio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Copia de directorio ───
         private static readonly HashSet<string> ExcludeTop = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             ".git", "vendor", "node_modules", "installer-src",
@@ -804,7 +837,7 @@ namespace SIGEJUB_Installer
                 }
 
                 if (File.Exists(lnkPath)) AppendLog("[OK] Acceso directo creado", Color.Green);
-                else AppendLog("[AVISO] Acceso directo podrÃ­a no haberse creado", Color.Orange);
+                else AppendLog("[AVISO] Acceso directo podría no haberse creado", Color.Orange);
             }
             catch (Exception ex) { AppendLog("[AVISO] Acceso directo: " + ex.Message, Color.Orange); }
         }
@@ -833,16 +866,17 @@ namespace SIGEJUB_Installer
             try
             {
                 string vbs = Path.Combine(appPath, "sigejub-start.vbs");
-                File.WriteAllText(vbs,
+                string content =
                     "On Error Resume Next\n" +
                     "Set sh = CreateObject(\"WScript.Shell\")\n" +
-                    "ret = sh.Run(\"cmd /k cd /d \"\"\" & \"" + appPath + "\" & \"\"\" \" & \" && php artisan serve --port=" + selectedPort + "\", 1, False)\n",
-                    Encoding.UTF8);
+                    "sh.CurrentDirectory = \"" + appPath + "\"\n" +
+                    "sh.Run \"php artisan serve --port=" + selectedPort + "\", 1, False\n";
+                File.WriteAllText(vbs, content, Encoding.UTF8);
             }
             catch { }
         }
 
-        // â”€â”€ Helpers de proceso â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Helpers de proceso ───
         private bool RunCmd(string cmd, string args, out string output) { return RunCmdIn(cmd, args, SourceRoot, out output); }
 
         private bool RunCmdIn(string cmd, string args, string workDir, out string output)
@@ -934,13 +968,5 @@ namespace SIGEJUB_Installer
             if (File.Exists(path)) try { return new Icon(path); } catch { }
             return SystemIcons.Application;
         }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
-        }
     }
 }
-
-
-

@@ -147,7 +147,7 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
                     : '<span class="badge-status rejected">Inactivo</span>';
                 return '<tr>' +
                     '<td>' + ((i + 1) + ((data.current_page - 1) * data.per_page)) + '</td>' +
-                    '<td><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.8rem;">' + escaparHTML(item.codigo) + '</code></td>' +
+                    '<td><code class="codigo-tag">' + escaparHTML(item.codigo) + '</code></td>' +
                     '<td>' + escaparHTML(item.nombre) + '</td>' +
                     '<td>' + badge + '</td>' +
                     '<td class="actions">' +

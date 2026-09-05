@@ -150,7 +150,7 @@
                 const enBsTxt = primaTasaDia > 0 ? enBs.toLocaleString('es-VE', { minimumFractionDigits: 2 }) : '—';
                 return `<tr>
                     <td>${(i + 1) + ((data.current_page - 1) * data.per_page)}</td>
-                    <td><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.8rem;">${escaparHTML(p.codigo)}</code></td>
+                    <td><code class="codigo-tag">${escaparHTML(p.codigo)}</code></td>
                     <td>${escaparHTML(p.nombre)}</td>
                     <td><strong>$ ${valorTxt}</strong></td>
                     <td><strong class="celdaEnBs" data-usd="${valorNum}">Bs. ${enBsTxt}</strong></td>
