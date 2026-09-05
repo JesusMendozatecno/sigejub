@@ -1,13 +1,19 @@
-{{-- caja-negra.blade.php - Sección de auditoría (Caja Negra): registro inmutable de acciones del sistema con filtros, estadísticas, paginación y modal de detalle. --}}
+{{-- caja-negra.blade.php - Módulo Historial (Caja Negra + Copias de Seguridad).
+     Registro inmutable de auditoría: filtros, estadísticas, paginación, detalle y exportación.
+     Copias de Seguridad: generar, listar, verificar (SHA-256), descargar, eliminar y restaurar (superadmin). --}}
 <header class="section-header">
     <div class="header-info">
         <h1><i class="fas fa-hard-drive" size="22"></i> Historial</h1>
         <p>Registro inmutable de auditoría — todas las acciones del sistema.</p>
     </div>
     <div class="header-actions">
-        <button class="cn-btn-action cn-btn-primary" onclick="exportarCajaNegra()">
-            <i class="fas fa-download" size="16"></i>
-            <span>Exportar</span>
+        <button class="cn-btn-action cn-btn-primary" onclick="exportarCajaNegra()" title="Exportar como PDF (respeta filtros)">
+            <i class="fas fa-file-pdf" size="16"></i>
+            <span>PDF</span>
+        </button>
+        <button class="cn-btn-action cn-btn-primary" onclick="exportarCajaNegraCsv()" title="Exportar como CSV (respeta filtros)">
+            <i class="fas fa-file-csv" size="16"></i>
+            <span>CSV</span>
         </button>
     </div>
 </header>
@@ -16,7 +22,7 @@
 <div class="cn-toolbar">
     <div class="cn-search-wrap">
         <i class="fas fa-search" size="16" class="cn-search-icon"></i>
-        <input type="text" id="cnSearch" placeholder="Buscar en descripción...">
+        <input type="text" id="cnSearch" placeholder="Buscar en descripción, IP o ruta...">
     </div>
     <div class="cn-filters">
         <select id="cnUsuario" onchange="cargarCajaNegra()">
@@ -24,18 +30,15 @@
         </select>
         <select id="cnAccion" onchange="cargarCajaNegra()">
             <option value="">Acción</option>
-            <option value="created">Creado</option>
-            <option value="updated">Actualizado</option>
-            <option value="deleted">Eliminado</option>
+            @foreach(\App\Services\AuditService::ACCION_ETIQUETAS as $clave => $etiqueta)
+            <option value="{{ $clave }}">{{ $etiqueta }}</option>
+            @endforeach
         </select>
         <select id="cnTipo" onchange="cargarCajaNegra()">
             <option value="">Tipo</option>
-            <option value="trabajador">Trabajador</option>
-            <option value="solicitud">Solicitud</option>
-            <option value="expediente">Expediente</option>
-            <option value="documento">Documento</option>
-            <option value="usuario">Usuario</option>
-            <option value="notificacion">Notificación</option>
+            @foreach(\App\Services\AuditService::ENTIDAD_ETIQUETAS as $clave => $etiqueta)
+            <option value="{{ $clave }}">{{ $etiqueta }}</option>
+            @endforeach
         </select>
         <div class="cn-date-range">
             <input type="date" id="cnDesde" onchange="cargarCajaNegra()" title="Desde">
@@ -68,6 +71,7 @@
             <tr>
                 <th>FECHA/HORA</th>
                 <th>USUARIO</th>
+                <th>ROL</th>
                 <th>ACCIÓN</th>
                 <th>TIPO</th>
                 <th>DESCRIPCIÓN</th>
@@ -76,7 +80,7 @@
             </tr>
         </thead>
         <tbody id="cnBody">
-            <tr><td colspan="7" class="cn-empty">Cargando registros...</td></tr>
+            <tr><td colspan="8" class="cn-empty">Cargando registros...</td></tr>
         </tbody>
     </table>
 </div>
@@ -86,125 +90,9 @@
     <div class="cn-pagination" id="cnPagination"></div>
 </div>
 
-<!-- Backup Section -->
-<div style="margin-top: 24px; background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #f1f5f9;">
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-        <div>
-            <h3 style="margin: 0; font-size: 1rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-shield"></i> Copias de Seguridad
-            </h3>
-            <p style="margin: 4px 0 0; font-size: 0.78rem; color: #64748b;">
-                Respaldo completo: base de datos + archivos del sistema
-            </p>
-        </div>
-        <button class="cn-btn-action cn-btn-primary" id="btnGenerarBackup" onclick="generarBackup()">
-            <i class="fas fa-hard-drive" size="16"></i>
-            <span>Generar Respaldo</span>
-        </button>
-    </div>
-    <div id="backupList" style="min-height: 40px;">
-        <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 16px;">Cargando respaldos...</p>
-    </div>
-</div>
-
-<style>
-    .backup-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 10px; background: #f8fafc; margin-bottom: 6px; border: 1px solid #f1f5f9; transition: all 0.15s; }
-    .backup-item:hover { border-color: #e2e8f0; background: #fafbfc; }
-    .backup-item .backup-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-    .backup-item .backup-icon { width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #1a365d; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .backup-item .backup-name { font-size: 0.85rem; font-weight: 600; color: #0f172a; word-break: break-all; }
-    .backup-item .backup-meta { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
-    .backup-item .backup-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .backup-item .btn-bk-download { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid #e2e8f0; background: white; color: #2563eb; cursor: pointer; transition: all 0.15s; }
-    .backup-item .btn-bk-download:hover { background: #eff6ff; border-color: #bfdbfe; }
-    .backup-item .btn-bk-delete { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid transparent; background: transparent; color: #dc2626; cursor: pointer; transition: all 0.15s; }
-    .backup-item .btn-bk-delete:hover { background: #fef2f2; }
-    .backup-empty { text-align: center; padding: 24px; color: #94a3b8; font-size: 0.85rem; }
-    .backup-error { text-align: center; padding: 16px; color: #dc2626; font-size: 0.85rem; }
-    .backup-loading { text-align: center; padding: 16px; color: #64748b; font-size: 0.85rem; }
-    .backup-loading i { animation: spin 1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-</style>
-
-<script>
-(function() {
-    async function cargarBackups() {
-        const el = document.getElementById('backupList');
-        try {
-            const r = await fetch('/backups');
-            const data = await r.json();
-            if (!data.backups || !data.backups.length) {
-                el.innerHTML = '<div class="backup-empty"><i class="fas fa-database" style="font-size:2rem;display:block;margin-bottom:8px;color:#cbd5e1;"></i>No hay copias de seguridad disponibles</div>';
-                return;
-            }
-            el.innerHTML = data.backups.map(function(b) {
-                return '<div class="backup-item">' +
-                    '<div class="backup-info">' +
-                        '<div class="backup-icon"><i class="fas fa-file-zipper"></i></div>' +
-                        '<div>' +
-                            '<div class="backup-name">' + b.nombre + '</div>' +
-                            '<div class="backup-meta">' + b.fecha + ' — ' + (b.tamano || '—') + '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="backup-actions">' +
-                        '<button class="btn-bk-download" onclick="descargarBackup(\'' + b.nombre + '\')"><i class="fas fa-download"></i> Descargar</button>' +
-                        '<button class="btn-bk-delete" onclick="eliminarBackup(\'' + b.nombre + '\')"><i class="fas fa-trash-can"></i></button>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        } catch (e) {
-            el.innerHTML = '<div class="backup-error">Error al cargar respaldos</div>';
-        }
-    }
-    window.generarBackup = async function() {
-        const btn = document.getElementById('btnGenerarBackup');
-        const el = document.getElementById('backupList');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
-        el.innerHTML = '<div class="backup-loading"><i class="fas fa-spinner"></i> Generando copia de seguridad, esto puede tomar varios minutos...</div>';
-        try {
-            const r = await fetch('/backups/generar', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
-            const data = await r.json();
-            if (data.estado === 'error') { throw new Error(data.mensaje); }
-            await cargarBackups();
-            if (typeof mostrarToast === 'function') mostrarToast(data.mensaje || 'Respaldo generado', 'success');
-        } catch (e) {
-            el.innerHTML = '<div class="backup-error">Error: ' + e.message + '</div>';
-            if (typeof mostrarToast === 'function') mostrarToast('Error al generar respaldo', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-hard-drive"></i> Generar Respaldo';
-        }
-    };
-    window.descargarBackup = function(nombre) {
-        window.open('/backups/' + encodeURIComponent(nombre) + '/descargar', '_blank');
-    };
-    window.eliminarBackup = async function(nombre) {
-        if (!confirm('Eliminar esta copia de seguridad?')) return;
-        try {
-            const r = await fetch('/backups/' + encodeURIComponent(nombre), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
-            const data = await r.json();
-            if (data.estado === 'error') { throw new Error(data.mensaje); }
-            await cargarBackups();
-            if (typeof mostrarToast === 'function') mostrarToast('Respaldo eliminado', 'success');
-        } catch (e) {
-            if (typeof mostrarToast === 'function') mostrarToast('Error al eliminar', 'error');
-        }
-    };
-    document.addEventListener('DOMContentLoaded', cargarBackups);
-    const obs = new MutationObserver(function(m) {
-        m.forEach(function(mm) {
-            if (mm.target.id === 'caja-negra' && mm.target.classList.contains('active')) cargarBackups();
-        });
-    });
-    var sec = document.getElementById('caja-negra');
-    if (sec) obs.observe(sec, { attributes: true, attributeFilter: ['class'] });
-})();
-</script>
-
 <!-- Detail Modal -->
 <div class="modal-overlay" id="cnDetailModal">
-    <div class="modal-container" style="max-width: 820px;">
+    <div class="modal-container" style="max-width: 860px;">
         <aside class="modal-sidebar">
             <span class="badge-new">AUDITORÍA</span>
             <h1>Detalle del<br>Registro</h1>
@@ -219,96 +107,73 @@
     </div>
 </div>
 
-<style>
-/* === BADGES === */
-.badge-action { display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px; }
-.badge-created { background:#ecfdf5;color:#059669;border:1px solid #a7f3d0; }
-.badge-updated { background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe; }
-.badge-deleted { background:#fef2f2;color:#dc2626;border:1px solid #fecaca; }
-.badge-type { font-size:0.68rem;color:#64748b;background:#f1f5f9;padding:3px 10px;border-radius:20px;font-weight:500; }
+<!-- ============================================================
+     COPIAS DE SEGURIDAD
+     ============================================================ -->
+<div style="margin-top: 24px; background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #f1f5f9;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div>
+            <h3 style="margin: 0; font-size: 1rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-shield-halved"></i> Copias de Seguridad
+            </h3>
+            <p style="margin: 4px 0 0; font-size: 0.78rem; color: #64748b;">
+                Respaldo completo: base de datos + archivos del sistema. Cada copia se verifica con SHA-256 y todas las operaciones quedan registradas en la Caja Negra.
+            </p>
+        </div>
+        <button class="cn-btn-action cn-btn-primary" id="btnGenerarBackup" onclick="generarBackup()">
+            <i class="fas fa-hard-drive" size="16"></i>
+            <span>Generar copia de seguridad</span>
+        </button>
+    </div>
+    <div id="backupList" style="min-height: 40px;">
+        <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 16px;">Cargando copias de seguridad...</p>
+    </div>
+</div>
 
-/* === BUTTONS === */
-.cn-btn-action { display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:10px;font-size:0.83rem;font-weight:600;cursor:pointer;transition:all 0.2s;border:none; }
-.cn-btn-action i { width:16px;height:16px; }
+<!-- Confirmar eliminación de copia -->
+<div class="modal-overlay" id="bkDeleteModal">
+    <div class="modal-container" style="max-width: 460px;">
+        <aside class="modal-sidebar">
+            <span class="badge-new">SEGURIDAD</span>
+            <h1>Eliminar<br>Copia</h1>
+            <p>Confirmación requerida.</p>
+            <div style="margin-top: auto;"><button type="button" class="btn-sidebar-cancel" id="btnCancelarBorrarBk">Cancelar</button></div>
+        </aside>
+        <main class="modal-form-content">
+            <h2 style="margin:0 0 10px;font-size:1rem;color:#0f172a;">¿Eliminar esta copia de seguridad?</h2>
+            <p style="font-size:0.85rem;color:#64748b;margin:0 0 16px;">
+                La eliminación es irreversible y quedará registrada permanentemente en la Caja Negra.
+            </p>
+            <div class="cn-detail-field"><label>Archivo</label><div class="value" id="bkDeleteNombre">—</div></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+                <button class="cn-btn-ghost" id="btnCancelarBorrarBk2">Cancelar</button>
+                <button class="cn-btn-action cn-danger" id="btnConfirmarBorrarBk">Eliminar</button>
+            </div>
+        </main>
+    </div>
+</div>
 
-.cn-btn-primary { background:#1a365d;color:white;box-shadow:0 2px 8px rgba(26,54,93,0.2); }
-.cn-btn-primary:hover { background:#1e3a8a;box-shadow:0 4px 14px rgba(26,54,93,0.3);transform:translateY(-1px); }
-.cn-btn-primary:active { transform:translateY(0);box-shadow:0 1px 4px rgba(26,54,93,0.2); }
-
-.cn-btn-ghost { display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;border:1px solid transparent;background:transparent;color:#475569; }
-.cn-btn-ghost:hover { background:#f1f5f9;border-color:#e2e8f0;color:#1a365d; }
-.cn-btn-ghost i { width:15px;height:15px; }
-
-.cn-btn-pag { display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;padding:0 10px;border-radius:8px;font-size:0.8rem;font-weight:600;border:1px solid #e2e8f0;background:white;color:#475569;cursor:pointer;transition:all 0.15s;margin:0 2px; }
-.cn-btn-pag:hover { background:#f1f5f9;border-color:#cbd5e1;color:#1a365d; }
-.cn-btn-pag.active { background:#1a365d;border-color:#1a365d;color:white;box-shadow:0 2px 8px rgba(26,54,93,0.25); }
-.cn-btn-pag.active:hover { background:#1e3a8a; }
-
-/* === TOOLBAR === */
-.cn-toolbar { background:white;border-radius:14px;padding:12px 16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.04);display:flex;flex-wrap:wrap;gap:12px;align-items:center;border:1px solid #f1f5f9; }
-.cn-search-wrap { position:relative;flex:1;min-width:200px; }
-.cn-search-icon { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none; }
-.cn-search-wrap input { width:100%;padding:9px 12px 9px 38px;border:1px solid #e2e8f0;border-radius:10px;font-size:0.83rem;background:#f8fafc;transition:all 0.2s;outline:none;color:#334155; }
-.cn-search-wrap input:focus { border-color:#2563eb;background:white;box-shadow:0 0 0 3px rgba(37,99,235,0.08); }
-.cn-search-wrap input::placeholder { color:#94a3b8; }
-
-.cn-filters { display:flex;flex-wrap:wrap;gap:8px;align-items:center; }
-.cn-filters select { padding:9px 30px 9px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:0.8rem;background:#f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;transition:all 0.2s;outline:none;color:#475569;cursor:pointer;appearance:none;min-width:110px; }
-.cn-filters select:focus { border-color:#2563eb;background-color:white;box-shadow:0 0 0 3px rgba(37,99,235,0.08); }
-
-.cn-date-range { display:flex;align-items:center;gap:6px; }
-.cn-date-range input[type=date] { padding:9px 10px;border:1px solid #e2e8f0;border-radius:10px;font-size:0.8rem;background:#f8fafc;transition:all 0.2s;outline:none;color:#475569;cursor:pointer;width:130px; }
-.cn-date-range input[type=date]:focus { border-color:#2563eb;background:white;box-shadow:0 0 0 3px rgba(37,99,235,0.08); }
-.cn-date-sep { color:#94a3b8;font-size:0.85rem;font-weight:600; }
-
-/* === STATS === */
-.cn-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px; }
-@media (max-width: 600px) { .cn-stats { grid-template-columns:1fr; } }
-.cn-stat-card { background:white;border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #f1f5f9;transition:transform 0.2s; }
-.cn-stat-card:hover { transform:translateY(-2px); }
-.cn-stat-card i { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
-.cn-stat-card div h3 { font-size:1.4rem;font-weight:800;color:#0f172a;margin:0;line-height:1.2; }
-.cn-stat-card div p { font-size:0.72rem;color:#64748b;margin:2px 0 0;text-transform:uppercase;font-weight:600;letter-spacing:0.3px; }
-.cn-stat-total i { background:#eff6ff;color:#1a365d; }
-.cn-stat-today i { background:#ecfdf5;color:#059669; }
-.cn-stat-week i { background:#fff7ed;color:#ea580c; }
-
-/* === TABLE === */
-.cn-table-wrap { background:white;border-radius:14px;overflow-x:auto;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #f1f5f9; }
-.cn-table { width:100%;border-collapse:collapse; }
-.cn-table th { padding:14px 16px;font-size:0.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;text-align:left;background:#f8fafc;border-bottom:1px solid #e2e8f0; }
-.cn-table td { padding:12px 16px;font-size:0.83rem;color:#334155;border-bottom:1px solid #f1f5f9; }
-.cn-table tbody tr:hover td { background:#fafbfc; }
-.cn-table tbody tr:last-child td { border-bottom:none; }
-
-/* === FOOTER === */
-.cn-footer { display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:12px; }
-.cn-counter { font-size:0.8rem;color:#64748b;font-weight:500; }
-.cn-pagination { display:flex;flex-wrap:wrap;gap:4px; }
-
-/* === DETAIL MODAL === */
-.cn-detail-modal .modal-box { max-width:720px;padding:0;overflow:hidden; }
-.cn-modal-head { display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #f1f5f9; }
-.cn-modal-head h3 { margin:0;font-size:1rem;color:#0f172a;display:flex;align-items:center;gap:8px; }
-.cn-modal-close { background:none;border:none;font-size:1.5rem;color:#94a3b8;cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all 0.2s; }
-.cn-modal-close:hover { background:#f1f5f9;color:#475569; }
-#cnDetailContent { padding:20px 24px 24px; }
-.cn-modal-loading { color:#94a3b8;text-align:center;padding:20px; }
-.cn-detail-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
-.cn-detail-field { background:#f8fafc;border-radius:10px;padding:12px 14px; }
-.cn-detail-field label { font-size:0.65rem;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:5px;letter-spacing:0.3px; }
-.cn-detail-field .value { font-size:0.85rem;color:#0f172a;word-break:break-word;max-height:100px;overflow-y:auto; }
-.cn-detail-field .value pre { font-size:0.73rem;background:#f1f5f9;padding:8px 10px;border-radius:6px;margin:4px 0 0;max-height:160px;overflow:auto;white-space:pre-wrap; }
-.cn-detail-full { background:#f8fafc;border-radius:10px;padding:12px 14px;margin-top:10px; }
-.cn-detail-full label { font-size:0.65rem;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:5px;letter-spacing:0.3px; }
-.cn-detail-full pre { font-size:0.73rem;background:#f1f5f9;padding:10px;border-radius:6px;max-height:180px;overflow:auto;white-space:pre-wrap;margin:0; }
-
-/* === EMPTY === */
-.cn-empty { text-align:center;padding:3rem 1rem;color:#94a3b8;font-size:0.9rem; }
-</style>
+<!-- Restaurar copia (solo superadmin) -->
+<div class="modal-overlay" id="bkRestoreModal">
+    <div class="modal-container" style="max-width: 620px;">
+        <aside class="modal-sidebar">
+            <span class="badge-new">SUPERADMIN</span>
+            <h1>Restaurar<br>Copia</h1>
+            <p>Restauración segura con backup preventivo obligatorio.</p>
+            <div style="margin-top: auto;"><button type="button" class="btn-sidebar-cancel" id="btnCerrarRestaurarBk">Cancelar</button></div>
+        </aside>
+        <main class="modal-form-content" id="bkRestoreContent">
+            <p class="cn-modal-loading">Analizando la copia de seguridad...</p>
+        </main>
+    </div>
+</div>
 
 <script>
 (function() {
+    const ES_ES_RELOAD = true;
+    window.CN_ES_SUPERADMIN = (typeof window.SIGEJUB_ROL !== 'undefined' && window.SIGEJUB_ROL === 'superadmin');
+
+    /* ===== CAJA NEGRA ===== */
     let cnPagina = 1;
 
     async function cargarStats() {
@@ -327,7 +192,7 @@
             const users = await r.json();
             const sel = document.getElementById('cnUsuario');
             sel.innerHTML = '<option value="">Todos los usuarios</option>' +
-                users.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
+                users.map(u => `<option value="${u.id}">${escaparHTML(u.nombre + ' ' + (u.apellido || ''))}</option>`).join('');
         } catch (e) { console.error('Error usuarios:', e); }
     }
 
@@ -349,29 +214,28 @@
         params.set('page', cnPagina);
 
         const tbody = document.getElementById('cnBody');
-        tbody.innerHTML = '<tr><td colspan="7" class="cn-empty">Buscando registros...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="cn-empty">Buscando registros...</td></tr>';
 
         try {
             const r = await fetch('/caja-negra?' + params.toString());
             const data = await r.json();
             if (!data.data || !data.data.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="cn-empty">Sin registros que coincidan con los filtros</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="cn-empty">Sin registros que coincidan con los filtros</td></tr>';
                 document.getElementById('cnCounter').textContent = 'Mostrando 0 registros';
                 document.getElementById('cnPagination').innerHTML = '';
                 return;
             }
             tbody.innerHTML = data.data.map(a => {
-                const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                const userEscaped = a.user ? escaparHTML(a.user.nombre) : 'Sistema';
-                const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.accion] || a.accion;
-                const badgeClass = 'badge-' + a.accion;
-                const tipoLabel = a.tipo_entidad ? a.tipo_entidad.charAt(0).toUpperCase() + a.tipo_entidad.slice(1) : '—';
+                const fecha = new Date(a.created_at).toLocaleString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                const userEscaped = a.usuario_nombre ? escaparHTML(a.usuario_nombre) : 'Sistema';
+                const badgeClass = 'badge-' + String(a.accion).replace(/[^a-zA-Z0-9]/g, '_');
                 const ip = a.direccion_ip || '—';
                 return `<tr>
                     <td style="font-size:0.78rem;color:#64748b;white-space:nowrap;">${fecha}</td>
                     <td style="font-weight:600;font-size:0.85rem;">${userEscaped}</td>
-                    <td><span class="badge-action ${badgeClass}">${badgeAction}</span></td>
-                    <td><span class="badge-type">${escaparHTML(tipoLabel)}</span></td>
+                    <td style="font-size:0.75rem;color:#64748b;"><span class="cn-rol-chip">${escaparHTML(a.usuario_rol || '—')}</span></td>
+                    <td><span class="badge-action ${badgeClass}">${escaparHTML(a.accion_humana)}</span></td>
+                    <td><span class="badge-type">${escaparHTML(a.tipo_entidad_humana)}</span></td>
                     <td style="font-size:0.83rem;color:#334155;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escaparHTML(a.descripcion)}</td>
                     <td style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">${escaparHTML(ip)}</td>
                     <td><button class="cn-btn-ghost" onclick="verDetalleCajaNegra(${a.id})" title="Ver detalle"><i class="fas fa-eye" size="15"></i> Ver</button></td>
@@ -399,7 +263,7 @@
             pag.innerHTML = html;
         } catch (e) {
             console.error('Error caja negra:', e);
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:#ef4444;font-size:0.9rem;">⚠ Error al cargar los registros</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2.5rem;color:#ef4444;font-size:0.9rem;">⚠ Error al cargar los registros</td></tr>';
         }
     };
 
@@ -411,28 +275,40 @@
         try {
             const r = await fetch('/caja-negra/' + id);
             const a = await r.json();
-            const fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-            const userEscaped = a.user ? escaparHTML(a.user.nombre) : 'Sistema';
-            const badgeAction = { created:'Creado', updated:'Actualizado', deleted:'Eliminado' }[a.accion] || a.accion;
-            const oldHtml = a.valores_anteriores ? `<pre>${JSON.stringify(a.valores_anteriores, null, 2)}</pre>` : '<span class="text-muted">—</span>';
-            const newHtml = a.valores_nuevos ? `<pre>${JSON.stringify(a.valores_nuevos, null, 2)}</pre>` : '<span class="text-muted">—</span>';
-            const reqHtml = a.datos_peticion ? `<pre>${JSON.stringify(a.datos_peticion, null, 2)}</pre>` : '<span class="text-muted">—</span>';
+            const fecha = new Date(a.created_at).toLocaleString('es-ES', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+            const badgeClass = 'badge-' + String(a.accion).replace(/[^a-zA-Z0-9]/g, '_');
+
+            function tablaCambios(obj) {
+                if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+                    return '<pre>' + escaparHTML(JSON.stringify(obj, null, 2)) + '</pre>';
+                }
+                const filas = Object.keys(obj).map(k =>
+                    '<tr><td>' + escaparHTML(k) + '</td><td><pre>' + escaparHTML(JSON.stringify(obj[k], null, 2)) + '</pre></td></tr>'
+                ).join('');
+                return '<table class="cn-diff-table"><thead><tr><th>Campo</th><th>Valor</th></tr></thead><tbody>' + filas + '</tbody></table>';
+            }
 
             content.innerHTML = `
                 <div class="cn-detail-grid">
                     <div class="cn-detail-field"><label>Fecha/Hora</label><div class="value">${fecha}</div></div>
-                    <div class="cn-detail-field"><label>Usuario</label><div class="value">${userEscaped}</div></div>
-                    <div class="cn-detail-field"><label>Acción</label><div class="value"><span class="badge-action ${'badge-'+a.accion}">${badgeAction}</span></div></div>
-                    <div class="cn-detail-field"><label>Tipo</label><div class="value"><span class="badge-type">${escaparHTML(a.tipo_entidad) || '—'}</span></div></div>
+                    <div class="cn-detail-field"><label>Usuario</label><div class="value">${escaparHTML(a.usuario_nombre || 'Sistema')}</div></div>
+                    <div class="cn-detail-field"><label>Rol</label><div class="value"><span class="cn-rol-chip">${escaparHTML(a.usuario_rol || '—')}</span></div></div>
+                    <div class="cn-detail-field"><label>Acción</label><div class="value"><span class="badge-action ${badgeClass}">${escaparHTML(a.accion_humana)}</span></div></div>
+                    <div class="cn-detail-field"><label>Tipo de entidad</label><div class="value"><span class="badge-type">${escaparHTML(a.tipo_entidad_humana)}</span></div></div>
                     <div class="cn-detail-field"><label>ID del registro</label><div class="value">${a.entidad_id ?? '—'}</div></div>
-                    <div class="cn-detail-field"><label>IP</label><div class="value" style="font-family:monospace;">${escaparHTML(a.direccion_ip) || '—'}</div></div>
                 </div>
-                <div class="cn-detail-field" style="margin-bottom:8px;"><label>Descripción</label><div class="value">${escaparHTML(a.descripcion)}</div></div>
+                <div class="cn-detail-field" style="margin-top:10px;"><label>Descripción</label><div class="value">${escaparHTML(a.descripcion)}</div></div>
+                <div class="cn-detail-origen">
+                    <div class="cn-detail-field"><label>Dirección IP</label><div class="value" style="font-family:monospace;">${escaparHTML(a.direccion_ip || '—')}</div></div>
+                    <div class="cn-detail-field"><label>Método HTTP</label><div class="value" style="font-family:monospace;">${escaparHTML(a.metodo || '—')}</div></div>
+                    <div class="cn-detail-field"><label>Ruta</label><div class="value" style="font-family:monospace;">${escaparHTML(a.ruta || '—')}</div></div>
+                    <div class="cn-detail-field"><label>Navegador / User Agent</label><div class="value">${escaparHTML(a.navegador || '—')}</div></div>
+                </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-                    <div class="cn-detail-full"><label>Valores Anteriores</label>${oldHtml}</div>
-                    <div class="cn-detail-full"><label>Valores Nuevos</label>${newHtml}</div>
+                    <div class="cn-detail-full"><label>Valores Anteriores (antes)</label>${a.valores_anteriores ? tablaCambios(a.valores_anteriores) : '<span class="text-muted">—</span>'}</div>
+                    <div class="cn-detail-full"><label>Valores Nuevos (después)</label>${a.valores_nuevos ? tablaCambios(a.valores_nuevos) : '<span class="text-muted">—</span>'}</div>
                 </div>
-                <div class="cn-detail-full" style="margin-top:12px;"><label>Datos de la Petición</label>${reqHtml}</div>
+                <div class="cn-detail-full" style="margin-top:12px;"><label>Datos de la Petición (sanitizados)</label>${a.datos_peticion ? '<pre>' + escaparHTML(JSON.stringify(a.datos_peticion, null, 2)) + '</pre>' : '<span class="text-muted">—</span>'}</div>
             `;
         } catch (e) {
             content.innerHTML = '<p class="cn-modal-loading" style="color:#ef4444;">Error al cargar detalle</p>';
@@ -440,14 +316,33 @@
     };
 
     window.exportarCajaNegra = function() {
-        const params = new URLSearchParams();
-        const desde = document.getElementById('cnDesde').value;
-        const hasta = document.getElementById('cnHasta').value;
-        if (desde) params.set('from', desde);
-        if (hasta) params.set('to', hasta);
-        const url = '/caja-negra/exportar' + (params.toString() ? '?' + params.toString() : '');
+        const params = filtrosCajaNegra();
+        const url = '/caja-negra/exportar' + (params ? '?' + params : '');
         window.open(url, '_blank', 'width=1000,height=700');
     };
+
+    window.exportarCajaNegraCsv = function() {
+        const params = filtrosCajaNegra();
+        const url = '/caja-negra/exportar-csv' + (params ? '?' + params : '');
+        window.open(url, '_blank');
+    };
+
+    function filtrosCajaNegra() {
+        const params = new URLSearchParams();
+        const usuario = document.getElementById('cnUsuario').value;
+        const accion = document.getElementById('cnAccion').value;
+        const tipo = document.getElementById('cnTipo').value;
+        const desde = document.getElementById('cnDesde').value;
+        const hasta = document.getElementById('cnHasta').value;
+        const search = document.getElementById('cnSearch').value;
+        if (search) params.set('search', search);
+        if (usuario) params.set('user_id', usuario);
+        if (accion) params.set('accion', accion);
+        if (tipo) params.set('tipo_entidad', tipo);
+        if (desde) params.set('from', desde);
+        if (hasta) params.set('to', hasta);
+        return params.toString();
+    }
 
     // Search on enter with debounce
     let cnTimeout = null;
@@ -456,11 +351,230 @@
         cnTimeout = setTimeout(() => { cnPagina = 1; cargarCajaNegra(); }, 400);
     });
 
-    // Init
+    /* ===== COPIAS DE SEGURIDAD ===== */
+    function escaparBk(s) { return escaparHTML(s); }
+    function formatearFecha(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        if (isNaN(d)) return iso;
+        return d.toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    }
+    function mostrarHashCorto(hash) {
+        if (!hash) return '<span class="text-muted">—</span>';
+        return '<span class="bk-hash" title="' + escaparBk(hash) + '">' + escaparBk(hash.slice(0, 16)) + '…</span>';
+    }
+
+    async function cargarBackups() {
+        const el = document.getElementById('backupList');
+        try {
+            const r = await fetch('/backups');
+            const data = await r.json();
+            if (!data.backups || !data.backups.length) {
+                el.innerHTML = '<div class="backup-empty"><i class="fas fa-database" style="font-size:2rem;display:block;margin-bottom:8px;color:#cbd5e1;"></i>No hay copias de seguridad disponibles</div>';
+                return;
+            }
+            el.innerHTML = data.backups.map(function(b) {
+                const estado = b.estado === 'Verificado'
+                    ? '<span class="bk-badge bk-badge-ok"><i class="fas fa-circle-check"></i> Verificado</span>'
+                    : '<span class="bk-badge bk-badge-bad"><i class="fas fa-circle-exclamation"></i> Inválido</span>';
+                const restaurar = window.CN_ES_SUPERADMIN
+                    ? '<button class="btn-bk-restore" onclick="restaurarBackup(\'' + escaparJS(b.nombre) + '\')" title="Restaurar (solo superadmin)"><i class="fas fa-rotate-left"></i> Restaurar</button>'
+                    : '';
+                return '<div class="backup-item">' +
+                    '<div class="backup-info">' +
+                        '<div class="backup-icon"><i class="fas fa-file-zipper"></i></div>' +
+                        '<div style="flex:1;min-width:0;">' +
+                            '<div class="backup-name">' + escaparBk(b.nombre) + '</div>' +
+                            '<div class="backup-meta">' + formatearFecha(b.fecha) + ' — ' + escaparBk(b.tamano) + ' — ' + b.tipo + '</div>' +
+                            '<div class="backup-meta" style="margin-top:5px;">SHA-256: ' + mostrarHashCorto(b.hash) + ' ' + estado + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="backup-actions">' +
+                        '<button class="btn-bk-download" onclick="descargarBackup(\'' + escaparJS(b.nombre) + '\')"><i class="fas fa-download"></i> Descargar</button>' +
+                        '<button class="btn-bk-verify" onclick="verificarBackup(\'' + escaparJS(b.nombre) + '\')"><i class="fas fa-shield-halved"></i> Verificar</button>' +
+                        restaurar +
+                        '<button class="btn-bk-delete" onclick="solicitarBorrarBackup(\'' + escaparJS(b.nombre) + '\')" title="Eliminar"><i class="fas fa-trash-can"></i></button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        } catch (e) {
+            el.innerHTML = '<div class="backup-error">Error al cargar las copias de seguridad</div>';
+        }
+    }
+
+    function escaparJS(s) {
+        return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    window.generarBackup = async function() {
+        const btn = document.getElementById('btnGenerarBackup');
+        const el = document.getElementById('backupList');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+        el.innerHTML = '<div class="backup-loading"><i class="fas fa-spinner"></i> Generando copia de seguridad, esto puede tomar varios minutos...</div>';
+        try {
+            const r = await fetch('/backups/generar', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
+            const data = await r.json();
+            if (data.estado === 'error') { throw new Error(data.mensaje); }
+            await cargarBackups();
+            if (typeof mostrarToast === 'function') mostrarToast(data.mensaje || 'Copia generada', 'success');
+        } catch (e) {
+            el.innerHTML = '<div class="backup-error">Error: ' + escaparBk(e.message) + '</div>';
+            if (typeof mostrarToast === 'function') mostrarToast('Error al generar copia', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-hard-drive"></i> Generar copia de seguridad';
+        }
+    };
+
+    window.descargarBackup = function(nombre) {
+        window.open('/backups/' + encodeURIComponent(nombre) + '/descargar', '_blank');
+        if (typeof mostrarToast === 'function') setTimeout(() => mostrarToast('Descarga iniciada', 'info'), 600);
+    };
+
+    window.verificarBackup = async function(nombre) {
+        if (typeof mostrarToast === 'function') mostrarToast('Verificando integridad (SHA-256)...', 'info');
+        try {
+            const r = await fetch('/backups/' + encodeURIComponent(nombre) + '/verificar');
+            const data = await r.json();
+            if (data.estado === 'error') { throw new Error(data.mensaje); }
+            const ok = data.integridad === 'Integridad válida';
+            if (typeof mostrarToast === 'function') mostrarToast(data.integridad || data.verificacion, ok ? 'success' : 'error');
+            await cargarBackups();
+        } catch (e) {
+            if (typeof mostrarToast === 'function') mostrarToast('Error al verificar: ' + e.message, 'error');
+        }
+    };
+
+    // === Eliminación con confirmación ===
+    let bkABorrar = null;
+    window.solicitarBorrarBackup = function(nombre) {
+        bkABorrar = nombre;
+        document.getElementById('bkDeleteNombre').textContent = nombre;
+        document.getElementById('bkDeleteModal').classList.add('show');
+    };
+    window.cerrarModalBorrarBackup = function() { document.getElementById('bkDeleteModal').classList.remove('show'); };
+    window.confirmarBorrarBackup = async function() {
+        if (!bkABorrar) return;
+        const btn = document.getElementById('btnConfirmarBorrarBk');
+        btn.disabled = true;
+        try {
+            const r = await fetch('/backups/' + encodeURIComponent(bkABorrar), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
+            const data = await r.json();
+            if (data.estado === 'error') { throw new Error(data.mensaje); }
+            if (typeof mostrarToast === 'function') mostrarToast('Copia eliminada y registrada en Caja Negra', 'success');
+            cerrarModalBorrarBackup();
+            await cargarBackups();
+        } catch (e) {
+            if (typeof mostrarToast === 'function') mostrarToast('Error al eliminar: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    };
+    document.getElementById('btnConfirmarBorrarBk').addEventListener('click', confirmarBorrarBackup);
+    document.getElementById('btnCancelarBorrarBk').addEventListener('click', cerrarModalBorrarBackup);
+    document.getElementById('btnCancelarBorrarBk2').addEventListener('click', cerrarModalBorrarBackup);
+
+    // === Restauración segura (superadmin): flujo obligatorio ===
+    window.restaurarBackup = function(nombre) {
+        const modal = document.getElementById('bkRestoreModal');
+        const content = document.getElementById('bkRestoreContent');
+        modal.classList.add('show');
+        content.innerHTML = '<p class="cn-modal-loading">Verificando integridad de la copia...</p>';
+        pasoRestaurar1(nombre, content);
+    };
+
+    function pasoRestaurar1(nombre, content) {
+        // 1) Verificar integridad
+        fetch('/backups/' + encodeURIComponent(nombre) + '/verificar').then(r => r.json()).then(data => {
+            if (data.estado === 'error') { throw new Error(data.mensaje); }
+            const integridad = data.integridad === 'Integridad válida';
+            content.innerHTML = `
+                <h2 style="margin:0 0 12px;font-size:1rem;color:#0f172a;">Paso 1 de 3 — Verificación de integridad</h2>
+                <div class="cn-detail-field"><label>Archivo</label><div class="value" style="word-break:break-all;">${escaparBk(nombre)}</div></div>
+                <div class="cn-detail-field"><label>SHA-256 actual</label><div class="value" style="font-family:monospace;font-size:0.7rem;word-break:break-all;">${escaparBk(data.hash_actual)}</div></div>
+                <div class="cn-detail-field"><label>SHA-256 registrado</label><div class="value" style="font-family:monospace;font-size:0.7rem;word-break:break-all;">${escaparBk(data.hash_registrado || '—')}</div></div>
+                <div style="margin-top:16px;">${integridad
+                    ? '<div class="bk-alert bk-alert-ok"><i class="fas fa-circle-check"></i> Integridad válida — la copia es segura para restaurar.</div>'
+                    : '<div class="bk-alert bk-alert-bad"><i class="fas fa-circle-exclamation"></i> Integridad no válida — NO se puede restaurar esta copia.</div>'}</div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+                    <button class="cn-btn-ghost" onclick="cerrarModalRestaurarBk()">Cancelar</button>
+                    <button class="cn-btn-action cn-btn-primary" id="bkRestorePaso2" ${integridad ? '' : 'disabled'}>Continuar</button>
+                </div>
+            `;
+            const btn2 = document.getElementById('bkRestorePaso2');
+            if (btn2) btn2.addEventListener('click', () => pasoRestaurar2(nombre, content));
+        }).catch(e => {
+            content.innerHTML = '<p class="cn-modal-loading" style="color:#ef4444;">Error al verificar: ' + escaparBk(e.message) + '</p>';
+        });
+    }
+
+    function pasoRestaurar2(nombre, content) {
+        // 2) Advertencia + confirmación explícita
+        content.innerHTML = `
+            <h2 style="margin:0 0 12px;font-size:1rem;color:#0f172a;">Paso 2 de 3 — Confirmación</h2>
+            <div class="bk-alert bk-alert-warn"><i class="fas fa-triangle-exclamation"></i>
+                ADVERTENCIA: La restauración reemplazará la información actual de la base de datos con el contenido de esta copia.
+                Se creará un <strong>backup preventivo</strong> automáticamente antes de restaurar.
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+                <button class="cn-btn-ghost" onclick="cerrarModalRestaurarBk()">Cancelar</button>
+                <button class="cn-btn-action cn-danger" id="bkRestorePaso3">Sí, continuar con la restauración</button>
+            </div>
+        `;
+        document.getElementById('bkRestorePaso3').addEventListener('click', () => pasoRestaurar3(nombre, content));
+    }
+
+    function pasoRestaurar3(nombre, content) {
+        // 3) Ejecutar restauración (backup preventivo + restaurar)
+        content.innerHTML = '<p class="cn-modal-loading"><i class="fas fa-spinner fa-spin"></i> Creando backup preventivo y restaurando... Este proceso puede tardar varios minutos.</p>';
+        fetch('/backups/' + encodeURIComponent(nombre) + '/restaurar', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } })
+            .then(r => r.json()).then(data => {
+                if (data.estado === 'error') {
+                    content.innerHTML = `
+                        <div class="bk-alert bk-alert-bad"><i class="fas fa-circle-xmark"></i> ${escaparBk(data.mensaje)}</div>
+                        <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+                            <button class="cn-btn-ghost" onclick="cerrarModalRestaurarBk()">Cerrar</button>
+                        </div>
+                    `;
+                    if (typeof mostrarToast === 'function') mostrarToast('Restauración fallida', 'error');
+                    return;
+                }
+                content.innerHTML = `
+                    <div class="bk-alert bk-alert-ok"><i class="fas fa-circle-check"></i> ${escaparBk(data.mensaje)}</div>
+                    <div class="cn-detail-field"><label>Backup preventivo</label><div class="value">${escaparBk(data.preventivo || '—')}</div></div>
+                    <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+                        <button class="cn-btn-ghost" onclick="cerrarModalRestaurarBk()">Cerrar</button>
+                    </div>
+                `;
+                if (typeof mostrarToast === 'function') mostrarToast('Restauración completada', 'success');
+                cargarBackups();
+            }).catch(e => {
+                content.innerHTML = '<p class="cn-modal-loading" style="color:#ef4444;">Error: ' + escaparBk(e.message) + '</p>';
+            });
+    }
+
+    window.cerrarModalRestaurarBk = function() { document.getElementById('bkRestoreModal').classList.remove('show'); };
+    document.getElementById('btnCerrarRestaurarBk').addEventListener('click', cerrarModalRestaurarBk);
+
+    // Cierre de modales al hacer clic fuera
+    ['cnDetailModal', 'bkDeleteModal', 'bkRestoreModal'].forEach(idModal => {
+        const m = document.getElementById(idModal);
+        if (m) m.addEventListener('click', function(e) {
+            if (e.target === m) m.classList.remove('show');
+        });
+    });
+    const cerrarDetalleBtn = document.getElementById('btnCerrarCnDetalle');
+    if (cerrarDetalleBtn) cerrarDetalleBtn.addEventListener('click', () => {
+        document.getElementById('cnDetailModal').classList.remove('show');
+    });
+
+    /* ===== INIT ===== */
     document.addEventListener('DOMContentLoaded', () => {
         cargarStats();
         cargarUsuarios();
         cargarCajaNegra();
+        cargarBackups();
     });
 
     const observer = new MutationObserver(m => {
@@ -469,6 +583,7 @@
                 cargarStats();
                 cargarUsuarios();
                 cargarCajaNegra();
+                cargarBackups();
             }
         });
     });

@@ -44,24 +44,30 @@
             <tr>
                 <th>Fecha/Hora</th>
                 <th>Usuario</th>
+                <th>Rol</th>
                 <th>Acción</th>
                 <th>Tipo</th>
                 <th>Descripción</th>
                 <th>IP</th>
+                <th>Método</th>
+                <th>Ruta</th>
             </tr>
         </thead>
         <tbody>
             @forelse($activities as $a)
             <tr>
                 <td style="white-space:nowrap;">{{ $a->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ $a->user?->nombre ?? 'Sistema' }}</td>
-                <td><span class="badge badge-{{ $a->accion }}">{{ ucfirst($a->accion) }}</span></td>
-                <td>{{ $a->tipo_entidad ?? '—' }}</td>
+                <td>{{ $a->user ? trim($a->user->nombre . ' ' . ($a->user->apellido ?? '')) : 'Sistema' }}</td>
+                <td>{{ $a->user?->rol ?? '—' }}</td>
+                <td><span class="badge badge-{{ $a->accion }}">{{ \App\Services\AuditService::accionHumana($a->accion) }}</span></td>
+                <td>{{ \App\Services\AuditService::entidadHumana($a->tipo_entidad) }}</td>
                 <td>{{ Str::limit($a->descripcion, 80) }}</td>
                 <td style="font-family:monospace;">{{ $a->direccion_ip ?? '—' }}</td>
+                <td style="font-family:monospace;">{{ $a->metodo ?? '—' }}</td>
+                <td style="font-family:monospace;">{{ $a->ruta ?? '—' }}</td>
             </tr>
             @empty
-            <tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">Sin registros</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">Sin registros</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -14,8 +14,45 @@
 .bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; }
 /* === ACTIVIDAD RECIENTE === */
 .recent-activity { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; }
-.recent-activity .activity-list { flex: 1; overflow-y: auto; max-height: 400px; }
-/* Scrollbar del listado de actividad */
-.recent-activity .activity-list::-webkit-scrollbar { width: 4px; }
-.recent-activity .activity-list::-webkit-scrollbar-track { background: transparent; }
-.recent-activity .activity-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+.recent-activity .activity-list { flex: 1; }
+
+/* === PAGINACIÓN DE ACTIVIDAD RECIENTE (estilo historial) === */
+.activity-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 0 2px;
+    flex-wrap: wrap;
+    border-top: 1px solid #eef2f7;
+    margin-top: 14px;
+}
+.activity-pagination .hist-pag-counter {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-right: 8px;
+}
+.activity-pagination .hist-pag-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.activity-pagination .hist-pag-btn:hover { background: #f1f5f9; color: var(--accent); }
+.activity-pagination .hist-pag-btn.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+.activity-pagination .hist-pag-dots { min-width: 28px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 700; }
+
+body.dark-mode .activity-pagination { border-top-color: #2c3b55; }
+body.dark-mode .activity-pagination .hist-pag-counter { color: #64748b; }
+body.dark-mode .activity-pagination .hist-pag-btn { background: #1e293b; border-color: #334155; color: #94a3b8; }
+body.dark-mode .activity-pagination .hist-pag-btn:hover { background: #334155; color: #f1f5f9; }
+body.dark-mode .activity-pagination .hist-pag-btn.active { background: var(--accent, #1e40af); border-color: var(--accent, #1e40af); color: #ffffff; }
+body.dark-mode .activity-pagination .hist-pag-dots { color: #64748b; }

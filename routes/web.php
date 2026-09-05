@@ -178,6 +178,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::get('/caja-negra', [CajaNegraController::class, 'index']);
     Route::get('/caja-negra/exportar', [CajaNegraController::class, 'exportar']);
+    Route::get('/caja-negra/exportar-csv', [CajaNegraController::class, 'exportarCsv']);
     Route::get('/caja-negra/{id}', [CajaNegraController::class, 'show']);
     Route::get('/caja-negra-data/estadisticas', [CajaNegraController::class, 'stats']);
     Route::get('/caja-negra-data/usuarios', [CajaNegraController::class, 'usuarios']);
@@ -186,8 +187,11 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
 Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::get('/backups', [BackupController::class, 'index']);
     Route::post('/backups/generar', [BackupController::class, 'generar'])->middleware('throttle:5,1');
+    Route::get('/backups/{archivo}/verificar', [BackupController::class, 'verificar']);
     Route::get('/backups/{archivo}/descargar', [BackupController::class, 'descargar']);
     Route::delete('/backups/{archivo}', [BackupController::class, 'eliminar']);
+    // Restauración: SOLO superadmin (validado también en el controlador).
+    Route::post('/backups/{archivo}/restaurar', [BackupController::class, 'restaurar'])->middleware('role:superadmin');
 });
 
 Route::middleware('auth')->group(function () {

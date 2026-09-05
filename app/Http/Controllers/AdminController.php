@@ -33,7 +33,7 @@ class AdminController extends Controller
             });
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(20);
+        $users = $query->orderBy('created_at', 'desc')->paginate(min($request->get('per_page', 8), 100));
 
         return response()->json($users);
     }
@@ -100,15 +100,15 @@ class AdminController extends Controller
             $query->where('created_at', '>=', now()->subDays($days));
         }
 
-        $activities = $query->with('user')->latest()->take(100)->get();
+        $activities = $query->with('user')->latest()->paginate(min($request->get('per_page', 5), 100));
 
         return response()->json($activities);
     }
 
-    public function actividadReciente()
+    public function actividadReciente(Request $request)
     {
         return response()->json(
-            Activity::latest()->take(20)->get()
+            Activity::with('user')->latest()->paginate(min($request->get('per_page', 8), 100))
         );
     }
 

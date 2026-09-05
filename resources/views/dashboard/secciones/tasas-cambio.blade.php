@@ -120,7 +120,7 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
             @csrf
             <div class="input-group">
                 <label>TASA USD/VES *</label>
-                <input type="number" name="tasa" id="tasaInput" step="0.0001" min="0.0001" max="999999.9999" inputmode="decimal" required placeholder="Ej: 150.0000" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
+                <input type="number" name="tasa" id="tasaInput" step="0.01" min="0.01" max="999999.99" inputmode="decimal" required placeholder="Ej: 150.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="input-group">
@@ -181,7 +181,7 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
 
             if (data.disponible && data.tasa) {
                 const t = data.tasa;
-                valorEl.textContent = '1 USD = ' + parseFloat(t.valor).toLocaleString('es-VE', {minimumFractionDigits:4}) + ' ' + t.moneda_destino;
+                valorEl.textContent = '1 USD = ' + parseFloat(t.valor).toLocaleString('es-VE', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' ' + t.moneda_destino;
                 metaEl.textContent = t.fecha + ' · ' + (t.fuente || 'BCV/Monitor') + ' · Tipo: ' + t.tipo;
             } else {
                 valorEl.textContent = 'Sin tasa registrada';
@@ -213,7 +213,7 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
                 const usuario = t.usuario ? (t.usuario.nombre + ' ' + t.usuario.apellido) : '—';
                 return '<tr>' +
                     '<td>' + escaparHTML(fecha) + '</td>' +
-                    '<td><strong>' + parseFloat(t.tasa).toLocaleString('es-VE', {minimumFractionDigits:4}) + '</strong></td>' +
+                    '<td><strong>' + parseFloat(t.tasa).toLocaleString('es-VE', {minimumFractionDigits:2,maximumFractionDigits:2}) + '</strong></td>' +
                     '<td>' + escaparHTML(t.moneda_origen) + '/' + escaparHTML(t.moneda_destino) + '</td>' +
                     '<td>' + escaparHTML(t.fuente || '—') + '</td>' +
                     '<td>' + tipoBadge + '</td>' +
@@ -346,5 +346,9 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
     });
     var sec = document.getElementById('tasas-cambio');
     if (sec) observer.observe(sec, {attributes:true, attributeFilter:['class']});
+
+    window.addEventListener('sigejub:tasa-actualizada', function() {
+        cargarTasaActual();
+    });
 })();
 </script>

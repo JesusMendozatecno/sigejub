@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Activity;
+use App\Services\AuditService;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -35,6 +36,13 @@ class AuthController extends Controller
             $user->ultimo_acceso_ip = $request->ip();
             $user->save();
 
+            AuditService::registrar(
+                'login',
+                'usuario',
+                $user->id,
+                "Inicio de sesión del usuario {$user->nombre} {$user->apellido}"
+            );
+
             if ($request->expectsJson()) {
                 $request->session()->flash('success', 'Bienvenido al sistema SIGEJUB');
                 return response()->json([
@@ -46,6 +54,16 @@ class AuthController extends Controller
 
             return redirect('dashboard')->with('success', 'Bienvenido al sistema SIGEJUB');
         }
+
+        AuditService::registrar(
+            'login_failed',
+            'usuario',
+            null,
+            "Inicio de sesión fallido para " . ($request->correo ?? 'correo desconocido'),
+            null,
+            ['correo_intentado' => $request->correo ?? null],
+            ['resultado' => 'fallido']
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -109,6 +127,13 @@ class AuthController extends Controller
     // 🚪 LOGOUT
     public function logout(Request $request)
     {
+        AuditService::registrar(
+            'logout',
+            'usuario',
+            auth()->id(),
+            "Cierre de sesión del usuario " . (auth()->user()->nombre ?? 'desconocido')
+        );
+
         Auth::logout();
 
         $request->session()->invalidate();

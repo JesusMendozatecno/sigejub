@@ -69,8 +69,7 @@
 </div>
 
 <div class="content-layout" style="align-items: start; grid-template-columns: 1.3fr 1fr;">
-    <div style="display: flex; flex-direction: column; gap: 20px;">
-        <section class="chart-container">
+        <section class="chart-container" style="margin:0;">
             <div class="chart-header">
                 <div>
                     <h3>Solicitudes por Mes</h3>
@@ -102,7 +101,7 @@
             </div>
         </div>
 
-        <div class="info-banner-dark" id="datoInstitucional">
+        <div class="info-banner-dark" id="datoInstitucional" style="grid-column: 1 / -1;">
             <div class="info-head">
                 <i class="fas fa-lightbulb"></i>
                 <h4>Dato Institucional</h4>
@@ -111,15 +110,17 @@
         </div>
     </div>
 
-    <section class="recent-activity" style="height: 100%;">
-        <h3 class="section-title"><i class="fas fa-clock-rotate-left"></i> Actividad Reciente</h3>
+    <section class="recent-activity" style="margin-top: 25px;">
+        <div class="chart-header" style="margin-bottom: 4px;">
+            <h3 class="section-title" style="margin:0;"><i class="fas fa-clock-rotate-left"></i> Actividad Reciente</h3>
+        </div>
         <div class="activity-list" id="actividadRecienteLista">
             <div class="activity-item" style="padding: 16px; color: #94a3b8; text-align: center; font-size: 0.85rem;">
                 Cargando...
             </div>
         </div>
+        <div class="activity-pagination" id="actividadPag"></div>
     </section>
-</div>
 
 <script>
 (function() {
@@ -145,15 +146,52 @@
         return `Hace ${days} día${days > 1 ? 's' : ''}`;
     }
 
-    async function cargarActividades() {
+    let paginaActividades = 1;
+
+    function renderPaginacionActividades(data) {
+        const cont = document.getElementById('actividadPag');
+        if (!cont) return;
+        const perPage = data.per_page || 8;
+        const desde = ((data.current_page - 1) * perPage) + 1;
+        const hasta = Math.min(data.current_page * perPage, data.total || 0);
+        if (!data.last_page || data.last_page <= 1) {
+            cont.innerHTML = '<span class="hist-pag-counter">' + desde + '–' + hasta + ' de ' + data.total + ' registros</span>';
+            return;
+        }
+        const cur = data.current_page;
+        const last = data.last_page;
+        let html = '<span class="hist-pag-counter">' + desde + '–' + hasta + ' de ' + data.total + '</span>';
+        if (cur > 1) html += '<button data-p="' + (cur - 1) + '" class="hist-pag-btn" title="Anterior">‹</button>';
+        for (let i = 1; i <= last; i++) {
+            if (i === 1 || i === last || (i >= cur - 2 && i <= cur + 2)) {
+                html += '<button data-p="' + i + '" class="hist-pag-btn' + (i === cur ? ' active' : '') + '">' + i + '</button>';
+            } else if (i === cur - 3 || i === cur + 3) {
+                html += '<span class="hist-pag-dots">…</span>';
+            }
+        }
+        if (cur < last) html += '<button data-p="' + (cur + 1) + '" class="hist-pag-btn" title="Siguiente">›</button>';
+        cont.innerHTML = html;
+        cont.querySelectorAll('.hist-pag-btn').forEach(b => {
+            b.addEventListener('click', function() {
+                const p = parseInt(this.dataset.p, 10);
+                if (p >= 1) cargarActividades(p);
+            });
+        });
+    }
+
+    async function cargarActividades(page) {
+        page = page || paginaActividades || 1;
         const container = document.getElementById('actividadRecienteLista');
         if (!container) return;
         try {
-            const result = await cachedFetch('/actividades', { ttl: 60000 });
-            const actividades = result.data;
+            const params = 'page=' + encodeURIComponent(page);
+            const resp = await cachedFetch('/actividades?' + params, { ttl: 60000 });
+            const result = resp.data || {};
+            const actividades = result.data || [];
             container.innerHTML = '';
             if (!actividades.length) {
                 container.innerHTML = '<div class="activity-item"><div class="activity-text" style="text-align:center;color:#94a3b8;padding:20px;"><p>Sin actividades recientes</p></div></div>';
+                document.getElementById('actividadPag') && (document.getElementById('actividadPag').innerHTML = '');
                 return;
             }
             actividades.forEach(a => {
@@ -170,6 +208,8 @@
                 `;
                 container.appendChild(div);
             });
+            paginaActividades = result.current_page;
+            renderPaginacionActividades(result);
         } catch (err) {
             console.error('Error al cargar actividades:', err);
         }
@@ -351,6 +391,8 @@
         cargarActividades();
         cargarTasaDolar();
     });
+
+    window.addEventListener('sigejub:tasa-actualizada', () => cargarTasaDolar());
 
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(m => {

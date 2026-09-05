@@ -250,6 +250,7 @@
                 <div id="activityList">
                     <p class="text-muted text-center" style="padding:20px;">Cargando actividad...</p>
                 </div>
+                <div class="activity-pagination" id="activityPagination"></div>
             </div>
 
             <!-- TAB: ADMINISTRACIÓN (solo admin/superadmin) -->
@@ -273,8 +274,8 @@
                 <!-- Sub-tab: Usuarios -->
                 <div class="admin-subtab" id="admin-usuarios">
                     <div class="search-bar">
-                        <input type="text" id="adminSearch" placeholder="Buscar usuario..." oninput="cargarAdminUsuarios()">
-                        <select id="adminRoleFilter" class="form-input" style="width:auto;" onchange="cargarAdminUsuarios()">
+                        <input type="text" id="adminSearch" placeholder="Buscar usuario..." oninput="cargarAdminUsuarios(1)">
+                        <select id="adminRoleFilter" class="form-input" style="width:auto;" onchange="cargarAdminUsuarios(1)">
                             <option value="">Todos los roles</option>
                             <option value="admin">Admin</option>
                             <option value="usuario">Usuario</option>
@@ -287,6 +288,7 @@
                             <tbody id="adminUsersBody"></tbody>
                         </table>
                     </div>
+                    <div class="activity-pagination" id="adminUsersPagination"></div>
                 </div>
 
                 <!-- Sub-tab: Actividad global -->
@@ -294,6 +296,7 @@
                     <div id="adminActivityList">
                         <p class="text-muted text-center" style="padding:20px;">Cargando actividad global...</p>
                     </div>
+                    <div class="activity-pagination" id="adminActivityPagination"></div>
                 </div>
 
                 <!-- Sub-tab: Config global -->
@@ -360,6 +363,20 @@
                 <button type="submit" class="btn btn-primary">Enviar</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal Confirmar Eliminación de Usuario -->
+<div class="modal-overlay" id="modalEliminarUsuario">
+    <div class="modal-box" style="max-width:400px;text-align:center;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--error-light);color:var(--error);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 16px;"><i class="fas fa-triangle-exclamation"></i></div>
+        <h3 style="color:var(--text-primary);">Eliminar usuario</h3>
+        <p style="font-size:0.9rem;color:var(--text-secondary);margin:0 0 4px;">¿Desea eliminar a <strong id="deleteUserName" style="color:var(--text-primary);">—</strong>?</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 18px;">Esta acción es permanente y no se puede deshacer.</p>
+        <div class="modal-actions" style="justify-content:center;">
+            <button class="btn btn-secondary" onclick="cerrarModalEliminarUsuario()"><i class="fas fa-xmark"></i> No</button>
+            <button class="btn btn-danger" onclick="confirmarEliminarUsuario()"><i class="fas fa-trash-can"></i> Sí, eliminar</button>
+        </div>
     </div>
 </div>
 

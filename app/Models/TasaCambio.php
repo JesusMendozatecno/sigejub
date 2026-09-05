@@ -24,7 +24,7 @@ class TasaCambio extends Model
     ];
 
     protected $casts = [
-        'tasa' => 'decimal:4',
+        'tasa' => 'decimal:2',
         'activa' => 'boolean',
         'fecha_consulta' => 'datetime',
     ];

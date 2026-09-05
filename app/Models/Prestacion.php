@@ -32,7 +32,7 @@ class Prestacion extends Model
         'sueldo_integral' => 'decimal:2',
         'total_primas' => 'decimal:2',
         'porcentaje_jubilacion' => 'decimal:2',
-        'tasa_utilizada' => 'decimal:4',
+        'tasa_utilizada' => 'decimal:2',
         'fecha_tasa_utilizada' => 'datetime',
     ];
 

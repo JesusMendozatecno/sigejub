@@ -12,6 +12,11 @@
     let modoEdicionActivo = false;         // true = modo edición, false = solo lectura
     let paginaActualTrabajadores = 1;
 
+    // Calendario de próximas jubilaciones
+    let calendarioMes = null;
+    let calendarioAnio = null;
+    let proximasJubilaciones = [];
+
     // ============================================
     // REFERENCIAS AL DOM — Modal principal y formulario
     // ============================================
@@ -563,6 +568,7 @@
         try {
             const result = await cachedFetch('/trabajadores-stats/dashboard', { ttl: 120000 });
             const data = result.data;
+            if (data.proximas) proximasJubilaciones = data.proximas;
 
             // ============================================
             // LISTA DE PRÓXIMAS JUBILACIONES — Top 5
@@ -601,6 +607,145 @@
     }
 
     // ============================================
+    // CALENDARIO DE PRÓXIMAS JUBILACIONES
+    // ============================================
+    const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const DIAS_ES = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+    const AVATAR_COLORS = [
+        ['#1e3a8a', '#dbeafe'],
+        ['#0ca678', '#d3f9e8'],
+        ['#b45309', '#fef3c7'],
+        ['#6d28d9', '#ede9fe'],
+        ['#be123c', '#ffe4e6'],
+        ['#0369a1', '#e0f2fe']
+    ];
+
+    function iniciales(nombre, apellido) {
+        const n = (nombre || '').split(' ').filter(Boolean).map(x => x[0]).slice(0, 1).join('');
+        const a = (apellido || '').split(' ').filter(Boolean).map(x => x[0]).slice(0, 1).join('');
+        return (n + a).slice(0, 2).toUpperCase();
+    }
+
+    function colorAvatar(index) {
+        return AVATAR_COLORS[index % AVATAR_COLORS.length];
+    }
+
+    function modalCalendario() { return document.getElementById('modalCalendarioJubilaciones'); }
+
+    function abrirCalendarioJubilaciones() {
+        const modal = modalCalendario();
+        if (!modal) return;
+        const ahora = new Date();
+        let base = null;
+        if (proximasJubilaciones.length) {
+            const fechas = proximasJubilaciones
+                .filter(t => t.fecha_retiro_estimada)
+                .map(t => new Date(t.fecha_retiro_estimada + 'T00:00:00'))
+                .sort((a, b) => a - b);
+            if (fechas.length) base = fechas[0];
+        }
+        calendarioMes = (base || ahora).getMonth() + 1;
+        calendarioAnio = (base || ahora).getFullYear();
+        renderCalendarioJubilaciones();
+        modal.style.display = 'flex';
+    }
+
+    function cerrarCalendarioJubilaciones() {
+        const modal = modalCalendario();
+        if (modal) modal.style.display = 'none';
+    }
+
+    function cambiarMesCalendario(delta) {
+        calendarioMes += delta;
+        if (calendarioMes < 1) { calendarioMes = 12; calendarioAnio--; }
+        if (calendarioMes > 12) { calendarioMes = 1; calendarioAnio++; }
+        renderCalendarioJubilaciones();
+    }
+
+    function renderCalendarioJubilaciones() {
+        const grid = document.getElementById('calGrid');
+        const title = document.getElementById('calTitle');
+        const events = document.getElementById('calEvents');
+        const sideTitle = document.getElementById('calSideTitle');
+        const countEl = document.getElementById('calCount');
+        if (!grid || !title || !events || !calendarioMes || !calendarioAnio) return;
+
+        title.textContent = MESES_ES[calendarioMes - 1] + ' ' + calendarioAnio;
+
+        let html = DIAS_ES.map(d => '<div class="workers-cal-day-head">' + d + '</div>').join('');
+
+        const offset = new Date(calendarioAnio, calendarioMes - 1, 1).getDay();
+        const diasEnMes = new Date(calendarioAnio, calendarioMes, 0).getDate();
+        const diasAnterior = new Date(calendarioAnio, calendarioMes - 1, 0).getDate();
+        const hoy = new Date();
+
+        // Jubilaciones del mes visible (ordenadas por fecha)
+        const porDia = {};
+        proximasJubilaciones
+            .filter(t => t.fecha_retiro_estimada)
+            .sort((a, b) => a.fecha_retiro_estimada.localeCompare(b.fecha_retiro_estimada))
+            .forEach(t => {
+                const f = new Date(t.fecha_retiro_estimada + 'T00:00:00');
+                if (f.getFullYear() !== calendarioAnio || f.getMonth() + 1 !== calendarioMes) return;
+                const d = f.getDate();
+                if (!porDia[d]) porDia[d] = [];
+                porDia[d].push(t);
+            });
+
+        // Celdas de 6 semanas (42)
+        let idxColor = 0;
+        for (let i = 0; i < 42; i++) {
+            const numDia = i - offset + 1;
+            let numero = numDia;
+            let otrosMes = '';
+            if (numDia < 1) { numero = diasAnterior + numDia; otrosMes = 'other-month'; }
+            else if (numDia > diasEnMes) { numero = numDia - diasEnMes; otrosMes = 'other-month'; }
+
+            let clase = 'cal-day' + (otrosMes ? ' ' + otrosMes : '');
+            if (!otrosMes) {
+                const dow = new Date(calendarioAnio, calendarioMes - 1, numDia).getDay();
+                if (dow === 0 || dow === 6) clase += ' weekend';
+                if (numDia === hoy.getDate() && calendarioMes === hoy.getMonth() + 1 && calendarioAnio === hoy.getFullYear()) clase += ' today';
+                if (porDia[numDia] && porDia[numDia].length) clase += ' has-events';
+            }
+            html += '<div class="' + clase + '"><span class="cal-day-num">' + numero + '</span>';
+            if (!otrosMes && porDia[numDia]) {
+                porDia[numDia].forEach((t, j) => {
+                    if (j >= 2) return;
+                    const nombre = String(t.nombres || '').split(' ')[0] || 'Trab.';
+                    const ini = iniciales(t.nombres, t.apellidos);
+                    html += '<div class="cal-event-chip" title="' + escaparHTML(t.nombres + ' ' + t.apellidos) + '">' +
+                        '<span class="cal-chip-ini">' + ini + '</span><span class="cal-chip-name">' + escaparHTML(nombre) + '</span></div>';
+                });
+                if (porDia[numDia].length > 2) {
+                    html += '<div class="cal-event-chip more" title="' + (porDia[numDia].length - 2) + ' más">+' + (porDia[numDia].length - 2) + '</div>';
+                }
+            }
+            html += '</div>';
+        }
+        grid.innerHTML = html;
+
+        // Panel lateral: lista de eventos del mes
+        const fechasMes = Object.keys(porDia).map(Number).sort((a, b) => a - b);
+        if (sideTitle) sideTitle.textContent = 'Eventos de ' + MESES_ES[calendarioMes - 1];
+        if (countEl) countEl.textContent = fechasMes.reduce((acc, d) => acc + porDia[d].length, 0);
+
+        if (!fechasMes.length) {
+            events.innerHTML = '<div class="cal-event-empty"><i class="fas fa-calendar-check"></i><br>Sin jubilaciones<br>previstas este mes.</div>';
+        } else {
+            events.innerHTML = fechasMes.map(d => porDia[d].map(t => {
+                const c = colorAvatar(idxColor++);
+                const fFecha = new Date(t.fecha_retiro_estimada + 'T00:00:00');
+                const fechaTxt = fFecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                return '<div class="cal-event-row">' +
+                    '<span class="cal-avatar" style="background:' + c[1] + ';color:' + c[0] + ';">' + iniciales(t.nombres, t.apellidos) + '</span>' +
+                    '<div class="cal-event-meta"><div class="cal-event-name">' + escaparHTML(t.nombres + ' ' + t.apellidos) + '</div>' +
+                    '<div class="cal-event-date">' + fechaTxt + '</div></div></div>';
+            }).join('')).join('');
+        }
+    }
+
+    // ============================================
     // MUTATION OBSERVER — Detecta cambios de pestaña para cargar datos bajo demanda
     // ============================================
     let estabaActivo = false;  // Estado anterior de la pestaña
@@ -628,4 +773,34 @@
         // Observa cambios en el atributo class de la sección
         observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
     }
+
+    // ============================================
+    // CALENDARIO DE JUBILACIONES — Eventos de apertura y navegación
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnCal = document.getElementById('btnVerCalendario');
+        const btnCerrarCal = document.getElementById('btnCerrarCalendario');
+        const modalCal = modalCalendario();
+        if (btnCal) btnCal.addEventListener('click', abrirCalendarioJubilaciones);
+        if (btnCerrarCal) btnCerrarCal.addEventListener('click', cerrarCalendarioJubilaciones);
+        const btnPrev = document.getElementById('btnCalPrev');
+        const btnNext = document.getElementById('btnCalNext');
+        const btnToday = document.getElementById('btnCalToday');
+        if (btnPrev) btnPrev.addEventListener('click', () => cambiarMesCalendario(-1));
+        if (btnNext) btnNext.addEventListener('click', () => cambiarMesCalendario(1));
+        if (btnToday) btnToday.addEventListener('click', () => {
+            const ahora = new Date();
+            calendarioMes = ahora.getMonth() + 1;
+            calendarioAnio = ahora.getFullYear();
+            renderCalendarioJubilaciones();
+        });
+        if (modalCal) {
+            modalCal.addEventListener('click', (e) => {
+                if (e.target === modalCal) cerrarCalendarioJubilaciones();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modalCal.style.display === 'flex') cerrarCalendarioJubilaciones();
+            });
+        }
+    });
 })();

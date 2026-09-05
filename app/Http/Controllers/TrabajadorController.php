@@ -287,7 +287,15 @@ class TrabajadorController extends Controller
             })->where(function ($q) {
                 $q->where('total_anos_servicio', '<', 25)
                   ->where('edad', '<', 60);
-            })->take(10)->get(['id', 'nombres', 'apellidos', 'edad', 'total_anos_servicio']);
+            })->take(10)->get(['id', 'nombres', 'apellidos', 'edad', 'total_anos_servicio', 'fecha_nacimiento', 'fecha_ingreso']);
+
+            $proximas = $proximas->map(function ($t) {
+                $porEdad = $t->fecha_nacimiento ? \Carbon\Carbon::parse($t->fecha_nacimiento)->addYears(60) : null;
+                $porServicio = $t->fecha_ingreso ? \Carbon\Carbon::parse($t->fecha_ingreso)->addYears(25) : null;
+                $fecha = ($porEdad && $porServicio) ? $porEdad->min($porServicio) : ($porEdad ?? $porServicio);
+                $t->fecha_retiro_estimada = $fecha ? $fecha->format('Y-m-d') : null;
+                return $t;
+            });
 
             $totalExpedientes = \App\Models\Expediente::count();
             $porcentaje = $totalTrabajadores > 0 ? round(($totalExpedientes / $totalTrabajadores) * 100, 1) : 0;

@@ -75,7 +75,7 @@ class TasaCambioService
             }
 
             return [
-                'tasa' => round($tasa, 4),
+                'tasa' => round($tasa, 2),
                 'moneda_origen' => $config['moneda_origen'],
                 'moneda_destino' => $config['moneda_destino'],
                 'fuente' => $fuente,
@@ -174,10 +174,13 @@ class TasaCambioService
 
         if (isset($body['dollar'])) return 'BCV/Monitor';
 
-        if (is_array($body)) {
-            foreach ($body as $item) {
-                if (is_array($item) && isset($item['fuente'])) {
+        foreach ($body as $item) {
+            if (is_array($item)) {
+                if (isset($item['fuente'])) {
                     return 'BCV (' . $item['fuente'] . ')';
+                }
+                if (isset($item['titulo'])) {
+                    return 'BCV (' . $item['titulo'] . ')';
                 }
             }
         }
@@ -187,6 +190,7 @@ class TasaCambioService
 
     /**
      * Sincronizar tasa: consultar API y guardar en DB.
+     * Solo registra si la tasa oficial cambió (redondeada a 2 decimales).
      * Retorna resultado con éxito/fallo y datos de la tasa.
      */
     public static function sincronizarTasa(?int $usuarioId = null): array
@@ -195,13 +199,25 @@ class TasaCambioService
 
         if ($resultadoAutomatica) {
             $ultima = TasaCambio::obtenerTasaActual();
+            $nuevaTasa = (float) $resultadoAutomatica['tasa'];
+
+            if ($ultima && (float) $ultima->tasa === $nuevaTasa) {
+                return [
+                    'success' => true,
+                    'cambiada' => false,
+                    'tipo' => 'automatica',
+                    'tasa' => $ultima,
+                    'mensaje' => 'La tasa oficial no ha cambiado. Se mantiene: ' .
+                        number_format($nuevaTasa, 2, ',', '.') . ' USD/VES',
+                ];
+            }
 
             if ($ultima) {
                 $ultima->update(['activa' => false]);
             }
 
             $tasa = TasaCambio::create([
-                'tasa' => $resultadoAutomatica['tasa'],
+                'tasa' => $nuevaTasa,
                 'moneda_origen' => $resultadoAutomatica['moneda_origen'],
                 'moneda_destino' => $resultadoAutomatica['moneda_destino'],
                 'fuente' => $resultadoAutomatica['fuente'],
@@ -215,9 +231,10 @@ class TasaCambioService
 
             return [
                 'success' => true,
+                'cambiada' => true,
                 'tipo' => 'automatica',
                 'tasa' => $tasa,
-                'mensaje' => 'Tasa automática actualizada: ' . number_format($tasa->tasa, 4, ',', '.') . ' ' .
+                'mensaje' => 'Tasa automática actualizada: ' . number_format($tasa->tasa, 2, ',', '.') . ' ' .
                     $tasa->moneda_destino . '/' . $tasa->moneda_origen,
             ];
         }
@@ -225,10 +242,11 @@ class TasaCambioService
         $ultima = TasaCambio::obtenerTasaActual();
         return [
             'success' => false,
+            'cambiada' => false,
             'tipo' => 'automatica',
             'tasa' => $ultima,
             'mensaje' => 'No se pudo obtener la tasa automática. ' .
-                ($ultima ? 'Se conserva la última tasa registrada: ' . number_format($ultima->tasa, 4, ',', '.') : 'No hay tasas registradas.'),
+                ($ultima ? 'Se conserva la última tasa registrada: ' . number_format($ultima->tasa, 2, ',', '.') : 'No hay tasas registradas.'),
         ];
     }
 

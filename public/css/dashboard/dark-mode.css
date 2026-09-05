@@ -66,7 +66,12 @@ body.dark-mode .sidebar-menu .menu-item.active {
 /* Botones de acción con colores específicos por tipo */
 body.dark-mode .btn-danger {
     background: #dc2626;
+    color: #ffffff;
     box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+body.dark-mode .btn-danger:hover {
+    background: #b91c1c;
+    color: #ffffff;
 }
 
 body.dark-mode .btn-approve { background: #064e3b; color: #6ee7b7; }
@@ -81,6 +86,19 @@ body.dark-mode .btn-editar { color: #fbbf24; background-color: #3d2e00; }
 body.dark-mode .btn-editar:hover { background-color: #d97706; color: white; }
 body.dark-mode .btn-eliminar { color: #fca5a5; background-color: #4c1d1d; }
 body.dark-mode .btn-eliminar:hover { background-color: #dc2626; color: white; }
+
+/* Copias de Seguridad — botones de acción (Historial) en modo oscuro */
+body.dark-mode .btn-bk-download { color: #93c5fd; background-color: #1e3a5f; }
+body.dark-mode .btn-bk-download:hover { background-color: #2563eb; color: white; }
+body.dark-mode .btn-bk-verify { color: #cbd5e1; background-color: #263449; border-color: #33465f; }
+body.dark-mode .btn-bk-verify:hover { background-color: #1a365d; border-color: #1a365d; color: #ffffff; }
+body.dark-mode .btn-bk-restore { color: #fbbf24; background-color: #3d2e00; }
+body.dark-mode .btn-bk-restore:hover { background-color: #d97706; color: white; }
+body.dark-mode .btn-bk-delete { color: #fca5a5; background-color: #4c1d1d; }
+body.dark-mode .btn-bk-delete:hover { background-color: #dc2626; color: white; }
+
+body.dark-mode .bk-badge-ok { color: #6ee7b7; background: #064e3b; border-color: #065f46; }
+body.dark-mode .bk-badge-bad { color: #fca5a5; background: #4c1d1d; border-color: #7f1d1d; }
 
 /* Badges de estado */
 body.dark-mode .badge-status.pending { background: #3d2e00; color: #fbbf24; }
@@ -166,6 +184,40 @@ body.dark-mode .consolidated-card { background: #1e3a8a; color: white; }
 body.dark-mode .eg-bar, body.dark-mode .progress-container, body.dark-mode .progress-track-mini { background: #334155; }
 body.dark-mode .eg-fill, body.dark-mode .progress-fill-mini { background: linear-gradient(90deg, #3b82f6, #2563eb); }
 body.dark-mode .progress-bar { background: #4ade80; }
+
+/* Auditoría al día y calendario de jubilaciones */
+body.dark-mode .audit-card { background: #1a2436; border-color: #33465f; }
+body.dark-mode .audit-header { color: #4ade80; }
+body.dark-mode .progress-val { color: #e2e8f0; }
+body.dark-mode .workers-calendar-modal { background: #1a2436; border-color: #33465f; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6); }
+body.dark-mode .workers-calendar-header { border-bottom-color: #2c3b55; }
+body.dark-mode .workers-calendar-header h3 { color: #f1f5f9; }
+body.dark-mode .workers-calendar-sub { color: #9aa8bd; }
+body.dark-mode .workers-calendar-close { background: #232f45; border-color: #33465f; color: #cbd5e1; }
+body.dark-mode .workers-calendar-close:hover { background: #4c1d1d; border-color: #7f1d1d; color: #fca5a5; }
+body.dark-mode .workers-calendar-title { color: #f1f5f9; }
+body.dark-mode .workers-calendar-nav, body.dark-mode .workers-calendar-today { background: #232f45; border-color: #33465f; color: #e2e8f0; }
+body.dark-mode .workers-calendar-nav:hover, body.dark-mode .workers-calendar-today:hover { background: var(--accent, #3b82f6); border-color: var(--accent, #3b82f6); color: #ffffff; }
+body.dark-mode .workers-cal-day-head { color: #9aa8bd; }
+body.dark-mode .cal-day { background: #232f45; border-color: #2c3b55; }
+body.dark-mode .cal-day:not(.other-month):hover { border-color: #475a78; background: #2c3b55; box-shadow: none; }
+body.dark-mode .cal-day .cal-day-num { color: #e2e8f0; }
+body.dark-mode .cal-day.weekend { background: #1e2a3f; }
+body.dark-mode .cal-day.weekend .cal-day-num { color: #a5b4fc; }
+body.dark-mode .cal-day.has-events { background: #233252; border-color: #2f4a75; }
+body.dark-mode .cal-day.today { border-color: #60a5fa; box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2); }
+body.dark-mode .cal-day.today .cal-day-num { background: #60a5fa; box-shadow: 0 2px 8px rgba(96, 165, 250, 0.4); }
+body.dark-mode .workers-calendar-side { border-left-color: #2c3b55; }
+body.dark-mode .workers-calendar-side-header { color: #f1f5f9; }
+body.dark-mode .cal-event-row { background: #232f45; border-color: #33465f; }
+body.dark-mode .cal-event-row:hover { border-color: #475a78; box-shadow: none; }
+body.dark-mode .cal-event-meta .cal-event-name { color: #e2e8f0; }
+body.dark-mode .cal-event-meta .cal-event-date { color: #4ade80; }
+body.dark-mode .workers-calendar-footer { border-top-color: #2c3b55; color: #9aa8bd; }
+body.dark-mode .cal-event-empty { color: #9aa8bd; }
+@media (max-width: 760px) {
+    body.dark-mode .workers-calendar-side { border-top-color: #2c3b55; }
+}
 
 /* Donut chart border */
 body.dark-mode .donut-visual { border-color: #3b82f6; border-bottom-color: #fca5a5; border-left-color: #4ade80; }
@@ -291,7 +343,6 @@ body.dark-mode .historial-card,
 body.dark-mode .info-detalle-card,
 body.dark-mode .notas-admin-card,
 body.dark-mode .docs-card,
-body.dark-mode .backup-item .btn-bk-download,
 body.dark-mode .cn-btn-pag,
 body.dark-mode .cn-toolbar,
 body.dark-mode .cn-stat-card,
@@ -316,6 +367,13 @@ body.dark-mode .doc-empty {
     box-shadow: var(--shadow-card) !important;
     color: var(--text-primary);
 }
+
+/* Expedientes: texto de las tarjetas (nombre/cédula) visible en oscuro.
+   .ec-info strong/span usan colores oscuros fijos (#0f172a/#64748b). */
+body.dark-mode .expediente-card .ec-foto { background: #1a2332; }
+body.dark-mode .expediente-card .ec-avatar { background: #334155; color: #64748b; }
+body.dark-mode .expediente-card .ec-info strong { color: var(--text-primary) !important; }
+body.dark-mode .expediente-card .ec-info > span:not(.ec-badge) { color: var(--text-muted) !important; }
 
 /* Tarjetas con fondo blanco y layout flex de ancho completo */
 body.dark-mode .metric-box-white,
@@ -509,6 +567,18 @@ body.dark-mode .admin-table tbody tr:hover td,
 body.dark-mode .solicitudes-table tbody tr:hover td,
 body.dark-mode .report-table tbody tr:hover td {
     background: var(--bg-card-hover) !important;
+}
+
+/* ── Códigos en chips (<code>) dentro de tablas — fondo claro fijo → oscuro ── */
+/* Los blades usan `background:#f1f5f9` en línea; en oscuro el texto (claro)
+   quedaba ilegible sobre ese fondo. Se mapea a superficie oscura. */
+body.dark-mode .custom-table code,
+body.dark-mode .table-wrapper-nomina code,
+body.dark-mode .cn-table code,
+body.dark-mode .admin-table code {
+    background: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
 }
 
 /* ── Campos desplegables (selects) — fondo blanco → oscuro ── */

@@ -171,21 +171,20 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
 
         <div class="prestacion-cuerpo">
             <div class="prestacion-col-izq">
-                <div class="subtitulo-sec"><i class="fas fa-coins"></i> Sueldo Base</div>
-                <div class="moneda-toggle" id="monedaSueldoToggle">
-                    <button type="button" class="active" data-moneda="Bs">Bs.</button>
-                    <button type="button" data-moneda="USD">$</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Moneda de cálculo</span>
+                    <div class="moneda-toggle" id="monedaToggle" style="margin:0;">
+                        <button type="button" class="active" data-moneda="Bs">Bs.</button>
+                        <button type="button" data-moneda="USD">$</button>
+                    </div>
                 </div>
+                <div class="subtitulo-sec"><i class="fas fa-coins"></i> Sueldo Base</div>
                 <div class="fila-sueldo">
                     <label id="lblSueldoBase">SUELDO BASE MENSUAL (Bs.)</label>
                     <input type="number" step="0.01" min="0" id="inputSueldoBase" value="0.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
                 </div>
 
                 <div class="subtitulo-sec" style="margin-top:12px;"><i class="fas fa-calculator"></i> Primas Aplicables</div>
-                <div class="moneda-toggle" id="monedaPrimasToggle">
-                    <button type="button" class="active" data-moneda="Bs">Bs.</button>
-                    <button type="button" data-moneda="USD">$</button>
-                </div>
                 <div id="primasContainer" style="max-height:280px;overflow-y:auto;"><p style="color:#94a3b8;font-size:0.8rem;">Cargando primas...</p></div>
 
                 <div class="pct-area">
@@ -251,8 +250,7 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     let primasDisponibles = [];
     let porcentajeActual = 100;
     let ultimoCalculo = null;
-    let sueldoBaseMoneda = 'Bs';
-    let primaMoneda = 'Bs';
+    let monedaActual = 'Bs';
     let tasaActual = 0;
 
     // Escala de profesionalización por nivel académico (se aplica siempre el mayor, sin sumar).
@@ -336,11 +334,10 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         });
     }
     function syncSueldoBaseUI() {
-        document.getElementById('lblSueldoBase').textContent = 'SUELDO BASE MENSUAL (' + simboloMoneda(sueldoBaseMoneda) + ')';
-        document.getElementById('inputSueldoBase').placeholder = sueldoBaseMoneda === 'USD' ? '0.00 $' : '0.00 Bs.';
+        document.getElementById('lblSueldoBase').textContent = 'SUELDO BASE MENSUAL (' + simboloMoneda(monedaActual) + ')';
+        document.getElementById('inputSueldoBase').placeholder = monedaActual === 'USD' ? '0.00 $' : '0.00 Bs.';
     }
-    bindMonedaToggle('monedaSueldoToggle', (m) => { sueldoBaseMoneda = m; syncSueldoBaseUI(); renderPrimas(primasDisponibles, datosTrabajador); });
-    bindMonedaToggle('monedaPrimasToggle', (m) => { primaMoneda = m; renderPrimas(primasDisponibles, datosTrabajador); });
+    bindMonedaToggle('monedaToggle', (m) => { monedaActual = m; syncSueldoBaseUI(); renderPrimas(primasDisponibles, datosTrabajador); });
 
     document.querySelectorAll('.pct-toggle button').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -484,10 +481,10 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             if (data.prestacion && data.prestacion.tasa_utilizada) {
                 tasaActual = parseFloat(data.prestacion.tasa_utilizada) || 0;
                 const tFecha = data.prestacion.fecha_tasa_utilizada ? new Date(data.prestacion.fecha_tasa_utilizada).toLocaleDateString('es-VE') : '—';
-                tasaDetalle.innerHTML = '<strong style="color:#0f172a;">' + parseFloat(data.prestacion.tasa_utilizada).toLocaleString('es-VE', {minimumFractionDigits:4}) + ' ' + (data.prestacion.moneda_tasa || 'VES/USD') + '</strong><br><span style="font-size:0.68rem;">Congelada: ' + tFecha + ' · ' + (data.prestacion.fuente_tasa || '—') + '</span>';
+                tasaDetalle.innerHTML = '<strong style="color:#0f172a;">' + parseFloat(data.prestacion.tasa_utilizada).toLocaleString('es-VE', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' ' + (data.prestacion.moneda_tasa || 'VES/USD') + '</strong><br><span style="font-size:0.68rem;">Congelada: ' + tFecha + ' · ' + (data.prestacion.fuente_tasa || '—') + '</span>';
             } else if (data.tasa_actual) {
                 tasaActual = parseFloat(data.tasa_actual.tasa) || 0;
-                tasaDetalle.innerHTML = '<strong style="color:#0f172a;">' + parseFloat(data.tasa_actual.tasa).toLocaleString('es-VE', {minimumFractionDigits:4}) + ' VES/USD</strong><br><span style="font-size:0.68rem;">' + data.tasa_actual.fecha + ' · ' + (data.tasa_actual.fuente || '—') + '</span>';
+                tasaDetalle.innerHTML = '<strong style="color:#0f172a;">' + parseFloat(data.tasa_actual.tasa).toLocaleString('es-VE', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' VES/USD</strong><br><span style="font-size:0.68rem;">' + data.tasa_actual.fecha + ' · ' + (data.tasa_actual.fuente || '—') + '</span>';
             } else {
                 tasaActual = 0;
                 tasaDetalle.innerHTML = '<span style="color:#94a3b8;">Sin tasa registrada</span>';
@@ -517,7 +514,7 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                 const autoVal = config.calc(p.valor, t);
                 const isNa = autoVal === 0 && !t[config.workerField];
                 const autoBs = esProf ? autoVal : (autoVal * (tasaActual > 0 ? tasaActual : 0));
-                const autoDisplay = primaMoneda === 'USD'
+                const autoDisplay = monedaActual === 'USD'
                     ? '$' + (esProf ? (tasaActual > 0 ? autoVal / tasaActual : 0) : autoVal).toFixed(2)
                     : 'Bs. ' + autoBs.toFixed(2);
                 inputHtml = '<div class="prima-auto' + (isNa ? ' na' : '') + '">' + autoDisplay + '</div>';
@@ -527,7 +524,7 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             let valorUnitarioDisplay;
             if (esProf) {
                 valorUnitarioDisplay = parseFloat(p.valor).toFixed(2) + '%';
-            } else if (primaMoneda === 'USD') {
+            } else if (monedaActual === 'USD') {
                 valorUnitarioDisplay = '$' + parseFloat(p.valor).toFixed(2);
             } else {
                 valorUnitarioDisplay = 'Bs. ' + (parseFloat(p.valor) * (tasaActual > 0 ? tasaActual : 0)).toFixed(2);
@@ -547,8 +544,8 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         if (!datosTrabajador || !primasDisponibles.length) return;
 
         const sueldoBaseInput = parseFloat(document.getElementById('inputSueldoBase').value) || 0;
-        const sueldoBase = aBs(sueldoBaseInput, sueldoBaseMoneda); // siempre en Bs
-        const monedaResumen = sueldoBaseMoneda; // moneda de presentación del resultado
+        const sueldoBase = aBs(sueldoBaseInput, monedaActual); // siempre en Bs
+        const monedaResumen = monedaActual; // moneda de presentación del resultado
         let totalPrimas = 0;
         const detalles = [];
         const resumenHtml = [];

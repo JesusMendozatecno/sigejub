@@ -211,13 +211,12 @@ class UserController extends Controller
         return response()->json(['mensaje' => 'Sesiones cerradas en otros dispositivos.']);
     }
 
-    public function getActivity()
+    public function getActivity(Request $request)
     {
         $activities = Activity::where('user_id', Auth::id())
             ->with('user')
             ->latest()
-            ->take(100)
-            ->get();
+            ->paginate(min($request->get('per_page', 5), 100));
 
         return response()->json($activities);
     }

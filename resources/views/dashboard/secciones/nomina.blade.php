@@ -17,7 +17,7 @@
 .sec-label-celeste { background: #e0f2fe; color: #0284c7; }
 .sec-label-verde { background: #dcfce7; color: #15803d; }
 body.dark-mode .table-wrapper-nomina { border-color: #334155; }
-body.dark-mode .table-wrapper-nomina td { border-bottom-color: #334155; border-right-color: #1e293b; }
+body.dark-mode .table-wrapper-nomina td { border-bottom-color: #334155; border-right-color: #1e293b; color: #f1f5f9; }
 body.dark-mode .sep-col { border-left-color: #334155 !important; }
 body.dark-mode .sec-label-azul { background: #1e3a5f; color: #93c5fd; }
 body.dark-mode .sec-label-celeste { background: #0c4a6e; color: #7dd3fc; }
@@ -77,7 +77,7 @@ body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
 <div id="vistaTablaNomina" style="display:none;">
     <div class="nomina-anio-header">
         <h2><i class="fas fa-folder-open"></i> NÓMINA &gt; <span id="anioTitulo">2026</span></h2>
-        <button type="button" class="btn-back" onclick="volverAnios()">← Volver a años</button>
+        <button type="button" class="btn-back" onclick="volverAnios()">←</button>
     </div>
 
     <div class="nomina-tabs" id="nominaTabs">

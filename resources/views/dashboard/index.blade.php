@@ -367,6 +367,61 @@ window.toggleHeaderTheme = function() {
     syncHeaderThemeIcon();
 };
 document.addEventListener('DOMContentLoaded', syncHeaderThemeIcon);
+
+// === Sincronización automática de la tasa USD/VES ===
+// Consulta la API oficial (BCV) y actualiza la tasa automáticamente cuando su valor cambia.
+// Frecuencia: configurada en .env con TASAS_INTERVALO_MINUTOS (TASAS_CACHE_TTL).
+(function() {
+    var INTERVALO_MIN = parseInt('{{ config('services.tasas_cambio.intervalo_minutos', 60) }}', 10) || 60;
+    if (INTERVALO_MIN < 5) INTERVALO_MIN = 60;
+    var INTERVALO_MS = INTERVALO_MIN * 60000;
+    var sincronizando = false;
+
+    async function sincronizarAutomatica() {
+        if (sincronizando) return;
+        sincronizando = true;
+        try {
+            var token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            var resp = await fetch('/tasas-cambio/sincronizar', {
+                method: 'POST',
+                headers: {'Accept':'application/json','X-CSRF-TOKEN':token}
+            });
+            var data = await resp.json();
+            if (data.estado === 'success' && data.cambiada) {
+                window.dispatchEvent(new CustomEvent('sigejub:tasa-actualizada', { detail: data.tasa || null }));
+            }
+        } catch(e) {
+            console.warn('SIGEJUB: error en sincronización automática de tasa:', e);
+        } finally {
+            sincronizando = false;
+        }
+    }
+
+    async function iniciarAutoSincronizacion() {
+        try {
+            var resp = await fetch('/tasas-cambio/estado');
+            var data = await resp.json();
+            if (data.disponible && data.tasa) {
+                var minutos = parseInt(data.tasa.minutos_desde || 0, 10);
+                var apiCfg = data.tasa.api_configurada;
+                // Si está desactualizada (más de 2h) o su consulta superó el intervalo, refrescar en silencio.
+                if (apiCfg && (minutos >= 120 || minutos >= INTERVALO_MIN)) {
+                    sincronizarAutomatica();
+                }
+            } else {
+                // Sin tasa registrada: intentar obtenerla de la API en silencio.
+                sincronizarAutomatica();
+            }
+        } catch(e) {
+            console.warn('SIGEJUB: error al iniciar auto-sincronización de tasa:', e);
+        }
+        setInterval(sincronizarAutomatica, INTERVALO_MS);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(iniciarAutoSincronizacion, 8000);
+    });
+})();
 </script>
 </body>
 </html>

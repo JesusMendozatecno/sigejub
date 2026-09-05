@@ -23,7 +23,19 @@ class RoleMiddleware
             return redirect('/login');
         }
 
+        $rolesPermitidos = implode(',', $roles);
+
         if (!in_array($user->rol, $roles)) {
+            \App\Services\AuditService::registrar(
+                'unauthorized',
+                'usuario',
+                $user->id,
+                "Acceso no autorizado: el usuario {$user->nombre} {$user->apellido} intentó acceder a {$request->path()} (requiere rol: {$rolesPermitidos})",
+                null,
+                ['roles_requeridos' => $roles],
+                ['roles_requeridos' => $roles]
+            );
+
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'estado' => 'error',

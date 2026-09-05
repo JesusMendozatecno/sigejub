@@ -312,10 +312,39 @@ async function togglePrivacidad() {
 }
 
 // === TAB: ACTIVIDAD ===
-async function cargarActividad() {
+var paginaActividad = 1;
+var paginaAdminActividad = 1;
+
+function renderPaginacion(containerId, data, cbPage) {
+    var cont = document.getElementById(containerId);
+    if (!cont) return;
+    if (!data || data.last_page <= 1) { cont.innerHTML = ''; return; }
+    var cur = data.current_page;
+    var last = data.last_page;
+    var html = '<button class="pag-btn" data-p="' + (cur - 1) + '"' + (cur <= 1 ? ' disabled' : '') + '>‹</button>';
+    for (var i = 1; i <= last; i++) {
+        if (i === 1 || i === last || (i >= cur - 2 && i <= cur + 2)) {
+            html += '<button class="pag-btn' + (i === cur ? ' active' : '') + '" data-p="' + i + '">' + i + '</button>';
+        } else if (i === cur - 3 || i === cur + 3) {
+            html += '<span class="pag-info">…</span>';
+        }
+    }
+    html += '<button class="pag-btn" data-p="' + (cur + 1) + '"' + (cur >= last ? ' disabled' : '') + '>›</button>';
+    html += '<span class="pag-info">' + cur + ' de ' + last + ' · ' + data.total + ' registros</span>';
+    cont.innerHTML = html;
+    cont.querySelectorAll('.pag-btn[data-p]').forEach(function(b) {
+        b.addEventListener('click', function() {
+            var p = parseInt(this.dataset.p, 10);
+            if (p >= 1) cbPage(p);
+        });
+    });
+}
+
+async function cargarActividad(page) {
+    page = page || paginaActividad || 1;
     var list = document.getElementById('activityList');
     try {
-        var resp = await Promise.all([api('/perfil/estadisticas'), api('/perfil/actividad')]);
+        var resp = await Promise.all([api('/perfil/estadisticas'), api('/perfil/actividad?page=' + page)]);
         var stats = await resp[0].json();
         var acts = await resp[1].json();
         document.getElementById('statTrabajadores').textContent = stats.total_trabajadores_capturados || 0;
@@ -324,14 +353,17 @@ async function cargarActividad() {
         document.getElementById('statMiembro').textContent = stats.miembro_desde || '—';
         document.getElementById('statUltimoAcceso').textContent = stats.ultimo_acceso || '—';
         document.getElementById('statUltimaIP').textContent = stats.ultima_ip || '—';
-        if (!acts.length) { list.innerHTML = '<p class="text-muted text-center" style="padding:20px;">No hay actividad registrada</p>'; return; }
-        list.innerHTML = acts.map(function(a) {
+        var items = acts.data || [];
+        if (!items.length) { list.innerHTML = '<p class="text-muted text-center" style="padding:20px;">No hay actividad registrada</p>'; document.getElementById('activityPagination').innerHTML = ''; return; }
+        list.innerHTML = items.map(function(a) {
             var icons = { created: { trabajador: ['users','green'], solicitud: ['file-lines','blue'], usuario: ['user-plus','purple'], documento: ['file','blue'], notificacion: ['bell','purple'] }, updated: { trabajador: ['pen','orange'], solicitud: ['pen-to-square','orange'], usuario: ['pen-to-square','orange'] }, deleted: { trabajador: ['trash-can','red'], solicitud: ['circle-xmark','red'] } };
             var fallback = ['circle','blue'];
             var iconData = (icons[a.accion] && icons[a.accion][a.tipo_entidad]) || fallback;
             var fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
             return '<div class="activity-item"><div class="activity-icon ' + iconData[1] + '"><i class="fas fa-' + iconData[0] + '"></i></div><div class="activity-text"><p>' + (a.descripcion || a.accion + ' ' + a.tipo_entidad) + '</p><span>' + fecha + '</span></div></div>';
         }).join('');
+        paginaActividad = acts.current_page;
+        renderPaginacion('activityPagination', acts, cargarActividad);
     } catch (err) { list.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Error al cargar actividad</p>'; }
 }
 
@@ -348,15 +380,19 @@ function cambiarAdminTab(tab) {
     if (tab === 'admin-actividad') cargarAdminActividad();
 }
 
-async function cargarAdminUsuarios() {
+var paginaAdminUsuarios = 1;
+
+async function cargarAdminUsuarios(page) {
+    page = page || paginaAdminUsuarios || 1;
     var search = document.getElementById('adminSearch').value;
     var rol = document.getElementById('adminRoleFilter').value;
     var tbody = document.getElementById('adminUsersBody');
     var myRol = window.SIGEJUB_USER_ROL || 'usuario';
     try {
-        var r = await api('/perfil/admin/usuarios?search=' + encodeURIComponent(search) + '&rol=' + rol);
+        var r = await api('/perfil/admin/usuarios?page=' + page + '&per_page=8&search=' + encodeURIComponent(search) + '&rol=' + rol);
         var data = await r.json();
-        if (!data.data || !data.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Sin usuarios</td></tr>'; return; }
+        if (page > data.last_page && page > 1) { cargarAdminUsuarios(Math.max(data.last_page, 1)); return; }
+        if (!data.data || !data.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Sin usuarios</td></tr>'; document.getElementById('adminUsersPagination').innerHTML = ''; return; }
         tbody.innerHTML = data.data.map(function(u) {
             var roleSelect = '';
             if (myRol === 'superadmin') {
@@ -375,8 +411,10 @@ async function cargarAdminUsuarios() {
             } else {
                 roleSelect = '<span style="font-size:0.75rem;color:#94a3b8;">' + u.rol + '</span>';
             }
-            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.nombre.charAt(0).toUpperCase()) + '</div>' + u.nombre + '</div></td><td>' + u.correo + '</td><td>' + roleSelect + '</td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.nombre.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i class="fas fa-message"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarUsuario(' + u.id + ')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
+            return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#1e3a8a;overflow:hidden;">' + (u.avatar ? '<img src="' + window.SIGEJUB_STORAGE_URL + '/' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : u.nombre.charAt(0).toUpperCase()) + '</div>' + u.nombre + '</div></td><td>' + u.correo + '</td><td>' + roleSelect + '</td><td style="font-size:0.75rem;color:#94a3b8;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td><td style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="abrirModalNotificacion(' + u.id + ', \'' + u.nombre.replace(/'/g, "\\'") + '\')" title="Enviar mensaje"><i class="fas fa-message"></i></button><button class="btn btn-danger btn-sm" onclick="solicitarEliminarUsuario(' + u.id + ', \'' + u.nombre.replace(/'/g, "\\'") + '\')"' + (u.id === window.SIGEJUB_USER_ID ? ' disabled style="opacity:0.4;"' : '') + '>Eliminar</button></td></tr>';
         }).join('');
+        paginaAdminUsuarios = data.current_page;
+        renderPaginacion('adminUsersPagination', data, cargarAdminUsuarios);
     } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px;">Error al cargar</td></tr>'; }
 }
 
@@ -389,8 +427,23 @@ async function cambiarRolUsuario(id, role) {
     } catch (err) { mostrarToast('Error', 'error'); }
 }
 
-async function eliminarUsuario(id) {
-    if (!confirm('¿Eliminar este usuario permanentemente?')) return;
+var pendingDeleteUserId = null;
+
+function solicitarEliminarUsuario(id, nombre) {
+    pendingDeleteUserId = id;
+    document.getElementById('deleteUserName').textContent = nombre || 'este usuario';
+    document.getElementById('modalEliminarUsuario').classList.add('show');
+}
+
+function cerrarModalEliminarUsuario() {
+    document.getElementById('modalEliminarUsuario').classList.remove('show');
+    pendingDeleteUserId = null;
+}
+
+async function confirmarEliminarUsuario() {
+    var id = pendingDeleteUserId;
+    cerrarModalEliminarUsuario();
+    if (!id) return;
     try {
         var r = await api('/perfil/admin/usuarios/' + id, { method: 'DELETE' });
         var d = await r.json();
@@ -399,6 +452,11 @@ async function eliminarUsuario(id) {
         cargarAdminUsuarios();
     } catch (err) { mostrarToast('Error', 'error'); }
 }
+
+window.addEventListener('click', function(e) {
+    var modal = document.getElementById('modalEliminarUsuario');
+    if (e.target === modal) cerrarModalEliminarUsuario();
+});
 
 // === NOTIFICACIONES (MODAL) ===
 function abrirModalNotificacion(userId, userName) {
@@ -432,16 +490,20 @@ window.addEventListener('click', function(e) {
     if (e.target === modal) cerrarModalNotificacion();
 });
 
-async function cargarAdminActividad() {
+async function cargarAdminActividad(page) {
+    page = page || paginaAdminActividad || 1;
     var el = document.getElementById('adminActivityList');
     try {
-        var r = await api('/perfil/admin/actividad');
+        var r = await api('/perfil/admin/actividad?page=' + page);
         var acts = await r.json();
-        if (!acts.length) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Sin actividad global</p>'; return; }
-        el.innerHTML = acts.map(function(a) {
+        var items = acts.data || [];
+        if (!items.length) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Sin actividad global</p>'; document.getElementById('adminActivityPagination').innerHTML = ''; return; }
+        el.innerHTML = items.map(function(a) {
             var fecha = new Date(a.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
             return '<div class="activity-item"><div class="activity-text"><p>' + a.descripcion + '</p><span>' + (a.user ? a.user.nombre : 'Sistema') + ' — ' + fecha + '</span></div></div>';
         }).join('');
+        paginaAdminActividad = acts.current_page;
+        renderPaginacion('adminActivityPagination', acts, cargarAdminActividad);
     } catch (err) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Error al cargar</p>'; }
 }
 

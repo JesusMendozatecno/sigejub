@@ -24,9 +24,9 @@
         <label>TIPO DE NÓMINA</label>
         <select id="filtroNomina">
             <option value="">Todas</option>
-            <option value="Docente">Docente</option>
-            <option value="Administrativo">Administrativo</option>
-            <option value="Obrero">Obrero</option>
+            <option value="ADM">Administrativo</option>
+            <option value="DOC">Docente</option>
+            <option value="OBREROS">Obrero</option>
         </select>
     </div>
     <div class="filter-group">
@@ -80,7 +80,6 @@
             <div id="proximasJubilacionesList">
                 <p style="color:rgba(255,255,255,0.7);font-size:0.85rem;">Cargando...</p>
             </div>
-            <button class="btn-white" type="button" style="margin-top:12px;">Ver Calendario</button>
         </div>
         <div class="promo-icon-watermark">
             <i class="fas fa-scroll"></i>
@@ -326,6 +325,41 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="delete-actions">
             <button type="button" class="btn-delete-cancel" id="btnNoEliminar">No, cancelar</button>
             <button type="button" class="btn-delete-confirm" id="btnSiEliminar">Sí, eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Calendario de Jubilaciones -->
+<div class="modal-overlay" id="modalCalendarioJubilaciones" style="z-index: 2600;">
+    <div class="workers-calendar-modal">
+        <div class="workers-calendar-header">
+            <div>
+                <h3><i class="fas fa-calendar-days"></i> Calendario de Jubilaciones</h3>
+                <p class="workers-calendar-sub">Fechas estimadas de retiro · primer requisito que se cumpla (60 años / 25 años de servicio)</p>
+            </div>
+            <button type="button" class="workers-calendar-close" id="btnCerrarCalendario" title="Cerrar">&times;</button>
+        </div>
+        <div class="workers-calendar-body">
+            <div class="workers-calendar-main">
+                <div class="workers-calendar-toolbar">
+                    <button type="button" class="workers-calendar-nav" id="btnCalPrev" title="Mes anterior"><i class="fas fa-chevron-left"></i></button>
+                    <span class="workers-calendar-title" id="calTitle">—</span>
+                    <button type="button" class="workers-calendar-nav" id="btnCalNext" title="Mes siguiente"><i class="fas fa-chevron-right"></i></button>
+                    <button type="button" class="workers-calendar-today" id="btnCalToday"><i class="fas fa-location-arrow"></i> Hoy</button>
+                </div>
+                <div class="workers-calendar-grid" id="calGrid"></div>
+            </div>
+            <aside class="workers-calendar-side">
+                <div class="workers-calendar-side-header">
+                    <span id="calSideTitle">Eventos del mes</span>
+                    <span class="workers-calendar-count" id="calCount">0</span>
+                </div>
+                <div class="workers-calendar-events" id="calEvents"></div>
+            </aside>
+        </div>
+        <div class="workers-calendar-footer">
+            <i class="fas fa-circle-info"></i>
+            <span>Las fechas son estimadas según la edad (60 años) y los años de servicio (25), tomando el requisito que ocurra primero.</span>
         </div>
     </div>
 </div>

@@ -90,3 +90,80 @@
 
 /* === EMPTY (Estado vacío) === */
 .cn-empty { text-align:center;padding:3rem 1rem;color:#94a3b8;font-size:0.9rem; }
+
+/* ============================================================
+   COPIAS DE SEGURIDAD — Botones con el estilo del sistema
+   (mismo lenguaje visual que .btn-ver / .btn-editar / .btn-eliminar
+   y botones primarios del dashboard: tintado + hover relleno).
+   ============================================================ */
+.backup-item {
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    background:white;border:1px solid #f1f5f9;border-radius:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:16px 18px;margin-bottom:10px;
+    transition:box-shadow 0.2s, border-color 0.2s;
+}
+.backup-item:hover { border-color:#e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.backup-info { display:flex;align-items:center;gap:14px;flex:1;min-width:260px; }
+.backup-icon {
+    width:40px;height:40px;border-radius:10px;background:#eff6ff;color:#1a365d;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.backup-name { font-weight:700;font-size:0.85rem;color:#0f172a;word-break:break-all; }
+.backup-meta { font-size:0.75rem;color:#64748b; }
+.backup-actions { display:flex;flex-wrap:wrap;align-items:center;gap:8px; }
+
+.btn-bk-download,
+.btn-bk-verify,
+.btn-bk-restore,
+.btn-bk-delete {
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:1px solid transparent;border-radius:8px;cursor:pointer;
+    font-family:inherit;font-weight:600;font-size:0.78rem;
+    transition:all 0.2s;white-space:nowrap;
+}
+.btn-bk-download,
+.btn-bk-verify,
+.btn-bk-restore { padding:7px 14px; }
+.btn-bk-download i,
+.btn-bk-verify i,
+.btn-bk-restore i { width:14px;height:14px; }
+
+/* Descargar (información / azul) */
+.btn-bk-download { color:#2563eb;background:#eff6ff; }
+.btn-bk-download:hover { background:#2563eb;color:#ffffff;box-shadow:0 4px 10px rgba(37,99,235,0.25); }
+
+/* Verificar (neutro / contorno, relleno con acento del sistema) */
+.btn-bk-verify { color:#475569;background:#f8fafc;border-color:#e2e8f0; }
+.btn-bk-verify:hover { background:#1a365d;border-color:#1a365d;color:#ffffff;box-shadow:0 4px 10px rgba(26,54,93,0.25); }
+
+/* Restaurar (advertencia / ámbar) */
+.btn-bk-restore { color:#d97706;background:#fffbeb; }
+.btn-bk-restore:hover { background:#d97706;color:#ffffff;box-shadow:0 4px 10px rgba(217,119,6,0.25); }
+
+/* Eliminar (peligro / rojo, solo icono) */
+.btn-bk-delete { width:32px;height:32px;border-radius:8px;color:#dc2626;background:#fef2f2; }
+.btn-bk-delete i { width:15px;height:15px; }
+.btn-bk-delete:hover { background:#dc2626;color:#ffffff;box-shadow:0 4px 10px rgba(220,38,38,0.25); }
+
+.btn-bk-download:active,
+.btn-bk-verify:active,
+.btn-bk-restore:active,
+.btn-bk-delete:active { transform:scale(0.95); }
+
+.btn-bk-download:disabled,
+.btn-bk-verify:disabled,
+.btn-bk-restore:disabled,
+.btn-bk-delete:disabled { opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none; }
+
+/* Botón peligro a escala de módulo (modales de confirmación) */
+.cn-danger { background:#dc2626;color:#ffffff;box-shadow:0 2px 8px rgba(220,38,38,0.2); }
+.cn-danger:hover { background:#b91c1c;box-shadow:0 4px 14px rgba(220,38,38,0.3);transform:translateY(-1px); }
+.cn-danger:disabled { opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none; }
+
+/* Botones de acción deshabilitados (Generar copia en curso, etc.) */
+.cn-btn-action:disabled { opacity:0.65;cursor:not-allowed;transform:none !important;box-shadow:none !important; }
+
+/* Sellos de estado de la copia */
+.bk-badge { display:inline-flex;align-items:center;gap:5px;font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;font-family:inherit; }
+.bk-badge-ok { color:#059669;background:#ecfdf5;border:1px solid #a7f3d0; }
+.bk-badge-bad { color:#dc2626;background:#fef2f2;border:1px solid #fecaca; }

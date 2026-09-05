@@ -11,7 +11,8 @@ class Activity extends Model
 {
     protected $fillable = [
         'user_id', 'accion', 'tipo_entidad', 'entidad_id', 'descripcion',
-        'direccion_ip', 'navegador', 'valores_anteriores', 'valores_nuevos', 'datos_peticion'
+        'direccion_ip', 'navegador', 'metodo', 'ruta',
+        'valores_anteriores', 'valores_nuevos', 'datos_peticion'
     ];
 
     protected $with = ['user'];
@@ -36,18 +37,27 @@ class Activity extends Model
         ?array $valoresNuevos = null,
         ?array $datosPeticion = null
     ): self {
-        $request = request();
-        return self::create([
-            'user_id' => auth()->id(),
-            'accion' => $accion,
-            'tipo_entidad' => $tipoEntidad,
-            'entidad_id' => $entidadId,
-            'descripcion' => $descripcion,
-            'direccion_ip' => $request?->ip(),
-            'navegador' => $request?->userAgent(),
-            'valores_anteriores' => $valoresAnteriores,
-            'valores_nuevos' => $valoresNuevos,
-            'datos_peticion' => $datosPeticion,
-        ]);
+        // Delega en AuditService para registrar con sanitización (inmutable y seguro).
+        return \App\Services\AuditService::registrar(
+            $accion,
+            $tipoEntidad,
+            $entidadId,
+            $descripcion,
+            $valoresAnteriores,
+            $valoresNuevos,
+            $datosPeticion
+        );
+    }
+
+    // Acción legible para el usuario (español).
+    public function accionHumana(): string
+    {
+        return \App\Services\AuditService::accionHumana($this->accion);
+    }
+
+    // Tipo de entidad legible para el usuario (español).
+    public function tipoEntidadHumana(): string
+    {
+        return \App\Services\AuditService::entidadHumana($this->tipo_entidad);
     }
 }

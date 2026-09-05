@@ -195,6 +195,250 @@
 }
 .progress-val { float: right; font-size: 12px; font-weight: bold; }
 
+/* === MODAL CALENDARIO DE JUBILACIONES === */
+.workers-calendar-modal {
+    background: #ffffff;
+    width: 94%;
+    max-width: 940px;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
+}
+.workers-calendar-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid #eef2f7;
+}
+.workers-calendar-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.workers-calendar-header h3 i { color: var(--accent); }
+.workers-calendar-sub { margin: 5px 0 0; font-size: 0.78rem; color: #64748b; }
+.workers-calendar-close {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.workers-calendar-close:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
+.workers-calendar-body {
+    display: flex;
+    gap: 22px;
+    padding: 20px 24px;
+}
+.workers-calendar-main { flex: 1; min-width: 0; }
+.workers-calendar-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.workers-calendar-nav, .workers-calendar-today {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #334155;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+.workers-calendar-nav:hover, .workers-calendar-today:hover { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+.workers-calendar-today { margin-left: auto; }
+.workers-calendar-title {
+    flex: 1;
+    text-align: center;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: capitalize;
+    font-size: 1.02rem;
+    letter-spacing: 0.2px;
+}
+.workers-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.workers-cal-day-head {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-align: center;
+    padding: 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+.cal-day {
+    min-height: 78px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 0.74rem;
+    position: relative;
+    transition: all 0.15s;
+}
+.cal-day:not(.other-month):hover { border-color: #cbd5e1; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); background: #ffffff; }
+.cal-day .cal-day-num {
+    font-weight: 700;
+    color: #475569;
+    font-size: 0.78rem;
+    line-height: 1;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+.cal-day.other-month { opacity: 0.35; background: transparent; border-color: transparent; }
+.cal-day.weekend { background: #f6f4fd; }
+.cal-day.weekend .cal-day-num { color: #6d5bd0; }
+.cal-day.has-events { background: #f0f7ff; border-color: #dbeafe; }
+.cal-day.today { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.1); }
+.cal-day.today .cal-day-num { background: var(--accent); color: #ffffff; box-shadow: 0 2px 8px rgba(26, 54, 93, 0.35); }
+.cal-event-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cal-event-chip.more { background: #0ca678; }
+.cal-chip-ini {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+}
+.cal-chip-name { overflow: hidden; text-overflow: ellipsis; }
+.workers-calendar-side {
+    flex: 0 0 255px;
+    width: 255px;
+    border-left: 1px solid #eef2f7;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    max-height: 440px;
+}
+.workers-calendar-side-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.workers-calendar-count {
+    background: var(--accent);
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.72rem;
+    letter-spacing: 0;
+}
+.workers-calendar-events {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.cal-event-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    transition: all 0.15s;
+}
+.cal-event-row:hover { border-color: #e2e8f0; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05); }
+.cal-avatar {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+.cal-event-meta { flex: 1; min-width: 0; }
+.cal-event-meta .cal-event-name {
+    font-size: 0.8rem;
+    color: #0f172a;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cal-event-meta .cal-event-date { font-size: 0.7rem; color: #0ca678; font-weight: 700; }
+.cal-event-empty {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    padding: 28px 8px;
+}
+.cal-event-empty i { font-size: 1.7rem; margin-bottom: 10px; opacity: 0.45; }
+.workers-calendar-footer {
+    padding: 12px 24px;
+    border-top: 1px solid #eef2f7;
+    font-size: 0.73rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+@media (max-width: 760px) {
+    .workers-calendar-body { flex-direction: column; }
+    .workers-calendar-side { border-left: none; padding-left: 0; border-top: 1px solid #eef2f7; padding-top: 14px; width: 100%; flex: auto; max-height: 260px; }
+    .cal-day { min-height: 58px; }
+}
+
 
 
 

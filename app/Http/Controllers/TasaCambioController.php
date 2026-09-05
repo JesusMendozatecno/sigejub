@@ -68,7 +68,7 @@ class TasaCambioController extends Controller
     {
         try {
             $request->validate([
-                'tasa' => 'required|numeric|min:0.0001|max:999999.9999',
+                'tasa' => 'required|numeric|min:0.01|max:999999.99',
                 'moneda_origen' => 'nullable|string|max:10',
                 'moneda_destino' => 'nullable|string|max:10',
                 'fuente' => 'nullable|string|max:100',
@@ -82,7 +82,7 @@ class TasaCambioController extends Controller
             }
 
             $tasa = TasaCambio::create([
-                'tasa' => $request->tasa,
+                'tasa' => round((float) $request->tasa, 2),
                 'moneda_origen' => $request->moneda_origen ?? 'USD',
                 'moneda_destino' => $request->moneda_destino ?? 'VES',
                 'fuente' => $request->fuente ?? 'Manual',

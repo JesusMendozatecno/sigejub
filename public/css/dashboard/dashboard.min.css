@@ -1,12 +1,12 @@
-﻿/* ============================================================
-   base.css â€” Sistema de diseÃ±o y variables CSS globales
-   Establece la paleta del sistema, tokens de diseÃ±o,
-   reseteos globales, tipografÃ­a, utilidades y scrollbar.
+/* ============================================================
+   base.css Ã¢â‚¬â€ Sistema de diseÃƒÂ±o y variables CSS globales
+   Establece la paleta del sistema, tokens de diseÃƒÂ±o,
+   reseteos globales, tipografÃƒÂ­a, utilidades y scrollbar.
    Los 3 temas (claro, oscuro, moderno) redefinen estas
    variables bajo body.dark-mode / body.theme-modern.
    ============================================================ */
 
-/* === DESIGN TOKENS â€” Modo Claro (default) === */
+/* === DESIGN TOKENS Ã¢â‚¬â€ Modo Claro (default) === */
 :root {
     /* Paleta principal */
     --accent: #1a365d;
@@ -83,7 +83,7 @@
     --space-10: 40px;
     --space-12: 48px;
 
-    /* TipografÃ­a */
+    /* TipografÃƒÂ­a */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
     --font-size-xs: 0.75rem;
@@ -147,7 +147,7 @@ a:hover { color: var(--accent-hover); }
 button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; font-size: inherit; }
 
-/* === SELECCIÃ“N DE TEXTO === */
+/* === SELECCIÃƒâ€œN DE TEXTO === */
 ::selection {
     background: var(--accent);
     color: white;
@@ -236,12 +236,12 @@ html.theme-switching *::after {
 }
 
 /* ============================================================
-   layout.css â€” Estructura principal del dashboard
+   layout.css Ã¢â‚¬â€ Estructura principal del dashboard
    Top bar, sidebar, dropdown de usuario y layout de contenido.
    Utiliza variables CSS de base.css para consistencia visual.
    ============================================================ */
 
-/* === SISTEMA DE PESTAÃ‘AS DINÃMICAS === */
+/* === SISTEMA DE PESTAÃƒâ€˜AS DINÃƒÂMICAS === */
 .content-section {
     display: none;
     animation: fadeInUp 0.3s ease;
@@ -278,7 +278,7 @@ body {
     background-color: var(--bg-body);
 }
 
-/* === TOP BAR â€” Barra superior === */
+/* === TOP BAR Ã¢â‚¬â€ Barra superior === */
 .top-bar {
     display: flex;
     align-items: center;
@@ -316,7 +316,7 @@ body {
     transition: color var(--transition-base);
 }
 
-/* === BÃšSQUEDA CENTRADA === */
+/* === BÃƒÅ¡SQUEDA CENTRADA === */
 .search-wrapper-centered {
     position: absolute;
     left: 50%;
@@ -373,7 +373,7 @@ body {
     z-index: 10;
 }
 
-/* === APP CONTAINER â€” Sidebar + Main Content === */
+/* === APP CONTAINER Ã¢â‚¬â€ Sidebar + Main Content === */
 .app-container {
     display: flex;
     flex-grow: 1;
@@ -381,7 +381,7 @@ body {
     overflow: hidden;
 }
 
-/* === SIDEBAR â€” MenÃº lateral === */
+/* === SIDEBAR Ã¢â‚¬â€ MenÃƒÂº lateral === */
 .sidebar {
     width: var(--sidebar-width);
     min-width: var(--sidebar-width);
@@ -560,7 +560,7 @@ body {
     color: var(--error-dark);
 }
 
-/* === MAIN CONTENT â€” Ãrea scrollable === */
+/* === MAIN CONTENT Ã¢â‚¬â€ ÃƒÂrea scrollable === */
 .main-content {
     flex-grow: 1;
     min-width: 0;
@@ -780,13 +780,13 @@ body {
 }
 
 /* ============================================================
-   components.css â€” Componentes reutilizables del dashboard
+   components.css Ã¢â‚¬â€ Componentes reutilizables del dashboard
    Botones, badges, tablas, formularios y elementos comunes.
    Utiliza variables CSS de base.css para consistencia.
    ============================================================ */
 
-/* === BOTONES â€” Sistema de jerarquÃ­a === */
-/* BotÃ³n primario (acciÃ³n principal) */
+/* === BOTONES Ã¢â‚¬â€ Sistema de jerarquÃƒÂ­a === */
+/* BotÃƒÂ³n primario (acciÃƒÂ³n principal) */
 .btn-primary {
     background: var(--accent);
     color: white;
@@ -813,7 +813,7 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-/* BotÃ³n primario oscuro (encabezados de secciÃ³n) */
+/* BotÃƒÂ³n primario oscuro (encabezados de secciÃƒÂ³n) */
 .btn-primary-dark {
     background: var(--accent);
     color: white;
@@ -836,7 +836,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* BotÃ³n de envÃ­o */
+/* BotÃƒÂ³n de envÃƒÂ­o */
 .btn-submit {
     background: var(--accent);
     color: white;
@@ -853,7 +853,7 @@ body {
     box-shadow: var(--shadow-md);
 }
 
-/* BotÃ³n de cancelar */
+/* BotÃƒÂ³n de cancelar */
 .btn-cancel {
     background: var(--bg-card);
     color: var(--text-secondary);
@@ -871,7 +871,7 @@ body {
     border-color: var(--border-input);
 }
 
-/* BotÃ³n outline (secundario) */
+/* BotÃƒÂ³n outline (secundario) */
 .btn-outline {
     display: inline-flex;
     align-items: center;
@@ -892,7 +892,7 @@ body {
     border-color: var(--border-input);
 }
 
-/* BotÃ³n de peligro */
+/* BotÃƒÂ³n de peligro */
 .btn-danger {
     background: var(--error);
     color: white;
@@ -912,7 +912,7 @@ body {
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
-/* BotÃ³n de cerrar sesiÃ³n */
+/* BotÃƒÂ³n de cerrar sesiÃƒÂ³n */
 .btn-logout {
     background: var(--error-light);
     color: var(--error);
@@ -929,7 +929,7 @@ body {
     color: white;
 }
 
-/* BotÃ³n fantasma (icono) */
+/* BotÃƒÂ³n fantasma (icono) */
 .btn-icon {
     display: inline-flex;
     align-items: center;
@@ -949,7 +949,7 @@ body {
     color: var(--accent);
 }
 
-/* BotÃ³n volver */
+/* BotÃƒÂ³n volver */
 .btn-volver {
     display: inline-flex;
     align-items: center;
@@ -1198,13 +1198,13 @@ body {
 }
 
 /* ============================================================
-   dashboard.css â€” Estilos principales del dashboard
-   Sidebar fijo, top bar, grid de estadÃ­sticas, grÃ¡fico de
-   barras, actividad reciente, accesos rÃ¡pidos y vencimientos.
+   dashboard.css Ã¢â‚¬â€ Estilos principales del dashboard
+   Sidebar fijo, top bar, grid de estadÃƒÂ­sticas, grÃƒÂ¡fico de
+   barras, actividad reciente, accesos rÃƒÂ¡pidos y vencimientos.
    Utiliza variables CSS de base.css para consistencia visual.
    ============================================================ */
 
-/* === SIDEBAR â€” Barra lateral izquierda fija === */
+/* === SIDEBAR Ã¢â‚¬â€ Barra lateral izquierda fija === */
 .sidebar-header {
     padding: 25px;
     display: flex;
@@ -1261,9 +1261,9 @@ body {
     cursor: pointer;
 }
 
-/* === MAIN CONTENT â€” Ya definido en layout.css con flex-grow, overflow-y: auto, background: var(--bg-body) === */
+/* === MAIN CONTENT Ã¢â‚¬â€ Ya definido en layout.css con flex-grow, overflow-y: auto, background: var(--bg-body) === */
 
-/* === TOP BAR â€” Ya definido en layout.css con height: var(--sidebar-topbar-height) === */
+/* === TOP BAR Ã¢â‚¬â€ Ya definido en layout.css con height: var(--sidebar-topbar-height) === */
 
 .search-container {
     display: flex;
@@ -1289,12 +1289,12 @@ body {
 .user-profile .name { display: block; font-size: 13px; font-weight: bold; color: var(--text-primary); }
 .user-profile .role { font-size: 11px; color: var(--text-muted); }
 
-/* === STATS â€” Encabezado de bienvenida y grid de tarjetas de estadÃ­sticas === */
+/* === STATS Ã¢â‚¬â€ Encabezado de bienvenida y grid de tarjetas de estadÃƒÂ­sticas === */
 .welcome-header { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
 .welcome-header h1 { font-size: 24px; color: var(--text-primary); }
 .subtitle { font-size: 14px; color: var(--accent); }
 
-/* === BOTONES â€” Ya definidos en components.css === */
+/* === BOTONES Ã¢â‚¬â€ Ya definidos en components.css === */
 
 .stats-grid {
     display: grid;
@@ -1320,7 +1320,7 @@ body {
 .stat-card p { font-size: 11px; font-weight: bold; color: var(--text-muted); letter-spacing: 1px; }
 .stat-card h2 { font-size: 28px; color: var(--accent); margin-top: 5px; }
 
-/* === LAYOUT INFERIOR â€” Grid de actividad reciente y accesos rÃ¡pidos === */
+/* === LAYOUT INFERIOR Ã¢â‚¬â€ Grid de actividad reciente y accesos rÃƒÂ¡pidos === */
 .content-layout {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -1372,7 +1372,7 @@ body {
 }
 
 /* ========================================================================
-   EXTENSIÃ“N â€” Reglas adicionales para el dashboard principal
+   EXTENSIÃƒâ€œN Ã¢â‚¬â€ Reglas adicionales para el dashboard principal
    ======================================================================== */
 
 /* Colores de texto y estados */
@@ -1391,7 +1391,7 @@ body {
 .trend.neutral { background: var(--bg-surface); color: var(--text-secondary); }
 .trend.negative { background: #fff5f5; color: #fa5252; }
 
-/* === GRÃFICO DE BARRAS === */
+/* === GRÃƒÂFICO DE BARRAS === */
 .chart-container {
     background: var(--bg-card);
     padding: 25px;
@@ -1428,7 +1428,7 @@ body {
 .bar-group.active span { color: var(--accent); font-weight: bold; }
 .val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 11px; }
 
-/* === ACCESOS RÃPIDOS === */
+/* === ACCESOS RÃƒÂPIDOS === */
 .quick-access-dark {
     background: var(--accent);
     padding: 25px;
@@ -1467,12 +1467,12 @@ body {
 .activity-icon.red { background: #fef2f2; color: #dc2626; }
 
 /* ============================================================
-   notifications.css â€” Estilos del dropdown de notificaciones
+   notifications.css Ã¢â‚¬â€ Estilos del dropdown de notificaciones
    y badge de contador en el header del dashboard.
    Utiliza variables CSS de base.css para consistencia visual.
    ============================================================ */
 
-/* === BOTÃ“N CAMPANA === */
+/* === BOTÃƒâ€œN CAMPANA === */
 .notif-trigger {
     position: relative;
     padding: 6px;
@@ -1536,7 +1536,7 @@ body {
     color: var(--text-primary);
 }
 
-/* === CADA NOTIFICACIÃ“N === */
+/* === CADA NOTIFICACIÃƒâ€œN === */
 .notif-item {
     padding: 10px 12px;
     border-radius: var(--radius-md);
@@ -1576,35 +1576,35 @@ body {
 }
 
 /* ============================================================
-   inicio.css â€” Estilos para la secciÃ³n "Inicio" del dashboard
-   Grid de tarjetas de estadÃ­sticas, grÃ¡fico de barras,
+   inicio.css Ã¢â‚¬â€ Estilos para la secciÃƒÂ³n "Inicio" del dashboard
+   Grid de tarjetas de estadÃƒÂ­sticas, grÃƒÂ¡fico de barras,
    contenedor de actividad reciente con scroll interno.
    ============================================================ */
 
-/* === GRID DE ESTADÃSTICAS === */
+/* === GRID DE ESTADÃƒÂSTICAS === */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 30px; }
 /* === TARJETAS INDIVIDUALES === */
 .stat-card { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
-/* === CONTENEDOR DEL GRÃFICO === */
+/* === CONTENEDOR DEL GRÃƒÂFICO === */
 .chart-container { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); }
-/* === BARRAS DEL GRÃFICO === */
+/* === BARRAS DEL GRÃƒÂFICO === */
 .bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; }
 /* === ACTIVIDAD RECIENTE === */
 .recent-activity { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; }
-.recent-activity .activity-list { flex: 1; overflow-y: auto; max-height: 400px; }
+.recent-activity .activity-list { flex: 1; }
 /* Scrollbar del listado de actividad */
 .recent-activity .activity-list::-webkit-scrollbar { width: 4px; }
 .recent-activity .activity-list::-webkit-scrollbar-track { background: transparent; }
 .recent-activity .activity-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 /* ============================================================
-   trabajadores.css â€” Estilos para la secciÃ³n "Trabajadores"
-   Encabezado de secciÃ³n, filtros, tabla con avatares,
+   trabajadores.css Ã¢â‚¬â€ Estilos para la secciÃƒÂ³n "Trabajadores"
+   Encabezado de secciÃƒÂ³n, filtros, tabla con avatares,
    badges de tipo (docente/admin), indicadores de estatus
-   con puntos de colores, paginaciÃ³n, tarjetas promocionales,
-   auditorÃ­a y modal de confirmaciÃ³n de eliminaciÃ³n.
+   con puntos de colores, paginaciÃƒÂ³n, tarjetas promocionales,
+   auditorÃƒÂ­a y modal de confirmaciÃƒÂ³n de eliminaciÃƒÂ³n.
    ============================================================ */
 
-/* --- EXTENSIÃ“N PARA SECCIÃ“N TRABAJADORES --- */
+/* --- EXTENSIÃƒâ€œN PARA SECCIÃƒâ€œN TRABAJADORES --- */
 
 .section-header {
     display: flex;
@@ -1626,7 +1626,7 @@ body {
     cursor: pointer;
 }
 
-/* === FILTROS â€” Grid de filtros + contador total === */
+/* === FILTROS Ã¢â‚¬â€ Grid de filtros + contador total === */
 .filters-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr) 200px;
@@ -1672,7 +1672,7 @@ body {
 .total-badge-card h2 { font-size: 22px; color: #1e3a8a; }
 .total-badge-card .icon-bg { color: #bfdbfe; }
 
-/* === TABLA CUSTOMIZADA â€” Contenedor con border-radius y sombra === */
+/* === TABLA CUSTOMIZADA Ã¢â‚¬â€ Contenedor con border-radius y sombra === */
 .data-table-container {
     background: white;
     border-radius: 16px;
@@ -1695,7 +1695,7 @@ body {
 .avatar.blue { background: #dbeafe; color: #1e40af; }
 .avatar.purple { background: #f3e8ff; color: #6b21a8; }
 
-/* === ESTATUS CON PUNTOS â€” Indicador visual de estado (activo/jubilado/suspensiÃ³n) === */
+/* === ESTATUS CON PUNTOS Ã¢â‚¬â€ Indicador visual de estado (activo/jubilado/suspensiÃƒÂ³n) === */
 .dot {
     height: 8px;
     width: 8px;
@@ -1707,7 +1707,7 @@ body {
 .dot.jubilado { background: #3b82f6; }
 .dot.suspension { background: #ef4444; }
 
-/* === BADGES DE TIPO â€” Docente o Administrativo === */
+/* === BADGES DE TIPO Ã¢â‚¬â€ Docente o Administrativo === */
 .badge-type {
     font-size: 9px;
     font-weight: 800;
@@ -1721,7 +1721,7 @@ body {
 .actions i { cursor: pointer; margin-right: 10px; transition: 0.2s; }
 .actions i:hover { color: #1a365d; }
 
-/* === FOOTER TABLA â€” PaginaciÃ³n e informaciÃ³n de resultados === */
+/* === FOOTER TABLA Ã¢â‚¬â€ PaginaciÃƒÂ³n e informaciÃƒÂ³n de resultados === */
 .table-footer {
     padding: 20px;
     display: flex;
@@ -1741,7 +1741,7 @@ body {
 }
 .pagination button.active { background: #1a365d; color: white; border-color: #1a365d; }
 
-/* === WIDGETS PROMO â€” Tarjetas promocionales y de auditorÃ­a === */
+/* === WIDGETS PROMO Ã¢â‚¬â€ Tarjetas promocionales y de auditorÃƒÂ­a === */
 /* Tarjeta promocional con degradado azul y contenido en blanco */
 .promo-card-blue {
     background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
@@ -1764,7 +1764,7 @@ body {
     cursor: pointer;
 }
 
-/* === TARJETA DE AUDITORÃA â€” Progreso de cumplimiento === */
+/* === TARJETA DE AUDITORÃƒÂA Ã¢â‚¬â€ Progreso de cumplimiento === */
 .audit-card {
     background: #f8fafc;
     border-radius: 20px;
@@ -1797,7 +1797,7 @@ body {
 
 
 
-/* === MODAL DE CONFIRMACIÃ“N DE ELIMINACIÃ“N === */
+/* === MODAL DE CONFIRMACIÃƒâ€œN DE ELIMINACIÃƒâ€œN === */
 .modal-delete-box {
     background-color: #ffffff;
     width: 100%;
@@ -1872,7 +1872,7 @@ body {
     background-color: #b91c1c;
 }
 
-/* Efecto de presiÃ³n al hacer clic â€” escala ligeramente hacia abajo */
+/* Efecto de presiÃƒÂ³n al hacer clic Ã¢â‚¬â€ escala ligeramente hacia abajo */
 .btn-delete-cancel:active, .btn-delete-confirm:active {
     transform: scale(0.96);
 }
@@ -1935,7 +1935,7 @@ body {
     box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
 }
 /* ============================================================
-   trabajadores2.css â€” Estilos complementarios de trabajadores
+   trabajadores2.css Ã¢â‚¬â€ Estilos complementarios de trabajadores
    Scrollbar del modal, botones de la barra lateral del modal,
    status pills (activo/jubilado) y type tags para la tabla.
    ============================================================ */
@@ -1948,7 +1948,7 @@ body {
 .modal-form-content::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 
 .input-group input:focus {
-    border-color: #6366f1; /* Ãndigo en lugar del azul institucional para diferenciar inputs del modal */
+    border-color: #6366f1; /* ÃƒÂndigo en lugar del azul institucional para diferenciar inputs del modal */
     background: white;
     outline: none;
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
@@ -2012,7 +2012,7 @@ body {
     color: #f1f5f9;
 }
 
-/* === STATUS PILLS Y TYPE TAGS â€” Activo/Jubilado y tipo de trabajador === */
+/* === STATUS PILLS Y TYPE TAGS Ã¢â‚¬â€ Activo/Jubilado y tipo de trabajador === */
 .status-pill {
     font-size: 10px;
     font-weight: 800;
@@ -2039,14 +2039,14 @@ body {
 }
 
 /* ============================================================
-   solicitud.css â€” Estilos para la secciÃ³n "Solicitudes"
+   solicitud.css Ã¢â‚¬â€ Estilos para la secciÃƒÂ³n "Solicitudes"
    Formulario de solicitud con grid de 4 columnas, filtros
-   por pestaÃ±as (tab-filters), tabla con badges de estado,
-   tarjetas de mÃ©tricas (aprobadas/pendientes/rechazadas) y
-   botones de acciÃ³n (exportar, filtrar).
+   por pestaÃƒÂ±as (tab-filters), tabla con badges de estado,
+   tarjetas de mÃƒÂ©tricas (aprobadas/pendientes/rechazadas) y
+   botones de acciÃƒÂ³n (exportar, filtrar).
    ============================================================ */
 
-/* --- EXTENSIÃ“N SECCIÃ“N SOLICITUDES --- */
+/* --- EXTENSIÃƒâ€œN SECCIÃƒâ€œN SOLICITUDES --- */
 
 .text-blue-accent { color: #1e3a8a; font-weight: 800; }
 
@@ -2079,7 +2079,7 @@ body {
 
 .input-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 columnas para los campos rÃ¡pidos del formulario */
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas para los campos rÃƒÂ¡pidos del formulario */
     gap: 15px;
 }
 
@@ -2129,7 +2129,7 @@ body {
     cursor: pointer;
 }
 
-/* Filtros por PestaÃ±as */
+/* Filtros por PestaÃƒÂ±as */
 .list-title-area {
     display: flex;
     align-items: center;
@@ -2157,7 +2157,7 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* === TABLA DE SOLICITUDES â€” Folio, trabajador y badge de estado === */
+/* === TABLA DE SOLICITUDES Ã¢â‚¬â€ Folio, trabajador y badge de estado === */
 .folio { color: #1e3a8a; font-weight: bold; font-size: 12px; }
 .worker-info strong { display: block; font-size: 13px; }
 .worker-info span { font-size: 11px; color: #94a3b8; }
@@ -2172,7 +2172,7 @@ body {
 .badge-status.approved { background: #f0fdf4; color: #22c55e; }
 .badge-status.rejected { background: #fef2f2; color: #ef4444; }
 
-/* === TARJETAS DE MÃ‰TRICAS â€” Total, aprobadas, pendientes, rechazadas === */
+/* === TARJETAS DE MÃƒâ€°TRICAS Ã¢â‚¬â€ Total, aprobadas, pendientes, rechazadas === */
 .metrics-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -2207,7 +2207,7 @@ body {
 .metric-data p { font-size: 10px; font-weight: bold; color: #64748b; }
 
 
-/* === BOTONES DE ACCIÃ“N â€” Filtros y Exportar === */
+/* === BOTONES DE ACCIÃƒâ€œN Ã¢â‚¬â€ Filtros y Exportar === */
 .list-actions {
     display: flex;
     gap: 10px;
@@ -2235,7 +2235,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* === ESTILOS DE TABLA Y ESTATUS â€” Badges de estado duplicados aquÃ­ para especificidad === */
+/* === ESTILOS DE TABLA Y ESTATUS Ã¢â‚¬â€ Badges de estado duplicados aquÃƒÂ­ para especificidad === */
 .badge-status {
     padding: 4px 10px;
     border-radius: 6px;
@@ -2246,17 +2246,17 @@ body {
 .badge-status.approved { background: #f0fdf4; color: #15803d; }
 .badge-status.rejected { background: #fef2f2; color: #b91c1c; }
 
-/* === CAMPO DE BÃšSQUEDA POR CÃ‰DULA (solicitudes.blade.php) === */
+/* === CAMPO DE BÃƒÅ¡SQUEDA POR CÃƒâ€°DULA (solicitudes.blade.php) === */
 #displayCedula:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 /* ============================================================
-   expediente.css â€” Estilos para la secciÃ³n "Expedientes"
+   expediente.css Ã¢â‚¬â€ Estilos para la secciÃƒÂ³n "Expedientes"
    Grid de tarjetas de expedientes con foto, detalle con
-   perfil, barra de progreso, documentos con aprobaciÃ³n/
+   perfil, barra de progreso, documentos con aprobaciÃƒÂ³n/
    rechazo, carga de archivos (dropzone), historial y
-   modal de creaciÃ³n con bÃºsqueda por cÃ©dula.
+   modal de creaciÃƒÂ³n con bÃƒÂºsqueda por cÃƒÂ©dula.
    ============================================================ */
 
-/* === LAYOUT â€” Utilidades y barra de bÃºsqueda === */
+/* === LAYOUT Ã¢â‚¬â€ Utilidades y barra de bÃƒÂºsqueda === */
 .hidden { display: none !important; }
 
 .search-filter-bar {
@@ -2318,7 +2318,7 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .expediente-card:hover {
-    transform: translateY(-4px); /* Efecto de elevaciÃ³n al hacer hover */
+    transform: translateY(-4px); /* Efecto de elevaciÃƒÂ³n al hacer hover */
     box-shadow: 0 12px 30px rgba(0,0,0,0.1);
     border-color: #dbeafe;
 }
@@ -2441,7 +2441,7 @@ body {
     height: 100%;
     background: linear-gradient(90deg, #3b82f6, #2563eb); /* Degradado azul para la barra de progreso */
     border-radius: 10px;
-    transition: width 0.4s ease; /* AnimaciÃ³n suave al cambiar el progreso */
+    transition: width 0.4s ease; /* AnimaciÃƒÂ³n suave al cambiar el progreso */
 }
 
 /* === DETALLE GRID === */
@@ -2609,7 +2609,7 @@ body {
     height: 100%;
     background: linear-gradient(90deg, #3b82f6, #2563eb);
     border-radius: 10px;
-    transition: width 0.5s ease; /* MÃ¡s lento que el mini-progress para destacar el cambio */
+    transition: width 0.5s ease; /* MÃƒÂ¡s lento que el mini-progress para destacar el cambio */
 }
 .eg-desc {
     font-size: 12px;
@@ -2653,7 +2653,7 @@ body {
     border: 1px solid #f1f5f9;
 }
 
-/* Grid con 3 columnas: Ã­cono | info | botones de acciÃ³n */
+/* Grid con 3 columnas: ÃƒÂ­cono | info | botones de acciÃƒÂ³n */
 .doc-item-row {
     display: grid;
     grid-template-columns: 50px 1fr auto;
@@ -2915,14 +2915,14 @@ body {
 }
 
 /* ============================================================
-   prestaciones.css â€” Estilos para la secciÃ³n "Prestaciones"
+   prestaciones.css Ã¢â‚¬â€ Estilos para la secciÃƒÂ³n "Prestaciones"
    Grid de tarjetas de prestaciones, selector de trabajador,
-   formulario de cÃ¡lculo de ingresos, toggle de porcentaje
-   de jubilaciÃ³n, sidebar consolidado con totales, checklist
-   de documentos y tarjetas de mÃ©tricas con borde lateral.
+   formulario de cÃƒÂ¡lculo de ingresos, toggle de porcentaje
+   de jubilaciÃƒÂ³n, sidebar consolidado con totales, checklist
+   de documentos y tarjetas de mÃƒÂ©tricas con borde lateral.
    ============================================================ */
 
-/* === EXTENSIÃ“N SECCIÃ“N 5: PRESTACIONES === */
+/* === EXTENSIÃƒâ€œN SECCIÃƒâ€œN 5: PRESTACIONES === */
 
 /* === GRID DE TARJETAS === */
 .prestaciones-grid-cards {
@@ -3030,7 +3030,7 @@ body {
     display: inline-block;
 }
 
-/* === DETALLE â€” Vista de detalle de una prestaciÃ³n === */
+/* === DETALLE Ã¢â‚¬â€ Vista de detalle de una prestaciÃƒÂ³n === */
 #prestacion-detalle .prestaciones-grid {
     margin-top: 20px;
 }
@@ -3070,7 +3070,7 @@ body {
     align-items: start;
 }
 
-/* === SELECTOR DE TRABAJADOR â€” Barra superior con avatar y nombre === */
+/* === SELECTOR DE TRABAJADOR Ã¢â‚¬â€ Barra superior con avatar y nombre === */
 .worker-selector-card {
     background: white;
     border-radius: 12px;
@@ -3109,7 +3109,7 @@ body {
     cursor: pointer;
 }
 
-/* === FORMULARIO DE CÃLCULO â€” Ingresos y estructura salarial === */
+/* === FORMULARIO DE CÃƒÂLCULO Ã¢â‚¬â€ Ingresos y estructura salarial === */
 .income-structure-card {
     background: white;
     border-radius: 12px;
@@ -3154,7 +3154,7 @@ body {
     width: 100%;
 }
 
-/* === TOGGLE DE JUBILACIÃ“N â€” Selector de porcentaje (60% / 100%) === */
+/* === TOGGLE DE JUBILACIÃƒâ€œN Ã¢â‚¬â€ Selector de porcentaje (60% / 100%) === */
 .jubilation-percent-area {
     display: flex;
     justify-content: space-between;
@@ -3184,7 +3184,7 @@ body {
 .percent-toggle button.active { background: white; color: #1e3a8a; font-weight: bold; }
 .percent-toggle button span { display: block; font-size: 10px; font-weight: normal; } /* Sub-etiqueta debajo del porcentaje */
 
-/* === SIDEBAR CONSOLIDADO â€” Totales y desglose de la prestaciÃ³n === */
+/* === SIDEBAR CONSOLIDADO Ã¢â‚¬â€ Totales y desglose de la prestaciÃƒÂ³n === */
 .consolidated-card {
     background: #1e3a8a;
     color: white;
@@ -3210,7 +3210,7 @@ body {
 
 .status-tag-green { background: #4ade80; color: #064e3b; font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 800; }
 
-/* === BOTONES SIDEBAR â€” Acciones de guardar/exportar desde el panel lateral === */
+/* === BOTONES SIDEBAR Ã¢â‚¬â€ Acciones de guardar/exportar desde el panel lateral === */
 .btn-dark-full {
     width: 100%;
     background: #1e3a8a;
@@ -3234,7 +3234,7 @@ body {
     cursor: pointer;
 }
 
-/* === CHECKLIST DE DOCUMENTOS â€” Requisitos para la prestaciÃ³n === */
+/* === CHECKLIST DE DOCUMENTOS Ã¢â‚¬â€ Requisitos para la prestaciÃƒÂ³n === */
 .doc-checklist-card {
     background: #f8fafc;
     padding: 20px;
@@ -3312,18 +3312,18 @@ body {
 .main-value {
     font-size: 32px;
     font-weight: 800;
-    color: #1e3a8a; /* Azul oscuro para los nÃºmeros */
+    color: #1e3a8a; /* Azul oscuro para los nÃƒÂºmeros */
     margin: 0;
     line-height: 1;
 }
 
-/* Color especÃ­fico para el valor de antigÃ¼edad */
+/* Color especÃƒÂ­fico para el valor de antigÃƒÂ¼edad */
 .border-green .main-value {
     color: #064e3b;
 }
 
 
-/* CONTENEDOR DE MÃ‰TRICAS INFERIORES */
+/* CONTENEDOR DE MÃƒâ€°TRICAS INFERIORES */
 .bottom-metrics {
     display: flex;
     gap: 20px;
@@ -3342,7 +3342,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     min-height: 160px;
-    border: none; /* Quitamos bordes estÃ¡ndar si existieran */
+    border: none; /* Quitamos bordes estÃƒÂ¡ndar si existieran */
 }
 
 /* BORDES LATERALES GRUESOS Y OSCUROS */
@@ -3354,7 +3354,7 @@ body {
 }
 
 /* CONTENEDOR DE ICONO Y ETIQUETA */
-/* En tu HTML, el icono y el span estÃ¡n dentro del mismo nivel, 
+/* En tu HTML, el icono y el span estÃƒÂ¡n dentro del mismo nivel, 
    usaremos flex en la caja padre para posicionarlos */
 .metric-box-white {
     display: flex;
@@ -3406,20 +3406,20 @@ body {
     line-height: 1;
 }
 
-/* COLOR ESPECÃFICO PARA EL VALOR DE ANTIGÃœEDAD */
+/* COLOR ESPECÃƒÂFICO PARA EL VALOR DE ANTIGÃƒÅ“EDAD */
 .border-green .metric-content h2 {
     color: #064e3b;
 }
 
 
 /* ============================================================
-   reportes.css â€” Estilos para la secciÃ³n "Reportes"
-   Barra de filtros con grid, mÃ©tricas en 3 columnas,
-   grÃ¡ficos (barras y donut), tabla de reportes, botones
-   de exportaciÃ³n a Excel/PDF con efectos hover.
+   reportes.css Ã¢â‚¬â€ Estilos para la secciÃƒÂ³n "Reportes"
+   Barra de filtros con grid, mÃƒÂ©tricas en 3 columnas,
+   grÃƒÂ¡ficos (barras y donut), tabla de reportes, botones
+   de exportaciÃƒÂ³n a Excel/PDF con efectos hover.
    ============================================================ */
 
-/* === EXTENSIÃ“N SECCIÃ“N 6: REPORTES === */
+/* === EXTENSIÃƒâ€œN SECCIÃƒâ€œN 6: REPORTES === */
 
 .section-header-flex {
     display: flex;
@@ -3428,7 +3428,7 @@ body {
     margin-bottom: 25px;
 }
 
-/* === BARRA DE FILTROS â€” Grid de filtros con selector y botÃ³n aplicar === */
+/* === BARRA DE FILTROS Ã¢â‚¬â€ Grid de filtros con selector y botÃƒÂ³n aplicar === */
 .filters-bar-card {
     background: white;
     padding: 20px;
@@ -3474,7 +3474,7 @@ body {
     gap: 8px;
 }
 
-/* === MÃ‰TRICAS â€” Grid de 3 columnas con tarjetas de indicadores === */
+/* === MÃƒâ€°TRICAS Ã¢â‚¬â€ Grid de 3 columnas con tarjetas de indicadores === */
 .metrics-grid-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 2fr;
@@ -3511,15 +3511,15 @@ body {
 .trend.down { color: #ef4444; }
 
 .metric-card-wide { display: flex; justify-content: space-between; }
-/* Marca de agua decorativa al fondo de las tarjetas de mÃ©tricas */
+/* Marca de agua decorativa al fondo de las tarjetas de mÃƒÂ©tricas */
 .bg-icon-watermark {
     position: absolute;
     right: -10px; bottom: -10px;
     font-size: 120px; color: #f1f5f9;
-    z-index: 0; /* DetrÃ¡s de todo el contenido */
+    z-index: 0; /* DetrÃƒÂ¡s de todo el contenido */
 }
 
-/* === GRÃFICOS â€” Grid de 2 columnas para charts (barras + donut) === */
+/* === GRÃƒÂFICOS Ã¢â‚¬â€ Grid de 2 columnas para charts (barras + donut) === */
 .charts-grid-2 {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
@@ -3544,7 +3544,7 @@ body {
 .bar-container span { font-size: 10px; color: #94a3b8; }
 
 .donut-chart-area { display: flex; align-items: center; gap: 20px; margin-top: 20px; }
-/* Donut visual simplificado â€” cada borde de color representa una categorÃ­a */
+/* Donut visual simplificado Ã¢â‚¬â€ cada borde de color representa una categorÃƒÂ­a */
 .donut-visual {
     width: 120px; height: 120px;
     border-radius: 50%;
@@ -3554,7 +3554,7 @@ body {
     display: flex; align-items: center; justify-content: center;
 }
 
-/* === TABLA REPORTE â€” Tabla con datos exportables === */
+/* === TABLA REPORTE Ã¢â‚¬â€ Tabla con datos exportables === */
 .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
 .report-table th { text-align: left; font-size: 10px; color: #94a3b8; padding: 15px; border-bottom: 1px solid #f1f5f9; }
 .report-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
@@ -3636,7 +3636,7 @@ body {
 }
 
 
-/* Contenedor para que no estÃ©n pegados */
+/* Contenedor para que no estÃƒÂ©n pegados */
 .actions-group {
     display: flex;
     gap: 12px; /* Espacio exacto entre botones */
@@ -3644,7 +3644,7 @@ body {
     margin-bottom: 20px;
 }
 
-/* Si prefieres que estÃ©n uno debajo del otro pero con espacio */
+/* Si prefieres que estÃƒÂ©n uno debajo del otro pero con espacio */
 .actions-group-vertical {
     display: flex;
     flex-direction: column;
@@ -3654,21 +3654,21 @@ body {
 
 
 /* ============================================================
-   caja-negra.css â€” Estilos para la secciÃ³n "Caja Negra"
-   (Historial / Registro de AuditorÃ­a)
-   Incluye: badges de acciÃ³n, botones, barra de herramientas
-   (toolbar), tarjetas de estadÃ­sticas, tabla de registros,
-   paginaciÃ³n, footer y modal de detalle.
+   caja-negra.css Ã¢â‚¬â€ Estilos para la secciÃƒÂ³n "Caja Negra"
+   (Historial / Registro de AuditorÃƒÂ­a)
+   Incluye: badges de acciÃƒÂ³n, botones, barra de herramientas
+   (toolbar), tarjetas de estadÃƒÂ­sticas, tabla de registros,
+   paginaciÃƒÂ³n, footer y modal de detalle.
    ============================================================ */
 
-/* === BADGES (Insignias de acciÃ³n y tipo) === */
+/* === BADGES (Insignias de acciÃƒÂ³n y tipo) === */
 .badge-action { display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px; }
 .badge-created { background:#ecfdf5;color:#059669;border:1px solid #a7f3d0; }
 .badge-updated { background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe; }
 .badge-deleted { background:#fef2f2;color:#dc2626;border:1px solid #fecaca; }
 .badge-type { font-size:0.68rem;color:#64748b;background:#f1f5f9;padding:3px 10px;border-radius:20px;font-weight:500; }
 
-/* === BOTONES (AcciÃ³n, fantasma, paginaciÃ³n) === */
+/* === BOTONES (AcciÃƒÂ³n, fantasma, paginaciÃƒÂ³n) === */
 .cn-btn-action { display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:10px;font-size:0.83rem;font-weight:600;cursor:pointer;transition:all 0.2s;border:none; }
 .cn-btn-action i { width:16px;height:16px; }
 
@@ -3702,7 +3702,7 @@ body {
 .cn-date-range input[type=date]:focus { border-color:#2563eb;background:white;box-shadow:0 0 0 3px rgba(37,99,235,0.08); }
 .cn-date-sep { color:#94a3b8;font-size:0.85rem;font-weight:600; }
 
-/* === STATS (Tarjetas de estadÃ­sticas) === */
+/* === STATS (Tarjetas de estadÃƒÂ­sticas) === */
 .cn-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px; }
 .cn-stat-card { background:white;border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #f1f5f9;transition:transform 0.2s; }
 .cn-stat-card:hover { transform:translateY(-2px); }
@@ -3721,7 +3721,7 @@ body {
 .cn-table tbody tr:hover td { background:#fafbfc; }
 .cn-table tbody tr:last-child td { border-bottom:none; }
 
-/* === FOOTER (PaginaciÃ³n y contador) === */
+/* === FOOTER (PaginaciÃƒÂ³n y contador) === */
 .cn-footer { display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:12px; }
 .cn-counter { font-size:0.8rem;color:#64748b;font-weight:500; }
 .cn-pagination { display:flex;flex-wrap:wrap;gap:4px; }
@@ -3743,15 +3743,15 @@ body {
 .cn-detail-full label { font-size:0.65rem;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:5px;letter-spacing:0.3px; }
 .cn-detail-full pre { font-size:0.73rem;background:#f1f5f9;padding:10px;border-radius:6px;max-height:180px;overflow:auto;white-space:pre-wrap;margin:0; }
 
-/* === EMPTY (Estado vacÃ­o) === */
+/* === EMPTY (Estado vacÃƒÂ­o) === */
 .cn-empty { text-align:center;padding:3rem 1rem;color:#94a3b8;font-size:0.9rem; }
 
 /* ============================================================
-   modal.css â€” Estilos para ventanas modales del dashboard
+   modal.css Ã¢â‚¬â€ Estilos para ventanas modales del dashboard
    Overlay con backdrop-filter, contenedor con sidebar oscuro
    y formulario scrollable, grids de 2 y 3 columnas, secciones
-   de documentos, tabla mini, botones de acciÃ³n y filtros
-   por pestaÃ±as.
+   de documentos, tabla mini, botones de acciÃƒÂ³n y filtros
+   por pestaÃƒÂ±as.
    ============================================================ */
 
 /* === VENTANA MODAL === */
@@ -3880,7 +3880,7 @@ body {
     border: 1px solid #e2e8f0;
 }
 
-/* === ACCIONES DEL MODAL â€” Botones de guardar/cancelar === */
+/* === ACCIONES DEL MODAL Ã¢â‚¬â€ Botones de guardar/cancelar === */
 .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -3910,7 +3910,7 @@ body {
 }
 .btn-submit:hover { background: #1e293b; transform: translateY(-1px); }
 
-/* === SECCIÃ“N INTERNA CON ENCABEZADO Y BOTÃ“N === */
+/* === SECCIÃƒâ€œN INTERNA CON ENCABEZADO Y BOTÃƒâ€œN === */
 .section-header-inline {
     display: flex;
     justify-content: space-between;
@@ -4026,10 +4026,10 @@ body {
 }
 
 /* ============================================================
-   profile.css â€” Estilos de la pÃ¡gina de perfil de usuario
+   profile.css Ã¢â‚¬â€ Estilos de la pÃƒÂ¡gina de perfil de usuario
    (/usuarios/user). Incluye layout, sidebar, formularios,
    selector de tema/color, sesiones activas, actividad,
-   tabla de administraciÃ³n y modo oscuro.
+   tabla de administraciÃƒÂ³n y modo oscuro.
    Utiliza variables CSS de base.css para consistencia.
    ============================================================ */
 
@@ -4074,7 +4074,7 @@ body {
 }
 .profile-header h1 { font-size: 1.5rem; color: var(--text-primary); font-weight: 700; margin: 0; }
 
-/* BotÃ³n volver */
+/* BotÃƒÂ³n volver */
 .btn-back {
     width: 40px; height: 40px;
     border-radius: 10px;
@@ -4157,7 +4157,7 @@ body {
 .role-superadmin { background: #fce7f3; color: #be185d; }
 .role-analista { background: #fef3c7; color: #b45309; }
 
-/* NavegaciÃ³n interna */
+/* NavegaciÃƒÂ³n interna */
 .profile-nav { padding: 12px; }
 .profile-nav-item {
     display: flex;
@@ -4192,7 +4192,7 @@ body {
     flex-direction: column;
 }
 
-/* PestaÃ±as */
+/* PestaÃƒÂ±as */
 .profile-tab { display: none; animation: fadeIn 0.25s ease; }
 .profile-tab.active { display: block; }
 @keyframes fadeIn {
@@ -4461,3 +4461,167 @@ body.dark-mode .profile-nav-item.active { background: #334155; color: #60a5fa; }
 body.dark-mode .profile-nav-divider { background: #334155; }
 
 
+
+/* === PAGINACIÃ“N ACTIVIDAD (tanto para perfil .pag-btn como para inicio .hist-pag-btn) === */
+.activity-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 0 2px;
+    flex-wrap: wrap;
+    border-top: 1px solid #eef2f7;
+    margin-top: 14px;
+}
+.activity-pagination .hist-pag-counter {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-right: 8px;
+}
+.activity-pagination .hist-pag-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.activity-pagination .hist-pag-btn:hover { background: #f1f5f9; color: var(--accent); }
+.activity-pagination .hist-pag-btn.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+.activity-pagination .hist-pag-dots { min-width: 28px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 700; }
+
+.activity-pagination .pag-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.activity-pagination .pag-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: #f0f4fb;
+    background: color-mix(in srgb, var(--accent) 8%, #ffffff);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+.activity-pagination .pag-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(26, 54, 93, 0.3);
+    cursor: default;
+}
+.activity-pagination .pag-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.activity-pagination .pag-btn:disabled:hover { border-color: #e2e8f0; color: #475569; background: #ffffff; }
+.activity-pagination .pag-info {
+    font-size: 0.76rem;
+    color: #94a3b8;
+    margin: 0 8px;
+    font-weight: 500;
+}
+
+body.dark-mode .activity-pagination { border-top-color: #2c3b55; }
+body.dark-mode .activity-pagination .hist-pag-counter { color: #64748b; }
+body.dark-mode .activity-pagination .hist-pag-btn { background: #1e293b; border-color: #334155; color: #94a3b8; }
+body.dark-mode .activity-pagination .hist-pag-btn:hover { background: #334155; color: #f1f5f9; }
+body.dark-mode .activity-pagination .hist-pag-btn.active { background: var(--accent, #1e40af); border-color: var(--accent, #1e40af); color: #ffffff; }
+body.dark-mode .activity-pagination .hist-pag-dots { color: #64748b; }
+body.dark-mode .activity-pagination .pag-btn { background: #232f45; border-color: #33465f; color: #cbd5e1; box-shadow: none; }
+body.dark-mode .activity-pagination .pag-btn:hover { border-color: #60a5fa; color: #60a5fa; background: #2c3b55; transform: none; box-shadow: none; }
+body.dark-mode .activity-pagination .pag-btn.active { background: var(--accent, #3b82f6); border-color: var(--accent, #3b82f6); color: #ffffff; }
+body.dark-mode .activity-pagination .pag-btn:disabled { opacity: 0.4; }
+body.dark-mode .activity-pagination .pag-btn:disabled:hover { border-color: #33465f; color: #cbd5e1; background: #232f45; }
+body.dark-mode .activity-pagination .pag-info { color: #9aa8bd; }
+/* ============================================================
+   COPIAS DE SEGURIDAD â€” Botones con el estilo del sistema
+   (mismo lenguaje visual que .btn-ver / .btn-editar / .btn-eliminar
+   y botones primarios del dashboard: tintado + hover relleno).
+   ============================================================ */
+.backup-item {
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    background:white;border:1px solid #f1f5f9;border-radius:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:16px 18px;margin-bottom:10px;
+    transition:box-shadow 0.2s, border-color 0.2s;
+}
+.backup-item:hover { border-color:#e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.backup-info { display:flex;align-items:center;gap:14px;flex:1;min-width:260px; }
+.backup-icon {
+    width:40px;height:40px;border-radius:10px;background:#eff6ff;color:#1a365d;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.backup-name { font-weight:700;font-size:0.85rem;color:#0f172a;word-break:break-all; }
+.backup-meta { font-size:0.75rem;color:#64748b; }
+.backup-actions { display:flex;flex-wrap:wrap;align-items:center;gap:8px; }
+
+.btn-bk-download,
+.btn-bk-verify,
+.btn-bk-restore,
+.btn-bk-delete {
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:1px solid transparent;border-radius:8px;cursor:pointer;
+    font-family:inherit;font-weight:600;font-size:0.78rem;
+    transition:all 0.2s;white-space:nowrap;
+}
+.btn-bk-download,
+.btn-bk-verify,
+.btn-bk-restore { padding:7px 14px; }
+.btn-bk-download i,
+.btn-bk-verify i,
+.btn-bk-restore i { width:14px;height:14px; }
+
+/* Descargar (informaciÃ³n / azul) */
+.btn-bk-download { color:#2563eb;background:#eff6ff; }
+.btn-bk-download:hover { background:#2563eb;color:#ffffff;box-shadow:0 4px 10px rgba(37,99,235,0.25); }
+
+/* Verificar (neutro / contorno, relleno con acento del sistema) */
+.btn-bk-verify { color:#475569;background:#f8fafc;border-color:#e2e8f0; }
+.btn-bk-verify:hover { background:#1a365d;border-color:#1a365d;color:#ffffff;box-shadow:0 4px 10px rgba(26,54,93,0.25); }
+
+/* Restaurar (advertencia / Ã¡mbar) */
+.btn-bk-restore { color:#d97706;background:#fffbeb; }
+.btn-bk-restore:hover { background:#d97706;color:#ffffff;box-shadow:0 4px 10px rgba(217,119,6,0.25); }
+
+/* Eliminar (peligro / rojo, solo icono) */
+.btn-bk-delete { width:32px;height:32px;border-radius:8px;color:#dc2626;background:#fef2f2; }
+.btn-bk-delete i { width:15px;height:15px; }
+.btn-bk-delete:hover { background:#dc2626;color:#ffffff;box-shadow:0 4px 10px rgba(220,38,38,0.25); }
+
+.btn-bk-download:active,
+.btn-bk-verify:active,
+.btn-bk-restore:active,
+.btn-bk-delete:active { transform:scale(0.95); }
+
+.btn-bk-download:disabled,
+.btn-bk-verify:disabled,
+.btn-bk-restore:disabled,
+.btn-bk-delete:disabled { opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none; }
+
+/* BotÃ³n peligro a escala de mÃ³dulo (modales de confirmaciÃ³n) */
+.cn-danger { background:#dc2626;color:#ffffff;box-shadow:0 2px 8px rgba(220,38,38,0.2); }
+.cn-danger:hover { background:#b91c1c;box-shadow:0 4px 14px rgba(220,38,38,0.3);transform:translateY(-1px); }
+.cn-danger:disabled { opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none; }
+
+/* Botones de acciÃ³n deshabilitados (Generar copia en curso, etc.) */
+.cn-btn-action:disabled { opacity:0.65;cursor:not-allowed;transform:none !important;box-shadow:none !important; }
+
+/* Sellos de estado de la copia */
+.bk-badge { display:inline-flex;align-items:center;gap:5px;font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;font-family:inherit; }
+.bk-badge-ok { color:#059669;background:#ecfdf5;border:1px solid #a7f3d0; }
+.bk-badge-bad { color:#dc2626;background:#fef2f2;border:1px solid #fecaca; }
