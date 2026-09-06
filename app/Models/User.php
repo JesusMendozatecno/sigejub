@@ -67,4 +67,52 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserNotification::class, 'from_user_id');
     }
+
+    // El esquema de la BD renombró remember_token a token_recordar.
+    public function getRememberTokenName(): string
+    {
+        return 'token_recordar';
+    }
+
+    public function getRememberToken(): ?string
+    {
+        return $this->{$this->getRememberTokenName()};
+    }
+
+    public function setRememberToken($value): void
+    {
+        $this->{$this->getRememberTokenName()} = $value;
+    }
+
+    /**
+     * Identificador usado en el flujo de recuperación de contraseña.
+     * La tabla password_reset_tokens se indexa por este valor (columna email).
+     */
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->correo;
+    }
+
+    /**
+     * Envía el enlace de restablecimiento de contraseña por correo.
+     * Se genera con el enlace hacia la ruta password.reset y el correo como parámetro.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $url = url(route('password.reset', [
+            'token' => $token,
+            'correo' => $this->correo,
+        ]));
+
+        $body = "Hola {$this->nombre}, recibimos una solicitud para restablecer tu contraseña.\n\n";
+        $body .= "Haz clic en el siguiente enlace para crear una nueva contraseña:\n{$url}\n\n";
+        $body .= "Si no solicitaste este cambio, puedes ignorar este correo.\n";
+        $body .= "El enlace es válido por 60 minutos.\n\nSaludos,\nEquipo SIGEJUB";
+
+        \App\Services\NotificationService::sendEmail(
+            $this,
+            'Recuperación de contraseña - SIGEJUB',
+            $body
+        );
+    }
 }

@@ -6,8 +6,8 @@
 .nomina-tab:hover:not(.active) { color: #1e3a8a; }
 .table-wrapper-nomina { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
 .table-wrapper-nomina table { min-width: 2800px; border-collapse: collapse; font-size: 0.72rem; }
-.table-wrapper-nomina th { position: sticky; top: 0; z-index: 2; padding: 6px 5px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.15); }
-.table-wrapper-nomina td { padding: 5px 5px; white-space: nowrap; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f8fafc; }
+.table-wrapper-nomina th { position: sticky; top: 0; z-index: 2; padding: 6px 5px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.15); text-align: center; }
+.table-wrapper-nomina td { padding: 5px 5px; white-space: nowrap; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f8fafc; text-align: center; }
 .section-azul th { background: #1e3a8a; color: white; }
 .section-celeste th { background: #0284c7; color: white; }
 .section-verde th { background: #15803d; color: white; }
@@ -214,10 +214,9 @@ window.exportarNomina = function() {
 window.abrirModalImportarNomina = function() {
     const sel = document.getElementById('modalImportarNomina').querySelector('select[name="anio"]');
     if (sel && sel.options.length <= 1) poblarSelectorAnios(sel);
-    if (sel && anioNominaActual) sel.value = anioNominaActual;
     document.getElementById('modalImportarNomina').style.display = 'flex';
     document.getElementById('formImportarNomina').reset();
-    if (sel && anioNominaActual) sel.value = anioNominaActual;
+    if (sel) sel.value = '';
     document.getElementById('resultadoImportacion').style.display = 'none';
 };
 
@@ -262,20 +261,16 @@ window.cargarAniosNomina = function() {
 };
 
 function poblarSelectorAnios(sel) {
-    fetch('/nomina/anios')
-        .then(r => r.json())
-        .then(resp => {
-            const anios = (resp && resp.anios) || [];
-            const anioActual = new Date().getFullYear();
-            const disponibles = new Set(anios.map(a => String(a.anio)));
-            if (!disponibles.has(String(anioActual))) disponibles.add(String(anioActual));
-            const orden = Array.from(disponibles).sort((a, b) => Number(b) - Number(a));
-            let html = '<option value="">Seleccione el año</option>';
-            orden.forEach(a => { html += '<option value="' + a + '">' + a + '</option>'; });
-            sel.innerHTML = html;
-            if (anioNominaActual) sel.value = anioNominaActual;
-        })
-        .catch(err => console.error(err));
+    // Rango completo: 1900 hasta el año actual (se actualiza solo cada año).
+    const anioActual = new Date().getFullYear();
+    const anios = [];
+    for (let anio = 1900; anio <= anioActual; anio++) {
+        anios.push(anio);
+    }
+    anios.sort((a, b) => b - a);
+    let html = '<option value="">Seleccione el año</option>';
+    anios.forEach(a => { html += '<option value="' + a + '">' + a + '</option>'; });
+    sel.innerHTML = html;
 }
 
 window.abrirAnioNomina = function(anio) {

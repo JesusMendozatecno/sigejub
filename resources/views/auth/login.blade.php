@@ -64,7 +64,7 @@
 
                     <div class="login-input-group">
                         <label for="loginEmail">Correo Electrónico</label>
-                        <input class="login-input" type="text" name="correo" id="loginEmail" placeholder="tu@correo.com" required>
+                        <input class="login-input" type="text" name="correo" id="loginEmail" placeholder="tu@correo.com" required autocomplete="username">
                     </div>
 
                     <div class="login-input-group">
@@ -81,7 +81,7 @@
                         <label>
                             <input type="checkbox" name="remember"> Recordarme
                         </label>
-                        <a href="#" class="login-forgot">¿Olvidaste tu contraseña?</a>
+                        <a href="{{ route('password.request') }}" class="login-forgot">¿Olvidaste tu contraseña?</a>
                     </div>
 
                     <button class="login-submit" id="loginBtn" type="submit">
@@ -98,6 +98,16 @@
     </div>
 
     <script>
+    var emailRecordado = localStorage.getItem('sigejub_email_recordado');
+    var chkRemember = document.querySelector('#loginForm input[name="remember"]');
+    var inputEmail = document.getElementById('loginEmail');
+
+    // Recupera el correo de la última persona que ingresó con "Recordarme".
+    if (emailRecordado && inputEmail) {
+        inputEmail.value = emailRecordado;
+        if (chkRemember) chkRemember.checked = true;
+    }
+
     document.getElementById('togglePassword')?.addEventListener('click', function() {
         var input = document.getElementById('loginPassword');
         var icon = document.getElementById('togglePasswordIcon');
@@ -112,6 +122,14 @@
 
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        // Si "Recordarme" está marcado, guarda el correo para el próximo acceso.
+        if (inputEmail && chkRemember) {
+            if (chkRemember.checked && inputEmail.value) {
+                localStorage.setItem('sigejub_email_recordado', inputEmail.value.trim());
+            } else {
+                localStorage.removeItem('sigejub_email_recordado');
+            }
+        }
         mostrarCargando('Verificando credenciales...');
         var btn = document.getElementById('loginBtn');
         btn.disabled = true;

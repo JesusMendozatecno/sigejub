@@ -42,6 +42,16 @@ Route::post('/register', [AuthController::class, 'register'])->middleware('throt
 
 /*
 |-----------------------------
+| RECUPERACIÓN DE CONTRASEÑA
+|-----------------------------
+*/
+Route::get('/password/reset', [AuthController::class, 'forgotPasswordForm'])->name('password.request');
+Route::post('/password/email', [AuthController::class, 'forgotPassword'])->name('password.email')->middleware('throttle:5,1');
+Route::get('/password/reset/{token}', [AuthController::class, 'resetPasswordForm'])->name('password.reset');
+Route::post('/password/reset', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
+
+/*
+|-----------------------------
 | DASHBOARD (PROTEGIDO)
 |-----------------------------
 */

@@ -145,6 +145,7 @@ class PrestacionesController extends Controller
             'sueldo_integral' => 'nullable|numeric',
             'total_primas' => 'nullable|numeric',
             'porcentaje_jubilacion' => 'nullable|numeric',
+            'anio' => 'required|integer|between:1900,' . date('Y'),
         ]);
 
         $t = Trabajador::find($request->trabajador_id);
@@ -186,12 +187,12 @@ class PrestacionesController extends Controller
         );
 
         $detalles = $request->detalles ?? [];
-        $periodo = now()->startOfMonth()->format('Y-m-d');
+        $anioPrestacion = (string) $request->anio;
 
-        $codigoNomina = 'NOM-' . now()->format('Y-m');
+        $codigoNomina = 'NOM-' . $anioPrestacion;
 
         $nomina = Nomina::firstOrCreate(
-            ['periodo' => $periodo],
+            ['periodo' => $anioPrestacion],
             ['codigo' => $codigoNomina, 'estado' => 'borrador']
         );
 
@@ -230,7 +231,7 @@ class PrestacionesController extends Controller
         NotificationService::prestacionCalculada($nombre, $request->monto);
 
         return response()->json([
-            'mensaje' => 'Prestaciones guardadas y nómina generada correctamente.',
+            'mensaje' => 'Prestaciones guardadas y nómina ' . $anioPrestacion . ' generada correctamente.',
             'prestacion' => $prestacion,
         ]);
     }

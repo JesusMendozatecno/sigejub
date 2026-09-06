@@ -243,6 +243,25 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
     </div>
 </div>
 
+<div class="modal-overlay" id="modalAnioPrestacion" style="z-index:5500;">
+    <div class="modal-delete-box" style="text-align:left;max-width:420px;">
+        <h3 style="text-align:center;"><i class="fas fa-calendar-alt"></i> Año de la Prestación</h3>
+        <p style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;">
+            Indique el año de la nómina a la que pertenece esta prestación.
+        </p>
+        <div class="input-group">
+            <label>AÑO DE LA PRESTACIÓN</label>
+            <select id="anioPrestacionSelect" required>
+                <option value="">Seleccione el año</option>
+            </select>
+        </div>
+        <div class="modal-actions" style="justify-content:center;">
+            <button type="button" class="btn-cancel" id="btnCancelarAnioPrestacion">Cancelar</button>
+            <button type="button" class="btn-submit" id="btnConfirmarAnioPrestacion"><i class="fas fa-arrow-right"></i> Continuar</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function() {
     let trabajadorActualId = null;
@@ -602,8 +621,40 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             mostrarToast('Debe calcular primero las prestaciones.', 'warning');
             return;
         }
-        guardarPrestacion(ultimoCalculo.sueldoBase, ultimoCalculo.totalPrimas, ultimoCalculo.sueldoIntegral, ultimoCalculo.totalPrestaciones, ultimoCalculo.detalles);
+        abrirModalAnioPrestacion();
     }
+
+    function abrirModalAnioPrestacion() {
+        const sel = document.getElementById('anioPrestacionSelect');
+        if (sel) {
+            const anioActual = new Date().getFullYear();
+            let html = '<option value="">Seleccione el año</option>';
+            for (let a = anioActual; a >= 1900; a--) {
+                html += '<option value="' + a + '">' + a + '</option>';
+            }
+            sel.innerHTML = html;
+        }
+        document.getElementById('modalAnioPrestacion').style.display = 'flex';
+    }
+
+    function cerrarModalAnioPrestacion() {
+        document.getElementById('modalAnioPrestacion').style.display = 'none';
+    }
+
+    document.getElementById('btnConfirmarAnioPrestacion').addEventListener('click', function() {
+        const sel = document.getElementById('anioPrestacionSelect');
+        if (!sel || !sel.value) {
+            mostrarToast('Debe seleccionar el año de la prestación.', 'warning');
+            return;
+        }
+        const anio = sel.value;
+        cerrarModalAnioPrestacion();
+        guardarPrestacion(ultimoCalculo.sueldoBase, ultimoCalculo.totalPrimas, ultimoCalculo.sueldoIntegral, ultimoCalculo.totalPrestaciones, ultimoCalculo.detalles, anio);
+    });
+    document.getElementById('btnCancelarAnioPrestacion').addEventListener('click', cerrarModalAnioPrestacion);
+    document.getElementById('modalAnioPrestacion').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModalAnioPrestacion();
+    });
 
     document.getElementById('btnGuardarPrestacion').addEventListener('click', guardarCalculo);
     document.getElementById('btnGuardarDesdeModal').addEventListener('click', function() {
@@ -615,7 +666,7 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         if (e.target === this) this.classList.remove('active');
     });
 
-    async function guardarPrestacion(sueldoBase, totalPrimas, sueldoIntegral, totalPrestaciones, detalles) {
+    async function guardarPrestacion(sueldoBase, totalPrimas, sueldoIntegral, totalPrestaciones, detalles, anio) {
         try {
             mostrarCargando('Guardando cálculo...');
             const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -624,6 +675,7 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
                 body: JSON.stringify({
                     trabajador_id: trabajadorActualId,
+                    anio: anio,
                     sueldo_base: sueldoBase,
                     monto: totalPrestaciones,
                     anios_servicio: datosTrabajador.total_anos_servicio || 0,

@@ -9,7 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Activity;
 use App\Services\AuditService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -140,6 +143,73 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    // 🔑 MOSTRAR FORMULARIO "OLVIDASTE TU CONTRASEÑA"
+    public function forgotPasswordForm()
+    {
+        return view('auth.forgot-password');
+    }
+
+    // 📧 ENVIAR ENLACE DE RECUPERACIÓN DE CONTRASEÑA
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'correo' => 'required|email',
+        ]);
+
+        $status = Password::sendResetLink(
+            ['correo' => $request->correo]
+        );
+
+        // Respuesta genérica para no revelar si el correo existe.
+        return back()->with('status', __(
+            $status === Password::RESET_LINK_SENT
+                ? 'Te hemos enviado por correo el enlace de recuperación de contraseña.'
+                : 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.'
+        ));
+    }
+
+    // 🔓 MOSTRAR FORMULARIO PARA DEFINIR NUEVA CONTRASEÑA
+    public function resetPasswordForm(Request $request, string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'correo' => $request->query('correo', ''),
+        ]);
+    }
+
+    // 🔒 GUARDAR NUEVA CONTRASEÑA
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'correo' => 'required|email',
+            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
+        ]);
+
+        $status = Password::reset(
+            $request->only('correo', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->password = Hash::make($password);
+                $user->setRememberToken(Str::random(60));
+                $user->save();
+
+                AuditService::registrar(
+                    'password_reset',
+                    'usuario',
+                    $user->id,
+                    "El usuario {$user->nombre} {$user->apellido} restableció su contraseña"
+                );
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('login')
+                ->with('success', 'Tu contraseña ha sido restablecida. Inicia sesión con tu nueva contraseña.');
+        }
+
+        return back()->withErrors(['correo' => __($status)]);
     }
 
 
