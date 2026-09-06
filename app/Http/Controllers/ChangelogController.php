@@ -5,7 +5,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Changelog;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 
 class ChangelogController extends Controller

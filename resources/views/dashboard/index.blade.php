@@ -269,18 +269,23 @@
     }
     if (!overlay || !overlay.classList.contains('active')) return;
     document.getElementById('loadingText').textContent = 'Preparando el sistema...';
-    Promise.all([
+    var preloads = [
         fetch('/actividades').catch(function(){}),
         fetch('/solicitudes?per_page=1').catch(function(){}),
         fetch('/trabajadores?per_page=1').catch(function(){}),
         fetch('/expedientes?per_page=1').catch(function(){}),
-        fetch('/caja-negra?per_page=1').catch(function(){}),
         fetch('/expedientes/listos-aprobacion').catch(function(){}),
         fetch('/solicitudes/por-mes').catch(function(){}),
         fetch('/solicitudes/vencimientos').catch(function(){}),
         fetch('/trabajadores-stats/dashboard').catch(function(){}),
         fetch('/notificaciones/no-leidas').catch(function(){}),
-    ]).then(function() {
+    ];
+    // La caja negra solo es visible para admin/superadmin; se omite para el rol usuario.
+    var rolPreload = window.SIGEJUB_ROL || '';
+    if (rolPreload === 'admin' || rolPreload === 'superadmin') {
+        preloads.push(fetch('/caja-negra?per_page=1').catch(function(){}));
+    }
+    Promise.all(preloads).then(function() {
         sessionStorage.setItem('sigejub_dashboard_cargado', '1');
         ocultarCargando();
     }).catch(function() {

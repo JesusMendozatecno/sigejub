@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 
 use App\Services\AuditService;
 use App\Services\BackupService;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -83,6 +82,7 @@ class BackupController extends Controller
         $act = \App\Models\Activity::where('tipo_entidad', 'backup')
             ->where('accion', 'backup_created')
             ->latest('id')
+            ->limit(100)
             ->get()
             ->first(function ($a) use ($archivo) {
                 return isset($a->datos_peticion['archivo']) && $a->datos_peticion['archivo'] === $archivo;
