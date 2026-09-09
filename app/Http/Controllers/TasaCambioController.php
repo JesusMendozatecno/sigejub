@@ -49,7 +49,7 @@ class TasaCambioController extends Controller
                 'moneda_destino' => $tasa->moneda_destino,
                 'fuente' => $tasa->fuente,
                 'tipo' => $tasa->tipo,
-                'fecha' => $tasa->created_at->format('d/m/Y H:i'),
+                'fecha' => $tasa->created_at->copy()->setTimezone('America/Caracas')->format('d/m/Y H:i'),
                 'usuario' => $tasa->usuario ? trim($tasa->usuario->nombre . ' ' . ($tasa->usuario->apellido ?? '')) : null,
             ],
         ]);

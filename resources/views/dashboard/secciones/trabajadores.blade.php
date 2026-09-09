@@ -13,6 +13,10 @@
 
 <section class="filters-bar-card" style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
     <div class="filter-group">
+        <label>BUSCAR TRABAJADOR</label>
+        <input type="text" id="buscadorTrabajadores" placeholder="Nombre, apellido o cédula..." autocomplete="off" style="min-width:220px;">
+    </div>
+    <div class="filter-group">
         <label>FILTRAR POR ESTATUS</label>
         <select id="filtroEstatus">
             <option value="">Cualquier estatus</option>
@@ -53,7 +57,8 @@
                 <th>NOMBRE COMPLETO</th>
                 <th>CÉDULA</th>
                 <th>CARGO</th>
-                <th>TIPO</th>
+                <th>GRADO</th>
+                <th>UNIDAD / DEPTO</th>
                 <th>ASIGNACIÓN</th>
                 <th>ESTATUS</th>
                 <th>ACCIONES</th>

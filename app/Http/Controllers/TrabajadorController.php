@@ -59,6 +59,11 @@ class TrabajadorController extends Controller
             $query->where('asignacion', $asignacion);
         }
 
+        // Filtro por tipo de nómina (ADM / DOC / OBREROS)
+        if ($nomina = $request->get('nomina')) {
+            $query->where('tipo_nomina', strtoupper(trim($nomina)));
+        }
+
         $trabajadores = $query->orderBy('nombres', 'asc')
                               ->orderBy('apellidos', 'asc')
                               ->paginate(min($request->get('per_page', 10), 100));
@@ -156,7 +161,7 @@ class TrabajadorController extends Controller
 
             $datos = $validated;
 
-            if (!empty($datos['cargo_id']) && empty($datos['cargo'])) {
+            if (!empty($datos['cargo_id'])) {
                 $cargo = \App\Models\Cargo::find($datos['cargo_id']);
                 if ($cargo) {
                     $datos['cargo'] = $cargo->nombre;
@@ -230,7 +235,7 @@ class TrabajadorController extends Controller
 
             $datos = $validated;
 
-            if (!empty($datos['cargo_id']) && empty($datos['cargo'])) {
+            if (!empty($datos['cargo_id'])) {
                 $cargo = \App\Models\Cargo::find($datos['cargo_id']);
                 if ($cargo) {
                     $datos['cargo'] = $cargo->nombre;

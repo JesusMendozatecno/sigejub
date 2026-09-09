@@ -305,7 +305,7 @@ class TasaCambioService
                 'moneda_destino' => $tasa->moneda_destino,
                 'fuente' => $tasa->fuente,
                 'tipo' => $tasa->tipo,
-                'fecha' => $fechaConsulta->format('d/m/Y h:i A'),
+                'fecha' => $fechaConsulta->copy()->setTimezone('America/Caracas')->format('d/m/Y h:i A'),
                 'fecha_raw' => $fechaConsulta->toIso8601String(),
                 'minutos_desde' => $minutosDesdeConsulta,
                 'api_configurada' => (bool) config('services.tasas_cambio.enabled', false),

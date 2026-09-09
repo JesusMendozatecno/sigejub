@@ -176,6 +176,7 @@
                 <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
                 <li class="menu-item" data-target="formulas"><i class="fas fa-square-root-variable" size="18"></i> Fórmulas</li>
                 <li class="menu-item" data-target="tasas-cambio"><i class="fas fa-dollar-sign" size="18"></i> Tasa de Cambio</li>
+                <li class="menu-item" data-target="ayuda"><i class="fas fa-circle-question" size="18"></i> Ayuda</li>
                 @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
                 <li class="menu-item" data-target="cargos-grados"><i class="fas fa-address-card" size="18"></i> Cargos y Grados</li>
                 <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
@@ -226,6 +227,10 @@
 
             <div id="tasas-cambio" class="content-section">
                 @include('dashboard.secciones.tasas-cambio')
+            </div>
+
+            <div id="ayuda" class="content-section">
+                @include('dashboard.secciones.ayuda')
             </div>
 
             @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))

@@ -58,7 +58,7 @@ body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
 </header>
 
 <div id="vistaAniosNomina">
-    <div class="filters-bar-card">
+    <div class="filters-bar-card" style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
         <div class="filter-group">
             <label>AÑOS DISPONIBLES</label>
             <p style="margin:2px 0 0;font-size:0.75rem;color:#64748b;">Seleccione un año para ver su nómina.</p>
@@ -87,7 +87,7 @@ body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
         <button class="nomina-tab" data-tipo="OBREROS">Obreros</button>
     </div>
 
-    <div class="filters-bar-card">
+    <div class="filters-bar-card" style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
         <div class="filter-group">
             <label>AÑO</label>
             <select id="filtroAnioNomina" onchange="cambiarAnioNomina(this.value)">

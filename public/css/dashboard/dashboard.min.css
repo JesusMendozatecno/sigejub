@@ -689,6 +689,16 @@ body {
     background: var(--bg-card);
 }
 
+/* Paginación centrada en la tabla de trabajadores */
+#trabajadores .table-footer {
+    position: relative;
+    justify-content: center;
+}
+#trabajadores .table-footer > span {
+    position: absolute;
+    left: var(--space-4);
+}
+
 /* === MODAL OVERLAY === */
 .modal-overlay {
     display: none;
@@ -1650,6 +1660,14 @@ body {
 }
 
 .filter-group select {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    padding: 8px;
+    border-radius: 6px;
+    color: #1e293b;
+    outline: none;
+}
+.filter-group input {
     width: 100%;
     border: 1px solid #e2e8f0;
     padding: 8px;

@@ -13,6 +13,7 @@ class NominaController extends Controller
     {
         $periodo = $request->get('periodo');
         $anio = $request->get('anio');
+        $tipoNomina = $request->get('tipo_nomina');
         if ($anio) {
             $periodo = $anio;
         }
@@ -51,6 +52,7 @@ class NominaController extends Controller
                     'total_anos_servicio' => $t->total_anos_servicio ?? 0,
                     'porcentaje_antiguedad' => (float) ($t->porcentaje_antiguedad ?? 0),
                     'codigo_prima_resp' => $t->es_jefe_coordinador ? '7' : '',
+                    'tipo_nomina' => $t->tipo_nomina ?? null,
                     'cargo' => $t->cargo ?? '',
                     'dedicacion' => $t->dedicacion ?? '',
                     'grado_cargo' => $t->grado_cargo ?? '',
@@ -67,7 +69,10 @@ class NominaController extends Controller
                     'total_asignacion' => $pivot ? (float) $pivot->total_asignacion : 0,
                 ];
             })
-            ->values();
+            ->values()
+            ->when($tipoNomina, fn($rows) => $rows->filter(
+                fn($r) => ($r['tipo_nomina'] ?? '') === strtoupper(trim($tipoNomina))
+            )->values());
 
         return response()->json([
             'trabajadores' => $trabajadores,

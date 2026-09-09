@@ -150,6 +150,11 @@ class NominaExportService
 
     protected function determinarTipoNomina($trabajador): string
     {
+        $tipo = strtoupper(trim((string) ($trabajador->tipo_nomina ?? '')));
+        if (in_array($tipo, ['ADM', 'DOC', 'OBREROS'], true)) {
+            return $tipo;
+        }
+
         return ($this->mapTipoNomina[$trabajador->tipo_contrato_id] ?? 'ADM');
     }
 }
