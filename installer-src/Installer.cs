@@ -13,9 +13,15 @@ namespace SIGEJUB_Installer
 {
     static class Program
     {
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+
         [STAThread]
         static void Main()
         {
+            // Evita que el escalado de DPI desincronice texto y coordenadas
+            // (causa que el texto se monte sobre el panel lateral en monitores escalados)
+            try { SetProcessDPIAware(); } catch { }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new InstallerForm());
@@ -285,18 +291,18 @@ namespace SIGEJUB_Installer
 
         private Panel MakeHeader(string title, string subtitle)
         {
-            var p = new Panel { Location = new Point(0, 0), Size = new Size(ContentW - 40, 84), BackColor = P.Bg };
+            var p = new Panel { Location = new Point(0, 0), Size = new Size(ContentW, 84), BackColor = P.Bg };
             lblTitle = new Label
             {
-                Text = title, AutoSize = false,
+                Text = title, AutoSize = true,
                 Font = new Font("Segoe UI", 17, FontStyle.Bold),
-                ForeColor = P.Navy, Location = new Point(18, 16), Size = new Size(560, 32)
+                ForeColor = P.Navy, Location = new Point(18, 16), MaximumSize = new Size(ContentW - 36, 40)
             };
             var sub = new Label
             {
-                Text = subtitle, AutoSize = false,
+                Text = subtitle, AutoSize = true,
                 Font = new Font("Segoe UI", 10),
-                ForeColor = P.Muted, Location = new Point(18, 50), Size = new Size(560, 20)
+                ForeColor = P.Muted, Location = new Point(18, 52), MaximumSize = new Size(ContentW - 36, 24)
             };
             p.Controls.Add(lblTitle);
             p.Controls.Add(sub);
@@ -372,14 +378,14 @@ namespace SIGEJUB_Installer
 
             var lbl1 = new Label
             {
-                Text = "Este asistente instalará SIGEJUB en tu equipo.", AutoSize = false,
-                Location = new Point(0, 0), Size = new Size(inner.Width, 28),
+                Text = "Este asistente instalará SIGEJUB en tu equipo.", AutoSize = true,
+                Location = new Point(0, 0), MaximumSize = new Size(inner.Width, 28),
                 Font = new Font("Segoe UI", 11), ForeColor = P.Text, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
             var lbl2 = new Label
             {
-                Text = "Durante la instalación:", AutoSize = false,
-                Location = new Point(0, 36), Size = new Size(inner.Width, 24),
+                Text = "Durante la instalación:", AutoSize = true,
+                Location = new Point(0, 36), MaximumSize = new Size(inner.Width, 24),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = P.Navy, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
             inner.Controls.Add(lbl1); inner.Controls.Add(lbl2);
@@ -394,14 +400,14 @@ namespace SIGEJUB_Installer
             int y = 66;
             foreach (var pt in puntos)
             {
-                var l = new Label { Text = pt, AutoSize = false, Location = new Point(0, y), Size = new Size(inner.Width, 24), Font = new Font("Segoe UI", 10), ForeColor = P.Muted, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
+                var l = new Label { Text = pt, AutoSize = true, Location = new Point(0, y), MaximumSize = new Size(inner.Width, 24), Font = new Font("Segoe UI", 10), ForeColor = P.Muted, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
                 inner.Controls.Add(l); y += 28;
             }
 
             var req = new Label
             {
                 Text = "Requisitos: PHP 8.2+ y Composer instalados. La base de datos debe existir en el servidor.",
-                AutoSize = false, Location = new Point(0, y + 12), Size = new Size(inner.Width, 40),
+                AutoSize = true, Location = new Point(0, y + 12), MaximumSize = new Size(inner.Width, 40),
                 Font = new Font("Segoe UI", 9, FontStyle.Italic), ForeColor = Color.FromArgb(180, 83, 9), Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
             };
             inner.Controls.Add(req);
