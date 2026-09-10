@@ -272,8 +272,10 @@ namespace SIGEJUB_Installer
             if (step == STEP_INSTALL)
             {
                 if (installing) return;
-                btnNext.Text = "Instalando...";
-                btnNext.Enabled = false;
+                btnBack.Visible = false;
+                btnNext.Visible = false;
+                SetProgress(0);
+                SetStatus("Reintentando...");
                 StartInstall();
                 return;
             }
@@ -338,8 +340,8 @@ namespace SIGEJUB_Installer
                 case STEP_DONE: BuildDone(); break;
             }
 
-            btnBack.Visible = (s != STEP_WELCOME && s != STEP_DONE);
-            btnNext.Visible = (s != STEP_DONE);
+            btnBack.Visible = (s != STEP_WELCOME && s != STEP_DONE && s != STEP_INSTALL);
+            btnNext.Visible = (s != STEP_DONE && s != STEP_INSTALL);
             btnStart.Visible = (s == STEP_DONE);
             if (s == STEP_WELCOME) { btnNext.Text = "Siguiente"; }
             else if (s == STEP_FOLDER) { btnNext.Text = "Siguiente"; }
@@ -608,21 +610,30 @@ namespace SIGEJUB_Installer
         {
             try
             {
-                Process.Start(new ProcessStartInfo { FileName = "php", Arguments = "artisan serve --port=" + selectedPort, WorkingDirectory = installPath, UseShellExecute = true });
-                this.Close();
-                return;
-            }
-            catch
-            {
-                // Fallback: si php no está disponible, abrir el vbs de arranque o la URL
-                string vbs = Path.Combine(installPath, "sigejub-start.vbs");
-                if (File.Exists(vbs))
+                string php = LocatePhp();
+                if (!string.IsNullOrEmpty(php) && File.Exists(php))
                 {
-                    try { Process.Start(vbs); this.Close(); return; } catch { }
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = php,
+                        Arguments = "artisan serve --port=" + selectedPort,
+                        WorkingDirectory = installPath,
+                        UseShellExecute = false
+                    });
+                    this.Close();
+                    return;
                 }
-                try { Process.Start("http://localhost:" + selectedPort); } catch { }
-                this.Close();
             }
+            catch { }
+
+            // Fallback: si php no se pudo resolver, abrir el vbs de arranque o la URL
+            string vbs = Path.Combine(installPath, "sigejub-start.vbs");
+            if (File.Exists(vbs))
+            {
+                try { Process.Start(vbs); this.Close(); return; } catch { }
+            }
+            try { Process.Start("http://localhost:" + selectedPort); } catch { }
+            this.Close();
         }
 
         private void StartInstall()
@@ -644,6 +655,7 @@ namespace SIGEJUB_Installer
                 // ── 1: Copiar archivos de la app ──
                 AppendLog("[1/8] Copiando archivos de la aplicación...", Color.Yellow);
                 CopyDirectory(SourceRoot, installPath);
+                CleanStorage(installPath);
                 SetProgress(12);
                 AppendLog("[OK] Archivos copiados a " + installPath, Color.Green);
 
@@ -656,8 +668,14 @@ namespace SIGEJUB_Installer
                     FinishWithError(); return;
                 }
                 string phpVer = "";
-                RunCmd("php", "-r \"echo PHP_MAJOR_VERSION;\"", out phpVer);
+                RunCmd("php", "-r \"echo PHP_VERSION;\"", out phpVer);
+                phpVer = (phpVer ?? "").Trim();
+                if (string.IsNullOrEmpty(phpVer)) phpVer = "desconocida";
                 AppendLog("[OK] PHP " + phpVer + " encontrado", Color.Green);
+                if (!IsPhpCompatible(phpVer))
+                {
+                    AppendLog("[ADVERTENCIA] SIGEJUB requiere PHP 8.2+; la versión detectada puede causar errores.", Color.Orange);
+                }
                 SetProgress(20);
 
                 // ── 3: Composer ──
@@ -696,23 +714,32 @@ namespace SIGEJUB_Installer
                 // ── 5: composer install ──
                 AppendLog("[5/8] Instalando dependencias (esto puede tardar)...", Color.Yellow);
                 if (!RunCmdIn("composer", "install --no-interaction --no-ansi --no-progress", installPath, out output))
-                    AppendLog("[ADVERTENCIA] composer: " + Truncate(output, 200), Color.Orange);
-                else
-                    AppendLog("[OK] Dependencias instaladas", Color.Green);
+                {
+                    AppendLog("[ERROR] composer install: " + Truncate(output, 300), Color.Red);
+                    FinishWithError(); return;
+                }
+                AppendLog("[OK] Dependencias instaladas", Color.Green);
                 SetProgress(52);
 
                 // ── 6: key ──
                 AppendLog("[6/8] Generando APP_KEY...", Color.Yellow);
                 if (!RunCmdIn("php", "artisan key:generate --force --no-ansi", installPath, out output))
-                    AppendLog("[ADVERTENCIA] key: " + Truncate(output, 200), Color.Orange);
-                else AppendLog("[OK] APP_KEY generada", Color.Green);
+                {
+                    AppendLog("[ERROR] key:generate: " + Truncate(output, 300), Color.Red);
+                    FinishWithError(); return;
+                }
+                AppendLog("[OK] APP_KEY generada", Color.Green);
                 SetProgress(64);
 
                 // ── 7: migrar ──
                 AppendLog("[7/8] Ejecutando migraciones...", Color.Yellow);
                 if (!RunCmdIn("php", "artisan migrate --force --no-ansi", installPath, out output))
-                    AppendLog("[ADVERTENCIA] Migraciones: " + Truncate(output, 250), Color.Orange);
-                else AppendLog("[OK] Migraciones ejecutadas", Color.Green);
+                {
+                    AppendLog("[ERROR] Migraciones: " + Truncate(output, 300), Color.Red);
+                    AppendLog("[ERROR] Revisa que la base de datos exista y las credenciales sean correctas.", Color.Red);
+                    FinishWithError(); return;
+                }
+                AppendLog("[OK] Migraciones ejecutadas", Color.Green);
                 SetProgress(78);
 
                 // ── 8: finalizar ──
@@ -761,18 +788,24 @@ namespace SIGEJUB_Installer
             this.Invoke(new Action(() =>
             {
                 installing = false;
+                btnBack.Visible = false;
+                btnNext.Visible = true;
                 btnNext.Enabled = true;
                 btnNext.Text = "Reintentar";
+                RepositionButtons();
             }));
         }
 
         // ─── Copia de directorio ───
+        // NOTA: "storage" NO se excluye: la aplicación Laravel necesita que existan
+        // las carpetas storage/framework/views, storage/framework/sessions,
+        // storage/framework/cache, storage/logs y storage/app al arrancar.
         private static readonly HashSet<string> ExcludeTop = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             ".git", "vendor", "node_modules", "installer-src",
             "SIGEJUB-Installer.exe", "build-installer.ps1", "setup.bat", "setup.sh",
             "inicio.php", "detener.bat", "detener.sh", "start.bat", "start.sh",
-            "sigejub-start.vbs", "README.md", "storage", "bd-sigejub"
+            "sigejub-start.vbs", "README.md", "bd-sigejub"
         };
 
         private void CopyDirectory(string src, string dst)
@@ -790,6 +823,33 @@ namespace SIGEJUB_Installer
                 if (name.StartsWith(".env", StringComparison.OrdinalIgnoreCase)) continue;
                 File.Copy(file, Path.Combine(dst, name), true);
             }
+        }
+
+        // Vacía los contenidos volátiles de storage (caché, sesiones, vistas compiladas,
+        // logs y backups locales) manteniendo las carpetas para que Laravel funcione.
+        private void CleanStorage(string appPath)
+        {
+            string[] dirs = {
+                "storage\\framework\\cache\\data",
+                "storage\\framework\\sessions",
+                "storage\\framework\\views",
+                "storage\\framework\\testing",
+                "storage\\logs",
+                "storage\\app\\backups",
+                "storage\\app\\temp",
+                "storage\\app\\private",
+                "storage\\app\\private\\temp"
+            };
+            foreach (var rel in dirs)
+            {
+                string d = Path.Combine(appPath, rel);
+                if (!Directory.Exists(d)) continue;
+                foreach (var f in Directory.GetFiles(d)) { try { File.Delete(f); } catch { } }
+                foreach (var s in Directory.GetDirectories(d)) { try { Directory.Delete(s, true); } catch { } }
+            }
+            // Logs sueltos en storage/logs ya cubiertos arriba; garantizar luego la
+            // creación de storage/app/public para el storage:link.
+            Directory.CreateDirectory(Path.Combine(appPath, "storage", "app", "public"));
         }
 
         private void CreateShortcut(string appPath)
@@ -819,7 +879,7 @@ namespace SIGEJUB_Installer
                         "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
                         "sc.IconLocation = \"" + ico + "\"\n" +
                         "sc.Save()\n");
-                    Process.Start("cscript", "//Nologo \"" + phpTmp + "\"").WaitForExit();
+                    RunHidden("cscript.exe", "//Nologo \"" + phpTmp + "\"");
                     try { File.Delete(phpTmp); } catch { }
                     directToPhp = true;
                 }
@@ -838,7 +898,7 @@ namespace SIGEJUB_Installer
                         "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
                         "sc.IconLocation = \"" + ico + "\"\n" +
                         "sc.Save()\n");
-                    Process.Start("cscript", "//Nologo \"" + vbs + "\"").WaitForExit();
+                    RunHidden("cscript.exe", "//Nologo \"" + vbs + "\"");
                     try { File.Delete(vbs); } catch { }
                 }
 
@@ -867,6 +927,26 @@ namespace SIGEJUB_Installer
             return null;
         }
 
+        // Valida que la versión de PHP sea 8.2+ (formato "8.3.5", "8.2.12", etc.)
+        private bool IsPhpCompatible(string v)
+        {
+            try
+            {
+                v = (v ?? "").Trim();
+                int dot = v.IndexOf('.');
+                if (dot < 0) return false;
+                int major = int.Parse(v.Substring(0, dot));
+                if (major < 8) return false;
+                if (major > 8) return true;
+                string rest = v.Substring(dot + 1);
+                int dot2 = rest.IndexOf('.');
+                string minorStr = dot2 >= 0 ? rest.Substring(0, dot2) : rest;
+                int minor = int.Parse(minorStr);
+                return minor >= 2;
+            }
+            catch { return false; }
+        }
+
         private void WriteLaunchVbs(string appPath)
         {
             try
@@ -885,6 +965,24 @@ namespace SIGEJUB_Installer
         // ─── Helpers de proceso ───
         private bool RunCmd(string cmd, string args, out string output) { return RunCmdIn(cmd, args, SourceRoot, out output); }
 
+        // Ejecuta un proceso sin ventana de consola y espera a que termine.
+        private void RunHidden(string cmd, string args)
+        {
+            try
+            {
+                using (var proc = Process.Start(new ProcessStartInfo(cmd, args)
+                {
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }))
+                {
+                    if (proc != null) { if (!proc.WaitForExit(120000)) { try { proc.Kill(); } catch { } } }
+                }
+            }
+            catch { }
+        }
+
         private bool RunCmdIn(string cmd, string args, string workDir, out string output)
         {
             output = "";
@@ -896,16 +994,27 @@ namespace SIGEJUB_Installer
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
                     WorkingDirectory = workDir,
                     StandardOutputEncoding = Encoding.UTF8,
                     StandardErrorEncoding = Encoding.UTF8
                 };
                 using (var proc = Process.Start(psi))
                 {
+                    // Leer stderr de forma asíncrona evita el deadlock cuando el
+                    // proceso genera mucha salida (p.ej. composer install).
+                    StringBuilder err = new StringBuilder();
+                    proc.ErrorDataReceived += (s, e2) => { if (e2.Data != null) { lock (err) err.AppendLine(e2.Data); } };
+                    proc.BeginErrorReadLine();
                     string o = proc.StandardOutput.ReadToEnd();
-                    string e = proc.StandardError.ReadToEnd();
-                    proc.WaitForExit(600000);
-                    output = (o + e).Trim();
+                    if (!proc.WaitForExit(600000))
+                    {
+                        try { proc.Kill(); } catch { }
+                        output = "Tiempo de espera agotado (más de 10 minutos).";
+                        return false;
+                    }
+                    string e = err.ToString();
+                    output = (o + "\n" + e).Trim();
                     return proc.ExitCode == 0;
                 }
             }
@@ -973,6 +1082,17 @@ namespace SIGEJUB_Installer
             var path = Path.Combine(SourceRoot, "public", "img", "imagen_2026-05-19_065531142.ico");
             if (File.Exists(path)) try { return new Icon(path); } catch { }
             return SystemIcons.Application;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (installing)
+            {
+                e.Cancel = true;
+                MessageBox.Show("La instalación está en curso. Espera a que termine.", "SIGEJUB",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            base.OnFormClosing(e);
         }
     }
 }
