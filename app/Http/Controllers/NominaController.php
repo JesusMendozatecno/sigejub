@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Nomina;
+use App\Models\NominaTrabajador;
 use App\Models\Trabajador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +59,7 @@ class NominaController extends Controller
                     'grado_cargo' => $t->grado_cargo ?? '',
                     'sueldo_base' => (float) ($pivot->sueldo_base ?? $t->sueldo_base ?? 0),
                     'tiene_nomina' => $pivot ? true : false,
+                    'nomina_trabajador_id' => $pivot ? (int) $pivot->id : null,
                     'prima_familiar' => $pivot ? (float) $pivot->prima_familiar : 0,
                     'prima_hijo' => $pivot ? (float) $pivot->prima_hijo : 0,
                     'prima_hijos_discapacidad' => $pivot ? (float) $pivot->prima_hijos_discapacidad : 0,
@@ -80,6 +82,66 @@ class NominaController extends Controller
             'nomina_codigo' => $nomina?->codigo,
             'nomina_estado' => $nomina?->estado,
         ]);
+    }
+
+    public function actualizarTrabajador(Request $request, int $id)
+    {
+        $pivot = NominaTrabajador::findOrFail($id);
+
+        $montos = [
+            'sueldo_base' => (float) ($request->input('sueldo_base') ?? 0),
+            'prima_familiar' => (float) ($request->input('prima_familiar') ?? 0),
+            'prima_hijo' => (float) ($request->input('prima_hijo') ?? 0),
+            'prima_hijos_discapacidad' => (float) ($request->input('prima_hijos_discapacidad') ?? 0),
+            'prima_actividad_universitaria' => (float) ($request->input('prima_actividad_universitaria') ?? 0),
+            'prima_profesionalizacion' => (float) ($request->input('prima_profesionalizacion') ?? 0),
+            'prima_responsabilidad' => (float) ($request->input('prima_responsabilidad') ?? 0),
+            'complemento_prima_responsabilidad' => (float) ($request->input('complemento_prima_responsabilidad') ?? 0),
+            'prima_antiguedad' => (float) ($request->input('prima_antiguedad') ?? 0),
+        ];
+
+        foreach ($montos as $campo => $valor) {
+            if ($valor < 0) {
+                return response()->json(['mensaje' => "El campo {$campo} no puede ser negativo."], 422);
+            }
+        }
+
+        $totalAsignacion = array_sum($montos);
+        $pivot->update($montos + ['total_asignacion' => $totalAsignacion]);
+
+        $totalGeneral = $this->recalcularTotalGeneral($pivot->nomina_id);
+
+        return response()->json([
+            'ok' => true,
+            'mensaje' => 'Datos de la nómina actualizados correctamente.',
+            'total_asignacion' => $totalAsignacion,
+            'total_general' => $totalGeneral,
+        ]);
+    }
+
+    public function eliminarTrabajador(Request $request, int $id)
+    {
+        $pivot = NominaTrabajador::findOrFail($id);
+        $trabajador = $pivot->trabajador;
+        $nominaId = $pivot->nomina_id;
+        $pivot->delete();
+
+        $totalGeneral = $this->recalcularTotalGeneral($nominaId);
+
+        return response()->json([
+            'ok' => true,
+            'mensaje' => ($trabajador?->cedula ?? 'El trabajador') . ' fue eliminado de la nómina.',
+            'total_general' => $totalGeneral,
+        ]);
+    }
+
+    protected function recalcularTotalGeneral(int $nominaId): float
+    {
+        $totalGeneral = (float) DB::table('nomina_trabajador')
+            ->where('nomina_id', $nominaId)
+            ->sum('total_asignacion');
+        Nomina::where('id', $nominaId)->update(['total_general' => $totalGeneral]);
+        return $totalGeneral;
     }
 
     public function anios()

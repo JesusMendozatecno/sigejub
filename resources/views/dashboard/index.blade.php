@@ -169,22 +169,22 @@
             <ul>
                 <li class="menu-item active" data-target="inicio"><i class="fas fa-house" size="18"></i> Inicio</li>
                 <li class="menu-item" data-target="trabajadores"><i class="fas fa-users" size="18"></i> Trabajadores</li>
+                <li class="menu-item" data-target="nomina"><i class="fas fa-file-invoice-dollar" size="18"></i> Nómina</li>
                 <li class="menu-item" data-target="solicitudes"><i class="fas fa-file-lines" size="18"></i> Solicitudes</li>
                 <li class="menu-item" data-target="expedientes"><i class="fas fa-folder" size="18"></i> Expedientes</li>
-                <li class="menu-item" data-target="nomina"><i class="fas fa-file-invoice-dollar" size="18"></i> Nómina</li>
                 <li class="menu-item" data-target="prestaciones"><i class="fas fa-wallet" size="18"></i> Prestaciones</li>
-                <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
-                <li class="menu-item" data-target="formulas"><i class="fas fa-square-root-variable" size="18"></i> Fórmulas</li>
-                <li class="menu-item" data-target="tasas-cambio"><i class="fas fa-dollar-sign" size="18"></i> Tasa de Cambio</li>
-                <li class="menu-item" data-target="ayuda"><i class="fas fa-circle-question" size="18"></i> Ayuda</li>
-                @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
-                <li class="menu-item" data-target="cargos-grados"><i class="fas fa-address-card" size="18"></i> Cargos y Grados</li>
-                <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
-                @endif
                 @if(Auth::user()->rol === 'superadmin')
                 <li class="menu-item" data-target="primas"><i class="fas fa-coins" size="18"></i> Primas</li>
                 @endif
-
+                <li class="menu-item" data-target="tasas-cambio"><i class="fas fa-dollar-sign" size="18"></i> Tasa de Cambio</li>
+                @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
+                <li class="menu-item" data-target="cargos-grados"><i class="fas fa-address-card" size="18"></i> Cargos y Grados</li>
+                @endif
+                <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
+                @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
+                <li class="menu-item" data-target="caja-negra"><i class="fas fa-hard-drive" size="18"></i> Historial</li>
+                @endif
+                <li class="menu-item" data-target="ayuda"><i class="fas fa-circle-question" size="18"></i> Ayuda</li>
             </ul>
         </nav>
     </aside>

@@ -16,7 +16,6 @@ use App\Http\Controllers\NominaController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\MasterDataController;
 
-
 /*
 |-----------------------------
 | INICIO & LOGIN
@@ -130,6 +129,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/importar/nomina', [NominaExportController::class, 'importar'])->name('importar.nomina');
     Route::get('/nomina/anios', [NominaController::class, 'anios'])->name('nomina.anios');
     Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
+    Route::post('/nomina/trabajador/{id}/actualizar', [NominaController::class, 'actualizarTrabajador'])->name('nomina.actualizarTrabajador');
+    Route::post('/nomina/trabajador/{id}/eliminar', [NominaController::class, 'eliminarTrabajador'])->name('nomina.eliminarTrabajador');
 });
 
 /*

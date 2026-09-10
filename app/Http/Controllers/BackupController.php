@@ -40,6 +40,18 @@ class BackupController extends Controller
                 ['tipo' => 'Base de datos', 'usuario' => auth()->user()->nombre ?? null],
                 ['archivo' => $resultado['archivo'], 'hash' => $resultado['hash'], 'verificacion' => $resultado['verificacion']]
             );
+
+            foreach ($resultado['eliminados'] ?? [] as $archivoEliminado) {
+                AuditService::registrar(
+                    'backup_deleted',
+                    'backup',
+                    null,
+                    "Copia de seguridad eliminada automáticamente por retención (máximo 2): {$archivoEliminado}",
+                    ['archivo' => $archivoEliminado, 'motivo' => 'retención máxima 2 copias'],
+                    ['archivo' => $archivoEliminado, 'eliminado' => true],
+                    ['archivo' => $archivoEliminado]
+                );
+            }
         } else {
             AuditService::registrar(
                 'backup_failed',

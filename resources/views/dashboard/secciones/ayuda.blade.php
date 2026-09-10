@@ -70,60 +70,46 @@ body.dark-mode .ayuda-video-placeholder{background:#1e293b;border-color:#475569;
                 <p style="font-size:0.82rem;color:#64748b;margin:0 0 18px;">Estos son los desarrolladores del sistema. Contáctelos para cualquier requerimiento o incidencia de soporte.</p>
                 <div class="ayuda-dev-grid">
 
-                    {{-- ## DESARROLLADOR 1 — complete o reemplace estos datos ## --}}
+                    {{-- ## DESARROLLADOR 1 ## --}}
                     <div class="ayuda-dev-card">
-                        {{-- FOTO DESARROLLADOR 1: coloque la imagen en public/img/desarrolladores/dev-1.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
+                        {{-- FOTO: coloque la imagen en public/img/desarrolladores/dev-1.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
                         <div class="ayuda-dev-foto">
-                            <div class="ayuda-dev-iniciales">D1</div>
+                            <div class="ayuda-dev-iniciales">ER</div>
                             <img src="{{ asset('img/desarrolladores/dev-1.jpg') }}" alt="Foto Desarrollador 1" onerror="this.style.display='none'">
                         </div>
-                        <h4>Nombre</h4>
-                        <span class="ayuda-dev-rol">Apellido</span>
-                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-00000000</span></div>
-                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>desarrollador1@ejemplo.com</span></div>
-                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0412-0000000</span></div>
+                        <h4>Edgardo Rodríguez</h4>
+                        <span class="ayuda-dev-rol">Desarrollador</span>
+                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-31416785</span></div>
+                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>edgardorodriguezz.250@gmail.com</span></div>
+                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0412-6778272</span></div>
                     </div>
 
-                    {{-- ## DESARROLLADOR 2 — complete o reemplace estos datos ## --}}
+                    {{-- ## DESARROLLADOR 2 ## --}}
                     <div class="ayuda-dev-card">
-                        {{-- FOTO DESARROLLADOR 2: coloque la imagen en public/img/desarrolladores/dev-2.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
+                        {{-- FOTO: coloque la imagen en public/img/desarrolladores/dev-2.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
                         <div class="ayuda-dev-foto">
-                            <div class="ayuda-dev-iniciales">D2</div>
+                            <div class="ayuda-dev-iniciales">YR</div>
                             <img src="{{ asset('img/desarrolladores/dev-2.jpg') }}" alt="Foto Desarrollador 2" onerror="this.style.display='none'">
                         </div>
-                        <h4>Nombre</h4>
-                        <span class="ayuda-dev-rol">Apellido</span>
-                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-00000000</span></div>
-                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>desarrollador2@ejemplo.com</span></div>
-                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0412-0000000</span></div>
+                        <h4>Yocelianna Rodríguez</h4>
+                        <span class="ayuda-dev-rol">Desarrolladora</span>
+                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-32201627</span></div>
+                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>yocelianna899@gmail.com</span></div>
+                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0412-0276113</span></div>
                     </div>
 
-                    {{-- ## DESARROLLADOR 3 — complete o reemplace estos datos ## --}}
+                    {{-- ## DESARROLLADOR 3 ## --}}
                     <div class="ayuda-dev-card">
-                        {{-- FOTO DESARROLLADOR 3: coloque la imagen en public/img/desarrolladores/dev-3.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
+                        {{-- FOTO: coloque la imagen en public/img/desarrolladores/dev-3.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
                         <div class="ayuda-dev-foto">
-                            <div class="ayuda-dev-iniciales">D3</div>
+                            <div class="ayuda-dev-iniciales">FO</div>
                             <img src="{{ asset('img/desarrolladores/dev-3.jpg') }}" alt="Foto Desarrollador 3" onerror="this.style.display='none'">
                         </div>
-                        <h4>Nombre</h4>
-                        <span class="ayuda-dev-rol">Apellido</span>
-                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-00000000</span></div>
-                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>desarrollador3@ejemplo.com</span></div>
-                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0412-0000000</span></div>
-                    </div>
-
-                    {{-- ## DESARROLLADOR 4 — complete o reemplace estos datos ## --}}
-                    <div class="ayuda-dev-card">
-                        {{-- FOTO DESARROLLADOR 4: coloque la imagen en public/img/desarrolladores/dev-4.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
-                        <div class="ayuda-dev-foto">
-                            <div class="ayuda-dev-iniciales">D4</div>
-                            <img src="{{ asset('img/desarrolladores/dev-4.jpg') }}" alt="Foto Desarrollador 4" onerror="this.style.display='none'">
-                        </div>
-                        <h4>Nombre</h4>
-                        <span class="ayuda-dev-rol">Apellido</span>
-                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-00000000</span></div>
-                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>desarrollador4@ejemplo.com</span></div>
-                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0412-0000000</span></div>
+                        <h4>Frandynson Ochoa</h4>
+                        <span class="ayuda-dev-rol">Desarrollador</span>
+                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-30562598</span></div>
+                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>frandynson777@gmail.com</span></div>
+                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0424-5048912</span></div>
                     </div>
 
                 </div>
