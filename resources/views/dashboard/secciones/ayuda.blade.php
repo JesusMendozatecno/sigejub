@@ -112,6 +112,20 @@ body.dark-mode .ayuda-video-placeholder{background:#1e293b;border-color:#475569;
                         <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0424-5048912</span></div>
                     </div>
 
+                    {{-- ## DESARROLLADOR 4 ## --}}
+                    <div class="ayuda-dev-card">
+                        {{-- FOTO: coloque la imagen en public/img/desarrolladores/dev-4.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
+                        <div class="ayuda-dev-foto">
+                            <div class="ayuda-dev-iniciales">BV</div>
+                            <img src="{{ asset('img/desarrolladores/dev-4.jpg') }}" alt="Foto Desarrollador 4" onerror="this.style.display='none'">
+                        </div>
+                        <h4>Brayan Vizcaya</h4>
+                        <span class="ayuda-dev-rol">Desarrollador</span>
+                        <div class="ayuda-dev-dato"><strong>Cédula</strong><span>V-31571097</span></div>
+                        <div class="ayuda-dev-dato"><strong>Correo</strong><span>vizcayabrayan32@gmail.com</span></div>
+                        <div class="ayuda-dev-dato"><strong>Teléfono</strong><span>0412-6205904</span></div>
+                    </div>
+
                 </div>
             </div>
         </div>
