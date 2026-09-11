@@ -203,8 +203,12 @@ namespace SIGEJUB_Installer
 
             content = new Panel { Dock = DockStyle.Fill, BackColor = P.Bg };
 
-            this.Controls.Add(steps);
+            // IMPORTANTE: en WinForms el docking se resuelve en z-order inverso
+            // (el último agregado se acopla primero). content (Dock=Fill) debe ir
+            // PRIMERO y steps (Dock=Left) DESPUÉS; de lo contrario el sidebar se
+            // superpone a la izquierda del contenido, tapando textos y encabezados.
             this.Controls.Add(content);
+            this.Controls.Add(steps);
 
             // Botones inferiores
             btnBack = new RoundBtn { Text = "Atrás", IsPrimary = false, Width = 110 };
