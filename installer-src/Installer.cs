@@ -16,15 +16,43 @@ namespace SIGEJUB_Installer
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
 
+        // Guarda el detalle de cualquier excepción no controlada para diagnóstico.
+        private static void SaveCrash(Exception ex)
+        {
+            try
+            {
+                string log = Path.Combine(Path.GetTempPath(), "sigejub-installer-error.log");
+                File.WriteAllText(log, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n" + ex.ToString());
+            }
+            catch { }
+        }
+
         [STAThread]
         static void Main()
         {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                SaveCrash(e.ExceptionObject as Exception ?? new Exception(e.ExceptionObject == null ? "null" : e.ExceptionObject.ToString()));
+            };
+            Application.ThreadException += (s, e) =>
+            {
+                SaveCrash(e.Exception);
+                try { MessageBox.Show("Ocurrió un error:\n\n" + e.Exception.Message + "\n\nDetalle guardado en " + Path.Combine(Path.GetTempPath(), "sigejub-installer-error.log"), "SIGEJUB", MessageBoxButtons.OK, MessageBoxIcon.Error); } catch { }
+            };
             // Evita que el escalado de DPI desincronice texto y coordenadas
             // (causa que el texto se monte sobre el panel lateral en monitores escalados)
             try { SetProcessDPIAware(); } catch { }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new InstallerForm());
+            try
+            {
+                Application.Run(new InstallerForm());
+            }
+            catch (Exception ex)
+            {
+                SaveCrash(ex);
+                try { MessageBox.Show("El instalador no pudo iniciar:\n\n" + ex.Message + "\n\nDetalle guardado en " + Path.Combine(Path.GetTempPath(), "sigejub-installer-error.log"), "SIGEJUB", MessageBoxButtons.OK, MessageBoxIcon.Error); } catch { }
+            }
         }
     }
 
@@ -53,7 +81,9 @@ namespace SIGEJUB_Installer
             // Limpiar TODOS los bordes por defecto del sistema (evita el recuadro
             // oscuro que asoma detrás del color morado en el borde del botón).
             FlatAppearance.BorderSize = 0;
-            FlatAppearance.BorderColor = Color.Transparent;
+            // ButtonBase no admite BorderColor en Transparent (lanza NotSupportedException);
+            // el recuadro nativo se elimina con BorderSize=0 y nuestro OnPaint dibuja el borde.
+            FlatAppearance.BorderColor = BackColor;
             FlatAppearance.MouseOverBackColor = Color.Transparent;
             FlatAppearance.MouseDownBackColor = Color.Transparent;
             BackColor = P.Indigo;
