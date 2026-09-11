@@ -43,38 +43,66 @@ namespace SIGEJUB_Installer
         public static readonly Color Green  = Color.FromArgb(22, 163, 74);
     }
 
-    // Botón moderno (redondeado, con hover)
+    // Botón moderno (redondeado, con hover, sin borde nativo)
     public class RoundBtn : Button
     {
         public bool IsPrimary { get; set; }
         public RoundBtn()
         {
             FlatStyle = FlatStyle.Flat;
+            // Limpiar TODOS los bordes por defecto del sistema (evita el recuadro
+            // oscuro que asoma detrás del color morado en el borde del botón).
             FlatAppearance.BorderSize = 0;
+            FlatAppearance.BorderColor = Color.Transparent;
+            FlatAppearance.MouseOverBackColor = Color.Transparent;
+            FlatAppearance.MouseDownBackColor = Color.Transparent;
             BackColor = P.Indigo;
             ForeColor = Color.White;
             Font = new Font("Segoe UI", 10, FontStyle.Bold);
             Cursor = Cursors.Hand;
             Height = 40;
             UseVisualStyleBackColor = false;
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
         }
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            var rc = new Rectangle(0, 0, Width - 1, Height - 1);
+
+            var bg = IsPrimary ? P.Indigo : BackColor;
+            if (IsPrimary)
+            {
+                if (Focused) bg = P.IndigoDark;
+                else if (ClientRectangle.Contains(PointToClient(Cursor.Position))) bg = Color.FromArgb(105, 108, 245);
+            }
+            else if (ClientRectangle.Contains(PointToClient(Cursor.Position)))
+            {
+                bg = Color.FromArgb(226, 232, 240);
+            }
+
+            // Rellenar TODO el rectángulo del botón para que el fondo nativo nunca
+            // se vea en las esquinas ni en el borde (elimina el recuadro negro).
+            using (var b = new SolidBrush(bg)) g.FillRectangle(b, 0, 0, Width, Height);
+
+            var rc = new Rectangle(1, 1, Width - 3, Height - 3);
             using (var path = Rounded(rc, 10))
             {
-                var bg = BackColor;
-                if (IsPrimary)
-                {
-                    bg = P.Indigo;
-                    if (Focused) bg = P.IndigoDark;
-                    else if (ClientRectangle.Contains(PointToClient(Cursor.Position))) bg = Color.FromArgb(105, 108, 245);
-                }
                 using (var b = new SolidBrush(bg)) g.FillPath(b, path);
             }
-            TextRenderer.DrawText(g, Text, Font, rc, ForeColor,
+
+            // Borde sutil y definido (nada de bordes nativos de Windows).
+            Color border = IsPrimary ? Color.FromArgb(79, 70, 229) : Color.FromArgb(203, 213, 225);
+            using (var path = Rounded(rc, 10))
+            using (var pen = new Pen(border, 1f))
+                g.DrawPath(pen, path);
+
+            string txt = Text;
+            if (IsPrimary && !string.IsNullOrEmpty(Text) && !Text.EndsWith("→"))
+            {
+                txt = Text + "  →";
+            }
+            TextRenderer.DrawText(g, txt, Font, rc, ForeColor,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
         public static GraphicsPath Rounded(Rectangle r, int d)
@@ -219,7 +247,7 @@ namespace SIGEJUB_Installer
             content.Controls.Add(btnBack);
             content.Controls.Add(btnNext);
 
-            btnStart = new RoundBtn { Text = "Iniciar SIGEJUB", IsPrimary = true, Width = 180, Height = 44 };
+            btnStart = new RoundBtn { Text = "Iniciar SIGEJUB", IsPrimary = true, Width = 200, Height = 44 };
             btnStart.Click += (s, e) => DoStart();
             content.Controls.Add(btnStart);
 
@@ -250,7 +278,7 @@ namespace SIGEJUB_Installer
             int h = content.ClientSize.Height;
             btnNext.Location = new Point(w - 160, h - 58);
             btnBack.Location = new Point(w - 290, h - 58);
-            btnStart.Location = new Point(w - 200, h - 64);
+            btnStart.Location = new Point(w - 220, h - 64);
             btnNext.BringToFront();
             btnBack.BringToFront();
             btnStart.BringToFront();
