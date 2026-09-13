@@ -320,12 +320,6 @@
 </div>
 
 <script>
-function escaparHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
-
 (function() {
     let currentStatus = 'all';
 

@@ -58,6 +58,7 @@ class Trabajador extends Model
         'grado_id',
         'nivel_instruccion_id',
         'tipo_contrato_id',
+        'tipo_nomina',
         'dedicacion',
         'grado_cargo',
     ];

@@ -206,7 +206,7 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
                 return;
             }
             tbody.innerHTML = data.data.map(function(t) {
-                const fecha = new Date(t.created_at).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                const fecha = new Date(t.created_at).toLocaleString('es-VE', {timeZone:'America/Caracas',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
                 const tipoBadge = t.tipo === 'automatica'
                     ? '<span class="badge-tipo badge-auto"><i class="fas fa-robot"></i> Automática</span>'
                     : '<span class="badge-tipo badge-manual"><i class="fas fa-user"></i> Manual</span>';

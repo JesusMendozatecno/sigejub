@@ -606,6 +606,9 @@ body.dark-mode .input-group select,
 body.dark-mode .filter-group select,
 body.dark-mode .filter-group-sm select,
 body.dark-mode .filters-bar-card select,
+body.dark-mode .filter-group input,
+body.dark-mode .filter-group-sm input,
+body.dark-mode .filters-bar-card input,
 body.dark-mode select.form-input option:checked {
     background: var(--bg-input) !important;
     color: var(--text-primary) !important;

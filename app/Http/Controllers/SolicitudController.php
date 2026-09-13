@@ -14,7 +14,6 @@ use App\Services\WorkflowService;
 use App\Services\NotificationService;
 use App\Services\ValidationService;
 use Illuminate\Support\Facades\Cache;
-// use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller
 {

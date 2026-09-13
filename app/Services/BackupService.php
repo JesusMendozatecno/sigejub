@@ -75,6 +75,10 @@ class BackupService
             }
 
             $hash = $this->calcularHash($zipPath);
+
+            // Retención: conservar únicamente las 2 copias más recientes.
+            $eliminados = $this->aplicarRetencion(2);
+
             return [
                 'estado'       => 'success',
                 'mensaje'      => 'Copia de seguridad generada y verificada exitosamente.',
@@ -83,6 +87,7 @@ class BackupService
                 'tamano_bytes' => $bytes,
                 'hash'         => $hash,
                 'verificacion' => 'Integridad válida',
+                'eliminados'   => $eliminados,
             ];
         } catch (\Throwable $e) {
             if (file_exists($dbFile)) unlink($dbFile);
@@ -138,6 +143,29 @@ class BackupService
             return null;
         }
         return $realPath;
+    }
+
+    /**
+     * Aplica la política de retención: conserva solo las $max copias de
+     * seguridad generadas más recientes (sigejub_backup_*.zip) y elimina
+     * las demás. Devuelve los nombres de los archivos eliminados.
+     * Las copias preventivas (preventivo_*.zip) no se tocan.
+     */
+    private function aplicarRetencion(int $max): array
+    {
+        $backupDir = storage_path('app/' . self::DIR);
+        $files = glob($backupDir . '/sigejub_backup_*.zip');
+        if (!is_array($files) || count($files) <= $max) {
+            return [];
+        }
+        usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
+        $eliminados = [];
+        foreach (array_slice($files, $max) as $viejo) {
+            if (@unlink($viejo)) {
+                $eliminados[] = basename($viejo);
+            }
+        }
+        return $eliminados;
     }
 
     /**

@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 
 use App\Services\AuditService;
 use App\Services\BackupService;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -41,6 +40,18 @@ class BackupController extends Controller
                 ['tipo' => 'Base de datos', 'usuario' => auth()->user()->nombre ?? null],
                 ['archivo' => $resultado['archivo'], 'hash' => $resultado['hash'], 'verificacion' => $resultado['verificacion']]
             );
+
+            foreach ($resultado['eliminados'] ?? [] as $archivoEliminado) {
+                AuditService::registrar(
+                    'backup_deleted',
+                    'backup',
+                    null,
+                    "Copia de seguridad eliminada automáticamente por retención (máximo 2): {$archivoEliminado}",
+                    ['archivo' => $archivoEliminado, 'motivo' => 'retención máxima 2 copias'],
+                    ['archivo' => $archivoEliminado, 'eliminado' => true],
+                    ['archivo' => $archivoEliminado]
+                );
+            }
         } else {
             AuditService::registrar(
                 'backup_failed',
@@ -83,6 +94,7 @@ class BackupController extends Controller
         $act = \App\Models\Activity::where('tipo_entidad', 'backup')
             ->where('accion', 'backup_created')
             ->latest('id')
+            ->limit(100)
             ->get()
             ->first(function ($a) use ($archivo) {
                 return isset($a->datos_peticion['archivo']) && $a->datos_peticion['archivo'] === $archivo;

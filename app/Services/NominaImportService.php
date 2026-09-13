@@ -233,6 +233,7 @@ class NominaImportService
             'dedicacion' => $dedicacion,
             'grado_cargo' => $gradoCargo,
             'asignacion' => 'Nomina',
+            'tipo_nomina' => $sheetName,
             '_pivot' => [
                 'sueldo_base' => $sueldoMensual,
                 'prima_familiar' => $primaFamiliar,

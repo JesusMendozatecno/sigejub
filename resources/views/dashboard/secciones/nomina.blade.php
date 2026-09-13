@@ -5,7 +5,7 @@
 .nomina-tab.active { background: white; color: #1a365d; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .nomina-tab:hover:not(.active) { color: #1e3a8a; }
 .table-wrapper-nomina { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
-.table-wrapper-nomina table { min-width: 2800px; border-collapse: collapse; font-size: 0.72rem; }
+.table-wrapper-nomina table { min-width: 2920px; border-collapse: collapse; font-size: 0.72rem; }
 .table-wrapper-nomina th { position: sticky; top: 0; z-index: 2; padding: 6px 5px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.15); text-align: center; }
 .table-wrapper-nomina td { padding: 5px 5px; white-space: nowrap; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f8fafc; text-align: center; }
 .section-azul th { background: #1e3a8a; color: white; }
@@ -40,6 +40,18 @@ body.dark-mode .nomina-anio-card .na-count { color: #94a3b8; }
 body.dark-mode .nomina-anio-header h2 { color: #f1f5f9; }
 body.dark-mode .nomina-anio-header .btn-back { background: #334155; color: #93c5fd; }
 body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
+.btn-accion { width: 26px; height: 26px; border: none; border-radius: 7px; font-size: 0.7rem; cursor: pointer; margin: 0 2px; transition: all 0.15s; vertical-align: middle; }
+.btn-accion-edit { background: #eff6ff; color: #1d4ed8; }
+.btn-accion-edit:hover { background: #dbeafe; }
+.btn-accion-del { background: #fef2f2; color: #dc2626; }
+.btn-accion-del:hover { background: #fee2e2; }
+body.dark-mode .btn-accion-edit { background: #1e3a5f; color: #93c5fd; }
+body.dark-mode .btn-accion-edit:hover { background: #0f2a4a; }
+body.dark-mode .btn-accion-del { background: #450a0a; color: #fca5a5; }
+body.dark-mode .btn-accion-del:hover { background: #5f0f0f; }
+.nomina-total-asis { margin-top: 14px; padding: 12px; border-radius: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; text-align: center; font-weight: 800; color: #15803d; font-size: 0.9rem; }
+body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; color: #86efac; }
+.modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 </style>
 
 <header class="section-header">
@@ -58,7 +70,7 @@ body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
 </header>
 
 <div id="vistaAniosNomina">
-    <div class="filters-bar-card">
+    <div class="filters-bar-card" style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
         <div class="filter-group">
             <label>AÑOS DISPONIBLES</label>
             <p style="margin:2px 0 0;font-size:0.75rem;color:#64748b;">Seleccione un año para ver su nómina.</p>
@@ -87,7 +99,7 @@ body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
         <button class="nomina-tab" data-tipo="OBREROS">Obreros</button>
     </div>
 
-    <div class="filters-bar-card">
+    <div class="filters-bar-card" style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
         <div class="filter-group">
             <label>AÑO</label>
             <select id="filtroAnioNomina" onchange="cambiarAnioNomina(this.value)">
@@ -107,12 +119,13 @@ body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
         <table>
             <thead>
                 <tr>
-                    <th class="section-azul" colspan="8">DATOS PERSONALES BÁSICOS</th>
+                    <th class="section-azul" colspan="9">DATOS PERSONALES BÁSICOS</th>
                     <th class="section-celeste" colspan="8">DATOS LABORALES Y ANTIGÜEDAD</th>
                     <th class="section-verde" colspan="10">REMUNERACIÓN Y PRIMAS / ASIGNACIONES</th>
                 </tr>
                 <tr>
                     <!-- AZUL -->
+                    <th class="section-azul" style="min-width:80px;">ACCIONES</th>
                     <th class="section-azul">N°</th>
                     <th class="section-azul">CÉDULA</th>
                     <th class="section-azul">APELLIDOS Y NOMBRES</th>
@@ -175,9 +188,76 @@ body.dark-mode .nomina-anio-header .btn-back:hover { background: #1e293b; }
     </div>
 </div>
 
+<div id="modalEditarNomina" class="modal-overlay">
+    <div class="modal-delete-box" style="text-align:left;max-width:620px;">
+        <h3 style="text-align:center;"><i class="fas fa-pen"></i> Editar Nómina</h3>
+        <p id="editarNominaInfo" style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;"></p>
+        <form id="formEditarNomina">
+            @csrf
+            <input type="hidden" name="nomina_trabajador_id" id="editarNominaPivotId">
+            <div class="modal-grid">
+                <div class="input-group">
+                    <label>SUELDO BASE (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="sueldo_base" class="input-monto-nomina" required>
+                </div>
+                <div class="input-group">
+                    <label>P. FAMILIAR (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="prima_familiar" class="input-monto-nomina">
+                </div>
+                <div class="input-group">
+                    <label>P. HIJOS (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="prima_hijo" class="input-monto-nomina">
+                </div>
+                <div class="input-group">
+                    <label>P. H-DISC (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="prima_hijos_discapacidad" class="input-monto-nomina">
+                </div>
+                <div class="input-group">
+                    <label>P. A-UNIV (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="prima_actividad_universitaria" class="input-monto-nomina">
+                </div>
+                <div class="input-group">
+                    <label>P. PROFES (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="prima_profesionalizacion" class="input-monto-nomina">
+                </div>
+                <div class="input-group">
+                    <label>P. RESP (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="prima_responsabilidad" class="input-monto-nomina">
+                </div>
+                <div class="input-group">
+                    <label>COMP. RESP (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="complemento_prima_responsabilidad" class="input-monto-nomina">
+                </div>
+                <div class="input-group">
+                    <label>P. ANTIG (Bs.)</label>
+                    <input type="number" step="0.01" min="0" name="prima_antiguedad" class="input-monto-nomina">
+                </div>
+            </div>
+            <div class="nomina-total-asis">TOTAL ASIGNACIÓN: <span id="editarTotalAsignacion">0,00</span> Bs.</div>
+            <div class="modal-actions" style="justify-content:center;">
+                <button type="button" class="btn-cancel" id="btnCancelarEditarNomina">Cancelar</button>
+                <button type="submit" class="btn-submit" id="btnSubmitEditarNomina">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modalEliminarNomina" class="modal-overlay">
+    <div class="modal-delete-box">
+        <h3 style="text-align:center;"><i class="fas fa-trash"></i> Eliminar de la Nómina</h3>
+        <p id="eliminarNominaInfo" style="text-align:center;color:#64748b;font-size:0.85rem;margin:16px 0;"></p>
+        <div class="modal-actions" style="justify-content:center;">
+            <button type="button" class="btn-cancel" id="btnCancelarEliminarNomina">Cancelar</button>
+            <button type="button" class="btn-submit" id="btnConfirmarEliminarNomina">Sí, eliminar</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let tipoNominaActual = '';
 let anioNominaActual = '';
+let filasNomina = [];
+let indiceEliminarNomina = null;
 
 document.querySelectorAll('.nomina-tab').forEach(tab => {
     tab.addEventListener('click', function() {
@@ -221,6 +301,104 @@ window.abrirModalImportarNomina = function() {
 };
 
 function fmt(v) { return (v || 0).toFixed(2).replace('.', ','); }
+
+function recalcularTotalAsignacion() {
+    const form = document.getElementById('formEditarNomina');
+    let total = 0;
+    form.querySelectorAll('.input-monto-nomina').forEach(inp => {
+        total += parseFloat(inp.value) || 0;
+    });
+    document.getElementById('editarTotalAsignacion').textContent = fmt(total);
+    return total;
+}
+
+window.abrirModalEditarNomina = function(index) {
+    const t = filasNomina[index];
+    if (!t || !t.nomina_trabajador_id) { mostrarToast('Este trabajador no tiene datos de nómina', 'error'); return; }
+    document.getElementById('editarNominaPivotId').value = t.nomina_trabajador_id;
+    document.getElementById('editarNominaInfo').textContent = (t.cedula || '') + ' - ' + (t.nombre_completo || '');
+    const form = document.getElementById('formEditarNomina');
+    ['sueldo_base','prima_familiar','prima_hijo','prima_hijos_discapacidad','prima_actividad_universitaria',
+     'prima_profesionalizacion','prima_responsabilidad','complemento_prima_responsabilidad','prima_antiguedad'].forEach(campo => {
+        form.querySelector('[name="' + campo + '"]').value = Number(t[campo] || 0);
+    });
+    recalcularTotalAsignacion();
+    document.getElementById('modalEditarNomina').style.display = 'flex';
+};
+
+window.abrirModalEliminarNomina = function(index) {
+    const t = filasNomina[index];
+    if (!t || !t.nomina_trabajador_id) { mostrarToast('Este trabajador no tiene datos de nómina', 'error'); return; }
+    indiceEliminarNomina = index;
+    document.getElementById('eliminarNominaInfo').innerHTML =
+        '¿Seguro que desea eliminar a <strong>' + (t.nombre_completo || '') + '</strong><br>(C.I. ' + (t.cedula || '') + ') de la nómina correspondiente al año <strong>' + anioNominaActual + '</strong>?<br><br>Esta acción no se puede deshacer.';
+    document.getElementById('modalEliminarNomina').style.display = 'flex';
+};
+
+const tbodyNomina = document.getElementById('tbodyNomina');
+if (tbodyNomina) {
+    tbodyNomina.addEventListener('click', function(ev) {
+        const btnEdit = ev.target.closest('[data-editar]');
+        const btnDel = ev.target.closest('[data-eliminar]');
+        if (btnEdit) { abrirModalEditarNomina(parseInt(btnEdit.dataset.editar, 10)); return; }
+        if (btnDel) { abrirModalEliminarNomina(parseInt(btnDel.dataset.eliminar, 10)); }
+    });
+}
+
+document.getElementById('formEditarNomina')?.addEventListener('input', recalcularTotalAsignacion);
+
+document.getElementById('btnCancelarEditarNomina')?.addEventListener('click', () => document.getElementById('modalEditarNomina').style.display = 'none');
+document.getElementById('btnCancelarEliminarNomina')?.addEventListener('click', () => document.getElementById('modalEliminarNomina').style.display = 'none');
+
+document.getElementById('formEditarNomina')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('editarNominaPivotId').value;
+    const btn = document.getElementById('btnSubmitEditarNomina');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+        const resp = await fetch('/nomina/trabajador/' + id + '/actualizar', {
+            method: 'POST', body: new FormData(this),
+            headers: { 'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            }
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw data;
+        document.getElementById('modalEditarNomina').style.display = 'none';
+        mostrarToast('Cambios guardados correctamente', 'success');
+        cargarNomina();
+    } catch (err) {
+        mostrarToast(err.mensaje || 'Error al guardar los cambios', 'error');
+    } finally {
+        btn.disabled = false; btn.textContent = 'Guardar cambios';
+    }
+});
+
+document.getElementById('btnConfirmarEliminarNomina')?.addEventListener('click', async function() {
+    const t = filasNomina[indiceEliminarNomina];
+    if (!t || !t.nomina_trabajador_id) return;
+    const btn = this;
+    btn.disabled = true;
+    try {
+        const resp = await fetch('/nomina/trabajador/' + t.nomina_trabajador_id + '/eliminar', {
+            method: 'POST',
+            headers: { 'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            },
+            body: ''
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw data;
+        document.getElementById('modalEliminarNomina').style.display = 'none';
+        mostrarToast('Trabajador eliminado de la nómina', 'success');
+        cargarNomina();
+    } catch (err) {
+        mostrarToast(err.mensaje || 'Error al eliminar', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+});
 
 window.cargarAniosNomina = function() {
     fetch('/nomina/anios')
@@ -312,12 +490,18 @@ function cargarNomina() {
             const rows = resp.trabajadores || resp;
             const tbody = document.getElementById('tbodyNomina');
             if (!tbody) return;
+            filasNomina = rows;
             let html = '';
             for (let i = 0; i < rows.length; i++) {
                 const t = rows[i];
                 const tiene = t.tiene_nomina;
                 const cls = tiene ? '' : ' style="opacity:0.55;"';
+                const acciones = tiene
+                    ? '<button type="button" class="btn-accion btn-accion-edit" data-editar="' + i + '" title="Editar registro"><i class="fas fa-pen"></i></button>' +
+                      '<button type="button" class="btn-accion btn-accion-del" data-eliminar="' + i + '" title="Eliminar de la nómina"><i class="fas fa-trash"></i></button>'
+                    : '<span style="color:#cbd5e1;">—</span>';
                 html += '<tr' + cls + '>' +
+                    '<td>' + acciones + '</td>' +
                     // AZUL
                     '<td>' + (i + 1) + '</td>' +
                     '<td>' + (t.cedula || '') + '</td>' +

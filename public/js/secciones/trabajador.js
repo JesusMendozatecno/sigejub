@@ -215,6 +215,20 @@
         if (selAsignacion) selAsignacion.addEventListener('change', () => cargarTrabajadores(selEstatus?.value || '', selNomina?.value || '', selAsignacion.value));
 
         // ============================================
+        // BUSCADOR — Filtra por nombre, apellido o cédula (con debounce)
+        // ============================================
+        const buscador = document.getElementById('buscadorTrabajadores');
+        if (buscador) {
+            let debounceTimer = null;
+            buscador.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    cargarTrabajadores(selEstatus?.value || '', selNomina?.value || '', selAsignacion?.value || '');
+                }, 350);
+            });
+        }
+
+        // ============================================
         // CONFIRMACIÓN DE ELIMINACIÓN — Botón "Sí, eliminar"
         // ============================================
         if (btnSiEliminar) {
@@ -337,7 +351,9 @@
         else paginaActualTrabajadores = 1;
 
         try {
-            const url = `/trabajadores?estatus=${estatus}&asignacion=${asignacion}&page=${paginaActualTrabajadores}`;
+            const busqueda = document.getElementById('buscadorTrabajadores')?.value.trim() || '';
+            const params = new URLSearchParams({ estatus, nomina, asignacion, search: busqueda, page: paginaActualTrabajadores });
+            const url = `/trabajadores?${params.toString()}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error('Error al consultar servidores');
             const data = await response.json();
@@ -359,7 +375,8 @@
                 const tipoDoc = cedulaParts.length > 1 ? cedulaParts[0] : '';
                 const numDoc = cedulaParts.length > 1 ? cedulaParts.slice(1).join('-') : t.cedula;
                 tdCedula.innerHTML = `<span style="color:#6366f1;font-weight:700;">${escaparHTML(tipoDoc)}</span> ${escaparHTML(numDoc)}`;
-                const tdCargo = document.createElement('td'); tdCargo.textContent = t.cargo;
+                const tdCargo = document.createElement('td'); tdCargo.textContent = t.cargo || '—';
+                const tdGrado = document.createElement('td'); tdGrado.textContent = t.grado_nivel || '—';
                 const tdTipo = document.createElement('td');
                 const typeTag = document.createElement('span'); typeTag.className = 'type-tag'; typeTag.textContent = t.unidad_departamento;
                 tdTipo.appendChild(typeTag);
@@ -395,7 +412,7 @@
                 div.appendChild(btnEliminar);
                 tdAcciones.appendChild(div);
 
-                tr.append(tdNombre, tdCedula, tdCargo, tdTipo, tdAsignacion, tdEstatus, tdAcciones);
+                tr.append(tdNombre, tdCedula, tdCargo, tdGrado, tdTipo, tdAsignacion, tdEstatus, tdAcciones);
                 tbody.appendChild(tr);
             });
 
@@ -424,8 +441,9 @@
         container.querySelectorAll('button[data-page]').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var f = document.getElementById('filtroEstatus');
+                var n = document.getElementById('filtroNomina');
                 var a = document.getElementById('filtroAsignacion');
-                cargarTrabajadores(f ? f.value : '', '', a ? a.value : '', parseInt(this.dataset.page));
+                cargarTrabajadores(f ? f.value : '', n ? n.value : '', a ? a.value : '', parseInt(this.dataset.page));
             });
         });
     }
