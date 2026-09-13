@@ -1073,6 +1073,24 @@ namespace SIGEJUB_Installer
         private void ExtractZip(string zip, string dest)
         {
             Directory.CreateDirectory(dest);
+            // ZipFile.ExtractToDirectory NO sobreescribe: si quedó una extracción parcial de un
+            // intento anterior, falla con "el archivo ya existe". Se limpia el destino primero.
+            string[] existing;
+            try { existing = Directory.GetFileSystemEntries(dest); }
+            catch { existing = new string[0]; }
+            if (existing.Length > 0)
+            {
+                AppendLog("  Limpiando extracción previa en " + dest + " ...", Color.White);
+                foreach (var e in existing)
+                {
+                    try
+                    {
+                        if (Directory.Exists(e)) Directory.Delete(e, true);
+                        else File.Delete(e);
+                    }
+                    catch (Exception ex) { AppendLog("[AVISO] No se pudo borrar " + Path.GetFileName(e) + ": " + ex.Message, Color.Orange); }
+                }
+            }
             ZipFile.ExtractToDirectory(zip, dest);
         }
 
@@ -1647,7 +1665,9 @@ namespace SIGEJUB_Installer
                 dbStartCmd = "\"" + Path.Combine(binDir, "pg_ctl.exe") + "\" -D \"" + dataDir + "\" -l \"" + Path.Combine(dir, "postgres.log") + "\" -o \"-p " + port + " -h 127.0.0.1\" start";
                 AppendLog("  Arrancando PostgreSQL en el puerto " + port + " ...", Color.White);
                 string out2;
-                if (!RunCmdIn(Path.Combine(binDir, "pg_ctl.exe"), "-D \"" + dataDir + "\" -l \"" + Path.Combine(dir, "postgres.log") + "\" -o \"-p " + port + " -h 127.0.0.1\" start", installPath, out out2))
+                // pg_ctl start lanza el demonio postgres en segundo plano y termina;
+                // si no se usa detach, la herencia del pipe de salida bloquea el instalador.
+                if (!RunCmdIn(Path.Combine(binDir, "pg_ctl.exe"), "-D \"" + dataDir + "\" -l \"" + Path.Combine(dir, "postgres.log") + "\" -o \"-p " + port + " -h 127.0.0.1\" start", installPath, out out2, detach: true))
                 {
                     AppendLog("[ERROR] pg_ctl start: " + Truncate(out2, 300), Color.Red); return false;
                 }
@@ -1712,6 +1732,10 @@ namespace SIGEJUB_Installer
                 env = RemoveEnvLine(env, "DB_PORT_PGSQL"); env = RemoveEnvLine(env, "DB_DATABASE_PGSQL");
                 env = RemoveEnvLine(env, "DB_USERNAME_PGSQL"); env = RemoveEnvLine(env, "DB_PASSWORD_PGSQL");
                 env = ReplaceEnv(env, "DB_CONNECTION", dbEngine);
+                // Cookie de sesión ÚNICA por instalación: evita que varias instalaciones en el
+                // mismo host (p.ej. localhost:8000 y localhost:8001) se pisen las cookies y
+                // provoquen "419 Page Expired" por token CSRF descifrado con otra APP_KEY.
+                env = ReplaceEnv(env, "SESSION_COOKIE", "sigejub_" + selectedPort + "_session");
                 if (dbEngine == "sqlite")
                 {
                     env = ReplaceEnv(env, "DB_DATABASE", dbName);
@@ -1757,6 +1781,7 @@ namespace SIGEJUB_Installer
             sb.AppendLine("");
             sb.AppendLine("LOG_CHANNEL=stack");
             sb.AppendLine("SESSION_DRIVER=file");
+            sb.AppendLine("SESSION_COOKIE=sigejub_8000_session");
             sb.AppendLine("SESSION_LIFETIME=120");
             sb.AppendLine("CACHE_DRIVER=file");
             sb.AppendLine("QUEUE_CONNECTION=sync");
@@ -2048,22 +2073,25 @@ namespace SIGEJUB_Installer
             catch { }
         }
 
-        private bool RunCmdIn(string cmd, string args, string workDir, out string output, Dictionary<string, string> env = null)
+        private bool RunCmdIn(string cmd, string args, string workDir, out string output, Dictionary<string, string> env = null, bool detach = false)
         {
             output = "";
             try
             {
                 var psi = new ProcessStartInfo(cmd, args)
                 {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    WorkingDirectory = workDir,
-                    StandardOutputEncoding = Encoding.UTF8,
-                    StandardErrorEncoding = Encoding.UTF8
+                    RedirectStandardOutput = !detach,
+                    RedirectStandardError  = !detach,
+                    UseShellExecute        = false,
+                    CreateNoWindow         = true,
+                    WindowStyle            = ProcessWindowStyle.Hidden,
+                    WorkingDirectory       = workDir,
                 };
+                if (!detach)
+                {
+                    psi.StandardOutputEncoding = Encoding.UTF8;
+                    psi.StandardErrorEncoding  = Encoding.UTF8;
+                }
                 if (env != null)
                 {
                     foreach (var kv in env)
@@ -2073,20 +2101,30 @@ namespace SIGEJUB_Installer
                 }
                 using (var proc = Process.Start(psi))
                 {
+                    // Modo detached: el proceso lanza un demonio en segundo plano (p.ej. pg_ctl start
+                    // lanza postgres.exe) y termina. No se redirige la salida y se espera hasta 10 s.
+                    if (detach)
+                    {
+                        proc.WaitForExit(10000);
+                        output = "(detached)";
+                        return !proc.HasExited || proc.ExitCode == 0;
+                    }
+
                     // Leer stderr de forma asíncrona evita el deadlock cuando el
                     // proceso genera mucha salida (p.ej. composer install).
                     StringBuilder err = new StringBuilder();
                     proc.ErrorDataReceived += (s, e2) => { if (e2.Data != null) { lock (err) err.AppendLine(e2.Data); } };
                     proc.BeginErrorReadLine();
-                    string o = proc.StandardOutput.ReadToEnd();
+                    StringBuilder sbOut = new StringBuilder();
+                    proc.OutputDataReceived += (s, e2) => { if (e2.Data != null) { lock (sbOut) sbOut.AppendLine(e2.Data); } };
+                    proc.BeginOutputReadLine();
                     if (!proc.WaitForExit(600000))
                     {
                         try { proc.Kill(); } catch { }
                         output = "Tiempo de espera agotado (más de 10 minutos).";
                         return false;
                     }
-                    string e = err.ToString();
-                    output = (o + "\n" + e).Trim();
+                    output = (sbOut.ToString() + "\n" + err.ToString()).Trim();
                     return proc.ExitCode == 0;
                 }
             }
