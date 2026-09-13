@@ -75,7 +75,9 @@ body.dark-mode .ayuda-video-placeholder{background:#1e293b;border-color:#475569;
                         {{-- FOTO: coloque la imagen en public/img/desarrolladores/dev-1.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
                         <div class="ayuda-dev-foto">
                             <div class="ayuda-dev-iniciales">ER</div>
-                            <img src="{{ asset('img/desarrolladores/dev-1.jpg') }}" alt="Foto Desarrollador 1" onerror="this.style.display='none'">
+                            @if(file_exists(public_path('img/desarrolladores/dev-1.jpg')))
+                                <img src="{{ asset('img/desarrolladores/dev-1.jpg') }}" alt="Foto Desarrollador 1">
+                            @endif
                         </div>
                         <h4>Edgardo Rodríguez</h4>
                         <span class="ayuda-dev-rol">Desarrollador</span>
@@ -117,7 +119,9 @@ body.dark-mode .ayuda-video-placeholder{background:#1e293b;border-color:#475569;
                         {{-- FOTO: coloque la imagen en public/img/desarrolladores/dev-4.jpg y se mostrará automáticamente. Mientras no exista, se muestran las iniciales. --}}
                         <div class="ayuda-dev-foto">
                             <div class="ayuda-dev-iniciales">BV</div>
-                            <img src="{{ asset('img/desarrolladores/dev-4.jpg') }}" alt="Foto Desarrollador 4" onerror="this.style.display='none'">
+                            @if(file_exists(public_path('img/desarrolladores/dev-4.jpg')))
+                                <img src="{{ asset('img/desarrolladores/dev-4.jpg') }}" alt="Foto Desarrollador 4">
+                            @endif
                         </div>
                         <h4>Brayan Vizcaya</h4>
                         <span class="ayuda-dev-rol">Desarrollador</span>

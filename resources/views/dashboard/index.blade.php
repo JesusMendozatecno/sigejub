@@ -7,8 +7,6 @@
     <title>SIGEJUB - Sistema de Jubilaciones</title>
 
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
-    <link rel="icon" href="{{ asset('img/favicon-32.png') }}" sizes="32x32" type="image/png">
-    <link rel="icon" href="{{ asset('img/favicon-16.png') }}" sizes="16x16" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -216,14 +216,26 @@ namespace SIGEJUB_Installer
         // URLs de descarga de los componentes (modo online)
         private const string PHP_PAGE    = "https://windows.php.net/downloads/releases/";
         private const string COMPOSER_URL = "https://getcomposer.org/download/latest-stable/composer.phar";
-        private const string MARIADB_URL  = "https://archive.mariadb.org/mariadb-11.4.5/winx64-packages/mariadb-11.4.5-winx64.zip";
-        private const string PGSQL_URL    = "https://get.enterprisedb.com/postgresql/postgresql-16.8-1-windows-x64-binaries.zip";
+        // UTF-8 SIN BOM: los scripts .vbs/.bat/.env fallan si el archivo empieza con BOM
+        private static readonly Encoding Utf8NoBom = new UTF8Encoding(false);
+        // Versiones con fallback: si una URL falla o descarga un zip corrupto, se prueba la siguiente
+        private static readonly string[] MARIADB_URLS =
+        {
+            "https://archive.mariadb.org/mariadb-11.4.5/winx64-packages/mariadb-11.4.5-winx64.zip",
+            "https://archive.mariadb.org/mariadb-10.11.11/winx64-packages/mariadb-10.11.11-winx64.zip"
+        };
+        private static readonly string[] PGSQL_URLS =
+        {
+            "https://get.enterprisedb.com/postgresql/postgresql-16.8-1-windows-x64-binaries.zip",
+            "https://get.enterprisedb.com/postgresql/postgresql-15.8-1-windows-x64-binaries.zip"
+        };
 
         // Estado de componentes resueltos durante la instalación
         private bool online = false;
         private string phpExe = null;       // php.exe del sistema o el portable local
         private bool phpPortable = false;   // true si se instaló PHP local dentro de la app
         private string composerPhar = null; // ruta de composer.phar local (si no hay composer en el sistema)
+        private string composerCmd = null;  // ruta resuelta del composer del sistema (p.ej. composer.bat)
         private bool dbPortable = false;    // true si se instaló un servidor BD local
         private string dbStartCmd = null;   // comando para arrancar la BD portable (vbs/inicio)
 
@@ -350,8 +362,6 @@ namespace SIGEJUB_Installer
             if (step == STEP_INSTALL)
             {
                 if (installing) return;
-                btnBack.Visible = false;
-                btnNext.Visible = false;
                 SetProgress(0);
                 SetStatus("Reintentando...");
                 StartInstall();
@@ -701,11 +711,24 @@ namespace SIGEJUB_Installer
 
         private void DoStart()
         {
+            // El .vbs de arranque oculta el servidor y abre el navegador; usarlo siempre
+            string vbs = Path.Combine(installPath, "sigejub-start.vbs");
+            if (File.Exists(vbs))
+            {
+                try
+                {
+                    string wscript = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "wscript.exe");
+                    Process.Start(new ProcessStartInfo(wscript, "\"" + vbs + "\"") { WorkingDirectory = installPath });
+                    this.Close();
+                    return;
+                }
+                catch { }
+            }
+
+            // Fallback: arrancar BD y PHP directamente y abrir el navegador
             try
             {
-                // Si se instaló un servidor BD local, asegurarse de que esté corriendo
                 if (dbPortable && !string.IsNullOrEmpty(dbStartCmd)) StartPortableDbBackground();
-
                 string php = phpExe;
                 if (!string.IsNullOrEmpty(php) && File.Exists(php))
                 {
@@ -717,26 +740,25 @@ namespace SIGEJUB_Installer
                         WorkingDirectory = installPath,
                         UseShellExecute = false
                     });
-                    this.Close();
-                    return;
                 }
             }
             catch { }
-
-            // Fallback: si php no se pudo resolver, abrir el vbs de arranque o la URL
-            string vbs = Path.Combine(installPath, "sigejub-start.vbs");
-            if (File.Exists(vbs))
-            {
-                try { Process.Start(vbs); this.Close(); return; } catch { }
-            }
             try { Process.Start("http://localhost:" + selectedPort); } catch { }
             this.Close();
         }
 
+        // Reinicia (o inicia) la instalación bloqueando el botón Atrás para evitar que
+        // el usuario navegue a otra página mientras el hilo de instalación corre.
         private void StartInstall()
         {
             if (installing) return;
             installing = true;
+            btnBack.Visible = false;
+            btnBack.Enabled = false;
+            btnNext.Visible = false;
+            btnNext.Enabled = false;
+            btnNext.Text = "Instalando...";
+            RepositionButtons();
             Thread th = new Thread(() => RunInstall());
             th.IsBackground = true;
             th.Start();
@@ -763,6 +785,9 @@ namespace SIGEJUB_Installer
                     : "[AVISO] Sin internet: se usarán los paquetes locales de la carpeta 'paquetes' (modo offline).",
                     online ? Color.Green : Color.Orange);
                 SetProgress(9);
+
+                // ── Pre: garantizar el runtime VC++ x64 (lo necesita PHP portable) ──
+                EnsureVCpp();
 
                 // ── 3: PHP (del sistema o portable local) ──
                 AppendLog("[3/12] Verificando PHP...", Color.Yellow);
@@ -804,10 +829,21 @@ namespace SIGEJUB_Installer
 
                 // ── 7: composer install ──
                 AppendLog("[7/12] Instalando dependencias (esto puede tardar)...", Color.Yellow);
+                try
+                {
+                    string vdir = Path.Combine(installPath, "vendor");
+                    if (Directory.Exists(vdir)) { AppendLog("  Limpiando vendor previo (instalación fallida previa)...", Color.Gray); Directory.Delete(vdir, true); }
+                }
+                catch { }
                 string output;
                 if (!RunComposer("install --no-interaction --no-ansi --no-progress", out output))
                 {
-                    AppendLog("[ERROR] composer install: " + Truncate(output, 300), Color.Red);
+                    AppendLog("[ERROR] composer install: " + Truncate(output, 300) + " (php=" + phpExe + ", composer=" + (composerPhar ?? composerCmd ?? "PATH") + ")", Color.Red);
+                    FinishWithError(); return;
+                }
+                if (!File.Exists(Path.Combine(installPath, "vendor", "autoload.php")))
+                {
+                    AppendLog("[ERROR] composer install terminó pero NO generó vendor/autoload.php. Respuesta de composer:\n" + Truncate(output, 400), Color.Red);
                     FinishWithError(); return;
                 }
                 AppendLog("[OK] Dependencias instaladas", Color.Green);
@@ -846,7 +882,7 @@ namespace SIGEJUB_Installer
                 string envPath = Path.Combine(installPath, ".env");
                 string env = File.ReadAllText(envPath, Encoding.UTF8);
                 env = ReplaceEnv(env, "APP_URL", "http://localhost:" + selectedPort);
-                File.WriteAllText(envPath, env, Encoding.UTF8);
+                File.WriteAllText(envPath, env, Utf8NoBom);
                 SetProgress(88);
 
                 // ── 11: acceso directo ──
@@ -893,7 +929,8 @@ namespace SIGEJUB_Installer
             this.Invoke(new Action(() =>
             {
                 installing = false;
-                btnBack.Visible = false;
+                btnBack.Visible = true;
+                btnBack.Enabled = true;
                 btnNext.Visible = true;
                 btnNext.Enabled = true;
                 btnNext.Text = "Reintentar";
@@ -917,16 +954,28 @@ namespace SIGEJUB_Installer
 
         private bool DownloadFile(string url, string dest)
         {
-            try
+            for (int attempt = 0; attempt < 2; attempt++)
             {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-                using (var wc = new WebClient())
+                try
                 {
-                    wc.Headers[HttpRequestHeader.UserAgent] = "SIGEJUB-Installer";
-                    wc.DownloadFile(url, dest);
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                    using (var wc = new WebClient())
+                    {
+                        wc.Headers[HttpRequestHeader.UserAgent] = "SIGEJUB-Installer";
+                        wc.DownloadFile(url, dest);
+                    }
+                    if (new FileInfo(dest).Length > 0) return true;
                 }
-                return new FileInfo(dest).Length > 0;
+                catch { try { if (File.Exists(dest)) File.Delete(dest); } catch { } }
+                Thread.Sleep(700);
             }
+            return false;
+        }
+
+        // Verifica que el archivo sea un ZIP válido (abre el índice central sin extraer)
+        private bool IsValidZip(string path)
+        {
+            try { using (var z = ZipFile.OpenRead(path)) { int n = z.Entries.Count; } return true; }
             catch { return false; }
         }
 
@@ -965,8 +1014,60 @@ namespace SIGEJUB_Installer
             {
                 Path.Combine(Application.StartupPath, "paquetes"),
                 Path.Combine(SourceRoot, "paquetes"),
-                Path.GetFullPath(Path.Combine(SourceRoot, "..", "paquetes"))
+                Path.GetFullPath(Path.Combine(SourceRoot, "..", "paquetes")),
+                Path.Combine(Application.StartupPath, "compont"),
+                Path.Combine(SourceRoot, "compont"),
+                Path.GetFullPath(Path.Combine(SourceRoot, "..", "compont"))
             };
+        }
+
+        // Busca un .exe/.msi por nombre en las carpetas de paquetes (p.ej. vc_redist*.exe)
+        private string FindBundleExe(string pattern)
+        {
+            foreach (var b in BundleCandidates())
+            {
+                if (!Directory.Exists(b)) continue;
+                try
+                {
+                    string[] files = Directory.GetFiles(b, pattern);
+                    if (files.Length > 0) return files[0];
+                }
+                catch { }
+            }
+            return null;
+        }
+
+        // ─── Runtime VC++ x64 ───
+        // PHP portable de windows.php.net requiere el redistribuible VC++ 2015-2022.
+        private bool EnsureVCpp()
+        {
+            if (VCppInstalled()) return true;
+            AppendLog("  Runtime VC++ 2015-2022 (x64) no detectado. Buscando vc_redist...", Color.Orange);
+            string redist = FindBundleExe("vc_redist*.exe");
+            if (redist == null)
+            {
+                AppendLog("  No hay vc_redist en 'paquetes'/'compont'. Si PHP no arranca, instala el runtime VC++ x64.", Color.Orange);
+                return false;
+            }
+            AppendLog("  Instalando " + Path.GetFileName(redist) + " (silencioso)...", Color.White);
+            RunHidden(redist, "/install /quiet /norestart");
+            if (VCppInstalled()) { AppendLog("[OK] Runtime VC++ instalado.", Color.Green); return true; }
+            AppendLog("[AVISO] No se pudo confirmar la instalación del runtime VC++.", Color.Orange);
+            return false;
+        }
+
+        private bool VCppInstalled()
+        {
+            try
+            {
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64"))
+                {
+                    if (k == null) return false;
+                    object v = k.GetValue("Installed");
+                    return v != null && Convert.ToInt32(v) == 1;
+                }
+            }
+            catch { return false; }
         }
 
         private void ExtractZip(string zip, string dest)
@@ -993,7 +1094,7 @@ namespace SIGEJUB_Installer
                     wc.Headers[HttpRequestHeader.UserAgent] = "SIGEJUB-Installer";
                     html = wc.DownloadString(PHP_PAGE);
                 }
-                var rx = new System.Text.RegularExpressions.Regex("php-8\\.[0-9]+\\.[0-9]+-nts-Win32-vs17-x64\\.zip");
+                var rx = new System.Text.RegularExpressions.Regex("php-8\\.[0-9]+\\.[0-9]+-nts-Win32-vs[0-9]+-x64\\.zip");
                 var names = new List<string>();
                 foreach (System.Text.RegularExpressions.Match m in rx.Matches(html))
                     if (!names.Contains(m.Value)) names.Add(m.Value);
@@ -1075,14 +1176,23 @@ namespace SIGEJUB_Installer
                 {
                     AppendLog("  Descargando " + name + " ...", Color.White);
                     string tmp = Path.Combine(Path.GetTempPath(), "sigejub-" + name);
-                    if (DownloadFile(PHP_PAGE + name, tmp)) zipPath = tmp;
-                    else AppendLog("[AVISO] No se pudo descargar PHP desde internet; se usará el paquete local.", Color.Orange);
+                    if (DownloadFile(PHP_PAGE + name, tmp) && IsValidZip(tmp)) zipPath = tmp;
+                    else
+                    {
+                        try { if (File.Exists(tmp)) File.Delete(tmp); } catch { }
+                        AppendLog("[AVISO] No se pudo descargar un ZIP válido de PHP; se usará el paquete local.", Color.Orange);
+                    }
                 }
             }
             if (zipPath == null)
             {
                 zipPath = FindBundleZip("php-*.zip");
                 if (zipPath != null) AppendLog("  Usando paquete offline: " + Path.GetFileName(zipPath), Color.White);
+            }
+            if (zipPath != null && !IsValidZip(zipPath))
+            {
+                AppendLog("[ERROR] El paquete local de PHP está corrupto: " + zipPath, Color.Red);
+                return false;
             }
             if (zipPath == null) return false;
 
@@ -1105,6 +1215,19 @@ namespace SIGEJUB_Installer
 
             phpExe = exe;
             phpPortable = true;
+
+            // Verificar que php.exe realmente arranca (si falta el runtime VC++, no responde)
+            string verOut;
+            if (!RunCmdIn(exe, "-v", installPath, out verOut) || string.IsNullOrWhiteSpace(verOut))
+            {
+                AppendLog("  php.exe no responde. Comprobando runtime VC++...", Color.Orange);
+                EnsureVCpp();
+                if (!RunCmdIn(exe, "-v", installPath, out verOut) || string.IsNullOrWhiteSpace(verOut))
+                {
+                    AppendLog("[ERROR] php.exe no responde. Instala el runtime VC++ x64 o revisa el paquete de PHP.", Color.Red);
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -1132,41 +1255,98 @@ namespace SIGEJUB_Installer
             sb.AppendLine("extension=pdo_sqlite");
             sb.AppendLine("extension=sqlite3");
             sb.AppendLine("extension=zip");
-            File.WriteAllText(iniPath, sb.ToString(), Encoding.UTF8);
+            File.WriteAllText(iniPath, sb.ToString(), Utf8NoBom);
         }
 
-        // Garantiza Composer: del sistema o composer.phar local
+        // Garantiza Composer: prefiere un composer.phar REAL (descargado/local) y evita
+        // los scripts shell de ComposerSetup (bin\composer) que PHP no puede ejecutar.
         private bool EnsureComposer()
         {
+            // 1) Detectar un Composer del sistema "usable" (exe/bat/cmd reales) o su .phar real
+            string sysCmd = null;
+            string sysPhar = null;
             try
             {
                 string outS;
                 if (RunCmd("where", "composer", out outS) && !string.IsNullOrWhiteSpace(outS))
                 {
-                    composerPhar = null;
-                    return true;
+                    string line = outS.Split('\n')[0].Trim();
+                    if (!string.IsNullOrWhiteSpace(line) && File.Exists(line))
+                    {
+                        string ext = Path.GetExtension(line).ToLowerInvariant();
+                        if (ext == ".exe" || ext == ".bat" || ext == ".cmd")
+                            sysCmd = line;
+                        else
+                        {
+                            // ComposerSetup deja bin\composer (script shell) + bin\composer.phar (real)
+                            string phar = Path.Combine(Path.GetDirectoryName(line), "composer.phar");
+                            if (File.Exists(phar)) { sysPhar = phar; }
+                            else AppendLog("  Composer del sistema no es un ejecutable real (" + line + "); se usará composer.phar local.", Color.Orange);
+                        }
+                    }
                 }
             }
             catch { }
-            AppendLog("  Composer no encontrado. Instalando composer.phar local...", Color.White);
+
+            // 2) Preferir un composer.phar controlado por el instalador (determinista)
             string dest = Path.Combine(installPath, "composer.phar");
             bool ok = false;
+            string origen = null;
             if (online)
             {
-                AppendLog("  Descargando composer.phar ...", Color.White);
+                AppendLog("  Descargando composer.phar (oficial) ...", Color.White);
                 ok = DownloadFile(COMPOSER_URL, dest);
-                if (!ok) AppendLog("[AVISO] No se pudo descargar composer.phar; se usará el paquete local.", Color.Orange);
+                if (ok) origen = "internet";
+                else AppendLog("[AVISO] No se pudo descargar composer.phar; se usará el paquete local.", Color.Orange);
             }
             if (!ok)
             {
                 string b = GetBundle("composer.phar");
                 if (b != null)
                 {
-                    try { File.Copy(b, dest, true); ok = true; }
+                    try { File.Copy(b, dest, true); ok = true; origen = "paquete local"; }
                     catch { AppendLog("[AVISO] No se pudo copiar composer.phar local.", Color.Orange); }
                 }
             }
-            if (ok) { composerPhar = dest; return true; }
+            if (!ok && sysPhar != null)
+            {
+                try { File.Copy(sysPhar, dest, true); ok = true; origen = sysPhar; }
+                catch { AppendLog("[AVISO] No se pudo usar el composer.phar de ComposerSetup.", Color.Orange); }
+            }
+            if (!ok)
+            {
+                // Fallback: Composer-Setup.exe (oficial) si está en la carpeta de paquetes
+                string setup = FindBundleExe("Composer-Setup.exe");
+                if (setup != null)
+                {
+                    AppendLog("  Ejecutando " + Path.GetFileName(setup) + " (genera composer.phar local)...", Color.White);
+                    RunHidden(setup, "--install-dir=\"" + installPath + "\" --filename=composer.phar --quiet --no-ansi");
+                    if (File.Exists(dest)) { ok = true; origen = "Composer-Setup.exe"; }
+                    else AppendLog("[AVISO] Composer-Setup.exe no generó composer.phar.", Color.Orange);
+                }
+            }
+            if (ok && new FileInfo(dest).Length < 100 * 1024)
+            {
+                AppendLog("[AVISO] composer.phar parece corrupto/incompleto (" + new FileInfo(dest).Length + " bytes).", Color.Orange);
+                try { File.Delete(dest); } catch { }
+                ok = false;
+            }
+            if (ok)
+            {
+                composerPhar = dest;
+                composerCmd = null;
+                AppendLog("  Composer listo: composer.phar (" + origen + ")", Color.Green);
+                return true;
+            }
+
+            // 3) Composer del sistema (exe/bat/cmd reales) como último recurso
+            if (!string.IsNullOrEmpty(sysCmd))
+            {
+                composerCmd = sysCmd;
+                composerPhar = null;
+                AppendLog("  Usando Composer del sistema: " + composerCmd, Color.Green);
+                return true;
+            }
             return false;
         }
 
@@ -1174,8 +1354,19 @@ namespace SIGEJUB_Installer
 
         private bool RunComposer(string args, out string output)
         {
-            if (composerPhar == null) return RunCmdIn("composer", args, installPath, out output);
-            return RunCmdIn(phpExe, "\"" + composerPhar + "\" " + args, installPath, out output);
+            // Prioridad: 1) composer.phar local (real, vía php), 2) composer del sistema (exe/bat/cmd)
+            if (composerPhar != null && File.Exists(composerPhar))
+                return RunCmdIn(phpExe, "\"" + composerPhar + "\" " + args, installPath, out output);
+            if (!string.IsNullOrEmpty(composerCmd) && File.Exists(composerCmd))
+            {
+                string ext = Path.GetExtension(composerCmd).ToLowerInvariant();
+                if (ext == ".bat" || ext == ".cmd")
+                    return RunCmdIn("cmd.exe", "/c \"" + composerCmd + "\" " + args, installPath, out output);
+                if (ext == ".exe")
+                    return RunCmdIn(composerCmd, args, installPath, out output);
+                return RunCmdIn(phpExe, "\"" + composerCmd + "\" " + args, installPath, out output);
+            }
+            return RunCmdIn("composer", args, installPath, out output);
         }
 
         // ─── Base de datos ───
@@ -1243,15 +1434,15 @@ namespace SIGEJUB_Installer
         {
             var sb = new StringBuilder();
             sb.AppendLine("[mysqld]");
-            sb.AppendLine("basedir=" + baseDir);
-            sb.AppendLine("datadir=" + dataDir);
+            sb.AppendLine("basedir=\"" + baseDir + "\"");
+            sb.AppendLine("datadir=\"" + dataDir + "\"");
             sb.AppendLine("port=" + port);
             sb.AppendLine("bind-address=127.0.0.1");
             sb.AppendLine("character-set-server=utf8mb4");
             sb.AppendLine("collation-server=utf8mb4_unicode_ci");
             sb.AppendLine("[client]");
             sb.AppendLine("port=" + port);
-            File.WriteAllText(iniPath, sb.ToString(), Encoding.UTF8);
+            File.WriteAllText(iniPath, sb.ToString(), Utf8NoBom);
         }
 
         private bool InstallPortableMariaDB(int port)
@@ -1262,15 +1453,57 @@ namespace SIGEJUB_Installer
                 AppendLog("  Obteniendo MariaDB portable (~90 MB)...", Color.White);
                 if (online)
                 {
-                    string tmp = Path.Combine(Path.GetTempPath(), "sigejub-mariadb.zip");
-                    if (DownloadFile(MARIADB_URL, tmp)) zipPath = tmp;
-                    else AppendLog("[AVISO] No se pudo descargar MariaDB; se usará el paquete local.", Color.Orange);
+                    foreach (var url in MARIADB_URLS)
+                    {
+                        if (zipPath != null) break;
+                        string tmp = Path.Combine(Path.GetTempPath(), "sigejub-mariadb.zip");
+                        if (DownloadFile(url, tmp) && IsValidZip(tmp)) zipPath = tmp;
+                        else
+                        {
+                            try { if (File.Exists(tmp)) File.Delete(tmp); } catch { }
+                            AppendLog("[AVISO] No se pudo descargar MariaDB desde " + new Uri(url).Host + "; probando otra versión...", Color.Orange);
+                        }
+                    }
                 }
-                if (zipPath == null) zipPath = FindBundleZip("mariadb-*.zip");
                 if (zipPath == null)
                 {
-                    AppendLog("[ERROR] No hay paquete MariaDB (paquetes/mariadb-*.zip) ni internet.", Color.Red);
+                    zipPath = FindBundleZip("mariadb-*.zip");
+                    if (zipPath != null) AppendLog("  Usando paquete offline: " + Path.GetFileName(zipPath), Color.White);
+                }
+                if (zipPath != null && !IsValidZip(zipPath))
+                {
+                    AppendLog("[ERROR] El paquete local de MariaDB está corrupto: " + zipPath, Color.Red);
                     return false;
+                }
+
+                if (zipPath == null)
+                {
+                    // Fallback: si solo hay un .msi en la carpeta de paquetes, instalarlo silenciosamente
+                    string msi = FindBundleExe("mariadb-*.msi");
+                    if (msi == null)
+                    {
+                        AppendLog("[ERROR] No hay paquete MariaDB (paquetes/mariadb-*.zip o *.msi) ni internet.", Color.Red);
+                        return false;
+                    }
+                    AppendLog("  Instalando MariaDB desde MSI (silencioso)...", Color.White);
+                    RunHidden("msiexec.exe", "/i \"" + msi + "\" /qn /norestart PORT=" + port);
+                    if (!WaitPort(port, 120))
+                    {
+                        AppendLog("[ERROR] MariaDB (MSI) no respondió en el puerto " + port + " tras 120 s.", Color.Red);
+                        return false;
+                    }
+                    string mysqlExe = FindMariaDbMysql();
+                    if (mysqlExe == null) { AppendLog("[ERROR] mysql.exe de MariaDB (MSI) no localizado en Program Files.", Color.Red); return false; }
+                    string sqlMsi = "CREATE DATABASE IF NOT EXISTS `" + dbName.Replace("`", "``") + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
+                    string outMsi;
+                    if (!RunCmdIn(mysqlExe, "-h127.0.0.1 -P" + port + " -uroot -e\"" + sqlMsi + "\"", installPath, out outMsi))
+                    {
+                        AppendLog("[ERROR] No se pudo crear la BD: " + Truncate(outMsi, 300), Color.Red); return false;
+                    }
+                    dbStartCmd = ""; // el MSI registra un servicio que arranca solo en el inicio
+                    dbHost = "127.0.0.1"; dbPort = port.ToString(); dbUser = "root"; dbPass = ""; dbPortable = true;
+                    AppendLog("[OK] MariaDB (MSI) lista. BD '" + dbName + "' creada (usuario root, sin clave).", Color.Green);
+                    return true;
                 }
 
                 string dir = Path.Combine(installPath, "mariadb");
@@ -1324,7 +1557,7 @@ namespace SIGEJUB_Installer
                 if (!WaitPort(port, 60)) { AppendLog("[ERROR] MariaDB no respondió en el puerto " + port + " tras 60 s.", Color.Red); return false; }
 
                 string mysql = Path.Combine(binDir, "mysql.exe");
-                string sql = "CREATE DATABASE IF NOT EXISTS `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
+                string sql = "CREATE DATABASE IF NOT EXISTS `" + dbName.Replace("`", "``") + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
                 string out2;
                 if (!RunCmdIn(mysql, "-h127.0.0.1 -P" + port + " -uroot -e\"" + sql + "\"", installPath, out out2))
                 {
@@ -1339,6 +1572,25 @@ namespace SIGEJUB_Installer
             catch (Exception ex) { AppendLog("[ERROR] MySQL/MariaDB: " + ex.Message, Color.Red); return false; }
         }
 
+        // Localiza mysql.exe de una instalación MariaDB vía MSI en Program Files
+        private string FindMariaDbMysql()
+        {
+            foreach (var root in new string[] { @"C:\Program Files\MariaDB", @"C:\Program Files (x86)\MariaDB" })
+            {
+                if (!Directory.Exists(root)) continue;
+                try
+                {
+                    foreach (var d in Directory.GetDirectories(root))
+                    {
+                        string m = Path.Combine(d, "bin", "mysql.exe");
+                        if (File.Exists(m)) return m;
+                    }
+                }
+                catch { }
+            }
+            return null;
+        }
+
         private bool InstallPortablePostgres(int port)
         {
             try
@@ -1347,11 +1599,28 @@ namespace SIGEJUB_Installer
                 AppendLog("  Obteniendo PostgreSQL portable (~300 MB)...", Color.White);
                 if (online)
                 {
-                    string tmp = Path.Combine(Path.GetTempPath(), "sigejub-pgsql.zip");
-                    if (DownloadFile(PGSQL_URL, tmp)) zipPath = tmp;
-                    else AppendLog("[AVISO] No se pudo descargar PostgreSQL; se usará el paquete local.", Color.Orange);
+                    foreach (var url in PGSQL_URLS)
+                    {
+                        if (zipPath != null) break;
+                        string tmp = Path.Combine(Path.GetTempPath(), "sigejub-pgsql.zip");
+                        if (DownloadFile(url, tmp) && IsValidZip(tmp)) zipPath = tmp;
+                        else
+                        {
+                            try { if (File.Exists(tmp)) File.Delete(tmp); } catch { }
+                            AppendLog("[AVISO] No se pudo descargar PostgreSQL desde " + new Uri(url).Host + "; probando otra versión...", Color.Orange);
+                        }
+                    }
                 }
-                if (zipPath == null) zipPath = FindBundleZip("postgresql-*.zip");
+                if (zipPath == null)
+                {
+                    zipPath = FindBundleZip("postgresql-*.zip");
+                    if (zipPath != null) AppendLog("  Usando paquete offline: " + Path.GetFileName(zipPath), Color.White);
+                }
+                if (zipPath != null && !IsValidZip(zipPath))
+                {
+                    AppendLog("[ERROR] El paquete local de PostgreSQL está corrupto: " + zipPath, Color.Red);
+                    return false;
+                }
                 if (zipPath == null)
                 {
                     AppendLog("[ERROR] No hay paquete PostgreSQL (paquetes/postgresql-*.zip) ni internet.", Color.Red);
@@ -1384,14 +1653,19 @@ namespace SIGEJUB_Installer
                 }
                 if (!WaitPort(port, 60)) { AppendLog("[ERROR] PostgreSQL no respondió en el puerto " + port + " tras 60 s.", Color.Red); return false; }
 
-                // Establecer clave del usuario postgres (por si la pedida)
+                // Establecer la clave del usuario postgres sin exponerla en la línea de comandos:
+                // se escribe en un archivo temporal y se pasa con -f + variable PGPASSWORD.
                 string psql = Path.Combine(binDir, "psql.exe");
                 string pass = dbPass;
-                string passSql = "ALTER USER postgres PASSWORD '" + pass.Replace("'", "''") + "';";
-                if (!RunCmdIn(psql, "-h127.0.0.1 -p" + port + " -U postgres -c \"" + passSql + "\"", installPath, out out2))
+                string passSql = "ALTER USER postgres PASSWORD '" + pass.Replace("'", "''") + "';\n";
+                string fSql = Path.Combine(Path.GetTempPath(), "sigejub-pg-setpass.sql");
+                File.WriteAllText(fSql, passSql, Utf8NoBom);
+                var env = new Dictionary<string, string> { { "PGPASSWORD", pass } };
+                if (!RunCmdIn(psql, "-h127.0.0.1 -p" + port + " -U postgres -f \"" + fSql + "\"", installPath, out out2, env))
                 {
                     AppendLog("[AVISO] No se pudo definir la clave de postgres: " + Truncate(out2, 200), Color.Orange);
                 }
+                try { File.Delete(fSql); } catch { }
                 // Crear la base de datos (las comillas dobles del SQL van dobladas para CreateProcess)
                 string ddl = "-h127.0.0.1 -p" + port + " -U postgres -c \"CREATE DATABASE \"\"" + dbName + "\"\"\"";
                 if (!RunCmdIn(psql, ddl, installPath, out out2))
@@ -1418,14 +1692,19 @@ namespace SIGEJUB_Installer
                     if (File.Exists(envExample)) File.Copy(envExample, envPath);
                     else
                     {
-                        // CopyDirectory excluye los .env*, así que usamos el ejemplo del instalador si falta
-                        string srcExample = Path.Combine(SourceRoot, ".env.example");
-                        if (File.Exists(srcExample))
+                        // CopyDirectory excluye los .env*, así que se busca el ejemplo cerca del instalador;
+                        // si no aparece en ningún sitio, se genera un .env mínimo (nunca fallamos aquí).
+                        string srcExample = LocateEnvExample();
+                        if (srcExample != null)
                         {
                             try { File.Copy(srcExample, envPath); }
                             catch (Exception ex2) { AppendLog("[ERROR] No se pudo crear .env: " + ex2.Message, Color.Red); return false; }
                         }
-                        else { AppendLog("[ERROR] Falta .env.example", Color.Red); return false; }
+                        else
+                        {
+                            File.WriteAllText(envPath, DefaultEnvTemplate(), Utf8NoBom);
+                            AppendLog("[AVISO] No se encontró .env.example; se generó un .env base.", Color.Orange);
+                        }
                     }
                 }
                 string env = File.ReadAllText(envPath, Encoding.UTF8);
@@ -1447,10 +1726,48 @@ namespace SIGEJUB_Installer
                     env = ReplaceEnv(env, "DB_USERNAME", dbUser);
                     env = ReplaceEnv(env, "DB_PASSWORD", dbPass);
                 }
-                File.WriteAllText(envPath, env, Encoding.UTF8);
+                File.WriteAllText(envPath, env, Utf8NoBom);
                 return true;
             }
             catch (Exception ex) { AppendLog("[ERROR] No se pudo escribir .env: " + ex.Message, Color.Red); return false; }
+        }
+
+        // Busca .env.example en varias rutas candidatas
+        private string LocateEnvExample()
+        {
+            string[] cands = {
+                Path.Combine(SourceRoot, ".env.example"),
+                Path.Combine(Application.StartupPath, ".env.example"),
+                Path.GetFullPath(Path.Combine(SourceRoot, "..", ".env.example"))
+            };
+            foreach (var p in cands)
+                if (File.Exists(p)) return p;
+            return null;
+        }
+
+        // Plantilla mínima de .env (solo como último recurso)
+        private string DefaultEnvTemplate()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("APP_NAME=SIGEJUB");
+            sb.AppendLine("APP_ENV=local");
+            sb.AppendLine("APP_KEY=");
+            sb.AppendLine("APP_DEBUG=true");
+            sb.AppendLine("APP_URL=http://localhost:8000");
+            sb.AppendLine("");
+            sb.AppendLine("LOG_CHANNEL=stack");
+            sb.AppendLine("SESSION_DRIVER=file");
+            sb.AppendLine("SESSION_LIFETIME=120");
+            sb.AppendLine("CACHE_DRIVER=file");
+            sb.AppendLine("QUEUE_CONNECTION=sync");
+            sb.AppendLine("");
+            sb.AppendLine("DB_CONNECTION=mysql");
+            sb.AppendLine("DB_HOST=127.0.0.1");
+            sb.AppendLine("DB_PORT=3306");
+            sb.AppendLine("DB_DATABASE=bd-sigejub");
+            sb.AppendLine("DB_USERNAME=root");
+            sb.AppendLine("DB_PASSWORD=");
+            return sb.ToString();
         }
 
         // Lanza un proceso en segundo plano sin esperarlo (mysqld, pg_ctl...)
@@ -1560,50 +1877,78 @@ namespace SIGEJUB_Installer
 
                 string ico = Path.Combine(appPath, "public", "img", "imagen_2026-05-19_065531142.ico") + ", 0";
 
-                // Apuntamos directamente a php.exe (no a un .vbs) para evitar la
-                // advertencia de Windows "¿Desea abrir este archivo?" de los scripts.
-                bool directToPhp = false;
-                string phpPath = phpExe;
-                if (!string.IsNullOrEmpty(phpPath))
+                // El acceso directo apunta a wscript.exe + sigejub-start.vbs: así el servidor
+                // PHP arranca OCULTO en segundo plano y el .vbs abre el navegador en la página.
+                bool created = false;
+                string wscript = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "wscript.exe");
+                string vbsTarget = Path.Combine(appPath, "sigejub-start.vbs");
+                if (File.Exists(vbsTarget))
                 {
-                    string phpTmp = Path.GetTempFileName() + ".vbs";
-                    File.WriteAllText(phpTmp,
-                        "Set ws = CreateObject(\"WScript.Shell\")\n" +
-                        "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
-                        "sc.TargetPath = \"" + phpPath + "\"\n" +
-                        "sc.Arguments = \"-S 127.0.0.1:" + selectedPort + " -t \"\"" + appPath + "\\public\"\"\" \n" +
-                        "sc.WorkingDirectory = \"" + appPath + "\"\n" +
-                        "sc.WindowStyle = 1\n" +
-                        "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
-                        "sc.IconLocation = \"" + ico + "\"\n" +
-                        "sc.Save()\n");
-                    RunHidden("cscript.exe", "//Nologo \"" + phpTmp + "\"");
-                    try { File.Delete(phpTmp); } catch { }
-                    directToPhp = true;
+                    try
+                    {
+                        CreateShortcutViaCom(lnkPath, wscript, "\"" + vbsTarget + "\"", appPath, 7, ico);
+                        created = File.Exists(lnkPath);
+                    }
+                    catch (Exception ex) { AppendLog("[AVISO] Acceso directo: " + ex.Message, Color.Orange); }
                 }
 
-                // Si no se pudo apuntar a php.exe, crear un .lnk hacia el .vbs (fallback)
-                if (!directToPhp)
+                // Fallback: si no existe el .vbs, apuntar directamente a php.exe
+                if (!created)
                 {
-                    string vbsPath = Path.Combine(appPath, "sigejub-start.vbs");
-                    string vbs = Path.GetTempFileName() + ".vbs";
-                    File.WriteAllText(vbs,
-                        "Set ws = CreateObject(\"WScript.Shell\")\n" +
-                        "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
-                        "sc.TargetPath = \"" + vbsPath + "\"\n" +
-                        "sc.WorkingDirectory = \"" + appPath + "\"\n" +
-                        "sc.WindowStyle = 7\n" +
-                        "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
-                        "sc.IconLocation = \"" + ico + "\"\n" +
-                        "sc.Save()\n");
-                    RunHidden("cscript.exe", "//Nologo \"" + vbs + "\"");
-                    try { File.Delete(vbs); } catch { }
+                    string phpPath = phpExe;
+                    if (!string.IsNullOrEmpty(phpPath) && File.Exists(phpPath))
+                    {
+                        try
+                        {
+                            CreateShortcutViaCom(lnkPath, phpPath,
+                                "-S 127.0.0.1:" + selectedPort + " -t \"" + appPath + "\\public\"",
+                                appPath, 1, ico);
+                            created = File.Exists(lnkPath);
+                        }
+                        catch (Exception ex) { AppendLog("[AVISO] Acceso directo (php): " + ex.Message, Color.Orange); }
+                    }
                 }
 
-                if (File.Exists(lnkPath)) AppendLog("[OK] Acceso directo creado", Color.Green);
-                else AppendLog("[AVISO] Acceso directo podría no haberse creado", Color.Orange);
+                if (created) AppendLog("[OK] Acceso directo creado", Color.Green);
+                else AppendLog("[AVISO] No se pudo crear el acceso directo en: " + lnkPath, Color.Orange);
             }
             catch (Exception ex) { AppendLog("[AVISO] Acceso directo: " + ex.Message, Color.Orange); }
+        }
+
+        // Crea un .lnk usando el objeto COM WScript.Shell directamente (sin cscript.exe ni .vbs temporal).
+        // Se ejecuta en el hilo de UI (STA) porque COM requiere un apartamento de un hilo.
+        private bool CreateShortcutViaCom(string lnkPath, string target, string arguments,
+            string workingDir, int windowStyle, string icon)
+        {
+            var result = false;
+            this.Invoke(new Action(() =>
+            {
+                try
+                {
+                    Type t = Type.GetTypeFromProgID("WScript.Shell");
+                    if (t == null) return;
+                    dynamic shell = Activator.CreateInstance(t);
+                    try
+                    {
+                        dynamic sc = shell.CreateShortcut(lnkPath);
+                        try
+                        {
+                            sc.TargetPath = target;
+                            sc.Arguments = arguments;
+                            sc.WorkingDirectory = workingDir;
+                            sc.WindowStyle = windowStyle;
+                            sc.Description = "SIGEJUB - Sistema de Gestion de Jubilaciones";
+                            sc.IconLocation = icon;
+                            sc.Save();
+                            result = File.Exists(lnkPath);
+                        }
+                        finally { Marshal.FinalReleaseComObject(sc); }
+                    }
+                    finally { Marshal.FinalReleaseComObject(shell); }
+                }
+                catch { }
+            }));
+            return result;
         }
 
         // Obtiene la ruta completa de php.exe desde el PATH
@@ -1660,20 +2005,24 @@ namespace SIGEJUB_Installer
                     sb.AppendLine("if not errorlevel 1 exit /b 0");
                     sb.AppendLine("start \"\" /b " + dbStartCmd);
                     sb.AppendLine("exit /b 0");
-                    File.WriteAllText(dbBat, sb.ToString(), Encoding.UTF8);
+                    File.WriteAllText(dbBat, sb.ToString(), Utf8NoBom);
                 }
 
                 string php = phpExe;
                 if (string.IsNullOrEmpty(php)) php = "php";
 
+                // sigejub-start.vbs: arranca la BD (si aplica) y el servidor PHP OCULTO
+                // en segundo plano, espera a que levante y abre el navegador en la página.
                 string vbs = Path.Combine(appPath, "sigejub-start.vbs");
-                string content =
-                    "On Error Resume Next\n" +
-                    "Set sh = CreateObject(\"WScript.Shell\")\n" +
-                    "sh.CurrentDirectory = \"" + appPath + "\"\n" +
-                    (writeDbBat ? "sh.Run \"\"\"" + dbBat + "\"\"\", 0, False\n" : "") +
-                    "sh.Run \"\"\"" + php + "\"\" -S 127.0.0.1:" + selectedPort + " -t \"\"" + appPath + "\\public\"\"\", 1, False\n";
-                File.WriteAllText(vbs, content, Encoding.UTF8);
+                var sbv = new StringBuilder();
+                sbv.AppendLine("On Error Resume Next");
+                sbv.AppendLine("Set sh = CreateObject(\"WScript.Shell\")");
+                sbv.AppendLine("sh.CurrentDirectory = " + VbsStr(appPath));
+                if (writeDbBat) sbv.AppendLine("sh.Run " + VbsStr(dbBat) + ", 0, False");
+                sbv.AppendLine("sh.Run " + VbsStr(php + " -S 127.0.0.1:" + selectedPort + " -t \"" + VbsInner(appPath + "\\public") + "\"") + ", 0, False");
+                sbv.AppendLine("WScript.Sleep 2500");
+                sbv.AppendLine("sh.Run " + VbsStr("http://localhost:" + selectedPort) + ", 1, False");
+                File.WriteAllText(vbs, sbv.ToString(), Utf8NoBom);
             }
             catch { }
         }
@@ -1699,7 +2048,7 @@ namespace SIGEJUB_Installer
             catch { }
         }
 
-        private bool RunCmdIn(string cmd, string args, string workDir, out string output)
+        private bool RunCmdIn(string cmd, string args, string workDir, out string output, Dictionary<string, string> env = null)
         {
             output = "";
             try
@@ -1715,6 +2064,13 @@ namespace SIGEJUB_Installer
                     StandardOutputEncoding = Encoding.UTF8,
                     StandardErrorEncoding = Encoding.UTF8
                 };
+                if (env != null)
+                {
+                    foreach (var kv in env)
+                    {
+                        try { psi.EnvironmentVariables[kv.Key] = kv.Value; } catch { }
+                    }
+                }
                 using (var proc = Process.Start(psi))
                 {
                     // Leer stderr de forma asíncrona evita el deadlock cuando el
@@ -1767,6 +2123,13 @@ namespace SIGEJUB_Installer
         }
 
         private string Truncate(string s, int max) { return s.Length <= max ? s : s.Substring(0, max) + "..."; }
+
+        // ─── Helpers de quoting VBS ───
+        // Escapa un texto para que sea seguro dentro de un literal de VBScript
+        // (las comillas se duplican: " -> "")
+        private static string VbsInner(string s) { return (s ?? "").Replace("\"", "\"\""); }
+        // Devuelve un literal de VBScript (texto entre comillas dobles) listo para embeber en un archivo .vbs
+        private static string VbsStr(string s) { return "\"" + VbsInner(s) + "\""; }
 
         private void AppendLog(string text, Color? color = null)
         {
