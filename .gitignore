@@ -19,6 +19,7 @@
 /node_modules
 /database/*.sqlite
 /bd-sigejub
+/paquetes
 /public/build
 /public/hot
 Homestead.json

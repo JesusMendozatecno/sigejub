@@ -48,6 +48,8 @@ $argList += "/reference:System.Windows.Forms.dll"
 $argList += "/reference:System.Drawing.dll"
 $argList += "/reference:System.Net.dll"
 $argList += "/reference:Microsoft.CSharp.dll"
+$argList += "/reference:System.IO.Compression.dll"
+$argList += "/reference:System.IO.Compression.FileSystem.dll"
 
 if ($icoPath -and (Test-Path $icoPath)) {
     $argList += '/win32icon:"' + $icoPath + '"'
