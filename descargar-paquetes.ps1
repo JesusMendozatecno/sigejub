@@ -50,16 +50,20 @@ Get-FileEx -Url ("https://windows.php.net/downloads/releases/" + $phpName) `
 Get-FileEx -Url "https://getcomposer.org/download/latest-stable/composer.phar" `
            -Dest (Join-Path $dir "composer.phar") -Name "Composer"
 
+# 3) Runtime VC++ 2015-2022 x64 (lo necesita PHP portable)
+Get-FileEx -Url "https://aka.ms/vs/17/release/vc_redist.x64.exe" `
+           -Dest (Join-Path $dir "vc_redist.x64.exe") -Name "VC++ Runtime x64"
+
 if (-not $SoloBasico) {
-    # 3) MariaDB portable (Win x64 Zip)
+    # 4) MariaDB portable (Win x64 Zip)
     Get-FileEx -Url "https://archive.mariadb.org/mariadb-11.4.5/winx64-packages/mariadb-11.4.5-winx64.zip" `
                -Dest (Join-Path $dir "mariadb-11.4.5-winx64.zip") -Name "MariaDB 11.4.5 (Win64)"
 
-    # 4) PostgreSQL portable (Win x64 Binaries)
+    # 5) PostgreSQL portable (Win x64 Binaries)
     Get-FileEx -Url "https://get.enterprisedb.com/postgresql/postgresql-16.8-1-windows-x64-binaries.zip" `
                -Dest (Join-Path $dir "postgresql-16.8-1-windows-x64-binaries.zip") -Name "PostgreSQL 16.8 (Win64)"
 } else {
-    Write-Host "[AVISO] Omitidos MariaDB y PostgreSQL (usa -SoloBasico para solo PHP+Composer)." -ForegroundColor Yellow
+    Write-Host "[AVISO] Omitidos MariaDB y PostgreSQL (usa -SoloBasico para solo PHP+Composer+VC++)." -ForegroundColor Yellow
 }
 
 Write-Host ""
