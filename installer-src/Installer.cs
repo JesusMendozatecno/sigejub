@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace SIGEJUB_Installer
 {
@@ -750,13 +751,13 @@ namespace SIGEJUB_Installer
                 SetProgress(2);
 
                 // ── 1: Copiar archivos de la app ──
-                AppendLog("[1/12] Copiando archivos de la aplicación...", Color.Yellow);
-                CopyDirectory(SourceRoot, installPath);
+                AppendLog("[1/13] Copiando archivos de la aplicación...", Color.Yellow);
+                CopyDirectory(SourceRoot, installPath, true);
                 CleanStorage(installPath);
                 SetProgress(6);
 
                 // ── 2: Detectar internet (modo online / offline) ──
-                AppendLog("[2/12] Comprobando conexión a internet...", Color.Yellow);
+                AppendLog("[2/13] Comprobando conexión a internet...", Color.Yellow);
                 online = HasInternet();
                 AppendLog(online
                     ? "[OK] Conexión disponible: se descargará la última versión de lo que falte."
@@ -765,7 +766,7 @@ namespace SIGEJUB_Installer
                 SetProgress(9);
 
                 // ── 3: PHP (del sistema o portable local) ──
-                AppendLog("[3/12] Verificando PHP...", Color.Yellow);
+                AppendLog("[3/13] Verificando PHP...", Color.Yellow);
                 if (!EnsurePhp())
                 {
                     AppendLog("[ERROR] No se pudo obtener PHP 8.2+. Con internet se descarga solo; sin internet, coloca el zip de PHP en la carpeta 'paquetes' junto al instalador.", Color.Red);
@@ -775,7 +776,7 @@ namespace SIGEJUB_Installer
                 SetProgress(14);
 
                 // ── 4: Composer (sistema o composer.phar local) ──
-                AppendLog("[4/12] Verificando Composer...", Color.Yellow);
+                AppendLog("[4/13] Verificando Composer...", Color.Yellow);
                 if (!EnsureComposer())
                 {
                     AppendLog("[ERROR] No se pudo obtener Composer.", Color.Red);
@@ -785,7 +786,7 @@ namespace SIGEJUB_Installer
                 SetProgress(18);
 
                 // ── 5: Base de datos ──
-                AppendLog("[5/12] Preparando base de datos (" + DbEngineName() + ")...", Color.Yellow);
+                AppendLog("[5/13] Preparando base de datos (" + DbEngineName() + ")...", Color.Yellow);
                 if (!ResolveDatabase())
                 {
                     AppendLog("[ERROR] No se pudo preparar la base de datos.", Color.Red);
@@ -794,7 +795,7 @@ namespace SIGEJUB_Installer
                 SetProgress(26);
 
                 // ── 6: .env ──
-                AppendLog("[6/12] Configurando .env...", Color.Yellow);
+                AppendLog("[6/13] Configurando .env...", Color.Yellow);
                 if (!WriteEnvFile())
                 {
                     FinishWithError(); return;
@@ -803,7 +804,7 @@ namespace SIGEJUB_Installer
                 SetProgress(34);
 
                 // ── 7: composer install ──
-                AppendLog("[7/12] Instalando dependencias (esto puede tardar)...", Color.Yellow);
+                AppendLog("[7/13] Instalando dependencias (esto puede tardar)...", Color.Yellow);
                 string output;
                 if (!RunComposer("install --no-interaction --no-ansi --no-progress", out output))
                 {
@@ -814,7 +815,7 @@ namespace SIGEJUB_Installer
                 SetProgress(52);
 
                 // ── 8: key ──
-                AppendLog("[8/12] Generando APP_KEY...", Color.Yellow);
+                AppendLog("[8/13] Generando APP_KEY...", Color.Yellow);
                 if (!RunPhp("artisan key:generate --force --no-ansi", out output))
                 {
                     AppendLog("[ERROR] key:generate: " + Truncate(output, 300), Color.Red);
@@ -824,7 +825,7 @@ namespace SIGEJUB_Installer
                 SetProgress(62);
 
                 // ── 9: migrar ──
-                AppendLog("[9/12] Ejecutando migraciones...", Color.Yellow);
+                AppendLog("[9/13] Ejecutando migraciones...", Color.Yellow);
                 if (!RunPhp("artisan migrate --force --no-ansi", out output))
                 {
                     AppendLog("[ERROR] Migraciones: " + Truncate(output, 300), Color.Red);
@@ -835,7 +836,7 @@ namespace SIGEJUB_Installer
                 SetProgress(74);
 
                 // ── 10: finalizar ──
-                AppendLog("[10/12] Finalizando...", Color.Yellow);
+                AppendLog("[10/13] Finalizando...", Color.Yellow);
                 RunPhp("artisan optimize:clear --no-ansi", out output);
                 string pubStorage = Path.Combine(installPath, "public", "storage");
                 if (Directory.Exists(pubStorage)) Directory.Delete(pubStorage, true);
@@ -855,6 +856,10 @@ namespace SIGEJUB_Installer
 
                 // ── 12: vbs de arranque ──
                 WriteLaunchVbs(installPath);
+
+                // ── 13: desinstalador + registro "Agregar o quitar programas" ──
+                WriteUninstaller(installPath);
+                RegisterUninstall(installPath);
                 SetProgress(100);
 
                 AppendLog("", Color.White);
@@ -865,6 +870,7 @@ namespace SIGEJUB_Installer
                             : DbEngineName() + " " + dbHost + ":" + dbPort), Color.Cyan);
                 AppendLog("  Puerto: " + selectedPort, Color.Cyan);
                 AppendLog("  URL:    http://localhost:" + selectedPort, Color.Cyan);
+                AppendLog("  Desinstalar: uninstall.vbs (en Agregar o quitar programas)", Color.Cyan);
 
                 this.Invoke(new Action(() =>
                 {
@@ -1494,32 +1500,68 @@ namespace SIGEJUB_Installer
             catch { }
         }
 
-        // ─── Copia de directorio ───
-        // NOTA: "storage" NO se excluye: la aplicación Laravel necesita que existan
-        // las carpetas storage/framework/views, storage/framework/sessions,
-        // storage/framework/cache, storage/logs y storage/app al arrancar.
-        private static readonly HashSet<string> ExcludeTop = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        // ─── Copia de directorio (filtro de producción) ───
+        // Solo se copian las carpetas y archivos esenciales de Laravel/PHP.
+        // Quedan fuera artefactos de desarrollo: .git, el propio instalador,
+        // tests, scripts de construcción, ejecutables, logs y documentación.
+        private static readonly HashSet<string> CopyTopDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            ".git", "vendor", "node_modules", "installer-src", "paquetes",
-            "SIGEJUB-Installer.exe", "build-installer.ps1", "setup.bat", "setup.sh",
-            "inicio.php", "detener.bat", "detener.sh", "start.bat", "start.sh",
-            "sigejub-start.vbs", "README.md", "bd-sigejub"
+            "app", "bootstrap", "config", "database", "lang", "public", "resources", "routes", "storage"
         };
 
-        private void CopyDirectory(string src, string dst)
+        private static readonly HashSet<string> CopyTopFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "artisan", "composer.json", "composer.lock", ".env.example",
+            "inicio.php", "start.bat", "start.sh", "detener.bat", "detener.sh",
+            "sigejub-start.vbs"
+        };
+
+        // Nombres que nunca deben viajar a producción, estén donde estén.
+        private static readonly HashSet<string> CopySkipNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".git", ".github", ".gitignore", ".gitattributes", ".editorconfig",
+            "node_modules", "installer-src", "paquetes", "vendor", "tests",
+            "SIGEJUB-Installer.exe", "vbstest.exe", "build-installer.ps1",
+            "descargar-paquetes.ps1", "setup.bat", "setup.sh", "phpunit.xml",
+            "README.md", "INFORME_AUDITORIA.md", "bd-sigejub"
+        };
+
+        private void CopyDirectory(string src, string dst, bool topLevel)
         {
             Directory.CreateDirectory(dst);
+            if (topLevel)
+            {
+                // Raíz: solo las carpetas de la lista blanca
+                foreach (var dir in Directory.GetDirectories(src, "*", SearchOption.TopDirectoryOnly))
+                {
+                    string name = Path.GetFileName(dir);
+                    if (!CopyTopDirs.Contains(name)) continue;
+                    CopyDirectory(dir, Path.Combine(dst, name), false);
+                }
+                // Raíz: solo los archivos de la lista blanca
+                foreach (var file in Directory.GetFiles(src, "*", SearchOption.TopDirectoryOnly))
+                {
+                    string name = Path.GetFileName(file);
+                    if (!CopyTopFiles.Contains(name)) continue;
+                    try { File.Copy(file, Path.Combine(dst, name), true); } catch { }
+                }
+                return;
+            }
+            // Subcarpetas recursivas con exclusión de nombres prohibidos
             foreach (var dir in Directory.GetDirectories(src, "*", SearchOption.TopDirectoryOnly))
             {
                 string name = Path.GetFileName(dir);
-                if (ExcludeTop.Contains(name)) continue;
-                CopyDirectory(dir, Path.Combine(dst, name));
+                if (CopySkipNames.Contains(name)) continue;
+                // public/storage se reconstruye con storage:link al final de la instalación
+                if (name == "storage" && string.Equals(Path.GetFileName(src), "public", StringComparison.OrdinalIgnoreCase)) continue;
+                CopyDirectory(dir, Path.Combine(dst, name), false);
             }
             foreach (var file in Directory.GetFiles(src))
             {
                 string name = Path.GetFileName(file);
-                if (name.StartsWith(".env", StringComparison.OrdinalIgnoreCase)) continue;
-                File.Copy(file, Path.Combine(dst, name), true);
+                if (CopySkipNames.Contains(name)) continue;
+                if (name.EndsWith(".log", StringComparison.OrdinalIgnoreCase)) continue;
+                try { File.Copy(file, Path.Combine(dst, name), true); } catch { }
             }
         }
 
@@ -1559,46 +1601,58 @@ namespace SIGEJUB_Installer
                 AppendLog("Creando acceso directo en: " + desktop, Color.Gray);
 
                 string ico = Path.Combine(appPath, "public", "img", "imagen_2026-05-19_065531142.ico") + ", 0";
+                string uninstallVbs = Path.Combine(appPath, "uninstall.vbs");
 
                 // Apuntamos directamente a php.exe (no a un .vbs) para evitar la
                 // advertencia de Windows "¿Desea abrir este archivo?" de los scripts.
-                bool directToPhp = false;
-                string phpPath = phpExe;
-                if (!string.IsNullOrEmpty(phpPath))
+                string target = null, args = "", windowStyle = "1";
+                if (!string.IsNullOrEmpty(phpExe) && File.Exists(phpExe))
                 {
-                    string phpTmp = Path.GetTempFileName() + ".vbs";
-                    File.WriteAllText(phpTmp,
-                        "Set ws = CreateObject(\"WScript.Shell\")\n" +
-                        "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
-                        "sc.TargetPath = \"" + phpPath + "\"\n" +
-                        "sc.Arguments = \"-S 127.0.0.1:" + selectedPort + " -t \"\"" + appPath + "\\public\"\"\" \n" +
-                        "sc.WorkingDirectory = \"" + appPath + "\"\n" +
-                        "sc.WindowStyle = 1\n" +
-                        "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
-                        "sc.IconLocation = \"" + ico + "\"\n" +
-                        "sc.Save()\n");
-                    RunHidden("cscript.exe", "//Nologo \"" + phpTmp + "\"");
-                    try { File.Delete(phpTmp); } catch { }
-                    directToPhp = true;
+                    target = phpExe;
+                    args = "-S 127.0.0.1:" + selectedPort + " -t \"" + appPath + "\\public\"";
                 }
+                else
+                {
+                    target = Path.Combine(appPath, "sigejub-start.vbs");
+                    windowStyle = "7";
+                }
+                target = target.Replace("\"", "\"\"");
+                args = args.Replace("\"", "\"\"");
 
-                // Si no se pudo apuntar a php.exe, crear un .lnk hacia el .vbs (fallback)
-                if (!directToPhp)
-                {
-                    string vbsPath = Path.Combine(appPath, "sigejub-start.vbs");
-                    string vbs = Path.GetTempFileName() + ".vbs";
-                    File.WriteAllText(vbs,
-                        "Set ws = CreateObject(\"WScript.Shell\")\n" +
-                        "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
-                        "sc.TargetPath = \"" + vbsPath + "\"\n" +
-                        "sc.WorkingDirectory = \"" + appPath + "\"\n" +
-                        "sc.WindowStyle = 7\n" +
-                        "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
-                        "sc.IconLocation = \"" + ico + "\"\n" +
-                        "sc.Save()\n");
-                    RunHidden("cscript.exe", "//Nologo \"" + vbs + "\"");
-                    try { File.Delete(vbs); } catch { }
-                }
+                string phpTmp = Path.GetTempFileName() + ".vbs";
+                File.WriteAllText(phpTmp,
+                    "Set ws = CreateObject(\"WScript.Shell\")\n" +
+                    "Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+                    // Escritorio
+                    "Set sc = ws.CreateShortcut(\"" + lnkPath + "\")\n" +
+                    "sc.TargetPath = \"" + target + "\"\n" +
+                    "sc.Arguments = \"" + args + "\"\n" +
+                    "sc.WorkingDirectory = \"" + appPath + "\"\n" +
+                    "sc.WindowStyle = " + windowStyle + "\n" +
+                    "sc.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
+                    "sc.IconLocation = \"" + ico + "\"\n" +
+                    "sc.Save()\n" +
+                    // Menú Inicio: carpeta SIGEJUB con lanzador y desinstalador
+                    "prog = ws.SpecialFolders(\"Programs\") & \"\\SIGEJUB\"\n" +
+                    "If Not fso.FolderExists(prog) Then fso.CreateFolder(prog)\n" +
+                    "Set sc2 = ws.CreateShortcut(prog & \"\\SIGEJUB.lnk\")\n" +
+                    "sc2.TargetPath = \"" + target + "\"\n" +
+                    "sc2.Arguments = \"" + args + "\"\n" +
+                    "sc2.WorkingDirectory = \"" + appPath + "\"\n" +
+                    "sc2.WindowStyle = " + windowStyle + "\n" +
+                    "sc2.Description = \"SIGEJUB - Sistema de Gestion de Jubilaciones\"\n" +
+                    "sc2.IconLocation = \"" + ico + "\"\n" +
+                    "sc2.Save()\n" +
+                    "Set sc3 = ws.CreateShortcut(prog & \"\\Desinstalar SIGEJUB.lnk\")\n" +
+                    "sc3.TargetPath = \"wscript.exe\"\n" +
+                    "sc3.Arguments = \"\"\"" + uninstallVbs + "\"\"\"\n" +
+                    "sc3.WorkingDirectory = \"C:\\Windows\\System32\"\n" +
+                    "sc3.WindowStyle = 7\n" +
+                    "sc3.Description = \"Desinstalar SIGEJUB\"\n" +
+                    "sc3.IconLocation = \"shell32.dll,40\"\n" +
+                    "sc3.Save()\n");
+                RunHidden("cscript.exe", "//Nologo \"" + phpTmp + "\"");
+                try { File.Delete(phpTmp); } catch { }
 
                 if (File.Exists(lnkPath)) AppendLog("[OK] Acceso directo creado", Color.Green);
                 else AppendLog("[AVISO] Acceso directo podría no haberse creado", Color.Orange);
@@ -1660,7 +1714,7 @@ namespace SIGEJUB_Installer
                     sb.AppendLine("if not errorlevel 1 exit /b 0");
                     sb.AppendLine("start \"\" /b " + dbStartCmd);
                     sb.AppendLine("exit /b 0");
-                    File.WriteAllText(dbBat, sb.ToString(), Encoding.UTF8);
+                    File.WriteAllText(dbBat, sb.ToString(), ScriptEncoding);
                 }
 
                 string php = phpExe;
@@ -1673,9 +1727,183 @@ namespace SIGEJUB_Installer
                     "sh.CurrentDirectory = \"" + appPath + "\"\n" +
                     (writeDbBat ? "sh.Run \"\"\"" + dbBat + "\"\"\", 0, False\n" : "") +
                     "sh.Run \"\"\"" + php + "\"\" -S 127.0.0.1:" + selectedPort + " -t \"\"" + appPath + "\\public\"\"\", 1, False\n";
-                File.WriteAllText(vbs, content, Encoding.UTF8);
+                File.WriteAllText(vbs, content, ScriptEncoding);
             }
             catch { }
+        }
+
+        // ─── Desinstalador ───
+        // Genera uninstall.vbs (orquestador gráfico) + uninstall-body.ps1 (lógica).
+        // El .vbs se auto-copia a %TEMP% para poder borrar la propia carpeta de
+        // instalación sin conflictos de archivos en uso.
+        // Codificación ANSI (sin BOM) para scripts: cscript.exe rechaza el BOM
+        // UTF-8 con "Carácter no válido" en sistemas con página de códigos 1252.
+        private static readonly Encoding ScriptEncoding = Encoding.GetEncoding(1252);
+
+        private void WriteUninstaller(string appPath)
+        {
+            try
+            {
+                string ps1 = Path.Combine(appPath, "uninstall-body.ps1");
+                File.WriteAllText(ps1, UninstallPsBody(), ScriptEncoding);
+
+                string vbsContent = UninstallVbsTemplate()
+                    .Replace("@@APPFOLDER@@", appPath)
+                    .Replace("@@SERVERPORT@@", selectedPort.ToString())
+                    .Replace("@@DBPORT@@", dbPort)
+                    .Replace("@@DBPORTABLE@@", dbPortable ? "1" : "0");
+                File.WriteAllText(Path.Combine(appPath, "uninstall.vbs"), vbsContent, ScriptEncoding);
+            }
+            catch (Exception ex) { AppendLog("[AVISO] Desinstalador: " + ex.Message, Color.Orange); }
+        }
+
+        private string UninstallVbsTemplate()
+        {
+            return
+                "' SIGEJUB - Desinstalador (generado por el instalador)\n" +
+                "On Error Resume Next\n" +
+                "Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+                "Set sh = CreateObject(\"WScript.Shell\")\n" +
+                "q = Chr(34)\n" +
+                "home = fso.GetSpecialFolder(2)\n" +
+                "' Auto-copia a la carpeta TEMP para poder borrar la de instalación\n" +
+                "If LCase(fso.GetParentFolderName(WScript.ScriptFullName)) <> LCase(home) Then\n" +
+                "    fso.CopyFile WScript.ScriptFullName, home & \"\\sigejub-uninstall.vbs\", True\n" +
+                "    fso.CopyFile fso.GetParentFolderName(WScript.ScriptFullName) & \"\\uninstall-body.ps1\", home & \"\\sigejub-uninstall-body.ps1\", True\n" +
+                "    ifArg = \"\"\n" +
+                "    If WScript.Arguments.Named.Exists(\"q\") Then ifArg = \" /q\"\n" +
+                "    sh.Run q & home & \"\\sigejub-uninstall.vbs\" & q & ifArg, 0, False\n" +
+                "    WScript.Quit 0\n" +
+                "End If\n" +
+                "body = home & \"\\sigejub-uninstall-body.ps1\"\n" +
+                "appFolder = \"@@APPFOLDER@@\"\n" +
+                "port = @@SERVERPORT@@\n" +
+                "dbPort = @@DBPORT@@\n" +
+                "dbPortable = @@DBPORTABLE@@\n" +
+                "quiet = WScript.Arguments.Named.Exists(\"q\")\n" +
+                "keepDb = 0\n" +
+                "If Not quiet Then\n" +
+                "    resp = MsgBox(\"SIGEJUB se eliminará del equipo.\" & vbCrLf & vbCrLf & \"Carpeta de instalación:\" & vbCrLf & appFolder & vbCrLf & vbCrLf & \"¿Conservar la base de datos (database\\)?\" & vbCrLf & \"Si = conservar BD y datos    No = borrar todo    Cancelar = salir\", 3 + 32 + 256, \"Desinstalar SIGEJUB\")\n" +
+                "    If resp = 2 Then WScript.Quit 3\n" +
+                "    If resp = 6 Then keepDb = 1\n" +
+                "End If\n" +
+                "Set pw = CreateObject(\"WScript.Shell\")\n" +
+                "cmd = q & \"powershell.exe\" & q & \" -NoProfile -ExecutionPolicy Bypass -File \" & q & body & q & \" -AppFolder \" & q & appFolder & q & \" -ServerPort \" & port & \" -DbPort \" & dbPort & \" -DbPortable \" & dbPortable & \" -KeepDb \" & keepDb\n" +
+                "pw.Run cmd, 0, True\n" +
+                "If Not quiet Then\n" +
+                "    If keepDb = 1 Then\n" +
+                "        MsgBox \"SIGEJUB desinstalado. Se conservó la base de datos:\" & vbCrLf & appFolder & \"\\database\", 64, \"Desinstalar SIGEJUB\"\n" +
+                "    Else\n" +
+                "        MsgBox \"SIGEJUB desinstalado correctamente.\", 64, \"Desinstalar SIGEJUB\"\n" +
+                "    End If\n" +
+                "End If\n" +
+                "sh.Run \"cmd /c timeout /t 2 /nobreak >nul & del /q \"\"\" & home & \"\\sigejub-uninstall.vbs\"\" \"\"\" & home & \"\\sigejub-uninstall-body.ps1\"\"\", 0, False\n";
+        }
+
+        private string UninstallPsBody()
+        {
+            return
+                "# SIGEJUB - lógica de desinstalación (generada por el instalador)\n" +
+                "param(\n" +
+                "    [string]$AppFolder,\n" +
+                "    [int]$ServerPort,\n" +
+                "    [int]$DbPort,\n" +
+                "    [int]$DbPortable,\n" +
+                "    [int]$KeepDb\n" +
+                ")\n" +
+                "$ErrorActionPreference = 'SilentlyContinue'\n" +
+                "\n" +
+                "# 1) Detener el servidor web (php -S) y la BD portable por puerto\n" +
+                "foreach ($p in @($ServerPort, $(if ($DbPortable -eq 1) { $DbPort }))) {\n" +
+                "    if ($p -gt 0) {\n" +
+                "        Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue |\n" +
+                "            ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "# 2) Refuerzo: procesos cuyo ejecutable vive dentro de la carpeta (php/mysqld/postgres...)\n" +
+                "Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path.StartsWith($AppFolder, [StringComparison]::OrdinalIgnoreCase) } |\n" +
+                "    Stop-Process -Force -ErrorAction SilentlyContinue\n" +
+                "\n" +
+                "Start-Sleep -Milliseconds 300\n" +
+                "\n" +
+                "# 3) Accesos directos (Escritorio + Menú Inicio)\n" +
+                "$prog = [Environment]::GetFolderPath('Programs')\n" +
+                "$cprog = [Environment]::GetFolderPath('CommonPrograms')\n" +
+                "foreach ($d in @(\n" +
+                "    [Environment]::GetFolderPath('Desktop'),\n" +
+                "    [Environment]::GetFolderPath('CommonDesktopDirectory'),\n" +
+                "    (Join-Path $prog 'SIGEJUB'),\n" +
+                "    (Join-Path $cprog 'SIGEJUB')\n" +
+                ")) {\n" +
+                "    $lnk = Join-Path $d 'SIGEJUB.lnk'\n" +
+                "    if (Test-Path -LiteralPath $lnk) { Remove-Item -LiteralPath $lnk -Force -ErrorAction SilentlyContinue }\n" +
+                "    $lnk2 = Join-Path $d 'Desinstalar SIGEJUB.lnk'\n" +
+                "    if (Test-Path -LiteralPath $lnk2) { Remove-Item -LiteralPath $lnk2 -Force -ErrorAction SilentlyContinue }\n" +
+                "    if ((Test-Path -LiteralPath $d) -and ((Get-ChildItem -LiteralPath $d -Force -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0)) {\n" +
+                "        Remove-Item -LiteralPath $d -Force -ErrorAction SilentlyContinue\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "# 4) Entrada de registro \"Agregar o quitar programas\"\n" +
+                "reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SIGEJUB\" /f 2>$null | Out-Null\n" +
+                "reg delete \"HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SIGEJUB\" /f 2>$null | Out-Null\n" +
+                "\n" +
+                "# 5) Borrar la carpeta de instalación (o conservar database\\ si se pidió)\n" +
+                "if (-not (Test-Path -LiteralPath $AppFolder)) { exit 0 }\n" +
+                "if ($KeepDb -eq 1) {\n" +
+                "    $bd = Join-Path $AppFolder 'database'\n" +
+                "    Get-ChildItem -LiteralPath $AppFolder -Force -ErrorAction SilentlyContinue |\n" +
+                "        Where-Object { $_.FullName -ne $bd } |\n" +
+                "        ForEach-Object {\n" +
+                "            if ($_.PSIsContainer) { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }\n" +
+                "            else { Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue }\n" +
+                "        }\n" +
+                "} else {\n" +
+                "    Remove-Item -LiteralPath $AppFolder -Recurse -Force -ErrorAction SilentlyContinue\n" +
+                "}\n" +
+                "# Reintento si algún proceso tardó en soltar los archivos\n" +
+                "if (($KeepDb -eq 0) -and (Test-Path -LiteralPath $AppFolder)) {\n" +
+                "    Start-Sleep -Seconds 2\n" +
+                "    Remove-Item -LiteralPath $AppFolder -Recurse -Force -ErrorAction SilentlyContinue\n" +
+                "}\n" +
+                "exit 0\n";
+        }
+
+        // Registra la entrada de "Agregar o quitar programas" para el usuario actual.
+        private void RegisterUninstall(string appPath)
+        {
+            try
+            {
+                string vbs = Path.Combine(appPath, "uninstall.vbs");
+                string icon = Path.Combine(appPath, "public", "img", "imagen_2026-05-19_065531142.ico");
+                // HKCU (siempre) y HKLM (si hay permisos de administrador)
+                RegistryKey[] hives = null;
+                try { hives = new RegistryKey[] { Registry.CurrentUser, Registry.LocalMachine }; }
+                catch { hives = new RegistryKey[] { Registry.CurrentUser }; }
+                foreach (var hive in hives)
+                {
+                    try
+                    {
+                        using (var key = hive.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\SIGEJUB"))
+                        {
+                            if (key == null) continue;
+                            key.SetValue("DisplayName", "SIGEJUB - Sistema de Gestión de Jubilaciones");
+                            key.SetValue("DisplayVersion", "1.0.0");
+                            key.SetValue("Publisher", "Equipo SIGEJUB");
+                            key.SetValue("InstallLocation", appPath);
+                            key.SetValue("DisplayIcon", icon);
+                            key.SetValue("UninstallString", "\"wscript.exe\" \"" + vbs + "\"");
+                            key.SetValue("QuietUninstallString", "\"wscript.exe\" \"" + vbs + "\" /q");
+                            key.SetValue("NoModify", 1, RegistryValueKind.DWord);
+                            key.SetValue("NoRepair", 1, RegistryValueKind.DWord);
+                            key.SetValue("EstimatedSize", 0, RegistryValueKind.DWord);
+                        }
+                    }
+                    catch { } // sin permisos para HKLM -> se ignora
+                }
+            }
+            catch (Exception ex) { AppendLog("[AVISO] Registro desinstalación: " + ex.Message, Color.Orange); }
         }
 
         // ─── Helpers de proceso ───
