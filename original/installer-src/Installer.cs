@@ -776,6 +776,13 @@ namespace SIGEJUB_Installer
                 AppendLog("[1/13] Copiando archivos de la aplicación (" + GetAppSource() + ")...", Color.Yellow);
                 CopyDirectory(GetAppSource(), installPath, true);
                 CleanStorage(installPath);
+                if (!File.Exists(Path.Combine(installPath, "composer.json")) || !File.Exists(Path.Combine(installPath, "artisan")))
+                {
+                    AppendLog("[ERROR] La aplicación no se copió correctamente (falta composer.json o artisan en " + installPath + ").", Color.Red);
+                    AppendLog("[ERROR] Ejecuta el instalador desde la carpeta de distribución, la que contiene la carpeta 'windows' (con sus subcarpetas 'mysql' y 'postgresql'). Si solo copiaste el archivo SIGEJUB-Installer.exe, copia también la carpeta 'windows' completa junto a él.", Color.Red);
+                    FinishWithError(); return;
+                }
+                AppendLog("[OK] Aplicación copiada (" + GetAppSource() + ")", Color.Green);
                 SetProgress(6);
 
                 // ── 2: Detectar internet (modo online / offline) ──
@@ -926,10 +933,18 @@ AppendLog("[7/13] Instalando dependencias (esto puede tardar)...", Color.Yellow)
         private string GetAppSource()
         {
             string variant = dbEngine == "pgsql" ? "postgresql" : dbEngine == "sqlite" ? "mysql" : dbEngine;
-            if (!string.IsNullOrEmpty(variant))
+            // Busca hacia arriba (hasta 4 niveles) la raíz de distribución que contenga
+            // windows/<variante>/artisan (o la propia app raíz con artisan).
+            string cur = SourceRoot;
+            for (int i = 0; i < 4 && !string.IsNullOrEmpty(cur); i++)
             {
-                string varDir = Path.Combine(SourceRoot, "windows", variant);
-                if (File.Exists(Path.Combine(varDir, "artisan"))) return varDir;
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    string varDir = Path.Combine(cur, "windows", variant);
+                    if (File.Exists(Path.Combine(varDir, "artisan"))) return varDir;
+                }
+                if (File.Exists(Path.Combine(cur, "artisan"))) return cur;
+                try { cur = Directory.GetParent(cur) != null ? Directory.GetParent(cur).FullName : null; } catch { break; }
             }
             return SourceRoot;
         }
@@ -1392,8 +1407,9 @@ AppendLog("[7/13] Instalando dependencias (esto puede tardar)...", Color.Yellow)
         private bool RunComposer(string args, out string output)
         {
             // Prioridad: 1) composer.phar local (real, vía php), 2) composer del sistema (exe/bat/cmd)
+            // -d memory_limit=-1 evita fallos por memoria durante 'composer install' con php.ini estricto.
             if (composerPhar != null && File.Exists(composerPhar))
-                return RunCmdIn(phpExe, "\"" + composerPhar + "\" " + args, installPath, out output);
+                return RunCmdIn(phpExe, "-d memory_limit=-1 \"" + composerPhar + "\" " + args, installPath, out output);
             if (!string.IsNullOrEmpty(composerCmd) && File.Exists(composerCmd))
             {
                 string ext = Path.GetExtension(composerCmd).ToLowerInvariant();
