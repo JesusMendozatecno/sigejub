@@ -177,7 +177,7 @@ class TrabajadorController extends Controller
             $datos['asignacion'] = 'Manual';
 
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
-            $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
+            $datos['anos_servicio_inst'] = (int) round(Carbon::parse($request->fecha_ingreso)->diffInYears(now()));
             $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
 
             $trabajador = Trabajador::create($datos);
@@ -251,7 +251,7 @@ class TrabajadorController extends Controller
             $datos['nivel_instruccion'] = $datos['nivel_instruccion'] ?? 1;
 
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
-            $datos['anos_servicio_inst'] = Carbon::parse($request->fecha_ingreso)->diffInYears(now());
+            $datos['anos_servicio_inst'] = (int) round(Carbon::parse($request->fecha_ingreso)->diffInYears(now()));
             $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
 
             $trabajador->update($datos);
