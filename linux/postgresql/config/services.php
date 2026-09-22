@@ -1,0 +1,50 @@
+<?php
+// Configuración de servicios externos (terceros).
+// Credenciales para Postmark, Resend, AWS SES y Slack.
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Third Party Services
+    |--------------------------------------------------------------------------
+    |
+    | This file is for storing the credentials for third party services such
+    | as Mailgun, Postmark, AWS and more. This file provides the de facto
+    | location for this type of information, allowing packages to have
+    | a conventional file to locate the various service credentials.
+    |
+    */
+
+    'postmark' => [
+        'key' => env('POSTMARK_API_KEY'),
+    ],
+
+    'resend' => [
+        'key' => env('RESEND_API_KEY'),
+    ],
+
+    'ses' => [
+        'key' => env('AWS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    ],
+
+    'slack' => [
+        'notifications' => [
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+        ],
+    ],
+
+    'tasas_cambio' => [
+        'enabled' => env('TASAS_API_ENABLED', false),
+        'url' => env('TASAS_API_URL', ''),
+        'api_key' => env('TASAS_API_KEY', ''),
+        'moneda_origen' => env('TASAS_MONEDA_ORIGEN', 'USD'),
+        'moneda_destino' => env('TASAS_MONEDA_DESTINO', 'VES'),
+        'cache_ttl' => env('TASAS_CACHE_TTL', 600),
+        'intervalo_minutos' => env('TASAS_INTERVALO_MINUTOS', 60),
+    ],
+
+];

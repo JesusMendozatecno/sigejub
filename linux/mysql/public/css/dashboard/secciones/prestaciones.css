@@ -1,0 +1,497 @@
+/* ============================================================
+   prestaciones.css — Estilos para la sección "Prestaciones"
+   Grid de tarjetas de prestaciones, selector de trabajador,
+   formulario de cálculo de ingresos, toggle de porcentaje
+   de jubilación, sidebar consolidado con totales, checklist
+   de documentos y tarjetas de métricas con borde lateral.
+   ============================================================ */
+
+/* === EXTENSIÓN SECCIÓN 5: PRESTACIONES === */
+
+/* === GRID DE TARJETAS === */
+.prestaciones-grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.prestacion-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.prestacion-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,35,102,0.1);
+    border-color: #dbeafe;
+}
+
+.prestacion-card .pc-foto {
+    height: 120px;
+    background: linear-gradient(135deg, #f8fafc, #eef2f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Degradado sutil al final de la foto para que se funda con el fondo blanco de la info */
+.prestacion-card .pc-foto::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, white);
+}
+
+.prestacion-card .pc-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.prestacion-card .pc-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.prestacion-card .pc-info {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.prestacion-card .pc-info strong {
+    font-size: 0.92rem;
+    color: #0f172a;
+    line-height: 1.3;
+}
+
+.prestacion-card .pc-info .pc-cedula {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.prestacion-card .pc-info .pc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.prestacion-card .pc-anios {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #eff6ff;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.prestacion-card .pc-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #1e40af;
+    background: #dbeafe;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+/* === DETALLE — Vista de detalle de una prestación === */
+#prestacion-detalle .prestaciones-grid {
+    margin-top: 20px;
+}
+
+#prestacion-detalle .btn-primary {
+    background: var(--primary-blue);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#prestacion-detalle .btn-primary:hover {
+    background: #001a4d;
+}
+
+#resultadosCalculo {
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 767px) {
+    .prestaciones-grid-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+.prestaciones-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 25px;
+    align-items: start;
+}
+
+/* === SELECTOR DE TRABAJADOR — Barra superior con avatar y nombre === */
+.worker-selector-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 25px;
+}
+
+.worker-avatar-box {
+    background: #dbeafe;
+    color: #1e3a8a;
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.badge-row { display: flex; gap: 8px; margin-top: 8px; }
+.badge-status { font-size: 9px; font-weight: bold; padding: 4px 8px; border-radius: 4px; }
+.active-bg { background: #dcfce7; color: #166534; }
+.info-bg { background: #eff6ff; color: #1e40af; }
+
+.btn-ghost-blue {
+    margin-left: auto;
+    background: #f1f5f9;
+    border: none;
+    color: #1e3a8a;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* === FORMULARIO DE CÁLCULO — Ingresos y estructura salarial === */
+.income-structure-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--card-shadow);
+}
+
+.card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.title-with-icon { display: flex; align-items: center; gap: 10px; }
+.disclaimer { font-size: 11px; color: #94a3b8; font-style: italic; }
+
+.inputs-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.currency-input {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0 15px;
+    margin-top: 8px;
+}
+
+.currency-input span { font-weight: bold; color: #64748b; margin-right: 10px; }
+.currency-input input {
+    border: none;
+    background: transparent;
+    padding: 12px 0;
+    font-weight: bold;
+    color: #1e293b;
+    width: 100%;
+}
+
+/* === TOGGLE DE JUBILACIÓN — Selector de porcentaje (60% / 100%) === */
+.jubilation-percent-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.percent-toggle {
+    display: flex;
+    background: #e2e8f0;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.percent-toggle button {
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    background: transparent;
+    color: #64748b;
+}
+
+.percent-toggle button.active { background: white; color: #1e3a8a; font-weight: bold; }
+.percent-toggle button span { display: block; font-size: 10px; font-weight: normal; } /* Sub-etiqueta debajo del porcentaje */
+
+/* === SIDEBAR CONSOLIDADO — Totales y desglose de la prestación === */
+.consolidated-card {
+    background: #1e3a8a;
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+}
+
+.card-label { font-size: 10px; letter-spacing: 1px; opacity: 0.7; margin-bottom: 15px; }
+.total-subtitle { font-size: 12px; opacity: 0.8; }
+.total-amount { font-size: 32px; margin: 10px 0 25px; }
+
+.sub-amounts {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    margin-bottom: 25px;
+}
+
+.sub-item span { display: block; font-size: 10px; opacity: 0.7; margin-bottom: 5px; }
+.sub-item strong { font-size: 16px; }
+
+.status-tag-green { background: #4ade80; color: #064e3b; font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 800; }
+
+/* === BOTONES SIDEBAR — Acciones de guardar/exportar desde el panel lateral === */
+.btn-dark-full {
+    width: 100%;
+    background: #1e3a8a;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.btn-outline-full {
+    width: 100%;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #1e3a8a;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* === CHECKLIST DE DOCUMENTOS — Requisitos para la prestación === */
+.doc-checklist-card {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 25px;
+}
+
+.checklist { list-style: none; margin-top: 15px; }
+.checklist li { display: flex; align-items: center; gap: 10px; font-size: 11px; margin-bottom: 12px; color: #64748b; }
+.checklist li.done { color: #166534; }
+.checklist li i { width: 14px; }
+
+.bottom-metrics {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.metric-card-styled {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 160px;
+}
+
+/* Borde lateral izquierdo grueso para categorizar visualmente las tarjetas */
+.metric-card-styled.border-blue { border-left: 6px solid #1a365d; }
+.metric-card-styled.border-green { border-left: 6px solid #064e3b; }
+
+.card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* Iconos con fondo de color suave y transparente */
+.icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.blue-soft { background: #dbeafe; color: #1e3a8a; }
+.green-soft { background: #6ee7b7; color: #064e3b; }
+
+/* Etiqueta superior derecha */
+.top-label {
+    font-size: 10px;
+    font-weight: 900;
+    color: #1e293b;
+    letter-spacing: -0.2px;
+}
+
+/* Contenido principal */
+.card-body-content {
+    margin-top: 20px;
+}
+
+.description {
+    font-size: 14px;
+    color: #475569;
+    margin: 0 0 8px 0;
+}
+
+.main-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e3a8a; /* Azul oscuro para los números */
+    margin: 0;
+    line-height: 1;
+}
+
+/* Color específico para el valor de antigüedad */
+.border-green .main-value {
+    color: #064e3b;
+}
+
+
+/* CONTENEDOR DE MÉTRICAS INFERIORES */
+.bottom-metrics {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+/* TARJETA INDIVIDUAL (Adaptado de metric-card-styled) */
+.metric-box-white {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 160px;
+    border: none; /* Quitamos bordes estándar si existieran */
+}
+
+/* BORDES LATERALES GRUESOS Y OSCUROS */
+.metric-box-white.border-blue { 
+    border-left: 6px solid #1a365d !important; 
+}
+.metric-box-white.border-green { 
+    border-left: 6px solid #064e3b !important; 
+}
+
+/* CONTENEDOR DE ICONO Y ETIQUETA */
+/* En tu HTML, el icono y el span están dentro del mismo nivel, 
+   usaremos flex en la caja padre para posicionarlos */
+.metric-box-white {
+    display: flex;
+    flex-direction: column;
+}
+
+/* CAJA DE ICONO (Adaptado de icon-box) */
+.metric-icon-small {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.blue-bg { background: #dbeafe; color: #1e3a8a; }
+.green-bg { background: #6ee7b7; color: #064e3b; }
+
+/* ETIQUETA SUPERIOR DERECHA (tag-top) */
+.tag-top {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    font-size: 10px;
+    font-weight: 900;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: -0.2px;
+}
+
+/* CONTENIDO DE TEXTO */
+.metric-content {
+    margin-top: auto; /* Empuja el contenido hacia abajo */
+}
+
+.metric-content p {
+    font-size: 14px;
+    color: #475569;
+    margin: 0 0 8px 0;
+}
+
+.metric-content h2 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e3a8a; /* Azul para la primera tarjeta */
+    margin: 0;
+    line-height: 1;
+}
+
+/* COLOR ESPECÍFICO PARA EL VALOR DE ANTIGÜEDAD */
+.border-green .metric-content h2 {
+    color: #064e3b;
+}
+

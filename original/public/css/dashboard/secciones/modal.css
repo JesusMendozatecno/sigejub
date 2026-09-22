@@ -1,0 +1,279 @@
+/* ============================================================
+   modal.css — Estilos para ventanas modales del dashboard
+   Overlay con backdrop-filter, contenedor con sidebar oscuro
+   y formulario scrollable, grids de 2 y 3 columnas, secciones
+   de documentos, tabla mini, botones de acción y filtros
+   por pestañas.
+   ============================================================ */
+
+/* === VENTANA MODAL === */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px); /* Desenfoque suave del fondo para dar profundidad */
+    z-index: 2000; /* Por encima de todo */
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-container {
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 1000px;
+    height: 85vh;
+    border-radius: 20px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.modal-sidebar {
+    width: 320px;
+    background: #0f172a;
+    color: white;
+    padding: 50px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex-shrink: 0;
+}
+
+.badge-new {
+    background: #1e293b;
+    color: #38bdf8;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.modal-sidebar h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #f8fafc;
+}
+
+.modal-sidebar p {
+    color: #94a3b8;
+    line-height: 1.6;
+}
+
+.modal-form-content {
+    flex-grow: 1;
+    padding: 50px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    position: relative;
+}
+
+/* === SECCIONES DEL FORMULARIO === */
+.form-section { margin-bottom: 40px; }
+.form-section h3 {
+    font-size: 0.9rem;
+    color: #6366f1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 12px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Grids de 2 y 3 columnas para los campos del formulario */
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+
+.input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 6px; }
+.input-group label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #64748b;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.input-group input,
+.input-group select {
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: var(--bg-input);
+    width: 100%;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    border-color: #6366f1;
+    background: var(--bg-input-focus);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.doc-check {
+    background: var(--bg-card);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    border: 1px solid #e2e8f0;
+}
+
+/* === ACCIONES DEL MODAL — Botones de guardar/cancelar === */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-cancel {
+    background: var(--bg-card);
+    border: 1px solid #e2e8f0;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.btn-submit {
+    background: #0f172a;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-submit:hover { background: #1e293b; transform: translateY(-1px); }
+
+/* === SECCIÓN INTERNA CON ENCABEZADO Y BOTÓN === */
+.section-header-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.btn-add-small {
+    background: white;
+    border: 1px solid #cbd5e1;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.mini-table th {
+    background: var(--bg-surface);
+    text-align: left;
+    padding: 10px;
+    color: #64748b;
+    font-size: 0.7rem;
+}
+
+.mini-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.btn-del {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.form-textarea {
+    width: 100%;
+    height: 100px;
+    padding: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #f1f5f9;
+    resize: none;
+    font-family: inherit;
+}
+
+.doc-item {
+    background: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    border: 1px solid transparent;
+}
+
+.upload-link {
+    color: #475569;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.tab-filters {
+    display: flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+    gap: 4px;
+    margin-top: 15px;
+}
+
+.tab-filters button {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-filters button.active {
+    background: var(--bg-card);
+    color: #0f172a;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}

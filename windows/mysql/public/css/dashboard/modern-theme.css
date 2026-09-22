@@ -1,0 +1,695 @@
+/* ============================================================
+   modern-theme.css — Tema "Modern" del sistema SIGEJUB
+   Estética contemporánea con acentos índigo/ámbar, bordes
+   redondeados, sombras suaves, gradientes y hover elevations.
+   Se activa con body.theme-modern.
+   ============================================================ */
+
+/* ── VARIABLES MODO MODERN ── */
+body.theme-modern {
+    /* Acento índigo */
+    --accent: #6366f1;
+    --accent-light: #a5b4fc;
+    --accent-dark: #4f46e5;
+
+    /* Superficies — fondo con matiz azulado, cards sin blanco puro */
+    --bg-body: #eaeef6;
+    --bg-card: #f8fafd;
+    --bg-card-hover: #f0f3fa;
+    --bg-sidebar: #0f172a;
+    --bg-surface: #eaeef6;
+    --bg-input: #eef1f8;
+    --bg-input-focus: #fbfcff;
+
+    /* Bordes */
+    --border: #dde5f0;
+
+    /* Texto — mejor contraste */
+    --text-primary: #0f172a;
+    --text-secondary: #3f4f6b;
+    --text-muted: #7d8ca6;
+    --text-inverse: #ffffff;
+
+    /* Sombras */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+    /* Radios más suaves */
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    /* Transiciones suaves al entrar en modern */
+    transition: background var(--transition-slow), color var(--transition-slow);
+}
+
+body.theme-modern *:not(.modal-overlay) {
+    transition: background-color var(--transition-slow),
+                color var(--transition-slow),
+                border-color var(--transition-slow),
+                box-shadow var(--transition-slow);
+}
+
+/* ── SIDEBAR — Efecto glass oscuro ── */
+body.theme-modern .app-container > .sidebar {
+    background: var(--bg-sidebar);
+    backdrop-filter: none;
+}
+
+body.theme-modern .sidebar-menu .menu-item {
+    border-radius: 8px;
+    margin: 2px 8px;
+    padding: 10px 12px;
+}
+
+body.theme-modern .sidebar-menu .menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+}
+
+body.theme-modern .sidebar-menu .menu-item.active {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+/* ── TOPBAR ── */
+body.theme-modern .top-bar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+}
+
+/* ── CONTENT SECTIONS — Bordered cards ── */
+body.theme-modern .content-section > * {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border);
+}
+
+body.theme-modern .content-section {
+    background: transparent;
+}
+
+/* ── SEARCH FILTER BAR ── */
+body.theme-modern .search-filter-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-card);
+}
+
+body.theme-modern .search-wrapper {
+    background: #eef0f4;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+body.theme-modern .search-wrapper:focus-within {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    background: var(--bg-input-focus);
+}
+
+/* ── STAT CARDS — Elevated with top accent ── */
+body.theme-modern .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+body.theme-modern .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    opacity: 0.6;
+}
+
+body.theme-modern .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+body.theme-modern .stat-card h2 {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.8rem;
+}
+
+/* ── TOTAL BADGE CARD — Gradient ── */
+body.theme-modern .total-badge-card {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: white;
+    border-radius: var(--radius);
+    padding: 16px 24px;
+}
+
+body.theme-modern .total-badge-card p { color: rgba(255, 255, 255, 0.8); }
+body.theme-modern .total-badge-card h2 { color: white; }
+body.theme-modern .total-badge-card i { color: rgba(255, 255, 255, 0.15); }
+
+/* ── METRIC CARDS ── */
+body.theme-modern .metrics-row .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition-base);
+}
+
+body.theme-modern .metrics-row .metric-card:hover {
+    background: var(--bg-card-hover);
+    box-shadow: var(--shadow-md);
+}
+
+/* ── TABLES ── */
+body.theme-modern .custom-table thead th {
+    background: #eef0f4;
+    border-bottom: 2px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+body.theme-modern .custom-table tbody tr:hover td {
+    background: #eef0f4;
+}
+
+body.theme-modern .data-table-container {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+}
+
+/* ── FORMS ── */
+body.theme-modern .form-input {
+    background: #eef0f4;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+}
+
+body.theme-modern .form-input:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    background: var(--bg-input-focus);
+}
+
+body.theme-modern .input-group label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+body.theme-modern select.form-input {
+    background: #eef0f4;
+}
+
+body.theme-modern select.form-input:focus {
+    background: var(--bg-input-focus);
+}
+
+/* ── BOTONES — Elevated with shadow ── */
+body.theme-modern .btn-primary-dark {
+    background: var(--accent);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+}
+
+body.theme-modern .btn-primary-dark:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+body.theme-modern .btn-submit {
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+}
+
+body.theme-modern .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+}
+
+body.theme-modern .btn-cancel:hover {
+    background: #f1f5f9;
+}
+
+body.theme-modern .btn-volver {
+    background: #eef0f4;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+}
+
+body.theme-modern .btn-volver:hover {
+    background: #e2e8f0;
+    color: var(--text-primary);
+}
+
+body.theme-modern .btn-approve {
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+}
+
+body.theme-modern .btn-approve:hover {
+    background: #10b981;
+    color: white;
+}
+
+body.theme-modern .btn-reject {
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+}
+
+body.theme-modern .btn-reject:hover {
+    background: #ef4444;
+    color: white;
+}
+
+body.theme-modern .btn-subir-doc {
+    background: var(--accent);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+}
+
+body.theme-modern .btn-subir-doc:hover {
+    background: var(--accent-dark);
+}
+
+/* ── BADGES ── */
+body.theme-modern .ec-badge {
+    font-weight: 600;
+    border-radius: 20px;
+}
+
+body.theme-modern .ec-badge.completado { background: #d1fae5; color: #065f46; }
+body.theme-modern .ec-badge.progreso { background: #eef2ff; color: var(--accent-dark); }
+body.theme-modern .ec-badge.pendiente { background: #fef3c7; color: #92400e; }
+
+body.theme-modern .status-tag { border-radius: 20px; }
+body.theme-modern .status-tag.success { background: #d1fae5; color: #065f46; }
+body.theme-modern .status-tag.pending { background: #eef2ff; color: var(--accent-dark); }
+body.theme-modern .status-tag.danger { background: #fee2e2; color: #991b1b; }
+
+body.theme-modern .status-pill.active { background: #eef2ff; color: var(--accent-dark); }
+body.theme-modern .status-pill.retired { background: #f1f5f9; color: var(--text-muted); }
+
+/* ── MODALS ── */
+body.theme-modern .modal-container {
+    border-radius: var(--radius);
+}
+
+body.theme-modern .modal-sidebar {
+    background: linear-gradient(135deg, var(--bg-sidebar), #1e293b);
+    border-radius: var(--radius) 0 0 var(--radius);
+}
+
+body.theme-modern .modal-form-content .form-section h3 {
+    color: var(--accent-dark);
+}
+
+body.theme-modern .modal-overlay {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+body.theme-modern .modal-delete-box {
+    border-radius: var(--radius);
+}
+
+/* ── EXPEDIENTES — Card hover lift ── */
+body.theme-modern .expediente-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition-base);
+}
+
+body.theme-modern .expediente-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
+    transform: translateY(-2px);
+    background: var(--bg-card-hover);
+}
+
+body.theme-modern .ec-avatar {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: white;
+}
+
+/* ── DOC ITEMS ── */
+body.theme-modern .doc-item-row {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+}
+
+body.theme-modern .doc-item-row:hover {
+    border-color: var(--accent-light);
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.06);
+}
+
+body.theme-modern .doc-icon { border-radius: 10px; }
+body.theme-modern .doc-icon.success { background: #d1fae5; color: #065f46; }
+body.theme-modern .doc-icon.pending { background: #eef2ff; color: var(--accent-dark); }
+body.theme-modern .doc-icon.danger { background: #fee2e2; color: #991b1b; }
+
+/* ── PROGRESS BARS — Gradient fills ── */
+body.theme-modern .eg-fill {
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+}
+
+body.theme-modern .global-progress-mini .progress-fill-mini {
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+}
+
+body.theme-modern .global-progress-mini .progress-value {
+    color: var(--accent);
+}
+
+/* ── ESTADO GLOBAL — Soft gradient ── */
+body.theme-modern .estado-global-card {
+    background: linear-gradient(135deg, #eef2ff, #dbeafe);
+    border: 1px solid #c7d2fe;
+}
+
+/* ── DROPZONE ── */
+body.theme-modern .dropzone-docs {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: #eef0f4;
+}
+
+body.theme-modern .dropzone-docs:hover,
+body.theme-modern .dropzone-docs.dragover {
+    border-color: var(--accent);
+    background: #eef2ff;
+}
+
+/* ── WELCOME HEADER — Gradient ── */
+body.theme-modern .welcome-header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    border-radius: var(--radius);
+}
+
+body.theme-modern .welcome-header h1 {
+    color: white;
+}
+
+body.theme-modern .welcome-header p {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── PHOTO PREVIEW ── */
+body.theme-modern .photo-preview {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: #eef0f4;
+}
+
+body.theme-modern .photo-preview:hover {
+    border-color: var(--accent);
+    background: #eef2ff;
+}
+
+body.theme-modern .perfil-expediente .foto-placeholder {
+    background: #eef0f4;
+}
+
+body.theme-modern .perfil-expediente .foto-expediente img {
+    border: 3px solid var(--accent-light);
+}
+
+/* ── USER AVATAR ── */
+body.theme-modern .user-avatar {
+    border: 2px solid var(--border);
+}
+
+/* ── THEME OPTIONS ── */
+body.theme-modern .theme-option {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #eef0f4;
+}
+
+body.theme-modern .theme-option:hover {
+    border-color: var(--accent-light);
+    background: #eef2ff;
+}
+
+body.theme-modern .theme-option.selected {
+    border-color: var(--accent);
+    background: #eef2ff;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+body.theme-modern .color-preset {
+    border-color: var(--border);
+}
+
+/* ── PROFILE ROLES ── */
+body.theme-modern .profile-role.role-admin { background: var(--accent); color: white; }
+body.theme-modern .profile-role.role-superadmin { background: #be185d; color: white; }
+body.theme-modern .profile-role.role-analista { background: #f1f5f9; color: var(--text-secondary); }
+
+/* ── TE AVATAR ── */
+body.theme-modern .te-avatar {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* ── HISTORIAL / NOTAS CARDS ── */
+body.theme-modern .historial-card {
+    background: #eef0f4;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+body.theme-modern .notas-admin-card {
+    background: #eef0f4;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+body.theme-modern .notas-admin-card textarea:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ── INFO DETALLE CARD ── */
+body.theme-modern .info-detalle-card {
+    background: #eef0f4;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* ── RECHAZO NOTA ── */
+body.theme-modern .rechazo-nota {
+    background: #fef3c7;
+    border-radius: 6px;
+}
+
+/* ── CARTA APROBACIÓN ── */
+body.theme-modern .carta-aprobacion-card {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-sm);
+}
+
+body.theme-modern .carta-aprobacion-card h4 {
+    color: #065f46;
+}
+
+/* ── FILE PREVIEW ── */
+body.theme-modern .file-preview-list li {
+    background: #eef0f4;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+/* ── FILTROS ── */
+body.theme-modern .filters-bar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+body.theme-modern .filter-group label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+body.theme-modern .filter-group select,
+body.theme-modern .filter-group-sm select {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+body.theme-modern select#filtroEstadoExpediente {
+    background: #eef0f4;
+}
+
+/* ── SCROLLBAR ── */
+body.theme-modern ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+body.theme-modern ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body.theme-modern ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 20px;
+}
+
+body.theme-modern ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ── TOAST ── */
+body.theme-modern .toast-container .toast {
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── NOTIF BADGE ── */
+body.theme-modern .notif-badge {
+    background: var(--error) !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   CORRECCIÓN DE BLANCOS HARCODEDOS EN MÓDULOS
+   Los blades usan `background: white` fijo. En el tema moderno los
+   mapeamos a su paleta (gris azulado) para eliminar el blanco puro
+   y mantener la estética coherente.
+   ────────────────────────────────────────────────────────────── */
+body.theme-modern .cn-btn-pag,
+body.theme-modern .cn-toolbar,
+body.theme-modern .cn-stat-card,
+body.theme-modern .cn-table-wrap,
+body.theme-modern .formula-card,
+body.theme-modern .formula-detalle-card,
+body.theme-modern .table-wrapper-nomina,
+body.theme-modern .prestacion-card,
+body.theme-modern .prestacion-info-superior,
+body.theme-modern .prestacion-col-izq,
+body.theme-modern .prestacion-col-der,
+body.theme-modern .modal-resultado-box,
+body.theme-modern .modal-tasa-box,
+body.theme-modern .doc-tabs,
+body.theme-modern .doc-section,
+body.theme-modern .doc-empty {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--shadow-card) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern [style*="background:white"],
+body.theme-modern [style*="background: white"] {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .notif-menu {
+    background: var(--bg-card) !important;
+}
+
+body.theme-modern .dashboard-render-zone > .content-section > * {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+/* Tab activo de módulos: respeta fondo de card */
+body.theme-modern .nomina-tab.active,
+body.theme-modern .cg-tab.active {
+    background: var(--bg-card) !important;
+    color: var(--accent-dark) !important;
+}
+
+/* Inputs / botones con blanco fijo → fondo input */
+body.theme-modern .pct-toggle button,
+body.theme-modern .cn-search-wrap input,
+body.theme-modern .cn-date-range input[type=date],
+body.theme-modern .fila-sueldo input,
+body.theme-modern .dropdown-menu,
+body.theme-modern .dropdown-panel {
+    background: var(--bg-input) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .cn-search-wrap input:focus,
+body.theme-modern .cn-date-range input[type=date]:focus,
+body.theme-modern .fila-sueldo input:focus {
+    background: var(--bg-input-focus) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Toast warning — fondo coherente */
+body.theme-modern .toast.warning {
+    background: #fef3c7 !important;
+    border-color: #f59e0b !important;
+    color: #92400e !important;
+}
+
+/* ── Botones / franjas con blanco fijo → paleta del tema moderno ── */
+body.theme-modern .btn-white,
+body.theme-modern .btn-outline-full,
+body.theme-modern .btn-add-small {
+    background: var(--bg-input) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+body.theme-modern .btn-white:hover,
+body.theme-modern .btn-outline-full:hover,
+body.theme-modern .btn-add-small:hover {
+    background: var(--bg-input-focus) !important;
+}
+
+body.theme-modern .filters-bar-card,
+body.theme-modern .doc-checklist-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .modal-container,
+body.theme-modern .modal-form-content {
+    background: var(--bg-card) !important;
+    color: var(--text-primary);
+}
+
+body.theme-modern .cn-stat-week i { background: #fef3c7 !important; color: #ea580c !important; }
+body.theme-modern .toggle-switch { background: #cbd5e1 !important; }
+body.theme-modern .toggle-switch.active { background: var(--accent) !important; }

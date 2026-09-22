@@ -1,0 +1,226 @@
+============================================================
+ SIGEJUB - GUIA DE INSTALACION
+============================================================
+
+Aca te explico paso a paso como se instala el sistema de
+jubilaciones tanto en Linux como en Windows. Es mas simple
+de lo que parece.
+
+Lo que necesitas (en general):
+
+- PHP 8.2 o mas nuevo. Con las extensiones de siempre:
+  mbstring, xml, curl, gd, zip, intl, sqlite3 y el driver de
+  la base que elijas (pdo_mysql o pdo_pgsql).
+- Composer (el instalador de Linux lo instala solo, no te
+  preocupes).
+- Una base de datos: SQLite (la mas facil, no necesita
+  servidor), MySQL/MariaDB o PostgreSQL. Vos elegis durante
+  la instalacion.
+
+
+============================================================
+ PARTE 1 - LINUX
+============================================================
+
+Lo mas recomendable es usar el instalador automatico
+(instalar.sh). El solo se encarga de instalar PHP, Composer,
+los drivers y la base de datos, copia la aplicacion donde vos
+quieras, crea los accesos directos y te deja todo listo.
+
+PASO 1. Dar permisos a los scripts.
+
+    chmod +x instalar.sh setup.sh start.sh detener.sh desinstalar.sh
+
+PASO 2. Correr el instalador.
+
+Importante: ejecutalo como usuario normal, SIN sudo (el mismo
+script pide la contrasena cuando la necesita):
+
+    ./instalar.sh
+
+El asistente te va preguntando:
+
+  1) Motor de base de datos. Pone:
+     1  = SQLite (recomendado, no necesita servidor)
+     2  = MySQL / MariaDB
+     3  = PostgreSQL
+
+por recomendacion se debe elegir SQLite pero por uso de proyecto use PostgrSQL
+
+  2) Carpeta de instalacion. Aca tenes que escribir la ruta
+     completa (absoluta) donde queres la aplicacion. Por
+     ejemplo, si la queres en el Escritorio:
+
+        Carpeta de instalacion [/home/tu_usuario/SIGEJUB]: /home/tu_usuario/Escritorio/SIGEJUB
+
+     Ojo con esto: la ruta TIENE que empezar con "/" . No uses
+     el simbolo ~ ni pongas solo el nombre de una carpeta,
+     porque sino te la guarda en otro lugar.
+
+  3) Despues se pone a trabajar solo: instala lo que falta,
+     copia la aplicacion, arma el .env, hace las migraciones y
+     carga los datos iniciales.
+
+  4) Al final te pregunta si queres iniciar el sistema en ese
+     momento Pulsa S de Si.
+
+PASO 3. Usar el sistema.
+
+- Iniciar: ./start.sh
+  (abre el navegador en http://localhost:8000/ ; si ese puerto
+   esta ocupado elige otro automaticamente)
+
+- Detener: ./detener.sh
+
+- Desinstalar: ./desinstalar.sh
+  Si queres conservar la base de datos, usa:
+  ./desinstalar.sh --keep-db
+
+- Tambien te crea dos accesos en el menu de aplicaciones:
+  "SIGEJUB - Sistema de Jubilaciones" y "Desinstalar SIGEJUB".
+
+Si ya tenes PHP y la base de datos instalados (explico abajo en
+Windows como se configura el .env, aca es igual), tambien podes
+usar el camino manual:
+
+    ./setup.sh      (configura el .env, migra y carga datos)
+    ./start.sh      (inicia el servidor)
+
+PROBLEMAS COMUNES EN LINUX:
+
+- "could not find driver" al usar PostgreSQL o MySQL.
+  La version nueva del instalador lo arregla solo. Si te paso
+  antes, hacelo a mano:
+
+      sudo apt-get install -y php-pgsql
+
+  (o php-mysql si usas MySQL) y despues:
+
+      cd ~/Escritorio/SIGEJUB
+      php artisan migrate --force
+      php artisan db:seed --force
+
+- "composer install fallo". Revisa el log:
+  cat /tmp/sigejub-composer.log
+
+- Te dice que PHP es viejo (menor a 8.2). Agrega el repositorio
+  de ondrej:
+
+      sudo add-apt-repository ppa:ondrej/php
+      sudo apt-get update
+
+- "Permission denied" al correr los scripts. Pasa esto:
+      chmod +x instalar.sh setup.sh start.sh detener.sh desinstalar.sh
+
+
+============================================================
+ PARTE 2 - WINDOWS
+============================================================
+
+Requisitos:
+
+- Windows 10 u 11.
+- Lo recomendado es XAMPP (www.apachefriends.org) con PHP 8.2 o
+  mas. El PHP te queda en C:\xampp\php\php.exe.
+- Base de datos: MySQL/MariaDB (ya viene con XAMPP) o
+  PostgreSQL si la preferis.
+
+HAY DOS CAMINOS.
+
+CAMINO A - Instalador grafico (el mas facil de todos).
+
+1. Copia el archivo SIGEJUB-Installer.exe a la PC.
+2. Doble clic sobre el exe. (Tambien podes usar setup.bat, que
+   abre lo mismo).
+3. Segui los pasos del asistente: elige base de datos, carpeta
+   de destino, etc.
+4. Cuando termina, el sistema ya queda listo para usar.
+
+Lo bueno del exe es que es portable: no hace falta instalar
+PHP ni Composer en la maquina.
+
+CAMINO B - Manual con XAMPP.
+
+1) Instala XAMPP.
+
+   Baja XAMPP con PHP 8.2+ e instalalo. Abri el Panel de
+   Control de XAMPP y encendete Apache y MySQL.
+
+2) Deja la aplicacion en su lugar.
+
+   Descomprime o clona el proyecto dentro de htdocs, por
+   ejemplo:
+
+       C:\xampp\htdocs\sigejub
+
+3) Instala dependencias y configura.
+
+   Abre una terminal en esa carpeta y ejecuta:
+
+       composer install
+       copy .env.example .env
+       php artisan key:generate
+
+   (Si php no te aparece en la terminal, usa la ruta completa:
+   C:\xampp\php\php.exe artisan ...)
+
+4) Configura la base de datos.
+
+   Crea la base de datos (por ejemplo bd-sigejub) con
+   phpMyAdmin (http://localhost/phpmyadmin) y despues edita el
+   archivo .env en esa parte:
+
+       DB_CONNECTION=mysql        (o pgsql si usas PostgreSQL)
+       DB_HOST=127.0.0.1
+       DB_PORT=3306               (o 5432 en PostgreSQL)
+       DB_DATABASE=bd-sigejub
+       DB_USERNAME=root
+       DB_PASSWORD=
+
+   Con XAMPP y MySQL dejas usuario root y contrasena vacia.
+
+   Si queres que los respaldos funcionen con XAMPP, agregale
+   esto al .env:
+
+       BACKUP_MYSQLDUMP_PATH=C:/xampp/mysql/bin/mysqldump.exe
+
+5) Migra y carga los datos.
+
+       php artisan migrate --force
+       php artisan db:seed --force
+
+6) Inicia el sistema.
+
+   Doble clic en start.bat. El mismo busca el PHP (en PATH o
+   en XAMPP), levanta el servidor en http://localhost:8000/ y
+   te abre el navegador. Si el servidor ya estaba corriendo,
+   solo te abre el navegador.
+
+   Para detener: doble clic en detener.bat.
+
+7) Alternativa con Apache.
+
+   Si preferis entrar por Apache, abri en el navegador:
+
+       http://localhost/sigejub/inicio.php
+
+   (el nombre de la carpeta depende de como se llame dentro de
+   htdocs). Ese archivo arranca el servidor solo si no esta
+   corriendo.
+
+
+============================================================
+ RESUMEN DE LOS ARCHIVOS
+============================================================
+
+instalar.sh (Linux)      -> instalacion automatica completa.
+setup.sh (Linux)         -> configuracion inicial si ya tenes PHP y BD.
+setup.bat (Windows)      -> abre el instalador grafico.
+SIGEJUB-Installer.exe    -> instalador grafico de Windows (portable).
+start.sh / start.bat     -> inicia el servidor y abre el navegador.
+detener.sh / detener.bat -> detiene el servidor.
+desinstalar.sh (Linux)   -> desinstala (--keep-db conserva la BD).
+inicio.php               -> arranca el sistema via Apache.
+build-installer.ps1      -> recompila el SIGEJUB-Installer.exe.
+
+============================================================
