@@ -158,7 +158,7 @@
                     </div>
                     <div class="input-group">
                         <label>TIPO DE JUBILACIÓN</label>
-                        <select name="tipo_jubilacion">
+                        <select name="tipo_jubilacion" id="inputTipoJubilacion">
                             <option value="">Seleccione...</option>
                             <option value="Antigüedad">Antigüedad</option>
                             <option value="Invalidez">Invalidez</option>
@@ -170,14 +170,16 @@
                 <section class="form-section">
                     <h3><i class="fas fa-user"></i> Datos del Trabajador</h3>
                     <div class="form-row-2">
+<div class="form-row-2">
                         <div class="input-group">
                             <label>NOMBRE COMPLETO</label>
-                            <input type="text" id="displayNombreCompleto" readonly placeholder="Seleccione un trabajador...">
+                            <input type="text" id="displayNombreCompleto" readonly disabled placeholder="Seleccione un trabajador...">
                         </div>
                         <div class="input-group">
                             <label>CÉDULA</label>
-                            <input type="text" id="displayCedula" placeholder="Escriba la cédula y presione Enter o TAB">
+                            <input type="text" id="displayCedula" readonly disabled placeholder="Se escoge al seleccionar el trabajador">
                         </div>
+                    </div>
                     </div>
                 </section>
 
@@ -347,7 +349,9 @@
         autocompleteIndex = -1;
 
         if (!resultados || resultados.length === 0) {
-            lista.innerHTML = '<div class="autocomplete-empty">Sin resultados</div>';
+            lista.innerHTML = '<div class="autocomplete-empty">No se encontró un trabajador con ese dato.<br>' +
+                '<button type="button" style="margin-top:10px;padding:8px 14px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;" ' +
+                'onclick="irARegistrarTrabajador()"><i class="fas fa-user-plus"></i> Registrar trabajador</button></div>';
             lista.style.display = 'block';
             return;
         }
@@ -367,12 +371,29 @@
         document.getElementById('displayCedula').value = trabajador.cedula;
         document.getElementById('inputBusquedaTrabajador').value = `${trabajador.nombres} ${trabajador.apellidos}`;
         document.getElementById('autocompleteList').style.display = 'none';
+        document.getElementById('displayNombreCompleto').disabled = false;
+        document.getElementById('displayCedula').disabled = false;
+        // Autocargar el tipo de jubilación desde el expediente del trabajador
+        fetch(`/trabajadores/${trabajador.id}`)
+            .then(r => r.json())
+            .then(t => {
+                const selTipo = document.getElementById('inputTipoJubilacion');
+                if (selTipo && t.tipo_jubilacion) {
+                    const op = Array.from(selTipo.options).find(o => o.value === t.tipo_jubilacion);
+                    if (op) selTipo.value = op.value;
+                }
+            })
+            .catch(() => {});
     }
 
     function limpiarSeleccion() {
         document.getElementById('hiddenTrabajadorId').value = '';
         document.getElementById('displayNombreCompleto').value = '';
         document.getElementById('displayCedula').value = '';
+        document.getElementById('displayNombreCompleto').disabled = true;
+        document.getElementById('displayCedula').disabled = true;
+        const selTipo = document.getElementById('inputTipoJubilacion');
+        if (selTipo) selTipo.value = '';
     }
 
     // Input: buscar mientras escribe
@@ -455,6 +476,17 @@
     });
 
     // === 3. CARGAR SOLICITUDES DESDE LA API ===
+    function hoyLocal() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    // Botón "Registrar trabajador" cuando el autocomplete no encuentra resultados
+    window.irARegistrarTrabajador = function() {
+        cerrarModalSolicitud();
+        if (typeof switchTab === 'function') switchTab('trabajadores');
+    };
+
     async function cargarSolicitudes(estado = 'all') {
         const params = estado !== 'all' ? `?estado=${estado}` : '';
         try {
@@ -548,6 +580,9 @@
             input.focus();
         }
         limpiarSeleccion();
+        // Fecha de solicitud = hoy (por defecto)
+        const fFecha = document.querySelector('#formSolicitud [name="fecha_solicitud"]');
+        if (fFecha) fFecha.value = hoyLocal();
         const r = await cargarAutocomplete();
         mostrarAutocomplete(r);
     };
@@ -702,6 +737,9 @@
                 document.getElementById('displayCedula').value = '';
                 document.getElementById('hiddenTrabajadorId').value = '';
                 document.getElementById('inputBusquedaTrabajador').value = '';
+                limpiarSeleccion();
+                const fFechaNueva = formCreate.querySelector('[name="fecha_solicitud"]');
+                if (fFechaNueva) fFechaNueva.value = hoyLocal();
                 Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/solicitudes')).forEach(k => localStorage.removeItem(k));
                 cargarSolicitudes(currentStatus);
                 cargarMetricas();

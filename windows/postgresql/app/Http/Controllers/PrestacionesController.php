@@ -86,6 +86,7 @@ class PrestacionesController extends Controller
                 'numero_hijos' => $trabajador->numero_hijos ?? 0,
                 'hijos_discapacidad' => $trabajador->hijos_discapacidad ?? 0,
                 'actividad_universitaria' => (bool) $trabajador->actividad_universitaria,
+                'actividad_universitaria_info' => \Illuminate\Support\Facades\DB::table('actividades_universitarias')->where('trabajador_id', $trabajador->id)->first(),
                 'porcentaje_antiguedad' => (float) ($trabajador->porcentaje_antiguedad ?? 0),
                 'prima_profesionalizacion' => (float) ($trabajador->prima_profesionalizacion ?? 0),
                 'es_jefe_coordinador' => (bool) $trabajador->es_jefe_coordinador,

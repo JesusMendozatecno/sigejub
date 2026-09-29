@@ -41,6 +41,21 @@ class MasterDataSeeder extends Seeder
         ];
         DB::table('areas')->insert($areas);
 
+        // --- UNIDADES / DEPARTAMENTOS ---
+        $unidades = [
+            ['nombre' => 'Dirección General', 'codigo' => 'DG', 'activo' => true],
+            ['nombre' => 'Subdirección Académica', 'codigo' => 'SAC', 'activo' => true],
+            ['nombre' => 'Subdirección Administrativa', 'codigo' => 'SAD', 'activo' => true],
+            ['nombre' => 'Departamento de Recursos Humanos', 'codigo' => 'DRH', 'activo' => true],
+            ['nombre' => 'Departamento de Finanzas', 'codigo' => 'DFI', 'activo' => true],
+            ['nombre' => 'Departamento de Sistemas', 'codigo' => 'DSIS', 'activo' => true],
+            ['nombre' => 'Departamento de Planeación', 'codigo' => 'DPL', 'activo' => true],
+            ['nombre' => 'Departamento de Asuntos Legales', 'codigo' => 'DAL', 'activo' => true],
+            ['nombre' => 'Departamento de Mantenimiento', 'codigo' => 'DMA', 'activo' => true],
+            ['nombre' => 'Departamento de Logística', 'codigo' => 'DLO', 'activo' => true],
+        ];
+        DB::table('unidades')->insert($unidades);
+
         // --- GRADOS ---
         $grados = [
             ['nombre' => 'P1', 'codigo' => 'P1', 'activo' => true],

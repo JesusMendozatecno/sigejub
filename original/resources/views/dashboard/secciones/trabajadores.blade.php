@@ -136,7 +136,7 @@
                                     <option value="P">P</option>
                                     <option value="G">G</option>
                                 </select>
-                                <input type="text" name="cedula" id="inputCedula" required placeholder="00000000" pattern="\d{5,10}" title="Solo números (5 a 10 dígitos)" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeypress="if(!/[0-9]/.test(event.key))event.preventDefault()" style="border-radius:0 8px 8px 0;flex:1;">
+                                <input type="text" name="cedula" id="inputCedula" required placeholder="00000000" pattern="\d{5,8}" maxlength="8" title="Solo números (5 a 8 dígitos)" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeypress="if(!/[0-9]/.test(event.key))event.preventDefault()" style="border-radius:0 8px 8px 0;flex:1;">
                             </div>
                         </div>
                         <div class="input-group">
@@ -177,7 +177,9 @@
                         </div>
                         <div class="input-group">
                             <label>UNIDAD O DEPARTAMENTO</label>
-                            <input type="text" name="unidad_departamento" id="inputUnidadDepartamento" required>
+                            <select name="unidad_id" id="selectUnidadDepartamento" required>
+                                <option value="" disabled selected>Cargando...</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-row-2">
@@ -190,6 +192,14 @@
                         <div class="input-group">
                             <label>FECHA DE INGRESO</label>
                             <input type="date" name="fecha_ingreso" id="inputFechaIngreso" required>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>TIPO DE JUBILACIÓN</label>
+                            <select name="tipo_jubilacion_id" id="selectTipoJubilacion">
+                                <option value="" disabled selected>Cargando...</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-row-2">
@@ -209,17 +219,27 @@
                     <div class="form-row-2">
                         <div class="input-group">
                             <label>NIVEL DE INSTRUCCIÓN</label>
-                            <select name="nivel_instruccion" id="selectNivelInstruccion">
-                                <option value="1">TSU</option>
-                                <option value="2">Licenciado / Ingeniero</option>
-                                <option value="3">Especialista</option>
-                                <option value="4">Magíster</option>
-                                <option value="5">Doctorado</option>
+                            <select name="nivel_instruccion_id" id="selectNivelInstruccion">
+                                <option value="" disabled selected>Cargando...</option>
                             </select>
                         </div>
                         <div class="input-group">
                             <label>NÚMERO DE CUENTA (BDV)</label>
                             <input type="tel" inputmode="numeric" name="cuenta_bancaria" id="inputCuentaBancaria" placeholder="0102..." pattern="\d{20}" maxlength="20" title="Solo 20 dígitos numéricos" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeypress="if(!/[0-9]/.test(event.key))event.preventDefault()">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px;padding:14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+                        <div class="input-group">
+                            <label>ESPECIALIDAD</label>
+                            <input type="text" name="especialidad" id="inputEspecialidad" placeholder="Ej: Gerencia de RRHH">
+                        </div>
+                        <div class="input-group">
+                            <label>CASA DE ESTUDIO</label>
+                            <input type="text" name="casa_estudio" id="inputCasaEstudio" placeholder="Universidad donde estudió">
+                        </div>
+                        <div class="input-group">
+                            <label>CASA DONDE EGRESÓ</label>
+                            <input type="text" name="casa_egreso" id="inputCasaEgreso" placeholder="Universidad donde egresó">
                         </div>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;padding:14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
@@ -245,9 +265,30 @@
                         </div>
                         <div style="grid-column:1 / -1;">
                             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:white;border-radius:8px;border:1px solid #e2e8f0;transition:all 0.2s;">
-                                <input type="checkbox" name="actividad_universitaria" id="checkActividadUniversitaria" value="1" style="width:18px;height:18px;accent-color:#2563eb;">
+                                <input type="checkbox" name="actividad_universitaria" id="checkActividadUniversitaria" value="1" onchange="toggleActividadUniversitariaFields()" style="width:18px;height:18px;accent-color:#2563eb;">
                                 <span style="font-size:0.85rem;font-weight:600;color:#0f172a;">¿Realiza actividad universitaria?</span>
                             </label>
+                            <div id="inputGroupActividadUniversitaria" style="display:none;padding:12px 12px 8px 12px;margin-top:8px;background:white;border:1px solid #e2e8f0;border-radius:8px;">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                    <div class="input-group">
+                                        <label>TIPO DE ACTIVIDAD</label>
+                                        <input type="text" name="act_univ_tipo" id="inputActUnivTipo" placeholder="Ej: TSU en Educación">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>¿DÓNDE?</label>
+                                        <input type="text" name="act_univ_lugar" id="inputActUnivLugar" placeholder="Institución / lugar">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>DESDE</label>
+                                        <input type="date" name="act_univ_desde" id="inputActUnivDesde" onchange="actualizarContadorActividadUniversitaria()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>HASTA</label>
+                                        <input type="date" name="act_univ_hasta" id="inputActUnivHasta" onchange="actualizarContadorActividadUniversitaria()">
+                                    </div>
+                                </div>
+                                <div id="contadorActividadUniversitaria" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:0.82rem;font-weight:600;"></div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -299,6 +340,53 @@ function toggleHijosDiscapacidadFields() {
     if (!checked) {
         document.getElementById('inputHijosDiscapacidad').value = 0;
     }
+}
+
+function toggleActividadUniversitariaFields() {
+    const checked = document.getElementById('checkActividadUniversitaria').checked;
+    const group = document.getElementById('inputGroupActividadUniversitaria');
+    if (group) group.style.display = checked ? 'block' : 'none';
+    if (!checked) {
+        document.getElementById('inputActUnivTipo').value = '';
+        document.getElementById('inputActUnivLugar').value = '';
+        document.getElementById('inputActUnivDesde').value = '';
+        document.getElementById('inputActUnivHasta').value = '';
+    }
+    actualizarContadorActividadUniversitaria();
+}
+
+function fmtFechaLocal(f) {
+    if (!f) return '';
+    const d = new Date(f + 'T00:00:00');
+    if (isNaN(d)) return f;
+    return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function fmtMeses(n) {
+    if (n <= 0) return 'menos de un mes';
+    const anios = Math.floor(n / 12);
+    const meses = n % 12;
+    let txt = '';
+    if (anios > 0) txt += anios + (anios === 1 ? ' año' : ' años');
+    if (meses > 0) txt += (txt ? ' y ' : '') + meses + (meses === 1 ? ' mes' : ' meses');
+    return txt || '0 meses';
+}
+
+function actualizarContadorActividadUniversitaria() {
+    const cont = document.getElementById('contadorActividadUniversitaria');
+    const box = document.getElementById('inputGroupActividadUniversitaria');
+    if (!cont || !box || box.style.display === 'none') return;
+    const desde = document.getElementById('inputActUnivDesde')?.value;
+    const hasta = document.getElementById('inputActUnivHasta')?.value;
+    if (!desde || !hasta) { cont.style.display = 'none'; return; }
+    const d = new Date(desde + 'T00:00:00');
+    const h = new Date(hasta + 'T00:00:00');
+    if (isNaN(d) || isNaN(h) || h < d) { cont.style.display = 'none'; return; }
+    let meses = (h.getFullYear() - d.getFullYear()) * 12 + (h.getMonth() - d.getMonth());
+    if (h.getDate() < d.getDate()) meses = Math.max(0, meses - 1);
+    cont.innerHTML = '<i class="fas fa-stopwatch"></i> Duración de la prima: ' + fmtMeses(meses) +
+        ' <span style="font-weight:400;">(del ' + fmtFechaLocal(desde) + ' al ' + fmtFechaLocal(hasta) + ')</span>';
+    cont.style.display = 'block';
 }
 
 function validarHijosDiscapacidad() {

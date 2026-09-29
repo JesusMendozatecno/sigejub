@@ -61,6 +61,8 @@ class Trabajador extends Model
         'tipo_nomina',
         'dedicacion',
         'grado_cargo',
+        'unidad_id',
+        'tipo_jubilacion_id',
     ];
 
     protected $casts = [
@@ -143,5 +145,15 @@ class Trabajador extends Model
     public function tipoContrato(): BelongsTo
     {
         return $this->belongsTo(TipoContrato::class, 'tipo_contrato_id');
+    }
+
+    public function unidadRelacion(): BelongsTo
+    {
+        return $this->belongsTo(Unidad::class, 'unidad_id');
+    }
+
+    public function tipoJubilacion(): BelongsTo
+    {
+        return $this->belongsTo(TipoJubilacion::class, 'tipo_jubilacion_id');
     }
 }

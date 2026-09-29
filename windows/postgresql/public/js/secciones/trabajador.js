@@ -33,8 +33,27 @@
 
     // Referencias al modal de agregar catálogo
     const modalCatalogo = document.getElementById('modalAgregarCatalogo');
-    let catalogoTipoActual = '';  // 'cargo' o 'grado'
+    let catalogoTipoActual = '';  // 'cargo', 'grado', 'nivel-instruccion', 'unidad-departamento', 'tipo-jubilacion'
     let catalogoSelectRef = null;
+    let catalogoValorPrevio = '';
+
+    // Tipos de catálogo cuyo valor de option es el ID (los demás usan el nombre).
+    const TIPOS_POR_ID = new Set(['cargo', 'nivel-instruccion', 'unidad-departamento', 'tipo-jubilacion']);
+    const CATALOGO_ETIQUETAS = {
+        'cargo': 'Cargo',
+        'grado': 'Grado',
+        'nivel-instruccion': 'Nivel de Instrucción',
+        'unidad-departamento': 'Unidad / Departamento',
+        'tipo-jubilacion': 'Tipo de Jubilación'
+    };
+    // Selects que deben cargarse desde los maestros
+    const SELECTS_CATALOGO = [
+        ['cargo', 'selectCargo'],
+        ['grado', 'selectGradoNivel'],
+        ['nivel-instruccion', 'selectNivelInstruccion'],
+        ['unidad-departamento', 'selectUnidadDepartamento'],
+        ['tipo-jubilacion', 'selectTipoJubilacion']
+    ];
 
     // ============================================
     // INICIALIZACIÓN — Eventos al cargar el DOM
@@ -58,10 +77,10 @@
 
                 form.reset();
                 habilitarCamposFormulario(true);  // Todos los campos editables
+                if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
 
                 // Cargar opciones de catálogos
-                cargarOpcionesCatalogo('cargo', 'selectCargo');
-                cargarOpcionesCatalogo('grado', 'selectGradoNivel');
+                SELECTS_CATALOGO.forEach(([tipo, selectId]) => cargarOpcionesCatalogo(tipo, selectId));
 
                 modalTitle.innerHTML = "Registrar<br>Nuevo<br>Trabajador";
                 modalDescription.textContent = "Complete el expediente institucional para iniciar el cálculo de antigüedad.";
@@ -181,6 +200,7 @@
                     document.getElementById('checkHijosDiscapacidad').checked = false;
                     toggleHijosDiscapacidadFields();
                     document.getElementById('checkActividadUniversitaria').checked = false;
+                    if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
                     cerrarTodoModal();
                     cargarTrabajadores();  // Refresca la tabla sin recargar la página
 
@@ -246,11 +266,28 @@
             window.addEventListener('click', (e) => { if (e.target === modalCatalogo) cerrarModalCatalogo(); });
         }
 
+        // ============================================
+        // QUICK-ADD DE CATÁLOGO — La opción "➕ Agregar nuevo..." abre el modal
+        // ============================================
+        SELECTS_CATALOGO.forEach(([tipo, selectId]) => {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            sel.addEventListener('change', () => {
+                if (sel.value !== '__agregar__') return;
+                sel.value = ''; // No deja la opción mágica seleccionada
+                abrirModalCatalogo(tipo, sel);
+            });
+        });
+
     });
 
     // ============================================
     // CARGAR OPCS DE CATÁLOGO — Carga opciones desde /master/{tipo} y agrega "Agregar nuevo"
     // ============================================
+    function esSelectPorId(tipo) {
+        return TIPOS_POR_ID.has(tipo);
+    }
+
     async function cargarOpcionesCatalogo(tipo, selectId, selectedValue) {
         const select = document.getElementById(selectId);
         if (!select) return;
@@ -261,22 +298,53 @@
             select.innerHTML = '<option value="" disabled selected>Seleccione...</option>';
             items.forEach(item => {
                 const opt = document.createElement('option');
-                if (tipo === 'cargo') {
+                opt.textContent = item.codigo + ' — ' + item.nombre;
+                opt.dataset.nombre = item.nombre;
+                opt.dataset.codigo = item.codigo || '';
+                if (item.id !== undefined) {
                     opt.value = item.id;
-                    opt.textContent = item.codigo + ' — ' + item.nombre;
-                    opt.dataset.nombre = item.nombre;
-                    if (selectedValue && item.nombre === selectedValue) opt.selected = true;
+                    opt.dataset.id = item.id;
+                    if (selectedValue && (item.nombre === selectedValue || String(item.id) === String(selectedValue))) {
+                        opt.selected = true;
+                    }
                 } else {
                     opt.value = item.nombre;
-                    opt.textContent = item.codigo + ' — ' + item.nombre;
                     if (selectedValue && item.nombre === selectedValue) opt.selected = true;
                 }
                 select.appendChild(opt);
             });
+            const optAgregar = document.createElement('option');
+            optAgregar.value = '__agregar__';
+            optAgregar.textContent = '➕ Agregar nuevo...';
+            optAgregar.dataset.agregar = '1';
+            select.appendChild(optAgregar);
         } catch (err) {
             console.error('Error cargando catálogo ' + tipo + ':', err);
             select.innerHTML = '<option value="" disabled>Error al cargar</option>';
         }
+    }
+
+    function setearSelectPorId(selectId, id) {
+        const select = document.getElementById(selectId);
+        if (!select || !id) return false;
+        const opciones = Array.from(select.options);
+        const match = opciones.find(o => o.dataset && o.dataset.id === String(id));
+        if (match) { select.value = match.value; return true; }
+        return false;
+    }
+
+    function setearNivelLegacy(legacy) {
+        const NVL = { 1: 'TSU', 2: 'LIC', 3: 'ESP', 4: 'MAG', 5: 'DOC' };
+        const codigo = NVL[legacy];
+        if (!codigo) return false;
+        const select = document.getElementById('selectNivelInstruccion');
+        if (!select) return false;
+        const opciones = Array.from(select.options);
+        const match = opciones.find(o => o.dataset && o.dataset.codigo === codigo);
+        if (match) { select.value = match.value; return true; }
+        const byName = opciones.find(o => (o.textContent || '').toUpperCase().includes(codigo));
+        if (byName) { select.value = byName.value; return true; }
+        return false;
     }
 
     function seleccionarValorCatalogo(selectId, valor) {
@@ -302,8 +370,10 @@
     function abrirModalCatalogo(tipo, selectRef) {
         catalogoTipoActual = tipo;
         catalogoSelectRef = selectRef;
+        catalogoValorPrevio = selectRef ? selectRef.value : '';
         const titulo = document.getElementById('tituloModalCatalogo');
-        if (titulo) titulo.innerHTML = `<i class="fas fa-plus-circle"></i> Agregar Nuevo ${tipo === 'cargo' ? 'Cargo' : 'Grado'}`;
+        const etiqueta = CATALOGO_ETIQUETAS[tipo] || tipo;
+        if (titulo) titulo.innerHTML = `<i class="fas fa-plus-circle"></i> Agregar Nuevo ${etiqueta}`;
         document.getElementById('inputNombreCatalogo').value = '';
         document.getElementById('inputCodigoCatalogo').value = '';
         if (modalCatalogo) modalCatalogo.style.display = 'flex';
@@ -311,10 +381,12 @@
 
     function cerrarModalCatalogo() {
         if (modalCatalogo) modalCatalogo.style.display = 'none';
-        // Restaurar el select al valor anterior
+        // Restaurar el valor que tenía el select antes de abrir el modal
         if (catalogoSelectRef) {
-            catalogoSelectRef.value = catalogoSelectRef.options[0]?.value || '';
+            catalogoSelectRef.value = catalogoValorPrevio || (catalogoSelectRef.options[0]?.value || '');
         }
+        catalogoSelectRef = null;
+        catalogoTipoActual = '';
     }
 
     async function guardarCatalogo() {
@@ -466,7 +538,11 @@
             // Cargar opciones de catálogos antes de poblar
             await Promise.all([
                 cargarOpcionesCatalogo('cargo', 'selectCargo', t.cargo),
-                cargarOpcionesCatalogo('grado', 'selectGradoNivel', t.grado_nivel)
+                cargarOpcionesCatalogo('grado', 'selectGradoNivel', t.grado_nivel),
+                cargarOpcionesCatalogo('nivel-instruccion', 'selectNivelInstruccion', t.nivel_instruccion_id),
+                cargarOpcionesCatalogo('unidad-departamento', 'selectUnidadDepartamento', t.unidad_departamento),
+                cargarOpcionesCatalogo('tipo-jubilacion', 'selectTipoJubilacion', t.tipo_jubilacion)
+
             ]);
 
             // Puebla todos los campos del formulario con los datos del servidor
@@ -480,13 +556,21 @@
             document.getElementById('inputApellidos').value = t.apellidos;
             document.getElementById('inputFechaNacimiento').value = t.fecha_nacimiento;
             seleccionarValorCatalogo('selectCargo', t.cargo);
-            document.getElementById('inputUnidadDepartamento').value = t.unidad_departamento;
+            if (!setearSelectPorId('selectUnidadDepartamento', t.unidad_id)) {
+                seleccionarValorCatalogo('selectUnidadDepartamento', t.unidad_departamento);
+            }
             seleccionarValorCatalogo('selectGradoNivel', t.grado_nivel);
             document.getElementById('inputFechaIngreso').value = t.fecha_ingreso;
             document.getElementById('inputAnosExterno').value = t.anos_servicio_externo;
             document.getElementById('inputPorcentajeAntiguedad').value = t.porcentaje_antiguedad;
-            document.getElementById('selectNivelInstruccion').value = t.nivel_instruccion;
+            if (!setearSelectPorId('selectNivelInstruccion', t.nivel_instruccion_id)) {
+                setearNivelLegacy(t.nivel_instruccion);
+            }
+            setearSelectPorId('selectTipoJubilacion', t.tipo_jubilacion_id);
             document.getElementById('inputCuentaBancaria').value = t.cuenta_bancaria || '';
+            document.getElementById('inputEspecialidad').value = t.estudio ? (t.estudio.especialidad || '') : '';
+            document.getElementById('inputCasaEstudio').value = t.estudio ? (t.estudio.casa_estudio || '') : '';
+            document.getElementById('inputCasaEgreso').value = t.estudio ? (t.estudio.casa_egreso || '') : '';
 
             // Poblar campos de hijos y actividad universitaria
             const tieneHijos = parseInt(t.numero_hijos) > 0;
@@ -499,7 +583,14 @@
             toggleHijosDiscapacidadFields();
             if (tieneHijosDisc) document.getElementById('inputHijosDiscapacidad').value = t.hijos_discapacidad;
 
+            const actUniv = t.actividad_universitaria_info || {};
             document.getElementById('checkActividadUniversitaria').checked = t.actividad_universitaria ? true : false;
+            document.getElementById('inputActUnivTipo').value = actUniv.tipo || '';
+            document.getElementById('inputActUnivLugar').value = actUniv.lugar || '';
+            document.getElementById('inputActUnivDesde').value = actUniv.desde || '';
+            document.getElementById('inputActUnivHasta').value = actUniv.hasta || '';
+            if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
+            if (typeof actualizarContadorActividadUniversitaria === 'function') actualizarContadorActividadUniversitaria();
 
             habilitarCamposFormulario(false);  // Deshabilita todos los campos (solo lectura)
 

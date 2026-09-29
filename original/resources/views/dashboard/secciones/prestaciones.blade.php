@@ -516,6 +516,16 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         }
     };
 
+    function mesesActividadUniversitaria(f1, f2) {
+        if (!f1 || !f2) return null;
+        const d = new Date(f1 + 'T00:00:00');
+        const h = new Date(f2 + 'T00:00:00');
+        if (isNaN(d) || isNaN(h) || h < d) return null;
+        let meses = (h.getFullYear() - d.getFullYear()) * 12 + (h.getMonth() - d.getMonth());
+        if (h.getDate() < d.getDate()) meses = Math.max(0, meses - 1);
+        return meses;
+    }
+
     function renderPrimas(primas, t) {
         const container = document.getElementById('primasContainer');
         container.innerHTML = '';
@@ -556,6 +566,27 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                 <div class="prima-valor">${valorUnitarioDisplay}<span>valor unitario</span></div>
                 <div>${inputHtml}</div>`;
             container.appendChild(row);
+            // Fila informativa: duración / vigencia de la prima de actividad universitaria
+            if (p.codigo === 'PRIMA_ACTIVIDAD_UNIVERSITARIA' && t.actividad_universitaria_info) {
+                const info = t.actividad_universitaria_info || {};
+                if (info.desde || info.hasta) {
+                    const infoRow = document.createElement('div');
+                    infoRow.className = 'prima-auto na';
+                    infoRow.style.gridColumn = '1 / -1';
+                    infoRow.style.marginTop = '-2px';
+                    infoRow.style.fontSize = '0.7rem';
+                    infoRow.style.textAlign = 'left';
+                    let txt = '<i class="fas fa-stopwatch"></i> Vigencia de la prima: ';
+                    const trozos = [];
+                    if (info.desde) trozos.push('desde ' + info.desde);
+                    if (info.hasta) trozos.push('hasta ' + info.hasta);
+                    txt += trozos.join(' ');
+                    const meses = mesesActividadUniversitaria(info.desde, info.hasta);
+                    if (meses !== null) txt += ' · ' + meses + ' mes(es)';
+                    infoRow.innerHTML = txt;
+                    container.appendChild(infoRow);
+                }
+            }
         });
     }
 

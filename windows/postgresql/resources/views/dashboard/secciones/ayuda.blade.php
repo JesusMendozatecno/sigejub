@@ -147,7 +147,7 @@ body.dark-mode .ayuda-video-placeholder{background:#1e293b;border-color:#475569;
             <div class="ayuda-panel-contenido">
 
                 <h3 class="ayuda-seccion-titulo"><i class="fas fa-file-pdf"></i> Manual de usuario</h3>
-                {{-- MANUAL PDF: coloque el archivo "manual_usuario_sigejub.pdf" en public/documentos/ y el botón lo abrirá en una pestaña nueva. --}}
+                {{-- MANUAL PDF: coloque el archivo "manual_usuario_sigejub.pdf" en public/archivos/documentos/ y el botón lo abrirá en una pestaña nueva. --}}
                 <div class="ayuda-manual-card">
                     <div class="ayuda-manual-info">
                         <div class="ayuda-manual-icon"><i class="fas fa-book"></i></div>
@@ -156,7 +156,7 @@ body.dark-mode .ayuda-video-placeholder{background:#1e293b;border-color:#475569;
                             <p>Guía completa del sistema de jubilaciones: registro, solicitudes, expedientes, nómina y prestaciones.</p>
                         </div>
                     </div>
-                    <button type="button" class="btn-primary-dark" onclick="window.open('{{ asset('documentos/manual_usuario_sigejub.pdf') }}','_blank')">
+                    <button type="button" class="btn-primary-dark" onclick="window.open('{{ asset('archivos/documentos/manual_usuario_sigejub.pdf') }}','_blank')">
                         <i class="fas fa-download"></i> Ver Manual (PDF)
                     </button>
                 </div>

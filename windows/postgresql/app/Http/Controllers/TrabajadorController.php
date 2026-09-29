@@ -123,6 +123,15 @@ class TrabajadorController extends Controller
             'numero_hijos' => $trabajador->numero_hijos,
             'hijos_discapacidad' => $trabajador->hijos_discapacidad,
             'actividad_universitaria' => (bool) $trabajador->actividad_universitaria,
+            'unidad_id' => $trabajador->unidad_id,
+            'tipo_jubilacion_id' => $trabajador->tipo_jubilacion_id,
+            'tipo_jubilacion' => $trabajador->tipo_jubilacion_id
+                ? optional(DB::table('tipos_jubilacion')->where('id', $trabajador->tipo_jubilacion_id)->first())->nombre
+                : null,
+            'estudio' => DB::table('estudios')->where('trabajador_id', $trabajador->id)->first()
+                ?: null,
+            'actividad_universitaria_info' => DB::table('actividades_universitarias')->where('trabajador_id', $trabajador->id)->first()
+                ?: null,
             'cuenta_bancaria' => $trabajador->cuenta_bancaria,
             'estatus' => $trabajador->estatus,
             'porcentaje_antiguedad' => $trabajador->porcentaje_antiguedad,
@@ -139,22 +148,32 @@ class TrabajadorController extends Controller
     {
         try {
             $validated = $request->validate([
-                'cedula' => 'required|unique:trabajadores,cedula|regex:/^[VEJPG]-?\d{5,10}$/i',
+                'cedula' => 'required|unique:trabajadores,cedula|regex:/^[VEJPG]-?\d{5,8}$/i',
                 'nombres' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
                 'apellidos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
                 'genero' => 'required|in:M,F',
                 'cargo' => 'required|string|max:150',
                 'cargo_id' => 'nullable|integer|exists:cargos,id',
-                'unidad_departamento' => 'required|string|max:150',
+                'unidad_id' => 'required|integer|exists:unidades,id',
+                'unidad_departamento' => 'nullable|string|max:150',
                 'grado_nivel' => 'required|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
                 'fecha_ingreso' => 'required|date',
                 'fecha_nacimiento' => 'required|date',
                 'anos_servicio_externo' => 'nullable|integer|min:0|max:60',
                 'nivel_instruccion' => 'nullable|integer|min:1|max:5',
+                'nivel_instruccion_id' => 'nullable|integer|exists:niveles_instruccion,id',
+                'tipo_jubilacion_id' => 'nullable|integer|exists:tipos_jubilacion,id',
+                'especialidad' => 'nullable|string|max:150',
+                'casa_estudio' => 'nullable|string|max:150',
+                'casa_egreso' => 'nullable|string|max:150',
                 'cuenta_bancaria' => 'nullable|string|digits:20',
                 'numero_hijos' => 'nullable|integer|min:0',
                 'hijos_discapacidad' => 'nullable|integer|min:0',
                 'actividad_universitaria' => 'nullable|boolean',
+                'act_univ_tipo' => 'nullable|string|max:150',
+                'act_univ_lugar' => 'nullable|string|max:150',
+                'act_univ_desde' => 'nullable|date',
+                'act_univ_hasta' => 'nullable|date|after_or_equal:act_univ_desde',
                 'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
                 'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
             ]);
@@ -168,19 +187,56 @@ class TrabajadorController extends Controller
                 }
             }
 
+            if (!empty($datos['unidad_id'])) {
+                $unidad = DB::table('unidades')->where('id', $datos['unidad_id'])->first();
+                if ($unidad) {
+                    $datos['unidad_departamento'] = $unidad->nombre;
+                }
+            }
+
+            if (!empty($datos['nivel_instruccion_id'])) {
+                $nivel = DB::table('niveles_instruccion')->where('id', $datos['nivel_instruccion_id'])->first();
+                if ($nivel) {
+                    $legacy = $this->nivelLegacy($nivel->nombre . ' ' . $nivel->codigo);
+                    if ($legacy) {
+                        $datos['nivel_instruccion'] = $legacy;
+                    }
+                }
+            }
+            $datos['nivel_instruccion'] = $datos['nivel_instruccion'] ?? 1;
+
             $datos['numero_hijos'] = $datos['numero_hijos'] ?? 0;
             $datos['hijos_discapacidad'] = $datos['hijos_discapacidad'] ?? 0;
             $datos['actividad_universitaria'] = $request->boolean('actividad_universitaria');
             $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
             $datos['anos_servicio_externo'] = $datos['anos_servicio_externo'] ?? 0;
-            $datos['nivel_instruccion'] = $datos['nivel_instruccion'] ?? 1;
             $datos['asignacion'] = 'Manual';
+
+            $estudios = [
+                'nivel_instruccion_id' => $validated['nivel_instruccion_id'] ?? null,
+                'especialidad' => $validated['especialidad'] ?? null,
+                'casa_estudio' => $validated['casa_estudio'] ?? null,
+                'casa_egreso' => $validated['casa_egreso'] ?? null,
+            ];
+            $actividad = [
+                'actividad_universitaria' => $request->boolean('actividad_universitaria'),
+                'tipo' => $validated['act_univ_tipo'] ?? null,
+                'lugar' => $validated['act_univ_lugar'] ?? null,
+                'fecha_desde' => $validated['act_univ_desde'] ?? null,
+                'fecha_hasta' => $validated['act_univ_hasta'] ?? null,
+            ];
+            foreach (['especialidad', 'casa_estudio', 'casa_egreso', 'act_univ_tipo', 'act_univ_lugar', 'act_univ_desde', 'act_univ_hasta'] as $k) {
+                unset($datos[$k]);
+            }
 
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
             $datos['anos_servicio_inst'] = (int) round(Carbon::parse($request->fecha_ingreso)->diffInYears(now()));
             $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
 
             $trabajador = Trabajador::create($datos);
+
+            $this->actualizarEstudios($trabajador->id, $estudios, true);
+            $this->actualizarActividadesUniversitarias($trabajador->id, $actividad, true);
 
             Activity::log('created', 'trabajador', $trabajador->id,
                 "Se registró al trabajador {$trabajador->nombres} {$trabajador->apellidos}");
@@ -214,22 +270,32 @@ class TrabajadorController extends Controller
             $trabajador = Trabajador::findOrFail($id);
 
             $validated = $request->validate([
-                'cedula' => 'required|unique:trabajadores,cedula,' . $trabajador->id . '|regex:/^[VEJPG]-?\d{5,10}$/i',
+                'cedula' => 'required|unique:trabajadores,cedula,' . $trabajador->id . '|regex:/^[VEJPG]-?\d{5,8}$/i',
                 'nombres' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
                 'apellidos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
                 'genero' => 'required|in:M,F',
                 'cargo' => 'required|string|max:150',
                 'cargo_id' => 'nullable|integer|exists:cargos,id',
-                'unidad_departamento' => 'required|string|max:150',
+                'unidad_id' => 'required|integer|exists:unidades,id',
+                'unidad_departamento' => 'nullable|string|max:150',
                 'grado_nivel' => 'required|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
                 'fecha_ingreso' => 'required|date',
                 'fecha_nacimiento' => 'required|date',
                 'anos_servicio_externo' => 'nullable|integer|min:0|max:60',
                 'nivel_instruccion' => 'nullable|integer|min:1|max:5',
+                'nivel_instruccion_id' => 'nullable|integer|exists:niveles_instruccion,id',
+                'tipo_jubilacion_id' => 'nullable|integer|exists:tipos_jubilacion,id',
+                'especialidad' => 'nullable|string|max:150',
+                'casa_estudio' => 'nullable|string|max:150',
+                'casa_egreso' => 'nullable|string|max:150',
                 'cuenta_bancaria' => 'nullable|string|digits:20',
                 'numero_hijos' => 'nullable|integer|min:0',
                 'hijos_discapacidad' => 'nullable|integer|min:0',
                 'actividad_universitaria' => 'nullable|boolean',
+                'act_univ_tipo' => 'nullable|string|max:150',
+                'act_univ_lugar' => 'nullable|string|max:150',
+                'act_univ_desde' => 'nullable|date',
+                'act_univ_hasta' => 'nullable|date|after_or_equal:act_univ_desde',
                 'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
                 'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
             ]);
@@ -243,18 +309,55 @@ class TrabajadorController extends Controller
                 }
             }
 
+            if (!empty($datos['unidad_id'])) {
+                $unidad = DB::table('unidades')->where('id', $datos['unidad_id'])->first();
+                if ($unidad) {
+                    $datos['unidad_departamento'] = $unidad->nombre;
+                }
+            }
+
+            if (!empty($datos['nivel_instruccion_id'])) {
+                $nivel = DB::table('niveles_instruccion')->where('id', $datos['nivel_instruccion_id'])->first();
+                if ($nivel) {
+                    $legacy = $this->nivelLegacy($nivel->nombre . ' ' . $nivel->codigo);
+                    if ($legacy) {
+                        $datos['nivel_instruccion'] = $legacy;
+                    }
+                }
+            }
+            $datos['nivel_instruccion'] = $datos['nivel_instruccion'] ?? 1;
+
             $datos['numero_hijos'] = $datos['numero_hijos'] ?? 0;
             $datos['hijos_discapacidad'] = $datos['hijos_discapacidad'] ?? 0;
             $datos['actividad_universitaria'] = $request->boolean('actividad_universitaria');
             $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
             $datos['anos_servicio_externo'] = $datos['anos_servicio_externo'] ?? ($request->anos_servicio_externo ?? 0);
-            $datos['nivel_instruccion'] = $datos['nivel_instruccion'] ?? 1;
+
+            $estudios = [
+                'nivel_instruccion_id' => $validated['nivel_instruccion_id'] ?? null,
+                'especialidad' => $validated['especialidad'] ?? null,
+                'casa_estudio' => $validated['casa_estudio'] ?? null,
+                'casa_egreso' => $validated['casa_egreso'] ?? null,
+            ];
+            $actividad = [
+                'actividad_universitaria' => $request->boolean('actividad_universitaria'),
+                'tipo' => $validated['act_univ_tipo'] ?? null,
+                'lugar' => $validated['act_univ_lugar'] ?? null,
+                'fecha_desde' => $validated['act_univ_desde'] ?? null,
+                'fecha_hasta' => $validated['act_univ_hasta'] ?? null,
+            ];
+            foreach (['especialidad', 'casa_estudio', 'casa_egreso', 'act_univ_tipo', 'act_univ_lugar', 'act_univ_desde', 'act_univ_hasta'] as $k) {
+                unset($datos[$k]);
+            }
 
             $datos['edad'] = Carbon::parse($request->fecha_nacimiento)->age;
             $datos['anos_servicio_inst'] = (int) round(Carbon::parse($request->fecha_ingreso)->diffInYears(now()));
             $datos['total_anos_servicio'] = $datos['anos_servicio_inst'] + ($request->anos_servicio_externo ?? 0);
 
             $trabajador->update($datos);
+
+            $this->actualizarEstudios($trabajador->id, $estudios);
+            $this->actualizarActividadesUniversitarias($trabajador->id, $actividad);
 
             Activity::log('updated', 'trabajador', $trabajador->id,
                 "Se actualizó el expediente de {$trabajador->nombres} {$trabajador->apellidos}");
@@ -346,6 +449,72 @@ class TrabajadorController extends Controller
                 'estado' => 'error',
                 'mensaje' => 'Error interno al eliminar el trabajador.'
             ], 500);
+        }
+    }
+
+    /**
+     * Traduce un nivel de instrucción (nombre o código del maestro)
+     * al código legacy 1-5 conservado en trabajadores.nivel_instruccion.
+     */
+    private function nivelLegacy($texto): ?int
+    {
+        $s = strtolower((string) $texto);
+        if (str_contains($s, 'doctor')) return 5;
+        if (str_contains($s, 'mag')) return 4;
+        if (str_contains($s, 'especial')) return 3;
+        if (str_contains($s, 'lic') || str_contains($s, 'ing')) return 2;
+        if (str_contains($s, 'tsu') || str_contains($s, 'tecn')) return 1;
+        return null;
+    }
+
+    /**
+     * Mantiene la fila de estudios del trabajador (una por trabajador).
+     */
+    private function actualizarEstudios(int $trabajadorId, array $e, bool $crear = false): void
+    {
+        $tiene = $e['nivel_instruccion_id'] || $e['especialidad'] || $e['casa_estudio'] || $e['casa_egreso'];
+        if ($tiene) {
+            $fila = [
+                'trabajador_id' => $trabajadorId,
+                'nivel_instruccion_id' => $e['nivel_instruccion_id'],
+                'especialidad' => $e['especialidad'],
+                'casa_estudio' => $e['casa_estudio'],
+                'casa_egreso' => $e['casa_egreso'],
+                'updated_at' => now(),
+            ];
+            if ($crear) {
+                $fila['created_at'] = now();
+                DB::table('estudios')->insert($fila);
+            } else {
+                DB::table('estudios')->updateOrInsert(['trabajador_id' => $trabajadorId], $fila);
+            }
+        } else {
+            DB::table('estudios')->where('trabajador_id', $trabajadorId)->delete();
+        }
+    }
+
+    /**
+     * Mantiene la fila de actividad universitaria del trabajador.
+     */
+    private function actualizarActividadesUniversitarias(int $trabajadorId, array $a, bool $crear = false): void
+    {
+        if ($a['actividad_universitaria']) {
+            $fila = [
+                'trabajador_id' => $trabajadorId,
+                'tipo' => $a['tipo'],
+                'lugar' => $a['lugar'],
+                'fecha_desde' => $a['fecha_desde'],
+                'fecha_hasta' => $a['fecha_hasta'],
+                'updated_at' => now(),
+            ];
+            if ($crear) {
+                $fila['created_at'] = now();
+                DB::table('actividades_universitarias')->insert($fila);
+            } else {
+                DB::table('actividades_universitarias')->updateOrInsert(['trabajador_id' => $trabajadorId], $fila);
+            }
+        } else {
+            DB::table('actividades_universitarias')->where('trabajador_id', $trabajadorId)->delete();
         }
     }
 

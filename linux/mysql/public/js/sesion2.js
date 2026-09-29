@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', function(e) {
         var modals = document.querySelectorAll('.modal-overlay');
         for (var i = 0; i < modals.length; i++) {
-            if (e.target === modals[i]) {
+            if (e.target === modals[i] && modals[i].getAttribute('data-no-close-outside') !== 'true') {
                 modals[i].style.display = 'none';
             }
         }

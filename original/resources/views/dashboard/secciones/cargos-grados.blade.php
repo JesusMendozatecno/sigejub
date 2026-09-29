@@ -23,6 +23,8 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
 <div class="cg-tabs">
     <button class="cg-tab active" data-tab="cargos" id="tabCargos"><i class="fas fa-briefcase"></i> Cargos</button>
     <button class="cg-tab" data-tab="grados" id="tabGrados"><i class="fas fa-graduation-cap"></i> Grados</button>
+    <button class="cg-tab" data-tab="unidad-departamento" id="tabUnidades"><i class="fas fa-building"></i> Unidad / Depto</button>
+    <button class="cg-tab" data-tab="nivel-instruccion" id="tabNiveles"><i class="fas fa-user-graduate"></i> Nivel de Instrucción</button>
 </div>
 
 <div class="search-filter-bar">
@@ -105,13 +107,15 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
 (function(){
     let currentPage = 1;
     let tipoActivo = 'cargo';
-    const MAP = { cargo: 'Cargo', grado: 'Grado' };
-    const ICONS = { cargo: 'fa-briefcase', grado: 'fa-graduation-cap' };
+    const MAP = { cargo: 'Cargo', grado: 'Grado', 'unidad-departamento': 'Unidad / Departamento', 'nivel-instruccion': 'Nivel de Instrucción' };
+    const ICONS = { cargo: 'fa-briefcase', grado: 'fa-graduation-cap', 'unidad-departamento': 'fa-building', 'nivel-instruccion': 'fa-user-graduate' };
 
     function cambiarTipo(tipo) {
         tipoActivo = tipo;
         document.getElementById('tabCargos').classList.toggle('active', tipo === 'cargo');
         document.getElementById('tabGrados').classList.toggle('active', tipo === 'grado');
+        document.getElementById('tabUnidades').classList.toggle('active', tipo === 'unidad-departamento');
+        document.getElementById('tabNiveles').classList.toggle('active', tipo === 'nivel-instruccion');
         document.getElementById('buscadorCG').value = '';
         document.getElementById('filtroEstadoCG').value = '';
         currentPage = 1;
@@ -120,6 +124,8 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
 
     document.getElementById('tabCargos')?.addEventListener('click', () => cambiarTipo('cargo'));
     document.getElementById('tabGrados')?.addEventListener('click', () => cambiarTipo('grado'));
+    document.getElementById('tabUnidades')?.addEventListener('click', () => cambiarTipo('unidad-departamento'));
+    document.getElementById('tabNiveles')?.addEventListener('click', () => cambiarTipo('nivel-instruccion'));
 
     async function cargarDatos(page) {
         page = page || 1;

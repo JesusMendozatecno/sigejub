@@ -161,7 +161,7 @@ body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; 
     </div>
 </div>
 
-<div id="modalImportarNomina" class="modal-overlay">
+<div id="modalImportarNomina" class="modal-overlay" data-no-close-outside="true">
     <div class="modal-delete-box" style="text-align:left;max-width:560px;">
         <h3 style="text-align:center;"><i class="fas fa-file-import"></i> Importar Nómina</h3>
         <p style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;">
@@ -185,10 +185,13 @@ body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; 
             </div>
         </form>
         <div id="resultadoImportacion" style="display:none;margin-top:16px;padding:12px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;font-size:0.85rem;"></div>
+        <div style="text-align:center;margin-top:12px;">
+            <button type="button" class="btn-submit" id="btnCerrarImportacion" style="display:none;background:#64748b;width:auto;padding:10px 28px;">Cerrar</button>
+        </div>
     </div>
 </div>
 
-<div id="modalEditarNomina" class="modal-overlay">
+<div id="modalEditarNomina" class="modal-overlay" data-no-close-outside="true">
     <div class="modal-delete-box" style="text-align:left;max-width:620px;">
         <h3 style="text-align:center;"><i class="fas fa-pen"></i> Editar Nómina</h3>
         <p id="editarNominaInfo" style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;"></p>
@@ -242,7 +245,7 @@ body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; 
     </div>
 </div>
 
-<div id="modalEliminarNomina" class="modal-overlay">
+<div id="modalEliminarNomina" class="modal-overlay" data-no-close-outside="true">
     <div class="modal-delete-box">
         <h3 style="text-align:center;"><i class="fas fa-trash"></i> Eliminar de la Nómina</h3>
         <p id="eliminarNominaInfo" style="text-align:center;color:#64748b;font-size:0.85rem;margin:16px 0;"></p>
@@ -298,6 +301,7 @@ window.abrirModalImportarNomina = function() {
     document.getElementById('formImportarNomina').reset();
     if (sel) sel.value = '';
     document.getElementById('resultadoImportacion').style.display = 'none';
+    document.getElementById('btnCerrarImportacion').style.display = 'none';
 };
 
 function fmt(v) { return (v || 0).toFixed(2).replace('.', ','); }
@@ -553,6 +557,11 @@ const secNomina = document.getElementById('nomina');
 if (secNomina) observerNomina.observe(secNomina, { attributes: true, attributeFilter: ['class'] });
 
 document.getElementById('btnCancelarImportar')?.addEventListener('click', () => document.getElementById('modalImportarNomina').style.display = 'none');
+document.getElementById('btnCerrarImportacion')?.addEventListener('click', () => {
+    document.getElementById('modalImportarNomina').style.display = 'none';
+    document.getElementById('formImportarNomina').reset();
+    document.getElementById('resultadoImportacion').style.display = 'none';
+});
 
 document.getElementById('formImportarNomina')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -584,6 +593,7 @@ document.getElementById('formImportarNomina')?.addEventListener('submit', async 
             html += '</ul>';
         }
         resultado.innerHTML = html;
+        document.getElementById('btnCerrarImportacion').style.display = 'inline-block';
         mostrarToast('Importación completada correctamente', 'success');
         cargarAniosNomina();
         const anioImport = data.datos && data.datos.anio ? String(data.datos.anio) : null;
@@ -593,6 +603,7 @@ document.getElementById('formImportarNomina')?.addEventListener('submit', async 
         resultado.style.background = '#fef2f2';
         resultado.style.borderColor = '#fecaca';
         resultado.innerHTML = '<strong style="color:#dc2626;">' + (err.mensaje || err.message || 'Error al importar') + '</strong>';
+        document.getElementById('btnCerrarImportacion').style.display = 'inline-block';
         mostrarToast(err.mensaje || 'Error al importar', 'error');
     } finally {
         ocultarCargando();

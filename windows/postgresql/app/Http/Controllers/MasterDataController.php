@@ -19,6 +19,7 @@ class MasterDataController extends Controller
         'tipo-contrato' => ['table' => 'tipos_contrato', 'label' => 'Tipo de Contrato'],
         'prima' => ['table' => 'primas', 'label' => 'Prima', 'extra_fields' => ['valor', 'fecha_vigencia']],
         'tipo-jubilacion' => ['table' => 'tipos_jubilacion', 'label' => 'Tipo de Jubilación'],
+        'unidad-departamento' => ['table' => 'unidades', 'label' => 'Unidad / Departamento'],
     ];
 
     private function resolveConfig(string $tipo): array
