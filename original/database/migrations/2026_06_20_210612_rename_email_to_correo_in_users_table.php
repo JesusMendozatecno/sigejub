@@ -31,7 +31,16 @@ return new class extends Migration
                 $table->renameColumn('name', 'nombre');
             }
             if ($this->hasColumn('users', 'role')) {
+                // Evitar problemas de default con MySQL/MariaDB en algunos entornos
+                try {
+                    DB::statement("ALTER TABLE users ALTER COLUMN role DROP DEFAULT");
+                } catch (\Throwable $e) {
+                }
                 $table->renameColumn('role', 'rol');
+                try {
+                    DB::statement("ALTER TABLE users ALTER COLUMN rol SET DEFAULT 'usuario'");
+                } catch (\Throwable $e) {
+                }
             }
         });
     }
