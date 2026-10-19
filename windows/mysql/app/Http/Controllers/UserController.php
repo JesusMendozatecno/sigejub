@@ -8,13 +8,21 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Activity;
+use App\Services\ImageStorageService;
 
 class UserController extends Controller
 {
+    // Servicio que guarda las imágenes con nombre fijo por usuario (se sobrescriben).
+    protected $imagenes;
+
+    public function __construct(ImageStorageService $imagenes)
+    {
+        $this->imagenes = $imagenes;
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -71,11 +79,8 @@ class UserController extends Controller
             'avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-        }
-
-        $path = $request->file('avatar')->store('avatars', 'public');
+        // Nombre determinista avatars/u_{id}.{ext}: reemplaza la anterior al cambiar.
+        $path = $this->imagenes->guardar($request->file('avatar'), 'avatars', 'u_' . $user->id, $user->avatar);
         $user->avatar = $path;
         $user->save();
 
@@ -88,12 +93,18 @@ class UserController extends Controller
     public function deleteAvatar()
     {
         $user = Auth::user();
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-            $user->avatar = null;
-            $user->save();
-        }
-        return response()->json(['mensaje' => 'Foto de perfil eliminada.']);
+
+        // Al eliminar se restaura la imagen por defecto (todo usuario tiene foto).
+        $this->imagenes->eliminar('avatars', 'u_' . $user->id, $user->avatar);
+        $ruta = $this->imagenes->copiarPorDefecto('avatars', 'u_' . $user->id, public_path('img/avatar-default.png'));
+
+        $user->avatar = $ruta;
+        $user->save();
+
+        return response()->json([
+            'mensaje' => 'Foto de perfil restablecida a la predeterminada.',
+            'avatar' => $ruta ? asset('storage/' . $ruta) : null,
+        ]);
     }
 
     public function updatePassword(Request $request)

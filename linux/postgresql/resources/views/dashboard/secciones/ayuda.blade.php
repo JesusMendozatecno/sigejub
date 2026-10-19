@@ -46,7 +46,7 @@ body.dark-mode .ayuda-video-placeholder{background:#1e293b;border-color:#475569;
 
 <header class="section-header">
     <div class="header-info">
-        <h1>Ayuda</h1>
+        <h1><span class="text-blue-accent">Ayuda</span></h1>
         <p>Información de soporte técnico y material de guía para el uso del sistema.</p>
     </div>
     <div class="header-actions">

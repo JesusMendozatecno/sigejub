@@ -83,8 +83,9 @@ body.theme-modern .top-bar {
     border-bottom: 1px solid var(--border);
 }
 
-/* ── CONTENT SECTIONS — Bordered cards ── */
-body.theme-modern .content-section > * {
+/* ── CONTENT SECTIONS — Bordered cards ──
+   (se excluyen las ventanas modales) */
+body.theme-modern .content-section > *:not(.modal-overlay):not(.modal-tasa):not(.modal-resultado) {
     background: var(--bg-card);
     border-radius: var(--radius);
     padding: 24px;
@@ -626,7 +627,7 @@ body.theme-modern .notif-menu {
     background: var(--bg-card) !important;
 }
 
-body.theme-modern .dashboard-render-zone > .content-section > * {
+body.theme-modern .dashboard-render-zone > .content-section > *:not(.modal-overlay):not(.modal-tasa):not(.modal-resultado) {
     background: var(--bg-card) !important;
     color: var(--text-primary);
 }

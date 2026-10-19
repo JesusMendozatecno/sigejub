@@ -46,7 +46,8 @@ class CajaNegraController extends Controller
             $query->where('created_at', '<=', $to . ' 23:59:59');
         }
 
-        $activities = $query->latest()->paginate(min((int) $request->get('per_page', 50), 100));
+        // Paginación del historial: 20 registros por página por defecto.
+        $activities = $query->latest()->paginate(min((int) $request->get('per_page', 20), 100));
 
         // Enriquecer con etiquetas traducidas y rol del usuario.
         $data = $activities->getCollection()->map(function (Activity $a) {

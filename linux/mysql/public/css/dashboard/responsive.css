@@ -6,9 +6,13 @@
    Breakpoints: < 1024px (tablet), < 768px (mobile), < 480px
    ============================================================ */
 
-/* === SIDEBAR TOGGLE BUTTON === */
+/* === SIDEBAR TOGGLE BUTTON ===
+   Visible también en escritorio: permite plegar el menú a solo iconos.
+   En móvil (<768px) abre el sidebar off-canvas. */
 .sidebar-toggle {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     cursor: pointer;
@@ -364,3 +368,54 @@
     .modal-overlay { position: static; background: none; }
     .modal-container { box-shadow: none; border: 1px solid var(--border); }
 }
+
+/* =====================================================
+   AUTOAJUSTE POR TAMAÑO DE PANTALLA
+   Tipografía fluida y grids que se adaptan a cualquier
+   resolución, desde pantallas pequeñas hasta ultrawide.
+   ===================================================== */
+
+/* Tipografía fluida: escala suavemente entre 768px y 1440px */
+.section-header h1,
+.welcome-header h1 {
+    font-size: clamp(1.25rem, 1rem + 1.2vw, 1.9rem);
+}
+.stat-card h2 {
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+}
+
+/* Pantallas medianas-portátiles (1025–1280px): más aire y menos ancho fijo */
+@media (min-width: 1025px) and (max-width: 1280px) {
+    .main-content { padding: 20px 24px; }
+    .content-layout { gap: 16px; }
+    .filters-bar { gap: 12px; }
+}
+
+/* Escritorio grande (1440px+): contenedores más anchos y grids de 4 columnas */
+@media (min-width: 1441px) {
+    .main-content { padding: 28px 36px; }
+    .stats-grid { gap: 20px; }
+}
+
+/* Ultrawide (1920px+): limita el ancho legible del contenido */
+@media (min-width: 1921px) {
+    .main-content { max-width: 1800px; }
+    .dashboard-render-zone { max-width: 1720px; }
+}
+
+/* El card de la tasa del dólar y la fila de cabecera siempre envuelven */
+.tasa-actual-card,
+.tasa-dolar-card { max-width: 100%; }
+.tasa-header-row > * { min-width: 0; }
+
+/* Las tarjetas y grids nunca desbordan su contenedor */
+.stats-grid,
+.content-layout,
+.prestaciones-grid,
+.charts-grid-2,
+.metrics-grid-3 { min-width: 0; }
+.stats-grid > *,
+.content-layout > * { min-width: 0; }
+
+/* Filtros: cada control puede encogerse para no forzar scroll */
+.filters-bar > * { min-width: 0; }

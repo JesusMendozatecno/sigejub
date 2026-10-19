@@ -18,6 +18,9 @@ class Prestacion extends Model
         'sueldo_integral',
         'total_primas',
         'porcentaje_jubilacion',
+        'fideicomiso_monto',
+        'fideicomiso_observaciones',
+        'fideicomiso_documento',
         'tasa_cambio_id',
         'tasa_utilizada',
         'moneda_tasa',
@@ -32,6 +35,7 @@ class Prestacion extends Model
         'sueldo_integral' => 'decimal:2',
         'total_primas' => 'decimal:2',
         'porcentaje_jubilacion' => 'decimal:2',
+        'fideicomiso_monto' => 'decimal:2',
         'tasa_utilizada' => 'decimal:2',
         'fecha_tasa_utilizada' => 'datetime',
     ];

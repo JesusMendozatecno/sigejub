@@ -116,6 +116,9 @@ class PrestacionesController extends Controller
                 'moneda_tasa' => $prestacion->moneda_tasa,
                 'fecha_tasa_utilizada' => $prestacion->fecha_tasa_utilizada,
                 'fuente_tasa' => $prestacion->fuente_tasa,
+                'fideicomiso_monto' => $prestacion->fideicomiso_monto !== null ? (float) $prestacion->fideicomiso_monto : null,
+                'fideicomiso_observaciones' => $prestacion->fideicomiso_observaciones,
+                'fideicomiso_documento' => $prestacion->fideicomiso_documento,
                 'calculado_por_user_id' => $prestacion->calculado_por_user_id,
             ] : null,
             'primas' => $primas->map(fn($p) => [
@@ -147,6 +150,8 @@ class PrestacionesController extends Controller
             'total_primas' => 'nullable|numeric',
             'porcentaje_jubilacion' => 'nullable|numeric',
             'anio' => 'required|integer|between:1900,' . date('Y'),
+            'fideicomiso_monto' => 'nullable|numeric|min:0|max:999999999999',
+            'fideicomiso_observaciones' => 'nullable|string|max:2000',
         ]);
 
         $t = Trabajador::find($request->trabajador_id);
@@ -169,22 +174,34 @@ class PrestacionesController extends Controller
 
         $tasaActual = TasaCambio::obtenerTasaActual();
 
+        $dataPrestacion = [
+            'monto' => $request->monto,
+            'anios_servicio' => $request->anios_servicio,
+            'detalles' => $request->detalles,
+            'sueldo_integral' => $request->sueldo_integral ?? 0,
+            'total_primas' => $request->total_primas ?? 0,
+            'porcentaje_jubilacion' => $request->porcentaje_jubilacion ?? 100,
+            'tasa_cambio_id' => $tasaActual?->id,
+            'tasa_utilizada' => $tasaActual?->tasa,
+            'moneda_tasa' => $tasaActual ? ($tasaActual->moneda_destino . '/' . $tasaActual->moneda_origen) : null,
+            'fecha_tasa_utilizada' => $tasaActual?->created_at,
+            'fuente_tasa' => $tasaActual?->fuente,
+            'calculado_por_user_id' => auth()->id(),
+        ];
+
+        // R4: monto de fideicomiso manual (se guarda aparte del monto de prestaciones)
+        if ($request->has('fideicomiso_monto')) {
+            $dataPrestacion['fideicomiso_monto'] = $request->filled('fideicomiso_monto')
+                ? $request->fideicomiso_monto
+                : null;
+            $dataPrestacion['fideicomiso_observaciones'] = $request->filled('fideicomiso_observaciones')
+                ? $request->fideicomiso_observaciones
+                : null;
+        }
+
         $prestacion = Prestacion::updateOrCreate(
             ['trabajador_id' => $request->trabajador_id],
-            [
-                'monto' => $request->monto,
-                'anios_servicio' => $request->anios_servicio,
-                'detalles' => $request->detalles,
-                'sueldo_integral' => $request->sueldo_integral ?? 0,
-                'total_primas' => $request->total_primas ?? 0,
-                'porcentaje_jubilacion' => $request->porcentaje_jubilacion ?? 100,
-                'tasa_cambio_id' => $tasaActual?->id,
-                'tasa_utilizada' => $tasaActual?->tasa,
-                'moneda_tasa' => $tasaActual ? ($tasaActual->moneda_destino . '/' . $tasaActual->moneda_origen) : null,
-                'fecha_tasa_utilizada' => $tasaActual?->created_at,
-                'fuente_tasa' => $tasaActual?->fuente,
-                'calculado_por_user_id' => auth()->id(),
-            ]
+            $dataPrestacion
         );
 
         $detalles = $request->detalles ?? [];
@@ -237,6 +254,36 @@ class PrestacionesController extends Controller
         ]);
     }
 
+    /**
+     * ADJUNTAR el comprobante/documento del fideicomiso a la prestación (R4)
+     * $id = trabajador_id
+     */
+    public function subirDocumentoFideicomiso(Request $request, $id)
+    {
+        $prestacion = Prestacion::where('trabajador_id', $id)->firstOrFail();
+
+        $request->validate([
+            'archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:102400',
+        ]);
+
+        $viejo = $prestacion->fideicomiso_documento;
+        $path = $request->file('archivo')->store('prestaciones/fideicomiso', 'public');
+        $prestacion->update(['fideicomiso_documento' => $path]);
+
+        if ($viejo) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($viejo);
+        }
+
+        Activity::log('updated', 'prestacion', $prestacion->id,
+            "Se adjuntó el comprobante de fideicomiso del trabajador ID {$id}");
+
+        return response()->json([
+            'estado' => 'success',
+            'mensaje' => 'Comprobante de fideicomiso adjuntado correctamente.',
+            'archivo' => $path,
+        ]);
+    }
+
     public function comprobante(Request $request, $id)
     {
         $trabajador = Trabajador::findOrFail($id);
@@ -272,6 +319,8 @@ class PrestacionesController extends Controller
             'porcentaje' => $porcentaje,
             'detalles' => $detalles,
             'foto_base64' => $fotoBase64,
+            'fideicomiso_monto' => $prestacion ? (float) ($prestacion->fideicomiso_monto ?? 0) : 0,
+            'fideicomiso_observaciones' => $prestacion?->fideicomiso_observaciones,
         ]);
 
         return $pdf->download('comprobante_prestaciones_' . $trabajador->cedula . '.pdf');

@@ -62,17 +62,39 @@ class NominaImportService
             for ($row = $dataStart; $row <= $lastRow; $row++) {
                 $cedula = trim((string) ($sheet->getCell("B{$row}")->getValue() ?? ''));
                 if (empty($cedula)) {
-                    $results['omitidos']++;
+                    // Se distingue una fila totalmente vacía (formato sobrante) de una
+                    // fila con datos pero sin cédula: solo la segunda es una omisión real.
+                    $esFilaVacia = true;
+                    foreach (['C', 'D', 'E', 'G', 'I'] as $col) {
+                        if (trim((string) ($sheet->getCell("{$col}{$row}")->getValue() ?? '')) !== '') {
+                            $esFilaVacia = false;
+                            break;
+                        }
+                    }
+                    if (!$esFilaVacia) {
+                        $results['omitidos']++;
+                    }
                     continue;
                 }
 
                 $nombreCompleto = trim((string) ($sheet->getCell("C{$row}")->getValue() ?? ''));
+                $cedulaNormalizada = $this->normalizarCedula($cedula);
+
                 if (empty($nombreCompleto)) {
+                    // Sin nombre en la hoja: si el trabajador ya existe por cédula, se
+                    // enlaza a la nómina en lugar de descartarlo (evita el "omite 1").
+                    $existente = $this->buscarTrabajadorPorCedula($cedula);
+                    if ($existente && !isset($cedulasExistentes[$cedulaNormalizada])) {
+                        $nomina->trabajadores()->attach($existente->id, []);
+                        $cedulasExistentes[$cedulaNormalizada] = true;
+                        $results['encontrados']++;
+                        $results['nuevos']++;
+                        continue;
+                    }
                     $results['errores'][] = "{$sheetName} Fila {$row}: Sin nombre para cédula {$cedula}";
                     continue;
                 }
 
-                $cedulaNormalizada = $this->normalizarCedula($cedula);
                 $results['encontrados']++;
 
                 if (isset($cedulasExistentes[$cedulaNormalizada])) {
@@ -92,7 +114,7 @@ class NominaImportService
                     $pivotData = $data['_pivot'] ?? [];
                     unset($data['_pivot']);
 
-                    $existente = Trabajador::where('cedula', $cedula)->first();
+                    $existente = $this->buscarTrabajadorPorCedula($cedula);
                     if ($existente) {
                         $existente->update($data);
                         $trabajador = $existente;
@@ -297,6 +319,22 @@ class NominaImportService
     protected function normalizarCedula(string $cedula): string
     {
         return preg_replace('/[^0-9]/', '', trim($cedula));
+    }
+
+    /**
+     * Busca un trabajador por cédula ignorando el prefijo (V-, E-, etc.)
+     * para no duplicar registros ni dejar trabajadores fuera de la nómina.
+     */
+    protected function buscarTrabajadorPorCedula(string $cedula): ?Trabajador
+    {
+        $normalizada = $this->normalizarCedula($cedula);
+        if ($normalizada === '') {
+            return null;
+        }
+
+        return Trabajador::all()->first(function ($t) use ($normalizada) {
+            return $this->normalizarCedula((string) $t->cedula) === $normalizada;
+        });
     }
 
     protected function parseDecimal($value): float

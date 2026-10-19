@@ -6,48 +6,62 @@
 
 /* === DESIGN TOKENS === */
 :root {
-    --pw-bg: #f8fafc;
+    --pw-bg: #F3F8FE;
     --pw-surface: #ffffff;
-    --pw-surface-alt: #f1f5f9;
-    --pw-primary: #1a365d;
-    --pw-primary-hover: #0f2340;
-    --pw-primary-light: rgba(26, 54, 93, 0.08);
-    --pw-accent: #3b82f6;
-    --pw-text: #1e293b;
-    --pw-text-secondary: #475569;
-    --pw-text-muted: #94a3b8;
-    --pw-border: #e2e8f0;
-    --pw-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-    --pw-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --pw-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
-    --pw-radius: 12px;
-    --pw-radius-sm: 8px;
-    --pw-radius-lg: 16px;
+    --pw-surface-alt: #E7F3FF;
+    --pw-primary: #062D63;
+    --pw-primary-hover: #073B7A;
+    --pw-primary-light: rgba(6, 45, 99, 0.08);
+    --pw-accent: #0878F9;
+    --pw-text: #12386B;
+    --pw-text-secondary: #5D7FAE;
+    --pw-text-muted: #8aa4c4;
+    --pw-border: #D8E7F8;
+    --pw-shadow-sm: 0 1px 3px rgba(18, 56, 107, 0.06);
+    --pw-shadow: 0 4px 12px rgba(18, 56, 107, 0.08);
+    --pw-shadow-lg: 0 12px 32px rgba(18, 56, 107, 0.12);
+    --pw-radius: 14px;
+    --pw-radius-sm: 10px;
+    --pw-radius-lg: 18px;
     --pw-transition: 0.3s ease;
-    --pw-nav-height: 64px;
-    --pw-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1a365d 100%);
+    --pw-nav-height: 76px;
+    --pw-gradient-hero: linear-gradient(135deg, #062D63 0%, #073B7A 55%, #0878F9 100%);
+
+    /* Botón "Ingresar": tokens dedicados para garantizar contraste en hover/focus */
+    --pw-btn-text: var(--pw-primary);
+    --pw-btn-border: var(--pw-border);
+    --pw-btn-hover-bg: var(--pw-primary);
+    --pw-btn-hover-text: #ffffff;
+    --pw-btn-hover-border: var(--pw-primary);
 }
 
 body.dark-mode {
-    --pw-bg: #0b1120;
-    --pw-surface: #1e293b;
-    --pw-surface-alt: #1a2332;
+    --pw-bg: #111827;
+    --pw-surface: #1b2638;
+    --pw-surface-alt: #202d42;
     --pw-primary: #60a5fa;
     --pw-primary-hover: #93c5fd;
-    --pw-primary-light: rgba(96, 165, 250, 0.1);
+    --pw-primary-light: rgba(96, 165, 250, 0.16);
     --pw-accent: #818cf8;
     --pw-text: #f1f5f9;
-    --pw-text-secondary: #cbd5e1;
-    --pw-text-muted: #64748b;
-    --pw-border: #1e293b;
-    --pw-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-    --pw-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --pw-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
-    --pw-gradient-hero: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+    --pw-text-secondary: #a6b4c8;
+    --pw-text-muted: #8695ad;
+    --pw-border: #2c3b52;
+    --pw-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --pw-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --pw-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --pw-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1b2638 100%);
+
+    /* Botón "Ingresar" en modo oscuro */
+    --pw-btn-text: #60a5fa;
+    --pw-btn-border: #2c3b52;
+    --pw-btn-hover-bg: #60a5fa;
+    --pw-btn-hover-text: #0f172a;
+    --pw-btn-hover-border: #60a5fa;
 }
 
 body.theme-modern {
-    --pw-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --pw-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4f46e5 100%);
     --pw-surface: rgba(255, 255, 255, 0.12);
     --pw-surface-alt: rgba(255, 255, 255, 0.08);
     --pw-primary: #ffffff;
@@ -61,7 +75,14 @@ body.theme-modern {
     --pw-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
     --pw-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     --pw-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.3);
-    --pw-gradient-hero: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7c3aed 100%);
+    --pw-gradient-hero: linear-gradient(135deg, #312e81 0%, #4338ca 55%, #4f46e5 100%);
+
+    /* Botón "Ingresar" en tema moderno: fondo blanco + texto índigo (alto contraste) */
+    --pw-btn-text: #ffffff;
+    --pw-btn-border: rgba(255, 255, 255, 0.35);
+    --pw-btn-hover-bg: #ffffff;
+    --pw-btn-hover-text: #312e81;
+    --pw-btn-hover-border: #ffffff;
 }
 
 /* === RESET === */
@@ -165,6 +186,13 @@ body.theme-modern .pw-nav-brand-text {
     color: var(--pw-primary);
 }
 
+.pw-nav-links a:focus-visible {
+    color: var(--pw-primary);
+    outline: 2px solid var(--pw-accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
 .pw-nav-links a::after {
     content: '';
     position: absolute;
@@ -182,30 +210,30 @@ body.theme-modern .pw-nav-brand-text {
 
 .pw-nav-login {
     padding: 8px 20px;
-    border: 1px solid var(--pw-border);
+    border: 1px solid var(--pw-btn-border);
     border-radius: var(--pw-radius-sm);
     font-size: 14px;
     font-weight: 600;
-    color: var(--pw-primary);
+    color: var(--pw-btn-text);
     background: transparent;
     cursor: pointer;
     transition: all var(--pw-transition);
 }
 
-.pw-nav-login:hover {
-    background: var(--pw-primary);
-    color: #ffffff;
-    border-color: var(--pw-primary);
+.pw-nav-login:hover,
+.pw-nav-login:focus-visible {
+    background: var(--pw-btn-hover-bg);
+    color: var(--pw-btn-hover-text);
+    border-color: var(--pw-btn-hover-border);
+    outline: none;
 }
 
-body.theme-modern .pw-nav-login {
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #ffffff;
-}
-
-body.theme-modern .pw-nav-login:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+/* Garantiza visibilidad del texto "Ingresar" cuando el hover actúa */
+.pw-nav-login:hover,
+.pw-nav-login:focus-visible,
+body.theme-modern .pw-nav-login:hover,
+body.theme-modern .pw-nav-login:focus-visible {
+    color: var(--pw-btn-hover-text) !important;
 }
 
 /* === MOBILE MENU === */
@@ -224,11 +252,48 @@ body.theme-modern .pw-nav-login:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    text-align: left;
     padding: calc(var(--pw-nav-height) + 40px) 24px 80px;
     background: var(--pw-gradient-hero);
     position: relative;
-    overflow: hidden;
+}
+
+.pw-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.pw-hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.pw-hero-image img {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    object-fit: cover;
+    border: 4px solid rgba(255, 255, 255, 0.15);
+}
+
+.pw-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -10%;
+    width: 120%;
+    height: 120px;
+    background: var(--pw-bg);
+    border-radius: 50% 50% 0 0;
+    z-index: 1;
 }
 
 .pw-hero::before {
@@ -244,9 +309,13 @@ body.theme-modern .pw-nav-login:hover {
 }
 
 .pw-hero-content {
-    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    max-width: 560px;
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 
 .pw-hero-logo {
@@ -765,6 +834,32 @@ body.theme-modern .pw-footer-brand-name {
 
     .pw-nav-toggle {
         display: block;
+    }
+
+    /* El botón "Ingresar" ocupa el ancho del menú desplegable */
+    .pw-nav-links .pw-nav-login {
+        width: 100%;
+        text-align: center;
+        padding: 12px 20px;
+    }
+
+    .pw-hero-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .pw-hero-content {
+        align-items: center;
+        text-align: center;
+    }
+
+    .pw-hero-image img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .pw-hero::after {
+        display: none;
     }
 
     .pw-hero-title {

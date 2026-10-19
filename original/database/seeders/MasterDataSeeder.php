@@ -9,6 +9,24 @@ use Illuminate\Support\Facades\DB;
 
 class MasterDataSeeder extends Seeder
 {
+    /**
+     * Inserta solo las filas cuyo código no exista todavía.
+     * Hace el seeder idempotente: se puede ejecutar varias veces
+     * (por ejemplo en cada instalación) sin duplicar catálogos.
+     */
+    private function seedMissing(string $table, array $rows): void
+    {
+        $existentes = DB::table($table)->pluck('codigo')->all();
+        $faltantes = array_values(array_filter(
+            $rows,
+            fn (array $fila): bool => !in_array($fila['codigo'], $existentes, true)
+        ));
+
+        if (!empty($faltantes)) {
+            DB::table($table)->insert($faltantes);
+        }
+    }
+
     public function run(): void
     {
         // --- CARGOS ---
@@ -24,7 +42,7 @@ class MasterDataSeeder extends Seeder
             ['nombre' => 'Administrativo', 'codigo' => 'ADM', 'activo' => true],
             ['nombre' => 'Operativo', 'codigo' => 'OPE', 'activo' => true],
         ];
-        DB::table('cargos')->insert($cargos);
+        $this->seedMissing('cargos', $cargos);
 
         // --- ÁREAS ---
         $areas = [
@@ -39,7 +57,7 @@ class MasterDataSeeder extends Seeder
             ['nombre' => 'Departamento de Mantenimiento', 'codigo' => 'DMA', 'activo' => true],
             ['nombre' => 'Departamento de Logística', 'codigo' => 'DLO', 'activo' => true],
         ];
-        DB::table('areas')->insert($areas);
+        $this->seedMissing('areas', $areas);
 
         // --- UNIDADES / DEPARTAMENTOS ---
         $unidades = [
@@ -54,7 +72,7 @@ class MasterDataSeeder extends Seeder
             ['nombre' => 'Departamento de Mantenimiento', 'codigo' => 'DMA', 'activo' => true],
             ['nombre' => 'Departamento de Logística', 'codigo' => 'DLO', 'activo' => true],
         ];
-        DB::table('unidades')->insert($unidades);
+        $this->seedMissing('unidades', $unidades);
 
         // --- GRADOS ---
         $grados = [
@@ -67,7 +85,7 @@ class MasterDataSeeder extends Seeder
             ['nombre' => 'PB', 'codigo' => 'PB', 'activo' => true],
             ['nombre' => 'PC', 'codigo' => 'PC', 'activo' => true],
         ];
-        DB::table('grados')->insert($grados);
+        $this->seedMissing('grados', $grados);
 
         // --- NIVELES DE INSTRUCCIÓN ---
         $niveles = [
@@ -79,7 +97,7 @@ class MasterDataSeeder extends Seeder
             ['nombre' => 'Magister', 'codigo' => 'MAG', 'activo' => true],
             ['nombre' => 'Doctor', 'codigo' => 'DOC', 'activo' => true],
         ];
-        DB::table('niveles_instruccion')->insert($niveles);
+        $this->seedMissing('niveles_instruccion', $niveles);
 
         // --- TIPOS DE CONTRATO ---
         $contratos = [
@@ -91,7 +109,7 @@ class MasterDataSeeder extends Seeder
             ['nombre' => 'Por horas', 'codigo' => 'PH', 'activo' => true],
             ['nombre' => 'Interino', 'codigo' => 'INT', 'activo' => true],
         ];
-        DB::table('tipos_contrato')->insert($contratos);
+        $this->seedMissing('tipos_contrato', $contratos);
 
         // --- PRIMAS ---
         $primas = [
@@ -103,7 +121,7 @@ class MasterDataSeeder extends Seeder
             ['codigo' => 'CESTA_TICKET', 'nombre' => 'Cesta Ticket', 'monto' => 0, 'activo' => true],
             ['codigo' => 'PRIMA_ACTIVIDAD_UNIVERSITARIA', 'nombre' => 'Prima de Actividad Universitaria', 'monto' => 0, 'activo' => true],
         ];
-        DB::table('primas')->insert($primas);
+        $this->seedMissing('primas', $primas);
 
         // --- TIPOS DE JUBILACIÓN ---
         $jubilaciones = [
@@ -111,6 +129,6 @@ class MasterDataSeeder extends Seeder
             ['nombre' => 'Invalidez', 'codigo' => 'INV', 'activo' => true],
             ['nombre' => 'Especial', 'codigo' => 'ESP', 'activo' => true],
         ];
-        DB::table('tipos_jubilacion')->insert($jubilaciones);
+        $this->seedMissing('tipos_jubilacion', $jubilaciones);
     }
 }

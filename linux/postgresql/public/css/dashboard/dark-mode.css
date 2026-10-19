@@ -469,8 +469,9 @@ body.dark-mode .notif-menu {
     color: var(--text-primary);
 }
 
-/* Contacto de render zone (contenedores que forzaban blanco) */
-body.dark-mode .dashboard-render-zone > .content-section > * {
+/* Contacto de render zone (contenedores que forzaban blanco).
+   Se excluyen las ventanas modales para no pintarles el fondo de tarjeta. */
+body.dark-mode .dashboard-render-zone > .content-section > *:not(.modal-overlay):not(.modal-tasa):not(.modal-resultado) {
     background: var(--bg-card) !important;
     color: var(--text-primary);
 }

@@ -3,6 +3,17 @@ title SIGEJUB - Servidor
 cd /d "%~dp0"
 chcp 65001 >nul 2>&1
 
+:: =============================================
+:: SIN LIMITE DE 30s PARA EL SERVIDOR php -S
+:: php -S (SAPI cli-server) usa max_execution_time=30 de php.ini
+:: y mataba la 1a peticion con "Maximum execution time exceeded"
+:: en arranques lentos. PHP_INI_SCAN_DIR añade este ini ENCIMA de
+:: php.ini sin tocar la instalacion de XAMPP (sin conf.d).
+:: =============================================
+if not exist "%~dp0ini" mkdir "%~dp0ini"
+if not exist "%~dp0ini\sigejub.ini" echo max_execution_time = 0 >"%~dp0ini\sigejub.ini"
+set "PHP_INI_SCAN_DIR=%~dp0ini"
+
 echo ============================================
 echo  SIGEJUB - Sistema de Jubilaciones
 echo ============================================

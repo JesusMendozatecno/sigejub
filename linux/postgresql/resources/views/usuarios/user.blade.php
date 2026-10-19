@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}?v={{ filemtime(public_path('css/dashboard/dark-mode.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/modern-theme.css') }}?v={{ filemtime(public_path('css/dashboard/modern-theme.css')) }}">
+    {{-- Fuente única de estilos de las ventanas modales --}}
+    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}?v={{ filemtime(public_path('css/dashboard/secciones/modal.css')) }}">
+    {{-- Capa de modernización visual (tokens claro/oscuro/modern + componentes) --}}
+    <link rel="stylesheet" href="{{ asset('css/dashboard/rediseno.css') }}?v={{ filemtime(public_path('css/dashboard/rediseno.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/cropperjs/cropper.min.css') }}">
@@ -42,6 +46,16 @@
                     <div class="avatar-overlay"><i class="fas fa-camera"></i></div>
                 </div>
                 <input type="file" id="avatarInput" hidden accept="image/*" onchange="onAvatarSelect(event)">
+                <div class="avatar-actions-btns" style="display:flex;gap:8px;justify-content:center;margin:12px 0 16px;">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('avatarInput').click()" title="Subir nueva foto de perfil" style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;padding:6px 14px;border-radius:8px;">
+                        <i class="fas fa-camera"></i> <span>Cambiar imagen</span>
+                    </button>
+                    @if($user->avatar)
+                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAvatar()" title="Eliminar foto actual" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;border-radius:8px;background:#ef4444;border-color:#ef4444;color:#fff;">
+                        <i class="fas fa-trash-can"></i>
+                    </button>
+                    @endif
+                </div>
                 <h2 class="profile-name">{{ $user->nombre }}</h2>
                 <p class="profile-email">{{ $user->correo }}</p>
                 <span class="profile-role {{ $user->rol === 'superadmin' ? 'role-superadmin' : ($user->rol === 'admin' ? 'role-admin' : 'role-analista') }}">
@@ -284,7 +298,7 @@
                             <option value="superadmin">Superadmin</option>
                         </select>
                     </div>
-                    <div style="overflow-x:auto;">
+                    <div class="admin-table-wrapper" style="overflow-x:auto; overflow-y:auto; max-height:calc(100vh - 320px); -webkit-overflow-scrolling: touch;">
                         <table class="admin-table">
                             <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th><th>Acción</th></tr></thead>
                             <tbody id="adminUsersBody"></tbody>
@@ -331,13 +345,19 @@
 
 <!-- Cropper Modal -->
 <div class="modal-overlay" id="cropModal">
-    <div class="modal-box">
-        <h3>Ajustar foto de perfil</h3>
-        <p style="font-size:0.85rem;color:#64748b;margin:0 0 16px;">Arrastra para ajustar la imagen al área deseada</p>
-        <div id="cropContainer"></div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="cerrarCrop()">Cancelar</button>
-            <button class="btn btn-primary" onclick="confirmarCrop()">Guardar foto</button>
+    <div class="modal-box" style="display:flex;flex-direction:column;max-height:90vh;max-width:520px;padding:24px;">
+        <div style="flex-shrink:0;">
+            <h3 style="margin:0 0 6px;color:var(--text-primary);"><i class="fas fa-crop-simple"></i> Ajustar foto de perfil</h3>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 16px;">Arrastra para encuadrar y recortar la imagen al área deseada</p>
+        </div>
+        <div id="cropContainer" style="max-height:340px;min-height:220px;overflow:hidden;background:#0f172a;border-radius:10px;margin-bottom:16px;"></div>
+        <div class="modal-actions" style="margin-top:auto;flex-shrink:0;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn btn-secondary" onclick="cerrarCrop()" style="padding:10px 18px;border-radius:8px;">
+                <i class="fas fa-xmark"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" id="btnConfirmarCrop" onclick="confirmarCrop()" style="padding:10px 20px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;font-weight:600;background:var(--accent);border-color:var(--accent);color:#fff;">
+                <i class="fas fa-floppy-disk"></i> Guardar foto
+            </button>
         </div>
     </div>
 </div>
@@ -388,6 +408,8 @@ window.SIGEJUB_STORAGE_URL='{{ asset("storage") }}';
 window.SIGEJUB_PROFILE_THEME='{{ $user->tema }}';
 window.SIGEJUB_ACCENT_COLOR='{{ $user->color_acento ?? "#1a365d" }}';
 </script>
+{{-- Gestor central de ventanas modales: solo cierran con su botón (clic fuera y ESC desactivados) --}}
+<script defer src="{{ asset('js/dashboard/modales.js') }}?v={{ filemtime(public_path('js/dashboard/modales.js')) }}"></script>
 <script defer src="{{ asset('js/profile.js') }}?v={{ filemtime(public_path('js/profile.js')) }}"></script>
 </body>
 </html>

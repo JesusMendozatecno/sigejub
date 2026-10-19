@@ -344,7 +344,7 @@ async function cargarActividad(page) {
     page = page || paginaActividad || 1;
     var list = document.getElementById('activityList');
     try {
-        var resp = await Promise.all([api('/perfil/estadisticas'), api('/perfil/actividad?page=' + page)]);
+        var resp = await Promise.all([api('/perfil/estadisticas'), api('/perfil/actividad?page=' + page + '&per_page=20')]);
         var stats = await resp[0].json();
         var acts = await resp[1].json();
         document.getElementById('statTrabajadores').textContent = stats.total_trabajadores_capturados || 0;
@@ -494,7 +494,7 @@ async function cargarAdminActividad(page) {
     page = page || paginaAdminActividad || 1;
     var el = document.getElementById('adminActivityList');
     try {
-        var r = await api('/perfil/admin/actividad?page=' + page);
+        var r = await api('/perfil/admin/actividad?page=' + page + '&per_page=20');
         var acts = await r.json();
         var items = acts.data || [];
         if (!items.length) { el.innerHTML = '<p class="text-muted text-center" style="padding:20px;">Sin actividad global</p>'; document.getElementById('adminActivityPagination').innerHTML = ''; return; }

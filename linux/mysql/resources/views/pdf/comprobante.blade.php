@@ -90,6 +90,11 @@
                     <tr><td>Porcentaje de Jubilación</td><td class="text-right">{{ number_format($porcentaje, 1, ',', '.') }}%</td></tr>
                     <tr><td>Años de Servicio</td><td class="text-right">{{ $trabajador->total_anos_servicio ?? 0 }}</td></tr>
                     <tr class="total-row"><td>MONTO TOTAL PRESTACIONES</td><td class="text-right">Bs. {{ number_format($total_prestaciones, 2, ',', '.') }}</td></tr>
+                    <tr>
+                        <td>Fideicomiso {{ ($fideicomiso_observaciones ?? null) ? '— ' . $fideicomiso_observaciones : '' }}</td>
+                        <td class="text-right">Bs. {{ number_format($fideicomiso_monto ?? 0, 2, ',', '.') }}</td>
+                    </tr>
+                    <tr class="total-row"><td>TOTAL GENERAL (Prestaciones + Fideicomiso)</td><td class="text-right">Bs. {{ number_format($total_prestaciones + ($fideicomiso_monto ?? 0), 2, ',', '.') }}</td></tr>
                 </tbody>
             </table>
         </div>

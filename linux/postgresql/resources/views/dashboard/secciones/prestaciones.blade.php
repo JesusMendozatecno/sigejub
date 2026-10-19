@@ -82,16 +82,7 @@ body.dark-mode .moneda-toggle button.active { background: #16a34a; color: white;
 .btn-volver { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid #e2e8f0; padding: 7px 14px; border-radius: 8px; color: #475569; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .btn-volver:hover { background: #f1f5f9; border-color: #cbd5e1; color: #1a365d; }
 
-.modal-resultado { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 5000; }
-.modal-resultado.active { display: flex; }
-.modal-resultado-box { background: var(--bg-card); border-radius: 16px; padding: 24px; width: 420px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-.modal-resultado-box h3 { font-size: 1rem; color: #0f172a; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
-.modal-rfila { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.82rem; }
-.modal-rfila:last-child { border-bottom: none; }
-.modal-rfila .ml { color: #64748b; }
-.modal-rfila .mr { font-weight: 700; color: #0f172a; }
-.modal-rfila.total { border-top: 2px solid #1a365d; margin-top: 6px; padding-top: 10px; }
-.modal-rfila.total .ml, .modal-rfila.total .mr { color: #1a365d; font-size: 0.95rem; }
+/* El estilo de la ventana modal (.modal-resultado / .modal-rfila) vive en css/dashboard/secciones/modal.css */
 
 .hidden { display: none !important; }
 
@@ -123,16 +114,12 @@ body.dark-mode .pct-toggle button.active { background: #1e40af; border-color: #1
 body.dark-mode .resumen-item { border-bottom-color: #334155; }
 body.dark-mode .resumen-item .r-label { color: #94a3b8; }
 body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
-body.dark-mode .modal-resultado-box { background: #1e293b; }
-body.dark-mode .modal-resultado-box h3 { color: #f1f5f9; }
-body.dark-mode .modal-rfila .ml { color: #94a3b8; }
-body.dark-mode .modal-rfila .mr { color: #f1f5f9; }
-body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { color: #93c5fd; }
+/* Los estilos de la ventana modal en tema oscuro viven en css/dashboard/secciones/modal.css */
 </style>
 
 <header class="section-header">
     <div class="header-info">
-        <h1>Cálculo de Prestaciones</h1>
+        <h1>Cálculo de <span class="text-blue-accent">Prestaciones</span></h1>
         <p>Seleccione un trabajador para ver y calcular sus prestaciones sociales.</p>
     </div>
 </header>
@@ -184,6 +171,20 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                     <input type="number" step="0.01" min="0" id="inputSueldoBase" value="0.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
                 </div>
 
+                <div class="subtitulo-sec" style="margin-top:12px;"><i class="fas fa-vault"></i> Fideicomiso (opcional)</div>
+                <div class="fila-sueldo">
+                    <label style="min-width:150px;">MONTO FIDEICOMISO (Bs.)</label>
+                    <input type="number" step="0.01" min="0" id="inputFideicomisoMonto" placeholder="0.00" style="flex:1;" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
+                    <label style="min-width:90px;">OBSERVACIONES</label>
+                    <input type="text" id="inputFideicomisoObs" maxlength="2000" placeholder="Ej.: Depósito en cuenta de ahorro" style="flex:2;">
+                </div>
+                <div id="fideicomisoDocBox" class="hidden" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;font-size:0.75rem;color:#64748b;">
+                    <a id="fideicomisoDocLink" href="#" target="_blank" style="color:#2563eb;font-weight:700;"><i class="fas fa-file-pdf"></i> Ver comprobante adjunto</a>
+                    <button type="button" id="btnSubirFideicomisoDoc" style="border:1px dashed #94a3b8;background:transparent;border-radius:8px;padding:4px 10px;font-size:0.72rem;cursor:pointer;"><i class="fas fa-upload"></i> Reemplazar comprobante</button>
+                    <input type="file" id="inputFideicomisoDoc" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+                </div>
+                <button type="button" id="btnAdjuntarFideicomisoDoc" style="border:1px dashed #94a3b8;background:transparent;border-radius:8px;padding:5px 10px;font-size:0.72rem;cursor:pointer;margin-top:6px;"><i class="fas fa-paperclip"></i> Adjuntar comprobante de fideicomiso</button>
+
                 <div class="subtitulo-sec" style="margin-top:12px;"><i class="fas fa-calculator"></i> Primas Aplicables</div>
                 <div id="primasContainer" style="max-height:280px;overflow-y:auto;"><p style="color:#94a3b8;font-size:0.8rem;">Cargando primas...</p></div>
 
@@ -209,6 +210,14 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                     <p>MONTO TOTAL PRESTACIONES</p>
                     <h2 id="totalPrestacionDisplay">Bs. 0,00</h2>
                 </div>
+                <div class="resumen-item" style="border-top:2px solid #e2e8f0;margin-top:8px;padding-top:10px;">
+                    <span class="r-label"><i class="fas fa-vault" style="color:#2563eb;"></i> Fideicomiso</span>
+                    <span class="r-value" id="totalFideicomisoDisplay">Bs. 0,00</span>
+                </div>
+                <div class="resumen-item" style="border-top:2px dashed #94a3b8;">
+                    <span class="r-label" style="font-weight:700;color:#0f172a;">TOTAL GENERAL</span>
+                    <span class="r-value" id="totalGeneralDisplay" style="color:#16a34a;">Bs. 0,00</span>
+                </div>
                 <div id="tasaInfoPrestacion" style="background:#f8fafc;border-radius:8px;padding:10px 14px;margin-top:10px;border:1px solid #e2e8f0;font-size:0.75rem;">
                     <div style="font-weight:700;color:#0f172a;margin-bottom:4px;"><i class="fas fa-dollar-sign" style="color:#2563eb;"></i> Tasa de Cambio</div>
                     <div id="tasaDetallePrestacion" style="color:#64748b;">Cargando...</div>
@@ -230,7 +239,9 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             <div class="modal-rfila"><span class="ml">Sueldo Integral Mensual</span><span class="mr" id="mrSueldoIntegral">Bs. 0,00</span></div>
             <div class="modal-rfila"><span class="ml">Porcentaje Aplicable</span><span class="mr" id="mrPorcentaje">100%</span></div>
             <div class="modal-rfila"><span class="ml">Años de Servicio</span><span class="mr" id="mrAnios">0</span></div>
-            <div class="modal-rfila total"><span class="ml">MONTO TOTAL PRESTACIONES</span><span class="mr" id="mrTotal">Bs. 0,00</span></div>
+            <div class="modal-rfila"><span class="ml">MONTO TOTAL PRESTACIONES</span><span class="mr" id="mrTotal">Bs. 0,00</span></div>
+            <div class="modal-rfila"><span class="ml">Fideicomiso</span><span class="mr" id="mrFideicomiso">Bs. 0,00</span></div>
+            <div class="modal-rfila total"><span class="ml">TOTAL GENERAL (Prestaciones + Fideicomiso)</span><span class="mr" id="mrTotalGeneral">Bs. 0,00</span></div>
         </div>
         <div style="display:flex;gap:8px;margin-top:16px;">
             <button class="btn-prestacion btn-prestacion-exito" id="btnGuardarDesdeModal" style="flex:1;">
@@ -339,6 +350,35 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         const m = parseFloat(montoBs) || 0;
         if (moneda === 'USD' && tasaActual > 0) return '$' + (m / tasaActual).toFixed(2).replace('.', ',');
         return fmtBs(m);
+    }
+
+    // R4: totales con fideicomiso (el fideicomiso se captura en Bs y se muestra aparte)
+    function fideicomisoBs() {
+        return parseFloat(document.getElementById('inputFideicomisoMonto')?.value) || 0;
+    }
+    function actualizarTotalesFideicomiso(montoPrestacionesBs, moneda) {
+        const m = moneda || monedaActual;
+        const fidei = fideicomisoBs();
+        const prest = parseFloat(montoPrestacionesBs) || 0;
+        const elF = document.getElementById('totalFideicomisoDisplay');
+        const elG = document.getElementById('totalGeneralDisplay');
+        if (elF) elF.textContent = fmtEnMoneda(fidei, m);
+        if (elG) elG.textContent = fmtEnMoneda(prest + fidei, m);
+    }
+    // Muestra u oculta el enlace del comprobante de fideicomiso adjunto.
+    function mostrarComprobanteFideicomiso(path, puedeAdjuntar) {
+        const box = document.getElementById('fideicomisoDocBox');
+        const link = document.getElementById('fideicomisoDocLink');
+        const btnAdj = document.getElementById('btnAdjuntarFideicomisoDoc');
+        if (!box) return;
+        if (path) {
+            if (link) link.href = '/storage/' + path;
+            box.style.display = 'flex';
+            if (btnAdj) btnAdj.style.display = 'none';
+        } else {
+            box.style.display = 'none';
+            if (btnAdj) btnAdj.style.display = puedeAdjuntar ? 'inline-flex' : 'none';
+        }
     }
 
     function bindMonedaToggle(toggleId, cb) {
@@ -474,6 +514,13 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                 }
                 const savedMonto = parseFloat(data.prestacion.monto) || 0;
                 document.getElementById('totalPrestacionDisplay').textContent = fmtBs(savedMonto);
+                // R4: restaurar fideicomiso guardado
+                const inputFidei = document.getElementById('inputFideicomisoMonto');
+                const inputFideiObs = document.getElementById('inputFideicomisoObs');
+                if (inputFidei) inputFidei.value = (data.prestacion.fideicomiso_monto !== null && data.prestacion.fideicomiso_monto !== undefined) ? parseFloat(data.prestacion.fideicomiso_monto).toFixed(2) : '';
+                if (inputFideiObs) inputFideiObs.value = data.prestacion.fideicomiso_observaciones || '';
+                actualizarTotalesFideicomiso(savedMonto, monedaActual);
+                mostrarComprobanteFideicomiso(data.prestacion.fideicomiso_documento, true);
                 porcentajeActual = savedPct;
                 document.querySelectorAll('.pct-toggle button').forEach(b => {
                     b.classList.toggle('active', parseFloat(b.dataset.pct) === savedPct);
@@ -492,6 +539,12 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                 document.getElementById('totalPrestacionDisplay').textContent = 'Bs. 0,00';
                 document.getElementById('sidebarPrimasResumen').innerHTML = '<p style="color:#94a3b8;font-size:0.8rem;">Presione "Calcular Prestaciones" para ver el resumen.</p>';
                 document.getElementById('inputSueldoBase').value = (datosTrabajador.sueldo_base || 0).toFixed(2);
+                const inputFideiV = document.getElementById('inputFideicomisoMonto');
+                const inputFideiObsV = document.getElementById('inputFideicomisoObs');
+                if (inputFideiV) inputFideiV.value = '';
+                if (inputFideiObsV) inputFideiObsV.value = '';
+                actualizarTotalesFideicomiso(0, monedaActual);
+                mostrarComprobanteFideicomiso(null, false);
             }
 
             renderPrimas(primasDisponibles, datosTrabajador);
@@ -636,6 +689,7 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
             ? resumenHtml.join('')
             : '<p style="color:#94a3b8;font-size:0.8rem;">Sin primas activas</p>';
         document.getElementById('totalPrestacionDisplay').textContent = fmtEnMoneda(totalPrestaciones, monedaResumen);
+        actualizarTotalesFideicomiso(totalPrestaciones, monedaResumen);
 
         // Mostrar modal con resultado
         document.getElementById('mrSueldoBase').textContent = fmtEnMoneda(sueldoBase, monedaResumen);
@@ -644,6 +698,8 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         document.getElementById('mrPorcentaje').textContent = porcentajeActual + '%';
         document.getElementById('mrAnios').textContent = datosTrabajador.total_anos_servicio || 0;
         document.getElementById('mrTotal').textContent = fmtEnMoneda(totalPrestaciones, monedaResumen);
+        document.getElementById('mrFideicomiso').textContent = fmtEnMoneda(fideicomisoBs(), monedaResumen);
+        document.getElementById('mrTotalGeneral').textContent = fmtEnMoneda(totalPrestaciones + fideicomisoBs(), monedaResumen);
         document.getElementById('modalResultado').classList.add('active');
     });
 
@@ -697,6 +753,38 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
         if (e.target === this) this.classList.remove('active');
     });
 
+    // R4: adjuntar/reemplazar el comprobante del fideicomiso
+    const inputFideicomisoDoc = document.getElementById('inputFideicomisoDoc');
+    const btnAdjuntarFidei = document.getElementById('btnAdjuntarFideicomisoDoc');
+    const btnReemplazarFidei = document.getElementById('btnSubirFideicomisoDoc');
+    if (btnAdjuntarFidei) btnAdjuntarFidei.addEventListener('click', () => inputFideicomisoDoc?.click());
+    if (btnReemplazarFidei) btnReemplazarFidei.addEventListener('click', () => inputFideicomisoDoc?.click());
+    if (inputFideicomisoDoc) inputFideicomisoDoc.addEventListener('change', async function() {
+        const file = this.files[0];
+        if (!file) return;
+        if (!trabajadorActualId) { mostrarToast('Abra primero el detalle del trabajador.', 'warning'); this.value = ''; return; }
+        try {
+            mostrarCargando('Adjuntando comprobante de fideicomiso...');
+            const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const fd = new FormData();
+            fd.append('archivo', file);
+            const resp = await fetch('/prestaciones/' + trabajadorActualId + '/fideicomiso-documento', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: fd,
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok || (data.estado && data.estado !== 'success')) throw data;
+            mostrarToast(data.mensaje || 'Comprobante adjuntado.', 'success');
+            mostrarComprobanteFideicomiso(data.archivo, true);
+        } catch (err) {
+            mostrarToast(err.mensaje || 'Error al adjuntar el comprobante.', 'error');
+        } finally {
+            ocultarCargando();
+            this.value = '';
+        }
+    });
+
     async function guardarPrestacion(sueldoBase, totalPrimas, sueldoIntegral, totalPrestaciones, detalles, anio) {
         try {
             mostrarCargando('Guardando cálculo...');
@@ -714,6 +802,8 @@ body.dark-mode .modal-rfila.total .ml, body.dark-mode .modal-rfila.total .mr { c
                     total_primas: totalPrimas,
                     porcentaje_jubilacion: porcentajeActual,
                     detalles: detalles,
+                    fideicomiso_monto: fideicomisoBs() || null,
+                    fideicomiso_observaciones: (document.getElementById('inputFideicomisoObs')?.value || '').trim() || null,
                 })
             });
             const data = await resp.json();

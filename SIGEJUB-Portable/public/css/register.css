@@ -1,0 +1,546 @@
+/* ============================================================
+   register.css — Página de registro SIGEJUB
+   Split layout: panel info izquierda + formulario derecha.
+   Grid 2 columnas para campos, validación visual, password
+   strength. Soporte completo para 3 temas: light, dark, modern.
+   ============================================================ */
+
+/* === DESIGN TOKENS === */
+:root {
+    --reg-bg: #f3f5f9;
+    --reg-surface: #ffffff;
+    --reg-surface-alt: #f1f5f9;
+    --reg-primary: #1a365d;
+    --reg-primary-hover: #142c4e;
+    --reg-primary-light: rgba(26, 54, 93, 0.08);
+    --reg-text: #1e293b;
+    --reg-text-secondary: #64748b;
+    --reg-text-muted: #94a3b8;
+    --reg-border: #e6eaf1;
+    --reg-input-bg: #ffffff;
+    --reg-shadow: 0 4px 24px rgba(16, 24, 40, 0.06);
+    --reg-radius: 14px;
+    --reg-radius-sm: 10px;
+    --reg-transition: 0.3s ease;
+    --reg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1a365d 100%);
+    --reg-success: #16a34a;
+    --reg-success-bg: #ecfdf5;
+    --reg-error: #dc2626;
+    --reg-error-bg: #fef2f2;
+    --reg-warning: #f59e0b;
+}
+
+body.dark-mode {
+    --reg-bg: #111827;
+    --reg-surface: #1b2638;
+    --reg-surface-alt: #202d42;
+    --reg-primary: #60a5fa;
+    --reg-primary-hover: #93c5fd;
+    --reg-primary-light: rgba(96, 165, 250, 0.16);
+    --reg-text: #f1f5f9;
+    --reg-text-secondary: #a6b4c8;
+    --reg-text-muted: #8695ad;
+    --reg-border: #2c3b52;
+    --reg-input-bg: #202d42;
+    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --reg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1b2638 100%);
+    --reg-success-bg: #064e3b;
+    --reg-error-bg: #4c1d1d;
+}
+
+body.theme-modern {
+    --reg-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4f46e5 100%);
+    --reg-surface: rgba(255, 255, 255, 0.1);
+    --reg-surface-alt: rgba(255, 255, 255, 0.05);
+    --reg-primary: #ffffff;
+    --reg-primary-hover: rgba(255, 255, 255, 0.9);
+    --reg-primary-light: rgba(255, 255, 255, 0.12);
+    --reg-text: #ffffff;
+    --reg-text-secondary: rgba(255, 255, 255, 0.85);
+    --reg-text-muted: rgba(255, 255, 255, 0.55);
+    --reg-border: rgba(255, 255, 255, 0.15);
+    --reg-input-bg: rgba(255, 255, 255, 0.08);
+    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    --reg-gradient: linear-gradient(135deg, #312e81 0%, #4338ca 55%, #4f46e5 100%);
+    --reg-success-bg: rgba(22, 163, 74, 0.15);
+    --reg-error-bg: rgba(220, 38, 38, 0.15);
+}
+
+/* === RESET === */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--reg-bg);
+    min-height: 100vh;
+    display: flex;
+    color: var(--reg-text);
+}
+
+body.theme-modern {
+    background: var(--reg-bg);
+    background-attachment: fixed;
+}
+
+/* === SPLIT LAYOUT === */
+.register-split {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* === LEFT PANEL (INFO) === */
+.register-info {
+    flex: 0 0 42%;
+    background: var(--reg-gradient);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 48px;
+    position: relative;
+    overflow: hidden;
+}
+
+.register-info::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.register-info-content {
+    max-width: 380px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.register-info-logo {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 28px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.register-info-logo img {
+    width: 44px;
+    height: 44px;
+}
+
+.register-info-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.register-info-subtitle {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 40px;
+    line-height: 1.5;
+}
+
+.register-info-features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+}
+
+.register-info-feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.register-info-feature-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+}
+
+.register-info-feature-text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.4;
+}
+
+.register-info-feature-text strong {
+    display: block;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+/* === RIGHT PANEL (FORM) === */
+.register-form-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 24px;
+    overflow-y: auto;
+    background: var(--reg-surface);
+    transition: background var(--reg-transition);
+}
+
+.register-form-wrapper {
+    width: 100%;
+    max-width: 520px;
+    padding: 20px 0;
+}
+
+.register-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--reg-text-muted);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color var(--reg-transition);
+}
+
+.register-back:hover {
+    color: var(--reg-primary);
+}
+
+.register-back i {
+    font-size: 12px;
+}
+
+.register-form-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--reg-text);
+    margin-bottom: 6px;
+}
+
+.register-form-subtitle {
+    font-size: 14px;
+    color: var(--reg-text-muted);
+    margin-bottom: 28px;
+}
+
+/* === FORM SECTIONS === */
+.register-section {
+    margin-bottom: 28px;
+}
+
+.register-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--reg-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--reg-border);
+}
+
+/* === FORM GRID === */
+.register-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.register-form-grid .reg-full-width {
+    grid-column: 1 / -1;
+}
+
+/* === INPUT GROUPS === */
+.register-input-group {
+    text-align: left;
+}
+
+.register-input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--reg-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.register-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--reg-input-bg);
+    border: 1px solid var(--reg-border);
+    border-radius: var(--reg-radius-sm);
+    font-size: 14px;
+    color: var(--reg-text);
+    font-family: inherit;
+    transition: all var(--reg-transition);
+    outline: none;
+}
+
+.register-input:focus {
+    border-color: var(--reg-primary);
+    background: var(--reg-surface);
+    box-shadow: 0 0 0 3px var(--reg-primary-light);
+}
+
+.register-input::placeholder {
+    color: var(--reg-text-muted);
+}
+
+body.theme-modern .register-input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+/* === PHONE WRAPPER === */
+.register-phone-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+.register-country-select {
+    width: 90px;
+    flex-shrink: 0;
+    padding: 12px 6px;
+    font-size: 12px;
+}
+
+.register-phone-wrapper .register-input {
+    flex: 1;
+}
+
+/* === PASSWORD WRAPPER === */
+.register-password-wrapper {
+    position: relative;
+}
+
+.register-password-wrapper .register-input {
+    padding-right: 44px;
+}
+
+.register-toggle-password {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--reg-text-muted);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--reg-transition);
+    border-radius: 6px;
+}
+
+.register-toggle-password:hover {
+    color: var(--reg-primary);
+    background: var(--reg-primary-light);
+}
+
+/* === PASSWORD STRENGTH === */
+.register-password-strength {
+    height: 4px;
+    background: var(--reg-border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.register-strength-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    transition: all var(--reg-transition);
+}
+
+/* === VALIDATION === */
+.register-validation {
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
+    min-height: 16px;
+    line-height: 16px;
+}
+
+.register-validation.valid { color: var(--reg-success); }
+.register-validation.error { color: var(--reg-error); }
+
+.register-input.valid {
+    border-color: var(--reg-success);
+    background-color: var(--reg-success-bg);
+}
+
+.register-input.invalid {
+    border-color: var(--reg-error);
+    background-color: var(--reg-error-bg);
+}
+
+/* === SUBMIT BUTTON === */
+.register-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--reg-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--reg-radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--reg-transition);
+    font-family: inherit;
+    margin-top: 8px;
+}
+
+.register-submit:hover {
+    background: var(--reg-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.register-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+body.theme-modern .register-submit {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.theme-modern .register-submit:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* === LOGIN LINK === */
+.register-login-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--reg-text-muted);
+}
+
+.register-login-link a {
+    color: var(--reg-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity var(--reg-transition);
+}
+
+.register-login-link a:hover {
+    opacity: 0.8;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
+    .register-info {
+        flex: 0 0 36%;
+    }
+}
+
+@media (max-width: 768px) {
+    .register-split {
+        flex-direction: column;
+    }
+
+    .register-info {
+        display: none;
+    }
+
+    .register-form-panel {
+        min-height: 100vh;
+        padding: 24px;
+    }
+
+    .register-form-wrapper {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .register-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .register-form-panel {
+        padding: 16px;
+    }
+
+    .register-form-title {
+        font-size: 22px;
+    }
+
+    .register-phone-wrapper {
+        flex-direction: column;
+    }
+
+    .register-country-select {
+        width: 100%;
+    }
+}
+
+/* SIGEJUB AUTH REDESIGN — coherencia visual con inicio de sesión */
+:root { --reg-primary:#087cf0; --reg-primary-hover:#0565d4; --reg-primary-light:rgba(0,132,255,.12); --reg-border:#d8e8ff; --reg-text:#123e7b; --reg-text-secondary:#6686b5; --reg-text-muted:#7895bd; --reg-gradient:linear-gradient(145deg,#073675 0%,#064b9f 54%,#03265a 100%); }
+body:not(.dark-mode):not(.theme-modern) { background:#eef7ff; }
+.register-split { min-height:100vh;min-height:100dvh;overflow:hidden; }
+.register-info { flex:0 0 51%; padding:150px 48px 64px; background:linear-gradient(145deg,#073675 0%,#064b9f 54%,#03265a 100%); }
+.register-info::before { background:radial-gradient(circle at 85% 12%,rgba(0,161,255,.22),transparent 32%),linear-gradient(140deg,transparent 60%,rgba(0,127,255,.10)); }
+.register-info::after { content:"";position:absolute;z-index:0;pointer-events:none;left:-12%;right:-8%;bottom:-17%;height:36%;border-radius:50% 50% 0 0 / 34% 34% 0 0;background:linear-gradient(160deg,rgba(0,139,255,.85),rgba(0,67,151,.8) 48%,rgba(0,32,79,.95));box-shadow:0 -18px 0 rgba(0,117,237,.18),0 -42px 0 rgba(0,148,255,.12);transform:rotate(-3deg); }
+.register-info-content { max-width:460px; }
+.register-info-logo { background:linear-gradient(145deg,#04b6ff,#0874ef);border:0;box-shadow:0 10px 28px rgba(0,25,85,.22); }
+.register-info-title { font-size:clamp(30px,3vw,42px); }
+.register-info-subtitle { color:#c5e3ff; }
+.register-info-feature-icon { width:48px;height:48px;border-radius:12px;background:linear-gradient(145deg,#079ef8,#0767e4);color:#fff; }
+.register-info-feature-text { color:#c9e5ff; }
+.register-form-panel { position:relative;flex:1 1 49%;background:radial-gradient(circle at 90% 10%,#e2f3ff 0,transparent 34%),linear-gradient(135deg,#f8fcff 0%,#edf7ff 100%);padding:34px clamp(22px,4vw,60px);align-items:center; }
+.register-form-panel::before { content:"";position:absolute;top:35px;right:34px;width:100px;height:58px;opacity:.65;background-image:radial-gradient(#8acfff 3px,transparent 3.5px);background-size:21px 21px; }
+.register-form-wrapper { position:relative;z-index:1;max-width:680px;padding:34px 38px;background:rgba(255,255,255,.9);border:1px solid #d9eaff;border-radius:24px;box-shadow:0 18px 50px rgba(45,112,190,.10); }
+.register-back { color:#0785ed;font-size:14px;font-weight:600; }
+.register-form-title { color:#104487;font-size:29px;font-weight:800; }
+.register-form-subtitle { color:#6e8fbd; }
+.register-section-title { color:#087cf0;border-color:#dceaff; }
+.register-input { min-height:48px;border-color:#d5e6ff;border-radius:12px;background:#fcfdff;color:#315b91; }
+.register-input:focus { border-color:#168bfa;box-shadow:0 0 0 4px rgba(0,132,255,.10); }
+.register-submit { min-height:56px;border-radius:13px;background:linear-gradient(105deg,#075cff,#00a9f4); }
+.register-submit:hover { background:linear-gradient(105deg,#064fe0,#008cdb); }
+.register-login-link a { color:#0079ef; }
+@media(max-width:800px) { .register-split{flex-direction:column;overflow:visible}.register-info{flex:auto;min-height:220px;padding:34px 24px}.register-info-logo{display:none}.register-info-features{display:none}.register-info-subtitle{margin-bottom:0}.register-info::after{height:28%;bottom:-22%}.register-form-panel{min-height:auto;padding:26px 16px 36px}.register-form-wrapper{max-width:680px;padding:28px 24px} }
+@media(max-width:520px) { .register-info{min-height:190px;padding:26px 20px}.register-form-panel{padding:16px 10px 26px}.register-form-wrapper{padding:23px 17px;border-radius:19px}.register-form-title{font-size:25px} }
+body.dark-mode .register-form-panel{background:linear-gradient(135deg,#111c30,#172840)}
+body.dark-mode .register-form-wrapper{background:#1b2638;border-color:#2c4261}
+body.theme-modern .register-form-panel{background:rgba(22,25,70,.28)}
+body.theme-modern .register-form-wrapper{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22)}
+
+.register-info-brand{position:absolute;top:35px;left:clamp(24px,6vw,96px);z-index:3;display:flex;align-items:center;gap:15px;text-align:left}
+.register-info-brand img{width:68px;height:68px;object-fit:contain;padding:11px;border-radius:15px;background:linear-gradient(145deg,#08a7ff,#0874ed)}
+.register-info-brand-copy strong{display:block;color:#fff;font-size:29px;line-height:1.1;font-weight:800}
+.register-info-brand-copy span{display:block;margin-top:7px;color:#c5e3ff;font-size:12px}
+@media(max-width:800px){.register-info-brand{top:20px;left:22px}.register-info-brand img{width:48px;height:48px;padding:8px}.register-info-brand-copy strong{font-size:22px}.register-info-brand-copy span{font-size:10px}}
+@media(max-width:520px){.register-info-brand{top:16px;left:18px}.register-info-brand img{width:42px;height:42px}.register-info-brand-copy strong{font-size:20px}}

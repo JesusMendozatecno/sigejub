@@ -1,13 +1,14 @@
 <style>
 .tasa-header-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
-.tasa-actual-card{background:linear-gradient(135deg,#1a365d,#1e3a8a);border-radius:14px;padding:24px;color:white;display:flex;align-items:center;gap:20px;min-width:320px;}
+/* Tarjeta de tasa actual — usa el color de acento del usuario (--accent) */
+.tasa-actual-card{background:linear-gradient(135deg,var(--accent,#1a365d),var(--accent-dark,#1e3a8a));border-radius:14px;padding:24px;color:white;display:flex;align-items:center;gap:20px;min-width:320px;flex:1;}
 .tasa-actual-card .tasa-icon{font-size:2.5rem;opacity:0.7;}
 .tasa-actual-card .tasa-info h3{font-size:0.8rem;opacity:0.7;margin:0 0 4px;}
 .tasa-actual-card .tasa-info .tasa-valor{font-size:2rem;font-weight:800;margin:0;line-height:1;}
 .tasa-actual-card .tasa-info .tasa-meta{font-size:0.72rem;opacity:0.6;margin-top:6px;}
 .tasa-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .tasa-btn{padding:10px 18px;border-radius:8px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;}
-.tasa-btn-primary{background:white;color:#1a365d;}
+.tasa-btn-primary{background:white;color:var(--accent,#1a365d);}
 .tasa-btn-primary:hover{background:#f1f5f9;}
 .tasa-btn-success{background:#16a34a;color:white;}
 .tasa-btn-success:hover{background:#15803d;}
@@ -21,29 +22,19 @@
 .badge-auto{background:#dbeafe;color:#1e40af;}
 .badge-manual{background:#fef3c7;color:#92400e;}
 .hist-pag-btn{min-width:32px;height:32px;padding:0 10px;border:1px solid #e2e8f0;background:white;border-radius:8px;font-size:0.78rem;font-weight:600;color:#64748b;cursor:pointer;transition:all 0.15s;}
-.hist-pag-btn:hover{background:#f1f5f9;color:#1a365d;}
-.hist-pag-btn.active{background:#1a365d;color:white;border-color:#1a365d;}
+.hist-pag-btn:hover{background:#f1f5f9;color:var(--accent,#1a365d);}
+.hist-pag-btn.active{background:var(--accent,#1a365d);color:white;border-color:var(--accent,#1a365d);}
 .hist-pag-dots{min-width:28px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#94a3b8;font-weight:700;}
 body.dark-mode .hist-pag-btn{background:#1e293b;border-color:#334155;color:#94a3b8;}
 body.dark-mode .hist-pag-btn:hover{background:#334155;color:#f1f5f9;}
 body.dark-mode .hist-pag-btn.active{background:#1e40af;border-color:#1e40af;color:white;}
 body.dark-mode .hist-pag-dots{color:#64748b;}
-.modal-tasa{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:5000;}
-.modal-tasa.active{display:flex;}
-.modal-tasa-box{background:var(--bg-card);border-radius:16px;padding:28px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
-.modal-tasa-box h3{font-size:1rem;color:#0f172a;margin:0 0 18px;display:flex;align-items:center;gap:8px;}
-.modal-tasa-box .input-group{margin-bottom:14px;}
-.modal-tasa-box .input-group label{display:block;font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:4px;}
-.modal-tasa-box .input-group input,.modal-tasa-box .input-group textarea,.modal-tasa-box .input-group select{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.85rem;}
-.modal-tasa-box .input-group input:focus,.modal-tasa-box .input-group textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.08);}
-.modal-tasa-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
-body.dark-mode .tasa-actual-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid #334155;}
+/* El estilo de la ventana modal (.modal-tasa) vive en css/dashboard/secciones/modal.css */
+body.dark-mode .tasa-actual-card{background:linear-gradient(135deg,var(--accent,#1e293b),#0f172a);border:1px solid #334155;}
+body.theme-modern .tasa-actual-card{background:linear-gradient(135deg,var(--accent,#4f46e5),#312e81);}
 body.dark-mode .historial-table th{color:#94a3b8;border-bottom-color:#334155;}
 body.dark-mode .historial-table td{color:#e2e8f0;border-bottom-color:#334155;}
 body.dark-mode .historial-table tr:hover td{background:#1e293b;}
-body.dark-mode .modal-tasa-box{background:#1e293b;}
-body.dark-mode .modal-tasa-box h3{color:#f1f5f9;}
-body.dark-mode .modal-tasa-box input,body.dark-mode .modal-tasa-box textarea,body.dark-mode .modal-tasa-box select{background:#0f172a;border-color:#334155;color:#e2e8f0;}
 body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
 </style>
 

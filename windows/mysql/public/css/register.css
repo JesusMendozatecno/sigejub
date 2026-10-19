@@ -7,49 +7,49 @@
 
 /* === DESIGN TOKENS === */
 :root {
-    --reg-bg: #f8fafc;
+    --reg-bg: #f3f5f9;
     --reg-surface: #ffffff;
     --reg-surface-alt: #f1f5f9;
     --reg-primary: #1a365d;
-    --reg-primary-hover: #0f2340;
+    --reg-primary-hover: #142c4e;
     --reg-primary-light: rgba(26, 54, 93, 0.08);
     --reg-text: #1e293b;
-    --reg-text-secondary: #475569;
+    --reg-text-secondary: #64748b;
     --reg-text-muted: #94a3b8;
-    --reg-border: #e2e8f0;
-    --reg-input-bg: #f4f7fa;
-    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-    --reg-radius: 12px;
-    --reg-radius-sm: 8px;
+    --reg-border: #e6eaf1;
+    --reg-input-bg: #ffffff;
+    --reg-shadow: 0 4px 24px rgba(16, 24, 40, 0.06);
+    --reg-radius: 14px;
+    --reg-radius-sm: 10px;
     --reg-transition: 0.3s ease;
     --reg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1a365d 100%);
     --reg-success: #16a34a;
-    --reg-success-bg: #f0fdf4;
+    --reg-success-bg: #ecfdf5;
     --reg-error: #dc2626;
     --reg-error-bg: #fef2f2;
     --reg-warning: #f59e0b;
 }
 
 body.dark-mode {
-    --reg-bg: #0b1120;
-    --reg-surface: #1e293b;
-    --reg-surface-alt: #1a2332;
+    --reg-bg: #111827;
+    --reg-surface: #1b2638;
+    --reg-surface-alt: #202d42;
     --reg-primary: #60a5fa;
     --reg-primary-hover: #93c5fd;
-    --reg-primary-light: rgba(96, 165, 250, 0.1);
+    --reg-primary-light: rgba(96, 165, 250, 0.16);
     --reg-text: #f1f5f9;
-    --reg-text-secondary: #cbd5e1;
-    --reg-text-muted: #64748b;
-    --reg-border: #334155;
-    --reg-input-bg: #0f172a;
-    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-    --reg-gradient: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
-    --reg-success-bg: #052e16;
-    --reg-error-bg: #450a0a;
+    --reg-text-secondary: #a6b4c8;
+    --reg-text-muted: #8695ad;
+    --reg-border: #2c3b52;
+    --reg-input-bg: #202d42;
+    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --reg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1b2638 100%);
+    --reg-success-bg: #064e3b;
+    --reg-error-bg: #4c1d1d;
 }
 
 body.theme-modern {
-    --reg-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --reg-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4f46e5 100%);
     --reg-surface: rgba(255, 255, 255, 0.1);
     --reg-surface-alt: rgba(255, 255, 255, 0.05);
     --reg-primary: #ffffff;
@@ -61,7 +61,7 @@ body.theme-modern {
     --reg-border: rgba(255, 255, 255, 0.15);
     --reg-input-bg: rgba(255, 255, 255, 0.08);
     --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-    --reg-gradient: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7c3aed 100%);
+    --reg-gradient: linear-gradient(135deg, #312e81 0%, #4338ca 55%, #4f46e5 100%);
     --reg-success-bg: rgba(22, 163, 74, 0.15);
     --reg-error-bg: rgba(220, 38, 38, 0.15);
 }

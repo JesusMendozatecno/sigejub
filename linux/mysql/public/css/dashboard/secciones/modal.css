@@ -1,46 +1,98 @@
-/* ============================================================
-   modal.css — Estilos para ventanas modales del dashboard
-   Overlay con backdrop-filter, contenedor con sidebar oscuro
-   y formulario scrollable, grids de 2 y 3 columnas, secciones
-   de documentos, tabla mini, botones de acción y filtros
-   por pestañas.
-   ============================================================ */
+/* ============================================================================
+   modal.css — FUENTE ÚNICA de estilos de las ventanas modales de SIGEJUB
+   ----------------------------------------------------------------------------
+   ¿Para qué sirve?
+   Define la apariencia de TODAS las ventanas modales del dashboard: la capa de
+   fondo (overlay), las ventanas grandes de formulario, las ventanas compactas
+   de confirmación y los estilos internos del formulario.
 
-/* === VENTANA MODAL === */
+   ¿Dónde se carga?
+   En resources/views/dashboard/index.blade.php, DESPUÉS de dashboard.min.css,
+   dark-mode.css y modern-theme.css, para poder sobrescribirlos.
+
+   ¿Cómo se abre y cierra?
+   Lo controla public/js/dashboard/modales.js (gestor central).
+   Regla del sistema: la ventana SOLO se cierra con el botón establecido (X,
+   Cancelar, etc.). El clic fuera NO cierra y la tecla ESC tampoco.
+
+   Orden de las reglas:
+     1. Capa de fondo (overlay)
+     2. Animación de entrada
+     3. Ventana grande (formulario): container + sidebar + contenido
+     4. Ventana compacta (diálogos y confirmaciones)
+     5. Variantes: modal-box (perfil/usuarios) y modal-tasa / modal-resultado
+     6. Estilos internos del formulario
+     7. Ajustes para pantallas pequeñas
+   ============================================================================ */
+
+/* ============================================================================
+   1. CAPA DE FONDO (OVERLAY)
+   Ocupa toda la pantalla y centra la ventana, pero SIN velo oscuro ni
+   desenfoque: el sistema debe seguir viéndose detrás de la ventana.
+   ============================================================================ */
 .modal-overlay {
-    display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px); /* Desenfoque suave del fondo para dar profundidad */
-    z-index: 2000; /* Por encima de todo */
-    justify-content: center;
+    display: none;                 /* Oculto por defecto; se muestra al abrir */
     align-items: center;
-    padding: 20px;
+    justify-content: center;
+    padding: 24px;
+    background: transparent;       /* Sin fondo: se ve el sistema detrás */
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    /* El z-index lo hereda del bundle (dashboard.min.css) para no alterarlo */
 }
 
-.modal-overlay.active { display: flex; }
+/* Estados visibles usados por el sistema (.active y .show) */
+.modal-overlay.active,
+.modal-overlay.show {
+    display: flex;
+}
 
+/* Anula el velo oscuro que definían dashboard.min.css, dark-mode.css y
+   modern-theme.css: todos los temas usan fondo transparente. */
+body.theme-modern .modal-overlay,
+body.dark-mode .modal-overlay {
+    background: transparent !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* ============================================================================
+   2. ANIMACIÓN DE ENTRADA
+   La ventana aparece con un desplazamiento y escala suaves. La animación se
+   dispara sola al pasar de display:none a display:flex.
+   ============================================================================ */
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.975); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ============================================================================
+   3. VENTANA GRANDE (FORMULARIO)
+   Estructura: .modal-container > (aside.modal-sidebar + main.modal-form-content)
+   ============================================================================ */
 .modal-container {
     background: var(--bg-card);
     width: 100%;
-    max-width: 1000px;
-    height: 85vh;
-    border-radius: 20px;
+    max-width: 900px;
+    max-height: 82vh;              /* Antes 85vh: se deja margen para ver el fondo */
+    border-radius: 18px;
     display: flex;
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
+    animation: modalIn 0.22s ease-out;
 }
 
+/* Columna lateral oscura con el título y la descripción de la ventana */
 .modal-sidebar {
-    width: 320px;
+    width: 280px;
     background: #0f172a;
-    color: white;
-    padding: 50px 40px;
+    color: #ffffff;
+    padding: 40px 32px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     flex-shrink: 0;
 }
 
@@ -56,7 +108,7 @@
 }
 
 .modal-sidebar h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 800;
     line-height: 1.1;
     color: #f8fafc;
@@ -65,18 +117,252 @@
 .modal-sidebar p {
     color: #94a3b8;
     line-height: 1.6;
+    font-size: 0.85rem;
 }
 
+/* Zona desplazable con el formulario */
 .modal-form-content {
     flex-grow: 1;
-    padding: 50px;
+    padding: 36px 40px;
     overflow-y: auto;
     background: var(--bg-card);
     position: relative;
 }
 
-/* === SECCIONES DEL FORMULARIO === */
-.form-section { margin-bottom: 40px; }
+/* ============================================================================
+   4. VENTANA COMPACTA (DIÁLOGOS Y CONFIRMACIONES)
+   Estructura: .modal-delete-box > (icono + h3 + p + .delete-actions)
+   ============================================================================ */
+.modal-delete-box {
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 460px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 28px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
+    animation: modalIn 0.22s ease-out;
+}
+
+/* Icono circular de advertencia (confirmación de eliminación) */
+.delete-icon-warn {
+    width: 56px;
+    height: 56px;
+    background-color: #fef2f2;
+    color: #dc2626;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+    font-size: 24px;
+}
+
+.modal-delete-box > h3 {
+    font-size: 1.15rem;
+    color: #0f172a;
+    margin: 0 0 8px;
+    font-weight: 600;
+}
+
+.modal-delete-box > p {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0 0 24px;
+    line-height: 1.45;
+}
+
+/* Fila de botones de los diálogos de confirmación */
+.delete-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-delete-cancel {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-delete-cancel:hover { background-color: #e2e8f0; }
+
+.btn-delete-confirm {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-delete-confirm:hover { background-color: #b91c1c; }
+
+.btn-delete-cancel:active,
+.btn-delete-confirm:active { transform: scale(0.96); }
+
+/* ============================================================================
+   5. VARIANTES DE VENTANA
+   ============================================================================ */
+
+/* 5.1 modal-box — usada en perfil de usuario y administración de usuarios */
+.modal-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+    animation: modalIn 0.22s ease-out;
+}
+.modal-box h3 { margin: 0 0 16px; font-size: 1.1rem; color: var(--text-primary); }
+
+/* 5.2 modal-tasa — registro manual de tasa de cambio (tasas-cambio.blade.php) */
+.modal-tasa {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: transparent;       /* Igual que el overlay: sin velo */
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    z-index: 5000;
+}
+.modal-tasa.active { display: flex; }
+
+.modal-tasa-box {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 28px;
+    width: 480px;
+    max-width: 90vw;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.28);
+    animation: modalIn 0.22s ease-out;
+}
+.modal-tasa-box h3 {
+    font-size: 1rem;
+    color: #0f172a;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.modal-tasa-box .input-group { margin-bottom: 14px; }
+.modal-tasa-box .input-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+.modal-tasa-box .input-group input,
+.modal-tasa-box .input-group textarea,
+.modal-tasa-box .input-group select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+.modal-tasa-box .input-group input:focus,
+.modal-tasa-box .input-group textarea:focus,
+.modal-tasa-box .input-group select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+.modal-tasa-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+/* 5.3 modal-resultado — resumen de cálculo de prestaciones (prestaciones.blade.php) */
+.modal-resultado {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: transparent;       /* Igual que el overlay: sin velo */
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    z-index: 5000;
+}
+.modal-resultado.active { display: flex; }
+
+.modal-resultado-box {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 28px;
+    width: 480px;
+    max-width: 92vw;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
+    animation: modalIn 0.22s ease-out;
+}
+.modal-resultado-box h3 {
+    font-size: 1rem;
+    color: #0f172a;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Filas de conceptos dentro del resultado de prestaciones */
+.modal-rfila {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+.modal-rfila:last-child { border-bottom: none; }
+.modal-rfila .ml { color: #64748b; }
+.modal-rfila .mr { font-weight: 700; color: #0f172a; }
+.modal-rfila.total { border-top: 2px solid #1a365d; margin-top: 6px; padding-top: 10px; }
+.modal-rfila.total .ml,
+.modal-rfila.total .mr { color: #1a365d; font-size: 0.95rem; }
+
+/* 5.3.1 Resultado de prestaciones en tema oscuro */
+body.dark-mode .modal-resultado-box { background: #1e293b; }
+body.dark-mode .modal-resultado-box h3 { color: #f1f5f9; }
+body.dark-mode .modal-rfila { border-bottom-color: #334155; }
+body.dark-mode .modal-rfila .ml { color: #94a3b8; }
+body.dark-mode .modal-rfila .mr { color: #f1f5f9; }
+body.dark-mode .modal-rfila.total { border-top-color: #93c5fd; }
+body.dark-mode .modal-rfila.total .ml,
+body.dark-mode .modal-rfila.total .mr { color: #93c5fd; }
+
+/* 5.4 modal-tasa en tema oscuro */
+body.dark-mode .modal-tasa-box { background: #1e293b; }
+body.dark-mode .modal-tasa-box h3 { color: #f1f5f9; }
+body.dark-mode .modal-tasa-box input,
+body.dark-mode .modal-tasa-box textarea,
+body.dark-mode .modal-tasa-box select {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+/* ============================================================================
+   6. ESTILOS INTERNOS DEL FORMULARIO
+   ============================================================================ */
+
+/* 6.1 Secciones del formulario (título + filas de campos) */
+.form-section { margin-bottom: 32px; }
+
 .form-section h3 {
     font-size: 0.9rem;
     color: #6366f1;
@@ -84,103 +370,64 @@
     letter-spacing: 1px;
     border-bottom: 1px solid #f1f5f9;
     padding-bottom: 12px;
-    margin-bottom: 25px;
+    margin-bottom: 22px;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-/* Grids de 2 y 3 columnas para los campos del formulario */
-.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
 
-.input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 6px; }
+/* 6.2 Campo con etiqueta (.input-group) */
+.input-group {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .input-group label {
     font-size: 0.7rem;
     font-weight: 800;
     color: #64748b;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     text-transform: uppercase;
 }
 
 .input-group input,
-.input-group select {
-    padding: 12px 16px;
+.input-group select,
+.input-group textarea {
+    padding: 11px 14px;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     background: var(--bg-input);
     width: 100%;
     font-size: 0.9rem;
+    font-family: inherit;
     transition: all 0.2s ease;
 }
 
 .input-group input:focus,
-.input-group select:focus {
+.input-group select:focus,
+.input-group textarea:focus {
     border-color: #6366f1;
     background: var(--bg-input-focus);
     outline: none;
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-.docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.doc-check {
-    background: var(--bg-card);
-    padding: 12px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    border: 1px solid #e2e8f0;
+/* 6.3 Mensajes de error de validación dentro de la ventana */
+.error-message {
+    color: #dc2626;
+    font-size: 0.75rem;
+    margin-top: 4px;
 }
 
-/* === ACCIONES DEL MODAL — Botones de guardar/cancelar === */
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
-}
+/* 6.4 Rejilla de columnas usado en la ventana de nómina */
+.modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
-.btn-cancel {
-    background: var(--bg-card);
-    border: 1px solid #e2e8f0;
-    padding: 12px 30px;
-    border-radius: 10px;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-}
-
-.btn-submit {
-    background: #0f172a;
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.btn-submit:hover { background: #1e293b; transform: translateY(-1px); }
-
-/* === SECCIÓN INTERNA CON ENCABEZADO Y BOTÓN === */
-.section-header-inline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.btn-add-small {
-    background: white;
-    border: 1px solid #cbd5e1;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-
+/* 6.5 Tabla compacta dentro de la ventana (p. ej. primas del trabajador) */
 .mini-table {
     width: 100%;
     border-collapse: collapse;
@@ -190,7 +437,6 @@
     overflow: hidden;
     border: 1px solid #e2e8f0;
 }
-
 .mini-table th {
     background: var(--bg-surface);
     text-align: left;
@@ -198,28 +444,37 @@
     color: #64748b;
     font-size: 0.7rem;
 }
+.mini-table td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; }
 
-.mini-table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid #f1f5f9;
+/* 6.6 Encabezado de sección interna con botón a la derecha */
+.section-header-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
 }
 
-.btn-del {
-    background: none;
-    border: none;
-    color: #94a3b8;
+.btn-add-small {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
     cursor: pointer;
 }
 
-.form-textarea {
-    width: 100%;
-    height: 100px;
-    padding: 15px;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    background: #f1f5f9;
-    resize: none;
-    font-family: inherit;
+/* 6.7 Lista de documentos y adjuntos */
+.docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.doc-check {
+    background: var(--bg-card);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    border: 1px solid #e2e8f0;
 }
 
 .doc-item {
@@ -242,6 +497,22 @@
     cursor: pointer;
 }
 
+/* 6.8 Área de texto larga (observaciones) */
+.form-textarea {
+    width: 100%;
+    height: 100px;
+    padding: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #f1f5f9;
+    resize: none;
+    font-family: inherit;
+}
+
+/* 6.9 Botón para eliminar filas dentro de la ventana */
+.btn-del { background: none; border: none; color: #94a3b8; cursor: pointer; }
+
+/* 6.10 Cabecera de listado con filtros */
 .list-header {
     display: flex;
     justify-content: space-between;
@@ -251,6 +522,7 @@
     border-bottom: 1px solid #f1f5f9;
 }
 
+/* 6.11 Filtros por pestañas */
 .tab-filters {
     display: flex;
     background: #f1f5f9;
@@ -259,7 +531,6 @@
     gap: 4px;
     margin-top: 15px;
 }
-
 .tab-filters button {
     border: none;
     padding: 8px 16px;
@@ -271,9 +542,70 @@
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .tab-filters button.active {
     background: var(--bg-card);
     color: #0f172a;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 6.12 Barra de acciones (Guardar / Cancelar) al pie del formulario */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-cancel {
+    background: var(--bg-card);
+    border: 1px solid #e2e8f0;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.btn-submit {
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-submit:hover { background: #1e293b; transform: translateY(-1px); }
+
+/* 6.13 Botón de cierre (X) dentro de la ventana */
+.modal-close-x {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+}
+.modal-close-x:hover { color: #0f172a; }
+
+/* ============================================================================
+   7. AJUSTES PARA PANTALLAS PEQUEÑAS
+   ============================================================================ */
+@media (max-width: 768px) {
+    .modal-container { max-width: 100%; max-height: 88vh; flex-direction: column; }
+    .modal-sidebar { width: 100%; padding: 20px 24px; }
+    .modal-sidebar h1 { font-size: 1.2rem; }
+    .modal-form-content { padding: 20px; }
+    .modal-delete-box { max-width: 100%; padding: 22px; }
+    .form-row-2,
+    .form-row-3,
+    .modal-grid,
+    .docs-grid { grid-template-columns: 1fr; }
+    .modal-actions { flex-direction: column; }
+    .modal-actions .btn-submit,
+    .modal-actions .btn-cancel { width: 100%; justify-content: center; }
 }

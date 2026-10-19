@@ -88,6 +88,11 @@ class Trabajador extends Model
         return $this->hasOne(Expediente::class);
     }
 
+    public function antecedentesServicio(): HasMany
+    {
+        return $this->hasMany(AntecedenteServicio::class, 'trabajador_id');
+    }
+
     public function nominas(): BelongsToMany
     {
         return $this->belongsToMany(Nomina::class, 'nomina_trabajador')

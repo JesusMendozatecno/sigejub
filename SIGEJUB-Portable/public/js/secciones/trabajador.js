@@ -1,0 +1,1222 @@
+/**
+ * secciones/trabajador.js — Script de la sección trabajador.
+ * Gestiona CRUD con DataTable, filtros por estatus y búsqueda.
+ */
+
+(function() {
+    // ============================================
+    // ESTADO GLOBAL DEL MÓDULO
+    // ============================================
+    let trabajadorSeleccionadoId = null;   // ID del trabajador en edición/visualización
+    let filaSeleccionadaDOM = null;        // Referencia a la fila <tr> para animaciones
+    let modoEdicionActivo = false;         // true = modo edición, false = solo lectura
+    let paginaActualTrabajadores = 1;
+
+    // Calendario de próximas jubilaciones
+    let calendarioMes = null;
+    let calendarioAnio = null;
+    let proximasJubilaciones = [];
+
+    // ============================================
+    // REFERENCIAS AL DOM — Modal principal y formulario
+    // ============================================
+    const modal = document.getElementById('modalTrabajador');
+    const form = document.getElementById('formTrabajador');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+    const btnSubmit = document.getElementById('btnSubmitTrabajador');
+    const btnHabilitarEdicion = document.getElementById('btnHabilitarEdicion');
+
+    // Referencias al modal de confirmación de eliminación
+    const modalEliminar = document.getElementById('modalEliminarConfirm');
+    const deleteWorkerName = document.getElementById('deleteWorkerName');
+
+    // Referencias al modal de agregar catálogo
+    const modalCatalogo = document.getElementById('modalAgregarCatalogo');
+    let catalogoTipoActual = '';  // 'cargo', 'grado', 'nivel-instruccion', 'unidad-departamento', 'tipo-jubilacion'
+    let catalogoSelectRef = null;
+    let catalogoValorPrevio = '';
+
+    // Tipos de catálogo cuyo valor de option es el ID (los demás usan el nombre).
+    const TIPOS_POR_ID = new Set(['cargo', 'nivel-instruccion', 'unidad-departamento', 'tipo-jubilacion', 'tipo-contrato']);
+    const CATALOGO_ETIQUETAS = {
+        'cargo': 'Cargo',
+        'grado': 'Grado',
+        'nivel-instruccion': 'Nivel de Instrucción',
+        'unidad-departamento': 'Unidad / Departamento',
+        'tipo-jubilacion': 'Tipo de Jubilación',
+        'tipo-contrato': 'Condición Laboral',
+        'dedicacion': 'Dedicación'
+    };
+    // Selects que deben cargarse desde los maestros
+    const SELECTS_CATALOGO = [
+        ['cargo', 'selectCargo'],
+        ['grado', 'selectGradoNivel'],
+        ['nivel-instruccion', 'selectNivelInstruccion'],
+        ['unidad-departamento', 'selectUnidadDepartamento'],
+        ['tipo-jubilacion', 'selectTipoJubilacion'],
+        ['tipo-contrato', 'selectCondicionLaboral'],
+        ['dedicacion', 'selectDedicacion']
+    ];
+
+    // ============================================
+    // INICIALIZACIÓN — Eventos al cargar el DOM
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnRegistrar = document.getElementById('btnRegistrarTrabajador');
+        const btnCerrar = document.getElementById('closeModal');
+        const btnCancelar = document.getElementById('btnCancelar');
+        const btnNoEliminar = document.getElementById('btnNoEliminar');
+        const btnSiEliminar = document.getElementById('btnSiEliminar');
+
+        // ============================================
+        // REGISTRAR NUEVO TRABAJADOR — Abre el modal en modo creación
+        // ============================================
+        if (btnRegistrar) {
+            btnRegistrar.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!modal) return;
+                modoEdicionActivo = false;
+                trabajadorSeleccionadoId = null;
+
+                form.reset();
+                habilitarCamposFormulario(true);  // Todos los campos editables
+                if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
+
+                // Cargar opciones de catálogos
+                SELECTS_CATALOGO.forEach(([tipo, selectId]) => cargarOpcionesCatalogo(tipo, selectId));
+
+                modalTitle.innerHTML = "Registrar<br>Nuevo<br>Trabajador";
+                modalDescription.textContent = "Complete el expediente institucional para iniciar el cálculo de antigüedad.";
+                if (btnHabilitarEdicion) btnHabilitarEdicion.style.display = 'none';
+                if (btnSubmit) {
+                    btnSubmit.style.display = 'block';
+                    btnSubmit.textContent = 'Registrar Trabajador';
+                }
+
+                modal.style.display = 'flex';
+            });
+        }
+
+        // ============================================
+        // CIERRE DE MODALES — Botones y clic fuera
+        // ============================================
+        const cerrarTodoModal = () => { if (modal) modal.style.display = 'none'; };
+        if (btnCerrar) btnCerrar.addEventListener('click', cerrarTodoModal);
+        if (btnCancelar) btnCancelar.addEventListener('click', cerrarTodoModal);
+        if (btnNoEliminar) btnNoEliminar.addEventListener('click', () => { if (modalEliminar) modalEliminar.style.display = 'none'; });
+
+        // Cualquier clic en el fondo oscuro cierra el modal correspondiente
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarTodoModal();
+            if (e.target === modalEliminar) modalEliminar.style.display = 'none';
+        });
+
+        // ============================================
+        // BOTÓN DE EDICIÓN — Alterna entre vista y edición dentro del modal
+        // ============================================
+        if (btnHabilitarEdicion) {
+            btnHabilitarEdicion.addEventListener('click', async function(e) {
+                e.preventDefault();
+                if (modoEdicionActivo) {
+                    // Segundo clic: envía el formulario para guardar cambios
+                    form.requestSubmit();
+                    return;
+                }
+                // Primer clic: activa la edición de campos
+                modoEdicionActivo = true;
+                habilitarCamposFormulario(true);
+                modalTitle.innerHTML = "Modificar<br>Expediente";
+                btnHabilitarEdicion.innerHTML = '<i class="fas fa-floppy-disk"></i> Guardar Cambios';
+                if (btnSubmit) btnSubmit.style.display = 'none';
+            });
+        }
+
+        // ============================================
+        // ENVÍO DEL FORMULARIO — AJAX (POST para crear, PUT con spoofing para editar)
+        // ============================================
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (btnSubmit) btnSubmit.disabled = true;
+
+                const formData = new FormData(this);
+
+                // Combinar tipo_documento + cédula en un solo campo
+                const tipoDoc = document.getElementById('selectTipoDocumento');
+                const inputCed = document.getElementById('inputCedula');
+                if (tipoDoc && inputCed && inputCed.value) {
+                    formData.delete('cedula');
+                    formData.append('cedula', tipoDoc.value + '-' + inputCed.value);
+                }
+
+                // Manejar checkbox actividad_universitaria (unchecked = no enviado)
+                const checkAct = document.getElementById('checkActividadUniversitaria');
+                formData.delete('actividad_universitaria');
+                formData.append('actividad_universitaria', checkAct && checkAct.checked ? '1' : '0');
+
+                // Resolver cargo_id desde el select
+                const selectCargo = document.getElementById('selectCargo');
+                if (selectCargo && selectCargo.value) {
+                    formData.delete('cargo_id');
+                    formData.append('cargo_id', selectCargo.value);
+                } else {
+                    formData.delete('cargo_id');
+                }
+
+                // Resolver dedicación como texto (el select devuelve el id del catálogo)
+                const selectDedicacion = document.getElementById('selectDedicacion');
+                if (selectDedicacion) {
+                    const opcionDedicacion = selectDedicacion.selectedOptions[0];
+                    formData.delete('dedicacion');
+                    formData.append('dedicacion', opcionDedicacion?.dataset?.nombre || selectDedicacion.value || '');
+                }
+
+                // Asegurar numero_hijos y hijos_discapacidad si los grupos están ocultos
+                if (!document.getElementById('checkTieneHijos')?.checked) {
+                    formData.set('numero_hijos', '0');
+                }
+                if (!document.getElementById('checkHijosDiscapacidad')?.checked) {
+                    formData.set('hijos_discapacidad', '0');
+                }
+
+                let url = '/trabajadores';  // Ruta por defecto: creación
+
+                // Si está en modo edición, cambia la URL y agrega spoofing de método PUT
+                if (modoEdicionActivo && trabajadorSeleccionadoId) {
+                    url = `/trabajadores/${trabajadorSeleccionadoId}`;
+                    formData.append('_method', 'PUT');
+                }
+
+                try {
+                    mostrarCargando(modoEdicionActivo ? 'Guardando cambios...' : 'Registrando trabajador...');
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value || '';
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw data;
+
+                    mostrarToast(data.mensaje || 'Operación completada con éxito.', 'success');
+                    if (window.limpiarCacheSigejub) window.limpiarCacheSigejub();
+                    form.reset();
+                    // Resetear checkboxes manualmente (form.reset no resetea checkboxes personalizados)
+                    document.getElementById('checkTieneHijos').checked = false;
+                    toggleHijosFields();
+                    document.getElementById('checkHijosDiscapacidad').checked = false;
+                    toggleHijosDiscapacidadFields();
+                    document.getElementById('checkActividadUniversitaria').checked = false;
+                    if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
+                    cerrarTodoModal();
+                    cargarTrabajadores();  // Refresca la tabla sin recargar la página
+
+                } catch (err) {
+                    console.error(err);
+                    if (err.errores) {
+                        // Errores de validación de Laravel: aplana el array y los muestra en un toast
+                        mostrarToast(Object.values(err.errores).flat().join('\n'), 'error');
+                    } else {
+                        mostrarToast(err.mensaje || 'Error interno de comunicación.', 'error');
+                    }
+                } finally {
+                    ocultarCargando();
+                    if (btnSubmit) {
+                        btnSubmit.disabled = false;
+                        btnSubmit.textContent = modoEdicionActivo ? 'Guardar Cambios' : 'Registrar Trabajador';
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // FILTROS REACTIVOS — Cambian la consulta de la tabla en tiempo real
+        // ============================================
+        const selEstatus = document.getElementById('filtroEstatus');
+        if (selEstatus) selEstatus.addEventListener('change', () => cargarTrabajadores(selEstatus.value, selNomina?.value || '', selAsignacion?.value || ''));
+
+        const selNomina = document.getElementById('filtroNomina');
+        if (selNomina) selNomina.addEventListener('change', () => cargarTrabajadores(selEstatus?.value || '', selNomina.value, selAsignacion?.value || ''));
+
+        const selAsignacion = document.getElementById('filtroAsignacion');
+        if (selAsignacion) selAsignacion.addEventListener('change', () => cargarTrabajadores(selEstatus?.value || '', selNomina?.value || '', selAsignacion.value));
+
+        // ============================================
+        // BUSCADOR — Filtra por nombre, apellido o cédula (con debounce)
+        // ============================================
+        const buscador = document.getElementById('buscadorTrabajadores');
+        if (buscador) {
+            let debounceTimer = null;
+            buscador.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    cargarTrabajadores(selEstatus?.value || '', selNomina?.value || '', selAsignacion?.value || '');
+                }, 350);
+            });
+        }
+
+        // ============================================
+        // CONFIRMACIÓN DE ELIMINACIÓN — Botón "Sí, eliminar"
+        // ============================================
+        if (btnSiEliminar) {
+            btnSiEliminar.addEventListener('click', ejecutarBajaTrabajador);
+        }
+
+        // ============================================
+        // MODAL CATÁLOGO — Eventos de cancelar y guardar
+        // ============================================
+        const btnCancelarCatalogo = document.getElementById('btnCancelarCatalogo');
+        const btnGuardarCatalogo = document.getElementById('btnGuardarCatalogo');
+        if (btnCancelarCatalogo) btnCancelarCatalogo.addEventListener('click', cerrarModalCatalogo);
+        if (btnGuardarCatalogo) btnGuardarCatalogo.addEventListener('click', guardarCatalogo);
+        if (modalCatalogo) {
+            window.addEventListener('click', (e) => { if (e.target === modalCatalogo) cerrarModalCatalogo(); });
+        }
+
+        // ============================================
+        // QUICK-ADD DE CATÁLOGO — La opción "➕ Agregar nuevo..." abre el modal
+        // ============================================
+        SELECTS_CATALOGO.forEach(([tipo, selectId]) => {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            sel.addEventListener('change', () => {
+                if (sel.value !== '__agregar__') return;
+                sel.value = ''; // No deja la opción mágica seleccionada
+                abrirModalCatalogo(tipo, sel);
+            });
+        });
+
+    });
+
+    // ============================================
+    // CARGAR OPCS DE CATÁLOGO — Carga opciones desde /master/{tipo} y agrega "Agregar nuevo"
+    // ============================================
+    function esSelectPorId(tipo) {
+        return TIPOS_POR_ID.has(tipo);
+    }
+
+    async function cargarOpcionesCatalogo(tipo, selectId, selectedValue) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        try {
+            const res = await fetch(`/master/${tipo}?solo_activos=1&per_page=100`);
+            const data = await res.json();
+            const items = data.data || [];
+            select.innerHTML = '<option value="" disabled selected>Seleccione...</option>';
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.textContent = item.codigo + ' — ' + item.nombre;
+                opt.dataset.nombre = item.nombre;
+                opt.dataset.codigo = item.codigo || '';
+                if (item.id !== undefined) {
+                    opt.value = item.id;
+                    opt.dataset.id = item.id;
+                    if (selectedValue && (item.nombre === selectedValue || String(item.id) === String(selectedValue))) {
+                        opt.selected = true;
+                    }
+                } else {
+                    opt.value = item.nombre;
+                    if (selectedValue && item.nombre === selectedValue) opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+            const optAgregar = document.createElement('option');
+            optAgregar.value = '__agregar__';
+            optAgregar.textContent = '➕ Agregar nuevo...';
+            optAgregar.dataset.agregar = '1';
+            select.appendChild(optAgregar);
+        } catch (err) {
+            console.error('Error cargando catálogo ' + tipo + ':', err);
+            select.innerHTML = '<option value="" disabled>Error al cargar</option>';
+        }
+    }
+
+    function setearSelectPorId(selectId, id) {
+        const select = document.getElementById(selectId);
+        if (!select || !id) return false;
+        const opciones = Array.from(select.options);
+        const match = opciones.find(o => o.dataset && o.dataset.id === String(id));
+        if (match) { select.value = match.value; return true; }
+        return false;
+    }
+
+    function setearNivelLegacy(legacy) {
+        const NVL = { 1: 'TSU', 2: 'LIC', 3: 'ESP', 4: 'MAG', 5: 'DOC' };
+        const codigo = NVL[legacy];
+        if (!codigo) return false;
+        const select = document.getElementById('selectNivelInstruccion');
+        if (!select) return false;
+        const opciones = Array.from(select.options);
+        const match = opciones.find(o => o.dataset && o.dataset.codigo === codigo);
+        if (match) { select.value = match.value; return true; }
+        const byName = opciones.find(o => (o.textContent || '').toUpperCase().includes(codigo));
+        if (byName) { select.value = byName.value; return true; }
+        return false;
+    }
+
+    function seleccionarValorCatalogo(selectId, valor) {
+        const select = document.getElementById(selectId);
+        if (!select || !valor) return;
+        const opciones = Array.from(select.options);
+        const match = opciones.find(o => o.dataset && o.dataset.nombre === valor) || opciones.find(o => o.value === valor);
+        if (match) {
+            select.value = match.value;
+        } else {
+            // Si no existe en el catálogo, agregarlo temporalmente y seleccionarlo
+            const opt = document.createElement('option');
+            opt.value = valor;
+            opt.textContent = valor;
+            opt.selected = true;
+            select.insertBefore(opt, select.options[select.options.length - 1]); // antes de "Agregar nuevo"
+        }
+    }
+
+    // ============================================
+    // MODAL AGREGAR CATÁLOGO — Abrir, guardar, cerrar
+    // ============================================
+    function abrirModalCatalogo(tipo, selectRef) {
+        catalogoTipoActual = tipo;
+        catalogoSelectRef = selectRef;
+        catalogoValorPrevio = selectRef ? selectRef.value : '';
+        const titulo = document.getElementById('tituloModalCatalogo');
+        const etiqueta = CATALOGO_ETIQUETAS[tipo] || tipo;
+        if (titulo) titulo.innerHTML = `<i class="fas fa-plus-circle"></i> Agregar Nuevo ${etiqueta}`;
+        document.getElementById('inputNombreCatalogo').value = '';
+        document.getElementById('inputCodigoCatalogo').value = '';
+        if (modalCatalogo) modalCatalogo.style.display = 'flex';
+    }
+
+    function cerrarModalCatalogo() {
+        if (modalCatalogo) modalCatalogo.style.display = 'none';
+        // Restaurar el valor que tenía el select antes de abrir el modal
+        if (catalogoSelectRef) {
+            catalogoSelectRef.value = catalogoValorPrevio || (catalogoSelectRef.options[0]?.value || '');
+        }
+        catalogoSelectRef = null;
+        catalogoTipoActual = '';
+    }
+
+    async function guardarCatalogo() {
+        const nombre = document.getElementById('inputNombreCatalogo').value.trim();
+        const codigo = document.getElementById('inputCodigoCatalogo').value.trim();
+        if (!nombre || !codigo) {
+            mostrarToast('Nombre y código son obligatorios.', 'error');
+            return;
+        }
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch(`/master/${catalogoTipoActual}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: JSON.stringify({ nombre, codigo, activo: true })
+            });
+            const data = await res.json();
+            if (!res.ok) throw data;
+            mostrarToast(data.mensaje || 'Guardado.', 'success');
+            cerrarModalCatalogo();
+            // Recargar opciones y seleccionar la nueva
+            await cargarOpcionesCatalogo(catalogoTipoActual, catalogoSelectRef?.id, nombre);
+        } catch (err) {
+            mostrarToast(err.mensaje || (err.errores ? Object.values(err.errores).flat().join(', ') : 'Error'), 'error');
+        }
+    }
+    // GET /trabajadores?estatus=...&asignacion=...
+    // ============================================
+    async function cargarTrabajadores(estatus = '', nomina = '', asignacion = '', pagina) {
+        const tbody = document.getElementById('tbodyTrabajadores');
+        if (!tbody) return;
+
+        if (pagina !== undefined) paginaActualTrabajadores = pagina;
+        else paginaActualTrabajadores = 1;
+
+        try {
+            const busqueda = document.getElementById('buscadorTrabajadores')?.value.trim() || '';
+            const params = new URLSearchParams({ estatus, nomina, asignacion, search: busqueda, page: paginaActualTrabajadores });
+            const url = `/trabajadores?${params.toString()}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Error al consultar servidores');
+            const data = await response.json();
+
+            const items = data.data || [];
+            tbody.innerHTML = '';  // Limpia la tabla
+            document.getElementById('totalTrabajadores').textContent = data.total || items.length || 0;
+
+            // Renderiza cada trabajador como una fila <tr> con celdas creadas manualmente
+            items.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = t.id;
+
+                const tdNombre = document.createElement('td');
+                const strong = document.createElement('strong'); strong.textContent = `${t.nombres} ${t.apellidos}`;
+                tdNombre.appendChild(strong);
+                const tdCedula = document.createElement('td');
+                const cedulaParts = (t.cedula || '').split('-');
+                const tipoDoc = cedulaParts.length > 1 ? cedulaParts[0] : '';
+                const numDoc = cedulaParts.length > 1 ? cedulaParts.slice(1).join('-') : t.cedula;
+                tdCedula.innerHTML = `<span style="color:#6366f1;font-weight:700;">${escaparHTML(tipoDoc)}</span> ${escaparHTML(numDoc)}`;
+                const tdCargo = document.createElement('td'); tdCargo.textContent = t.cargo || '—';
+                const tdGrado = document.createElement('td'); tdGrado.textContent = t.grado_nivel || '—';
+                const tdTipo = document.createElement('td');
+                const typeTag = document.createElement('span'); typeTag.className = 'type-tag'; typeTag.textContent = t.unidad_departamento;
+                tdTipo.appendChild(typeTag);
+                const tdAsignacion = document.createElement('td');
+                const asigTag = document.createElement('span'); asigTag.className = 'type-tag';
+                asigTag.textContent = t.asignacion || '—';
+                if (t.asignacion === 'Nomina') asigTag.style.background = '#dbeafe';
+                else if (t.asignacion === 'Manual') asigTag.style.background = '#fef3c7';
+                tdAsignacion.appendChild(asigTag);
+                const tdEstatus = document.createElement('td');
+                const statusPill = document.createElement('span');
+                const esActivo = t.estatus === 'activo';
+                statusPill.className = `status-pill ${esActivo ? 'active' : 'retired'}`;
+                statusPill.textContent = (t.estatus || 'SIN ESTATUS').toUpperCase();
+                tdEstatus.appendChild(statusPill);
+
+                // Columna de acciones: botones Ver y Eliminar
+                const tdAcciones = document.createElement('td');
+                const div = document.createElement('div'); div.className = 'acciones-cell';
+                const btnVer = document.createElement('button');
+                btnVer.className = 'btn-icon btn-ver';
+                btnVer.title = 'Ver Expediente';
+                btnVer.onclick = () => window.sigejubVerTrabajador(t.id, btnVer);
+                const iconEye = document.createElement('i'); iconEye.className = 'fas fa-eye';
+                btnVer.appendChild(iconEye);
+                const btnEliminar = document.createElement('button');
+                btnEliminar.className = 'btn-icon btn-eliminar';
+                btnEliminar.title = 'Dar de Baja';
+                btnEliminar.onclick = () => window.sigejubEliminarTrabajador(t.id, `${t.nombres} ${t.apellidos}`, btnEliminar);
+                const iconTrash = document.createElement('i'); iconTrash.className = 'fas fa-trash-can';
+                btnEliminar.appendChild(iconTrash);
+                const btnAntecedentes = document.createElement('button');
+                btnAntecedentes.className = 'btn-icon';
+                btnAntecedentes.type = 'button';
+                btnAntecedentes.title = 'Antecedentes de Servicio';
+                btnAntecedentes.dataset.id = t.id;
+                btnAntecedentes.dataset.nombre = t.nombres;
+                btnAntecedentes.dataset.apellidos = t.apellidos;
+                btnAntecedentes.dataset.cedula = t.cedula || '';
+                btnAntecedentes.dataset.cargo = t.cargo || '';
+                btnAntecedentes.dataset.unidad = t.unidad_departamento || '';
+                btnAntecedentes.onclick = function() { abrirAntecedentes(btnAntecedentes); };
+                const iconClock = document.createElement('i'); iconClock.className = 'fas fa-clock-rotate-left';
+                btnAntecedentes.appendChild(iconClock);
+                const btnRelacion = document.createElement('button');
+                btnRelacion.className = 'btn-icon';
+                btnRelacion.type = 'button';
+                btnRelacion.title = 'Relación de Cargos y Tiempo de Servicio (R6)';
+                btnRelacion.onclick = () => window.open('/reportes/relacion-cargos/' + t.id, '_blank');
+                const iconRel = document.createElement('i'); iconRel.className = 'fas fa-file-lines';
+                btnRelacion.appendChild(iconRel);
+                div.appendChild(btnVer);
+                div.appendChild(btnAntecedentes);
+                div.appendChild(btnRelacion);
+                div.appendChild(btnEliminar);
+                tdAcciones.appendChild(div);
+
+                tr.append(tdNombre, tdCedula, tdCargo, tdGrado, tdTipo, tdAsignacion, tdEstatus, tdAcciones);
+                tbody.appendChild(tr);
+            });
+
+            renderPaginacionTrabajadores(data);
+
+        } catch (err) {
+            console.error('Error render-table:', err);
+        }
+    }
+
+    function renderPaginacionTrabajadores(data) {
+        const container = document.querySelector('.table-footer .pagination');
+        if (!container) return;
+        if (data.last_page <= 1) { container.innerHTML = ''; return; }
+        var html = '';
+        if (data.current_page > 1) {
+            html += '<button type="button" data-page="' + (data.current_page - 1) + '">&laquo;</button>';
+        }
+        for (var i = 1; i <= data.last_page; i++) {
+            html += '<button type="button" data-page="' + i + '"' + (i === data.current_page ? ' class="active"' : '') + '>' + i + '</button>';
+        }
+        if (data.current_page < data.last_page) {
+            html += '<button type="button" data-page="' + (data.current_page + 1) + '">&raquo;</button>';
+        }
+        container.innerHTML = html;
+        container.querySelectorAll('button[data-page]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var f = document.getElementById('filtroEstatus');
+                var n = document.getElementById('filtroNomina');
+                var a = document.getElementById('filtroAsignacion');
+                cargarTrabajadores(f ? f.value : '', n ? n.value : '', a ? a.value : '', parseInt(this.dataset.page));
+            });
+        });
+    }
+
+    // ============================================
+    // VER EXPEDIENTE — GET /trabajadores/{id} y carga en modal (solo lectura)
+    // ============================================
+    window.sigejubVerTrabajador = async function(id, elemento) {
+        if (!modal) return;
+        filaSeleccionadaDOM = elemento.closest('tr');
+        trabajadorSeleccionadoId = id;
+        modoEdicionActivo = false;
+
+        try {
+            mostrarCargando('Cargando expediente...');
+            const res = await fetch(`/trabajadores/${id}`);
+            if (!res.ok) throw new Error('No se pudo obtener la información del trabajador');
+            const t = await res.json();
+
+            // Cargar opciones de catálogos antes de poblar
+            await Promise.all([
+                cargarOpcionesCatalogo('cargo', 'selectCargo', t.cargo),
+                cargarOpcionesCatalogo('grado', 'selectGradoNivel', t.grado_nivel),
+                cargarOpcionesCatalogo('nivel-instruccion', 'selectNivelInstruccion', t.nivel_instruccion_id),
+                cargarOpcionesCatalogo('unidad-departamento', 'selectUnidadDepartamento', t.unidad_departamento),
+                cargarOpcionesCatalogo('tipo-jubilacion', 'selectTipoJubilacion', t.tipo_jubilacion),
+                cargarOpcionesCatalogo('tipo-contrato', 'selectCondicionLaboral', t.tipo_contrato_id),
+                cargarOpcionesCatalogo('dedicacion', 'selectDedicacion', t.dedicacion)
+
+            ]);
+
+            // Puebla todos los campos del formulario con los datos del servidor
+            const cedulaParts = (t.cedula || '').split('-');
+            const tipoDoc = cedulaParts.length > 1 ? cedulaParts[0] : 'V';
+            const numDoc = cedulaParts.length > 1 ? cedulaParts.slice(1).join('-') : t.cedula;
+            document.getElementById('selectTipoDocumento').value = tipoDoc;
+            document.getElementById('inputCedula').value = numDoc;
+            document.getElementById('selectGenero').value = t.genero;
+            document.getElementById('inputNombres').value = t.nombres;
+            document.getElementById('inputApellidos').value = t.apellidos;
+            document.getElementById('inputFechaNacimiento').value = t.fecha_nacimiento;
+            seleccionarValorCatalogo('selectCargo', t.cargo);
+            if (!setearSelectPorId('selectUnidadDepartamento', t.unidad_id)) {
+                seleccionarValorCatalogo('selectUnidadDepartamento', t.unidad_departamento);
+            }
+            seleccionarValorCatalogo('selectGradoNivel', t.grado_nivel);
+            document.getElementById('inputFechaIngreso').value = t.fecha_ingreso;
+            document.getElementById('inputAnosExterno').value = t.anos_servicio_externo;
+            document.getElementById('inputPorcentajeAntiguedad').value = t.porcentaje_antiguedad;
+            if (!setearSelectPorId('selectNivelInstruccion', t.nivel_instruccion_id)) {
+                setearNivelLegacy(t.nivel_instruccion);
+            }
+            setearSelectPorId('selectTipoJubilacion', t.tipo_jubilacion_id);
+            if (!setearSelectPorId('selectCondicionLaboral', t.tipo_contrato_id)) {
+                seleccionarValorCatalogo('selectCondicionLaboral', t.tipo_contrato_id);
+            }
+            seleccionarValorCatalogo('selectDedicacion', t.dedicacion || '');
+            document.getElementById('inputCuentaBancaria').value = t.cuenta_bancaria || '';
+            document.getElementById('inputEspecialidad').value = t.estudio ? (t.estudio.especialidad || '') : '';
+            document.getElementById('inputCasaEstudio').value = t.estudio ? (t.estudio.casa_estudio || '') : '';
+            document.getElementById('inputCasaEgreso').value = t.estudio ? (t.estudio.casa_egreso || '') : '';
+
+            // Poblar campos de hijos y actividad universitaria
+            const tieneHijos = parseInt(t.numero_hijos) > 0;
+            document.getElementById('checkTieneHijos').checked = tieneHijos;
+            toggleHijosFields();
+            if (tieneHijos) document.getElementById('inputNumeroHijos').value = t.numero_hijos;
+
+            const tieneHijosDisc = parseInt(t.hijos_discapacidad) > 0;
+            document.getElementById('checkHijosDiscapacidad').checked = tieneHijosDisc;
+            toggleHijosDiscapacidadFields();
+            if (tieneHijosDisc) document.getElementById('inputHijosDiscapacidad').value = t.hijos_discapacidad;
+
+            const actUniv = t.actividad_universitaria_info || {};
+            document.getElementById('checkActividadUniversitaria').checked = t.actividad_universitaria ? true : false;
+            document.getElementById('inputActUnivTipo').value = actUniv.tipo || '';
+            document.getElementById('inputActUnivLugar').value = actUniv.lugar || '';
+            document.getElementById('inputActUnivDesde').value = actUniv.desde || '';
+            document.getElementById('inputActUnivHasta').value = actUniv.hasta || '';
+            if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
+            if (typeof actualizarContadorActividadUniversitaria === 'function') actualizarContadorActividadUniversitaria();
+
+            habilitarCamposFormulario(false);  // Deshabilita todos los campos (solo lectura)
+
+            modalTitle.innerHTML = "Expediente<br>Laboral";
+            modalDescription.textContent = "Modo de lectura institucional. Use el botón inferior para editar.";
+            if (btnHabilitarEdicion) {
+                btnHabilitarEdicion.innerHTML = '<i class="fas fa-pen"></i> Editar Expediente';
+                btnHabilitarEdicion.style.display = 'flex';
+            }
+            if (btnSubmit) btnSubmit.style.display = 'none';
+
+            modal.style.display = 'flex';
+
+        } catch (err) {
+            mostrarToast(err.message, 'error');
+        } finally {
+            ocultarCargando();
+        }
+    };
+
+    // ============================================
+    // ELIMINAR TRABAJADOR — Abre modal de confirmación de baja
+    // ============================================
+    window.sigejubEliminarTrabajador = function(id, nombre, elemento) {
+        trabajadorSeleccionadoId = id;
+        filaSeleccionadaDOM = elemento.closest('tr');
+        if (deleteWorkerName) deleteWorkerName.textContent = nombre;
+        if (modalEliminar) modalEliminar.style.display = 'flex';
+    };
+
+    // ============================================
+    // EJECUTAR BAJA — DELETE /trabajadores/{id} con animación de salida
+    // ============================================
+    async function ejecutarBajaTrabajador() {
+        if (!trabajadorSeleccionadoId) return;
+        try {
+            mostrarCargando('Procesando baja...');
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value || '';
+            const res = await fetch(`/trabajadores/${trabajadorSeleccionadoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                }
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                if (modalEliminar) modalEliminar.style.display = 'none';
+                if (filaSeleccionadaDOM) {
+                    // Animación de desvanecimiento y luego remoción del DOM
+                    filaSeleccionadaDOM.style.opacity = '0';
+                    setTimeout(() => {
+                        filaSeleccionadaDOM.remove();
+                        // Decrementa el contador de total de trabajadores
+                        const badgeTotal = document.getElementById('totalTrabajadores');
+                        if (badgeTotal) badgeTotal.textContent = Math.max(0, parseInt(badgeTotal.textContent) - 1);
+                    }, 300);
+                }
+                mostrarToast(data.mensaje || 'Baja procesada.', 'success');
+            } else {
+                mostrarToast(data.mensaje || 'Error al procesar la baja.', 'error');
+            }
+        } catch (err) {
+            mostrarToast('Error de red al intentar conectar.', 'error');
+        } finally {
+            ocultarCargando();
+        }
+    }
+
+    // ============================================
+    // HABILITAR/DESHABILITAR CAMPOS — Controla la edición del formulario
+    // ============================================
+    function habilitarCamposFormulario(condicion) {
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(i => i.disabled = !condicion);  // true = habilitado, false = deshabilitado
+    }
+
+    // ============================================
+    // ESTADÍSTICAS DEL DASHBOARD — Próximas jubilaciones y % expedientes digitales
+    // GET /trabajadores-stats/dashboard
+    // ============================================
+    async function cargarTrabajadoresStats() {
+        try {
+            const result = await cachedFetch('/trabajadores-stats/dashboard', { ttl: 120000 });
+            const data = result.data;
+            if (data.proximas) proximasJubilaciones = data.proximas;
+
+            // ============================================
+            // LISTA DE PRÓXIMAS JUBILACIONES — Top 5
+            // ============================================
+            const lista = document.getElementById('proximasJubilacionesList');
+            if (lista && data.proximas) {
+                if (!data.proximas.length) {
+                    lista.innerHTML = '<p style="color:rgba(255,255,255,0.7);font-size:0.85rem;">No hay trabajadores próximos a jubilarse.</p>';
+                } else {
+                    // Renderiza los primeros 5 trabajadores con su edad y años de servicio
+                    lista.innerHTML = '<p style="color:rgba(255,255,255,0.85);font-size:0.85rem;margin-bottom:10px;">' +
+                        data.proximas.length + ' trabajadores próximos a cumplir requisitos:</p>' +
+                        data.proximas.slice(0, 5).map(t =>
+                            `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);font-size:0.82rem;">
+                                <span>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</span>
+                                <span style="color:rgba(255,255,255,0.6);font-size:0.75rem;">${escaparHTML(t.edad) || '—'} años · ${escaparHTML(t.total_anos_servicio) || 0} años serv.</span>
+                            </div>`
+                        ).join('');
+                }
+            }
+
+            // ============================================
+            // BARRA DE ESTATUS — % de expedientes digitalizados
+            // ============================================
+            const texto = document.getElementById('estatusDatosTexto');
+            const barra = document.getElementById('estatusDatosBarra');
+            const pct = document.getElementById('estatusDatosPorcentaje');
+            if (texto) {
+                texto.textContent = `${data.porcentaje_expedientes}% de los trabajadores cuentan con expediente digital (${data.total_expedientes} de ${data.total_trabajadores}).`;
+            }
+            if (barra) barra.style.width = data.porcentaje_expedientes + '%';
+            if (pct) pct.textContent = data.porcentaje_expedientes + '%';
+        } catch (err) {
+            console.error('Error al cargar stats de trabajadores:', err);
+        }
+    }
+
+    // ============================================
+    // CALENDARIO DE PRÓXIMAS JUBILACIONES
+    // ============================================
+    const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const DIAS_ES = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+    const AVATAR_COLORS = [
+        ['#1e3a8a', '#dbeafe'],
+        ['#0ca678', '#d3f9e8'],
+        ['#b45309', '#fef3c7'],
+        ['#6d28d9', '#ede9fe'],
+        ['#be123c', '#ffe4e6'],
+        ['#0369a1', '#e0f2fe']
+    ];
+
+    function iniciales(nombre, apellido) {
+        const n = (nombre || '').split(' ').filter(Boolean).map(x => x[0]).slice(0, 1).join('');
+        const a = (apellido || '').split(' ').filter(Boolean).map(x => x[0]).slice(0, 1).join('');
+        return (n + a).slice(0, 2).toUpperCase();
+    }
+
+    function colorAvatar(index) {
+        return AVATAR_COLORS[index % AVATAR_COLORS.length];
+    }
+
+    function modalCalendario() { return document.getElementById('modalCalendarioJubilaciones'); }
+
+    function abrirCalendarioJubilaciones() {
+        const modal = modalCalendario();
+        if (!modal) return;
+        const ahora = new Date();
+        let base = null;
+        if (proximasJubilaciones.length) {
+            const fechas = proximasJubilaciones
+                .filter(t => t.fecha_retiro_estimada)
+                .map(t => new Date(t.fecha_retiro_estimada + 'T00:00:00'))
+                .sort((a, b) => a - b);
+            if (fechas.length) base = fechas[0];
+        }
+        calendarioMes = (base || ahora).getMonth() + 1;
+        calendarioAnio = (base || ahora).getFullYear();
+        renderCalendarioJubilaciones();
+        modal.style.display = 'flex';
+    }
+
+    function cerrarCalendarioJubilaciones() {
+        const modal = modalCalendario();
+        if (modal) modal.style.display = 'none';
+    }
+
+    function cambiarMesCalendario(delta) {
+        calendarioMes += delta;
+        if (calendarioMes < 1) { calendarioMes = 12; calendarioAnio--; }
+        if (calendarioMes > 12) { calendarioMes = 1; calendarioAnio++; }
+        renderCalendarioJubilaciones();
+    }
+
+    function renderCalendarioJubilaciones() {
+        const grid = document.getElementById('calGrid');
+        const title = document.getElementById('calTitle');
+        const events = document.getElementById('calEvents');
+        const sideTitle = document.getElementById('calSideTitle');
+        const countEl = document.getElementById('calCount');
+        if (!grid || !title || !events || !calendarioMes || !calendarioAnio) return;
+
+        title.textContent = MESES_ES[calendarioMes - 1] + ' ' + calendarioAnio;
+
+        let html = DIAS_ES.map(d => '<div class="workers-cal-day-head">' + d + '</div>').join('');
+
+        const offset = new Date(calendarioAnio, calendarioMes - 1, 1).getDay();
+        const diasEnMes = new Date(calendarioAnio, calendarioMes, 0).getDate();
+        const diasAnterior = new Date(calendarioAnio, calendarioMes - 1, 0).getDate();
+        const hoy = new Date();
+
+        // Jubilaciones del mes visible (ordenadas por fecha)
+        const porDia = {};
+        proximasJubilaciones
+            .filter(t => t.fecha_retiro_estimada)
+            .sort((a, b) => a.fecha_retiro_estimada.localeCompare(b.fecha_retiro_estimada))
+            .forEach(t => {
+                const f = new Date(t.fecha_retiro_estimada + 'T00:00:00');
+                if (f.getFullYear() !== calendarioAnio || f.getMonth() + 1 !== calendarioMes) return;
+                const d = f.getDate();
+                if (!porDia[d]) porDia[d] = [];
+                porDia[d].push(t);
+            });
+
+        // Celdas de 6 semanas (42)
+        let idxColor = 0;
+        for (let i = 0; i < 42; i++) {
+            const numDia = i - offset + 1;
+            let numero = numDia;
+            let otrosMes = '';
+            if (numDia < 1) { numero = diasAnterior + numDia; otrosMes = 'other-month'; }
+            else if (numDia > diasEnMes) { numero = numDia - diasEnMes; otrosMes = 'other-month'; }
+
+            let clase = 'cal-day' + (otrosMes ? ' ' + otrosMes : '');
+            if (!otrosMes) {
+                const dow = new Date(calendarioAnio, calendarioMes - 1, numDia).getDay();
+                if (dow === 0 || dow === 6) clase += ' weekend';
+                if (numDia === hoy.getDate() && calendarioMes === hoy.getMonth() + 1 && calendarioAnio === hoy.getFullYear()) clase += ' today';
+                if (porDia[numDia] && porDia[numDia].length) clase += ' has-events';
+            }
+            html += '<div class="' + clase + '"><span class="cal-day-num">' + numero + '</span>';
+            if (!otrosMes && porDia[numDia]) {
+                porDia[numDia].forEach((t, j) => {
+                    if (j >= 2) return;
+                    const nombre = String(t.nombres || '').split(' ')[0] || 'Trab.';
+                    const ini = iniciales(t.nombres, t.apellidos);
+                    html += '<div class="cal-event-chip" title="' + escaparHTML(t.nombres + ' ' + t.apellidos) + '">' +
+                        '<span class="cal-chip-ini">' + ini + '</span><span class="cal-chip-name">' + escaparHTML(nombre) + '</span></div>';
+                });
+                if (porDia[numDia].length > 2) {
+                    html += '<div class="cal-event-chip more" title="' + (porDia[numDia].length - 2) + ' más">+' + (porDia[numDia].length - 2) + '</div>';
+                }
+            }
+            html += '</div>';
+        }
+        grid.innerHTML = html;
+
+        // Panel lateral: lista de eventos del mes
+        const fechasMes = Object.keys(porDia).map(Number).sort((a, b) => a - b);
+        if (sideTitle) sideTitle.textContent = 'Eventos de ' + MESES_ES[calendarioMes - 1];
+        if (countEl) countEl.textContent = fechasMes.reduce((acc, d) => acc + porDia[d].length, 0);
+
+        if (!fechasMes.length) {
+            events.innerHTML = '<div class="cal-event-empty"><i class="fas fa-calendar-check"></i><br>Sin jubilaciones<br>previstas este mes.</div>';
+        } else {
+            events.innerHTML = fechasMes.map(d => porDia[d].map(t => {
+                const c = colorAvatar(idxColor++);
+                const fFecha = new Date(t.fecha_retiro_estimada + 'T00:00:00');
+                const fechaTxt = fFecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                return '<div class="cal-event-row">' +
+                    '<span class="cal-avatar" style="background:' + c[1] + ';color:' + c[0] + ';">' + iniciales(t.nombres, t.apellidos) + '</span>' +
+                    '<div class="cal-event-meta"><div class="cal-event-name">' + escaparHTML(t.nombres + ' ' + t.apellidos) + '</div>' +
+                    '<div class="cal-event-date">' + fechaTxt + '</div></div></div>';
+            }).join('')).join('');
+        }
+    }
+
+    // ============================================
+    // MUTATION OBSERVER — Detecta cambios de pestaña para cargar datos bajo demanda
+    // ============================================
+    let estabaActivo = false;  // Estado anterior de la pestaña
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+            // Solo nos interesa la sección #trabajadores
+            if (m.target.id === 'trabajadores') {
+                const actualmenteActivo = m.target.classList.contains('active');
+                // Si se activó ahora y antes no lo estaba → carga datos
+                if (actualmenteActivo && !estabaActivo) {
+                    cargarTrabajadores();
+                    cargarTrabajadoresStats();
+                }
+                estabaActivo = actualmenteActivo;
+            }
+        });
+    });
+
+    // Inicia la observación si la sección existe
+    const seccion = document.getElementById('trabajadores');
+    if (seccion) {
+        estabaActivo = seccion.classList.contains('active');
+        // Si ya está visible, carga las stats inmediatamente
+        if (estabaActivo) cargarTrabajadoresStats();
+        // Observa cambios en el atributo class de la sección
+        observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    // ============================================
+    // CALENDARIO DE JUBILACIONES — Eventos de apertura y navegación
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnCal = document.getElementById('btnVerCalendario');
+        const btnCerrarCal = document.getElementById('btnCerrarCalendario');
+        const modalCal = modalCalendario();
+        if (btnCal) btnCal.addEventListener('click', abrirCalendarioJubilaciones);
+        if (btnCerrarCal) btnCerrarCal.addEventListener('click', cerrarCalendarioJubilaciones);
+        const btnPrev = document.getElementById('btnCalPrev');
+        const btnNext = document.getElementById('btnCalNext');
+        const btnToday = document.getElementById('btnCalToday');
+        if (btnPrev) btnPrev.addEventListener('click', () => cambiarMesCalendario(-1));
+        if (btnNext) btnNext.addEventListener('click', () => cambiarMesCalendario(1));
+        if (btnToday) btnToday.addEventListener('click', () => {
+            const ahora = new Date();
+            calendarioMes = ahora.getMonth() + 1;
+            calendarioAnio = ahora.getFullYear();
+            renderCalendarioJubilaciones();
+        });
+        if (modalCal) {
+            modalCal.addEventListener('click', (e) => {
+                if (e.target === modalCal) cerrarCalendarioJubilaciones();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modalCal.style.display === 'flex') cerrarCalendarioJubilaciones();
+            });
+        }
+    });
+})();
+
+
+// ============================================
+// ANTECEDENTES DE SERVICIO (R1 + R7)
+// ============================================
+let antTrabajadorActual = null;
+let antCatalogo = { condiciones: [], dedicaciones: [], tipos: [] };
+
+function escaparHTML2(text) {
+    if (text == null) return '';
+    const str = String(text);
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+function abrirAntecedentes(btn) {
+    const id = btn.dataset.id;
+    antTrabajadorActual = id;
+    document.getElementById('modalAntecedentes').style.display = 'flex';
+    document.getElementById('btnNuevoAntecedente').dataset.trabajadorId = id;
+    const info = `${btn.dataset.nombre || ''} ${btn.dataset.apellidos || ''} · C.I.: ${btn.dataset.cedula || ''} · ${btn.dataset.cargo || ''} · ${btn.dataset.unidad || ''}`;
+    document.getElementById('antTrabajadorInfo').textContent = info;
+    cargarAntecedentes(id);
+}
+
+function cerrarAntecedentes() {
+    document.getElementById('modalAntecedentes').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnCerrarAnt = document.getElementById('btnCerrarAntecedentes');
+    const btnNuevo = document.getElementById('btnNuevoAntecedente');
+    const modalAnt = document.getElementById('modalAntecedentes');
+    if (btnCerrarAnt) btnCerrarAnt.onclick = cerrarAntecedentes;
+    if (modalAnt) {
+        modalAnt.addEventListener('click', (e) => { if (e.target === modalAnt) cerrarAntecedentes(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modForm = document.getElementById('modalAntecedenteForm');
+                const modDocs = document.getElementById('modalAntecedenteDocs');
+                if (modDocs && modDocs.style.display === 'flex') return cerrarAntDocs();
+                if (modForm && modForm.style.display === 'flex') return cerrarAntForm();
+                if (modalAnt && modalAnt.style.display === 'flex') cerrarAntecedentes();
+            }
+        });
+    }
+    if (btnNuevo) btnNuevo.onclick = () => abrirFormAntecedente('nuevo', null);
+    const btnRelacionCargos = document.getElementById('btnVerRelacionCargos');
+    if (btnRelacionCargos) btnRelacionCargos.onclick = () => {
+        if (antTrabajadorActual) window.open('/reportes/relacion-cargos/' + antTrabajadorActual, '_blank');
+    };
+
+    const formAnt = document.getElementById('formAntecedente');
+    if (formAnt) formAnt.onsubmit = async (e) => {
+        e.preventDefault();
+        const idAnt = document.getElementById('antCampoId').value;
+        const trabajadorId = antTrabajadorActual || document.getElementById('btnNuevoAntecedente').dataset.trabajadorId;
+        const payload = {
+            institucion: document.getElementById('antCampoInstitucion').value,
+            cargo: document.getElementById('antCampoCargo').value || null,
+            condicion_laboral: document.getElementById('antCampoCondicion').value || null,
+            dedicacion: document.getElementById('antCampoDedicacion').value || null,
+            fecha_inicio: document.getElementById('antCampoInicio').value,
+            fecha_fin: document.getElementById('antCampoFin').value || null,
+            observaciones: document.getElementById('antCampoObs').value || null,
+            es_institucion_actual: document.getElementById('antCampoActual').checked ? 1 : 0,
+        };
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        let url, metodo;
+        if (idAnt) { url = '/antecedentes/' + idAnt; metodo = 'PUT'; }
+        else { url = '/trabajadores/' + trabajadorId + '/antecedentes'; metodo = 'POST'; }
+        try {
+            const resp = await fetch(url, { method: metodo, headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }, body: JSON.stringify(payload) });
+            const json = await resp.json().catch(()=>({}));
+            if (resp.ok && json.estado === 'success') {
+                mostrarToast('Antecedente guardado correctamente', 'success');
+                cerrarAntForm();
+                await cargarAntecedentes(trabajadorId);
+            } else {
+                mostrarToast(json.mensaje || 'Error al guardar antecedente', 'danger');
+            }
+        } catch (err) { mostrarToast('Error al guardar antecedente', 'danger'); }
+    };
+    const btnCancelAnt = document.getElementById('btnCancelarAntecedente');
+    if (btnCancelAnt) btnCancelAnt.onclick = cerrarAntForm;
+
+    const formDoc = document.getElementById('formAntecedenteDoc');
+    if (formDoc) formDoc.onsubmit = async (e) => {
+        e.preventDefault();
+        const antId = formDoc.dataset.antecedenteId;
+        const fd = new FormData();
+        fd.append('tipo_documento', document.getElementById('antDocTipo').value);
+        fd.append('numero_providencia', document.getElementById('antDocProvidencia').value || '');
+        fd.append('fecha_emision', document.getElementById('antDocFecha').value || '');
+        fd.append('institucion_emisora', document.getElementById('antDocInstitucion').value || '');
+        fd.append('folio_numero', document.getElementById('antDocFolioNumero').value || '');
+        fd.append('folio_hojas', document.getElementById('antDocFolioHojas').value || '');
+        fd.append('observaciones', document.getElementById('antDocObs').value || '');
+        const file = document.getElementById('antDocArchivo').files[0];
+        if (file) fd.append('archivo', file);
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        try {
+            const resp = await fetch('/antecedentes/' + antId + '/documentos', { method: 'POST', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }, body: fd });
+            const json = await resp.json().catch(()=>({}));
+            if (resp.ok && json.estado === 'success') {
+                mostrarToast('Documento adjuntado', 'success');
+                formDoc.reset();
+                await abrirAntDocs({ dataset: { antecedenteId: antId, info: document.getElementById('antDocsPeriodoInfo').textContent } });
+            } else {
+                mostrarToast(json.mensaje || 'Error al adjuntar', 'danger');
+            }
+        } catch (err) { mostrarToast('Error al adjuntar', 'danger'); }
+    };
+    const btnCerrarDocs = document.getElementById('btnCerrarAntDocs');
+    if (btnCerrarDocs) btnCerrarDocs.onclick = cerrarAntDocs;
+    const modalDocs = document.getElementById('modalAntecedenteDocs');
+    if (modalDocs) modalDocs.addEventListener('click', (e) => { if (e.target === modalDocs) cerrarAntDocs(); });
+    const modalForm = document.getElementById('modalAntecedenteForm');
+    if (modalForm) modalForm.addEventListener('click', (e) => { if (e.target === modalForm) cerrarAntForm(); });
+});
+
+function abrirFormAntecedente(modo, ant) {
+    const mod = document.getElementById('modalAntecedenteForm');
+    if (mod) mod.style.display = 'flex';
+    document.getElementById('antFormTitulo').innerHTML = modo === 'editar' ? '<i class="fas fa-pen"></i> Editar Período de Servicio' : '<i class="fas fa-calendar-plus"></i> Nuevo Período de Servicio';
+    document.getElementById('antCampoId').value = ant ? ant.id : '';
+    document.getElementById('antCampoInstitucion').value = ant ? ant.institucion || '' : '';
+    document.getElementById('antCampoCargo').value = ant ? ant.cargo || '' : '';
+    document.getElementById('antCampoCondicion').value = ant ? ant.condicion_laboral || '' : '';
+    document.getElementById('antCampoDedicacion').value = ant ? ant.dedicacion || '' : '';
+    document.getElementById('antCampoInicio').value = ant ? ant.fecha_inicio || '' : '';
+    document.getElementById('antCampoFin').value = ant && ant.fecha_fin ? ant.fecha_fin : '';
+    document.getElementById('antCampoObs').value = ant ? ant.observaciones || '' : '';
+    document.getElementById('antCampoActual').checked = !!(ant && ant.es_institucion_actual);
+    const dc = document.getElementById('antListaCondiciones');
+    const dd = document.getElementById('antListaDedicaciones');
+    if (dc) dc.innerHTML='';
+    if (dd) dd.innerHTML='';
+    if (antCatalogo.condiciones) antCatalogo.condiciones.forEach(v => { const o=document.createElement('option'); o.value=v; dc.appendChild(o); });
+    if (antCatalogo.dedicaciones) antCatalogo.dedicaciones.forEach(v => { const o=document.createElement('option'); o.value=v; dd.appendChild(o); });
+}
+
+function cerrarAntForm() {
+    const mod = document.getElementById('modalAntecedenteForm');
+    if (mod) mod.style.display = 'none';
+}
+
+async function cargarAntecedentes(id) {
+    try {
+        const resp = await fetch('/trabajadores/' + id + '/antecedentes');
+        const json = await resp.json().catch(()=>({}));
+        antCatalogo = { condiciones: json.condiciones||[], dedicaciones: json.dedicaciones||[], tipos: json.tipos_documento||[] };
+        renderAntecedentes(json.antecedentes || []);
+    } catch (err) {
+        const cont = document.getElementById('antLista');
+        if (cont) cont.innerHTML = '<p style="text-align:center;padding:26px;opacity:0.6;">Error al cargar antecedentes.</p>';
+    }
+}
+
+function renderAntecedentes(items) {
+    const cont = document.getElementById('antLista');
+    if (!cont) return;
+    if (!items.length) { cont.innerHTML = '<p style="text-align:center;padding:26px;opacity:0.6;">No hay antecedentes registrados.</p>'; return; }
+    let html = '<table class="custom-table" style="min-width:700px;"><thead><tr><th>Institución</th><th>Cargo</th><th>Condición</th><th>Dedicación</th><th>Inicio</th><th>Fin</th><th>Vigente</th><th>Docs</th><th>Acciones</th></tr></thead><tbody>';
+    items.forEach(a => {
+        const docs = (a.documentos||[]).length;
+        const vigente = a.es_institucion_actual ? '<span class="type-tag" style="background:#dcfce7;color:#166534;">Sí</span>' : '<span class="type-tag">No</span>';
+        const fin = a.fecha_fin || (a.es_institucion_actual ? '—' : '');
+        html += `<tr data-id="${a.id}">
+            <td><strong>${escaparHTML2(a.institucion)}</strong>${a.observaciones?'<div style="font-size:0.7rem;opacity:0.6;margin-top:2px;">'+escaparHTML2(a.observaciones)+'</div>':''}</td>
+            <td>${escaparHTML2(a.cargo)}</td>
+            <td>${escaparHTML2(a.condicion_laboral)}</td>
+            <td>${escaparHTML2(a.dedicacion)}</td>
+            <td>${a.fecha_inicio||''}</td>
+            <td>${fin}</td>
+            <td>${vigente}</td>
+            <td>${docs}</td>
+            <td>
+                <div class="acciones-cell">
+                    <button type="button" class="btn-icon" title="Editar período" onclick='editarAntecedente(${JSON.stringify(a).replace(/'/g,"&#39;")})'><i class="fas fa-pen"></i></button>
+                    <button type="button" class="btn-icon" title="Documentos (R7)" onclick="abrirAntDocs(this)" data-antecedente-id="${a.id}" data-info="${escaparHTML2(a.institucion)} · ${a.fecha_inicio||''}"><i class="fas fa-paperclip"></i></button>
+                    <button type="button" class="btn-icon btn-eliminar" title="Eliminar" onclick="eliminarAntecedente(${a.id})"><i class="fas fa-trash-can"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    cont.innerHTML = html;
+}
+
+function editarAntecedente(a) {
+    abrirFormAntecedente('editar', a);
+}
+
+async function eliminarAntecedente(id) {
+    if (!confirm('¿Eliminar este antecedente de servicio?')) return;
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    try {
+        const resp = await fetch('/antecedentes/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' } });
+        const json = await resp.json().catch(()=>({}));
+        if (resp.ok && json.estado === 'success') {
+            mostrarToast('Antecedente eliminado', 'success');
+            await cargarAntecedentes(antTrabajadorActual);
+        } else mostrarToast(json.mensaje || 'Error al eliminar', 'danger');
+    } catch (err) { mostrarToast('Error al eliminar', 'danger'); }
+}
+
+async function abrirAntDocs(btn) {
+    const mod = document.getElementById('modalAntecedenteDocs');
+    if (mod) mod.style.display = 'flex';
+    const antId = btn.dataset.antecedenteId;
+    const formDoc = document.getElementById('formAntecedenteDoc');
+    if (formDoc) formDoc.dataset.antecedenteId = antId;
+    const info = document.getElementById('antDocsPeriodoInfo');
+    if (info) info.textContent = btn.dataset.info || '';
+    const sel = document.getElementById('antDocTipo');
+    if (sel) { sel.innerHTML = ''; (antCatalogo.tipos||[]).forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); }); }
+    await cargarAntDocsLista(antId);
+}
+
+function cerrarAntDocs() {
+    const mod = document.getElementById('modalAntecedenteDocs');
+    if (mod) mod.style.display = 'none';
+}
+
+async function cargarAntDocsLista(antId) {
+    const cont = document.getElementById('antDocsLista');
+    if (!cont) return;
+    cont.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.6;">Cargando...</p>';
+    try {
+        const resp = await fetch('/trabajadores/' + antTrabajadorActual + '/antecedentes');
+        const json = await resp.json().catch(()=>({}));
+        const ant = (json.antecedentes||[]).find(x => String(x.id) === String(antId));
+        if (!ant || !ant.documentos.length) { cont.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.6;">No hay documentos adjuntos.</p>'; return; }
+        let html = '<div style="display:grid;gap:10px;">';
+        ant.documentos.forEach(d => {
+            const link = d.archivo ? `<a href="/storage/${d.archivo}" target="_blank" class="btn-icon" title="Ver archivo"><i class="fas fa-eye"></i></a>` : '';
+            html += `<div style="border:1px solid rgba(148,163,184,0.35);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+                <div style="font-size:0.8rem;line-height:1.5;">
+                    <strong>${escaparHTML2(d.tipo_documento)}</strong>
+                    ${d.numero_providencia?'<div>Nº: '+escaparHTML2(d.numero_providencia)+'</div>':''}
+                    ${d.fecha_emision?'<div>Fecha: '+d.fecha_emision+'</div>':''}
+                    ${d.institucion_emisora?'<div>Emisor: '+escaparHTML2(d.institucion_emisora)+'</div>':''}
+                    ${(d.folio_numero||d.folio_hojas)?'<div>Folio: '+escaparHTML2(d.folio_numero)+' '+(d.folio_hojas?(' ('+d.folio_hojas+' hojas)'):'')+'</div>':''}
+                    ${d.observaciones?'<div style="opacity:0.7;">'+escaparHTML2(d.observaciones)+'</div>':''}
+                </div>
+                <div class="acciones-cell">${link}<button type="button" class="btn-icon btn-eliminar" title="Eliminar documento" onclick="eliminarAntDoc(${d.id})"><i class="fas fa-trash-can"></i></button></div>
+            </div>`;
+        });
+        html += '</div>';
+        cont.innerHTML = html;
+    } catch (err) { cont.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.6;">Error al cargar documentos.</p>'; }
+}
+
+async function eliminarAntDoc(id) {
+    if (!confirm('¿Eliminar este documento de respaldo?')) return;
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    try {
+        const resp = await fetch('/antecedente-documentos/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' } });
+        const json = await resp.json().catch(()=>({}));
+        if (resp.ok && json.estado === 'success') {
+            mostrarToast('Documento eliminado', 'success');
+            const antId = document.getElementById('formAntecedenteDoc').dataset.antecedenteId;
+            await cargarAntDocsLista(antId);
+            await cargarAntecedentes(antTrabajadorActual);
+        } else mostrarToast(json.mensaje || 'Error al eliminar', 'danger');
+    } catch (err) { mostrarToast('Error al eliminar', 'danger'); }
+}

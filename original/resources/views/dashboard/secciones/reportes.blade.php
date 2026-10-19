@@ -1,7 +1,7 @@
 {{-- reportes.blade.php - Centro de reportes y estadísticas: métricas de trabajadores/solicitudes/usuarios, gráficos por tipo de nómina y estatus, y tabla resumen del sistema. --}}
 <header class="section-header-flex">
     <div class="header-info">
-        <h1>Centro de Reportes y Estadísticas</h1>
+        <h1>Centro de <span class="text-blue-accent">Reportes y Estadísticas</span></h1>
         <p>Visualización y análisis de datos del sistema institucional</p>
     </div>
     <div class="header-actions">
@@ -17,6 +17,32 @@
         </div>
     </div>
 </header>
+
+<!-- Reporte R5: Próximos Jubilados -->
+<div style="margin-top:20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <div style="font-weight:700;color:#0f172a;font-size:0.92rem;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-hourglass-half" style="color:#2563eb;"></i> Reporte: Próximos Jubilados
+    </div>
+    <label style="font-size:0.72rem;color:#64748b;font-weight:700;">DESDE
+        <input type="date" id="proxJubDesde" value="{{ now()->format('Y-m-d') }}" style="display:block;margin-top:3px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;">
+    </label>
+    <label style="font-size:0.72rem;color:#64748b;font-weight:700;">HASTA
+        <input type="date" id="proxJubHasta" value="{{ now()->addMonths(24)->format('Y-m-d') }}" style="display:block;margin-top:3px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;">
+    </label>
+    <button class="btn-export-pdf" type="button" onclick="abrirProximosJubilados()" style="margin-top:14px;">
+        <i class="fas fa-print"></i>
+        <span>Abrir Reporte</span>
+    </button>
+    <p style="font-size:0.72rem;color:#64748b;flex-basis:100%;margin:0;">Muestra a los trabajadores cuya fecha estimada de retiro (60 años de edad o 25 años de servicio, el primer requisito que se cumpla) cae dentro del período consultado.</p>
+</div>
+<script>
+function abrirProximosJubilados() {
+    const desde = document.getElementById('proxJubDesde').value;
+    const hasta = document.getElementById('proxJubHasta').value;
+    if (!desde || !hasta) { mostrarToast('Seleccione el período del reporte.', 'warning'); return; }
+    window.open('/reportes/proximos-jubilados?desde=' + encodeURIComponent(desde) + '&hasta=' + encodeURIComponent(hasta), '_blank');
+}
+</script>
 
 <div class="metrics-grid-3" style="margin-top: 20px;">
     <div class="metric-card-simple" id="statTrabajadores">

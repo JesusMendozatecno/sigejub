@@ -51,12 +51,12 @@ body.dark-mode .btn-accion-del { background: #450a0a; color: #fca5a5; }
 body.dark-mode .btn-accion-del:hover { background: #5f0f0f; }
 .nomina-total-asis { margin-top: 14px; padding: 12px; border-radius: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; text-align: center; font-weight: 800; color: #15803d; font-size: 0.9rem; }
 body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; color: #86efac; }
-.modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+/* La rejilla .modal-grid de la ventana de edición vive en css/dashboard/secciones/modal.css */
 </style>
 
 <header class="section-header">
     <div class="header-info">
-        <h1>Nómina</h1>
+        <h1><span class="text-blue-accent">Nómina</span></h1>
         <p>Gestión de planilla de nómina institucional organizada por años.</p>
     </div>
     <div class="header-actions">

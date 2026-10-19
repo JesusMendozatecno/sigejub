@@ -11,7 +11,9 @@ use App\Models\Solicitud;
 use App\Models\Activity;
 use App\Services\NotificationService;
 use App\Services\ValidationService;
+use App\Services\ImageStorageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ExpedienteController extends Controller
 {
@@ -91,13 +93,20 @@ class ExpedienteController extends Controller
             ], 422);
         }
 
-        if ($request->hasFile('foto_carnet')) {
-            $validated['foto_carnet'] = $request->file('foto_carnet')->store('expedientes/fotos', 'public');
-        }
-
         $validated['estado_global'] = 0;
 
+        // Se crea primero el expediente para conocer su ID y nombrar la foto
+        // como expedientes/fotos/exp_{id}.{ext} (nombre determinista).
+        $foto = $request->file('foto_carnet');
+        unset($validated['foto_carnet']);
+
         $expediente = Expediente::create($validated);
+
+        if ($foto) {
+            $expediente->foto_carnet = app(ImageStorageService::class)
+                ->guardar($foto, 'expedientes/fotos', 'exp_' . $expediente->id);
+            $expediente->save();
+        }
 
         $trabajador = $expediente->trabajador;
         Activity::log('created', 'expediente', $expediente->id,
@@ -112,7 +121,7 @@ class ExpedienteController extends Controller
 
     public function show($id)
     {
-        $expediente = Expediente::with('trabajador', 'solicitud', 'documentos')->findOrFail($id);
+        $expediente = Expediente::with('trabajador', 'solicitud', 'documentos', 'recibos')->findOrFail($id);
         return response()->json($expediente);
     }
 
@@ -162,8 +171,14 @@ class ExpedienteController extends Controller
             'foto_carnet' => 'required|image|max:2048',
         ]);
 
-        $path = $request->file('foto_carnet')->store('expedientes/fotos', 'public');
-        $expediente->update(['foto_carnet' => $path]);
+        $path = app(ImageStorageService::class)->guardar(
+            $request->file('foto_carnet'),
+            'expedientes/fotos',
+            'exp_' . $expediente->id,
+            $expediente->foto_carnet
+        );
+        $expediente->foto_carnet = $path;
+        $expediente->save();
 
         return response()->json([
             'estado' => 'success',
@@ -296,6 +311,71 @@ class ExpedienteController extends Controller
         return response()->json([
             'estado' => 'success',
             'mensaje' => 'Notas actualizadas.',
+        ]);
+    }
+
+    /**
+     * LISTAR recibos de nómina adjuntos al expediente (R3)
+     */
+    public function listarRecibos($id)
+    {
+        $expediente = Expediente::with('recibos')->findOrFail($id);
+
+        return response()->json([
+            'estado' => 'success',
+            'recibos' => $expediente->recibos,
+        ]);
+    }
+
+    /**
+     * ADJUNTAR un recibo de nómina al expediente (R3)
+     */
+    public function subirRecibo(Request $request, $id)
+    {
+        $expediente = Expediente::findOrFail($id);
+
+        $validated = $request->validate([
+            'periodo' => 'nullable|string|date_format:Y-m',
+            'concepto' => 'nullable|string|max:150',
+            'monto_usd' => 'nullable|numeric|min:0|max:999999999999',
+            'observaciones' => 'nullable|string|max:2000',
+            'archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:102400',
+        ]);
+
+        $validated['archivo'] = $request->file('archivo')->store('expedientes/recibos', 'public');
+        $validated['expediente_id'] = $expediente->id;
+
+        $recibo = \App\Models\ReciboPago::create($validated);
+
+        Activity::log('created', 'recibo_pago', $recibo->id,
+            "Se adjuntó un recibo de nómina al expediente #{$expediente->id}");
+
+        return response()->json([
+            'estado' => 'success',
+            'mensaje' => 'Recibo de nómina adjuntado correctamente.',
+            'recibo' => $recibo,
+        ]);
+    }
+
+    /**
+     * ELIMINAR un recibo de nómina (y su archivo)
+     */
+    public function eliminarRecibo($id)
+    {
+        $recibo = \App\Models\ReciboPago::findOrFail($id);
+
+        if ($recibo->archivo) {
+            Storage::disk('public')->delete($recibo->archivo);
+        }
+        $expedienteId = $recibo->expediente_id;
+        $recibo->delete();
+
+        Activity::log('deleted', 'recibo_pago', $id,
+            "Se eliminó un recibo de nómina del expediente #{$expedienteId}");
+
+        return response()->json([
+            'estado' => 'success',
+            'mensaje' => 'Recibo eliminado correctamente.',
         ]);
     }
 

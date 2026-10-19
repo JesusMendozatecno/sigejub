@@ -33,4 +33,9 @@ class Expediente extends Model
     {
         return $this->hasMany(Documento::class);
     }
+
+    public function recibos(): HasMany
+    {
+        return $this->hasMany(ReciboPago::class);
+    }
 }

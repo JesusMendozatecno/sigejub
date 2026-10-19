@@ -62,11 +62,40 @@ function inicializarDashboard() {
     var toggle = document.getElementById('sidebarToggle');
     var overlay = document.getElementById('sidebarOverlay');
     function closeSidebar() { if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('show'); }
+
+    // Restaurar preferencia de sidebar colapsado (solo escritorio)
+    if (sidebar && window.innerWidth >= 768) {
+        try {
+            if (localStorage.getItem('sigejub_sidebar_collapsed') === '1') {
+                sidebar.classList.add('collapsed');
+            }
+        } catch (_) {}
+    }
+
     if (toggle) {
-        toggle.addEventListener('click', function(e) { e.stopPropagation(); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('show'); });
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (window.innerWidth >= 768) {
+                // Escritorio: colapsar/expandir a solo-iconos y recordar la preferencia
+                if (sidebar) {
+                    sidebar.classList.toggle('collapsed');
+                    try {
+                        localStorage.setItem('sigejub_sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+                    } catch (_) {}
+                }
+            } else {
+                // Móvil: abrir/cerrar el panel deslizante
+                if (sidebar) sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('show');
+            }
+        });
     }
     if (overlay) overlay.addEventListener('click', closeSidebar);
     document.querySelectorAll('.sidebar-menu .menu-item').forEach(function(item) {
+        // Tooltip para el estado "solo iconos" del menú
+        if (!item.dataset.tooltip) {
+            item.dataset.tooltip = item.textContent.trim();
+        }
         item.addEventListener('click', function() { if (window.innerWidth < 768) closeSidebar(); });
     });
 }
@@ -92,11 +121,17 @@ window.addEventListener('click', function(e) {
 // === NOTIFICACIONES ===
 var notifAbierto = false;
 
+function cerrarNotifDropdown() {
+    var menu = document.getElementById('notifMenu');
+    if (menu) menu.classList.remove('open');
+    notifAbierto = false;
+}
+
 function toggleNotifDropdown() {
     var menu = document.getElementById('notifMenu');
     if (!menu) return;
     notifAbierto = !notifAbierto;
-    menu.style.display = notifAbierto ? 'block' : 'none';
+    menu.classList.toggle('open', notifAbierto);
     if (notifAbierto) cargarNotificaciones();
 }
 
@@ -107,7 +142,7 @@ async function cargarNotificaciones() {
         var result = await cachedFetch('/notificaciones', { ttl: 30000 });
         var data = result.data;
         if (!data.length) {
-            list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;font-size:0.85rem;">Sin notificaciones</p>';
+            list.innerHTML = '<p class="notif-empty">Sin notificaciones</p>';
             return;
         }
         list.innerHTML = '';
@@ -156,14 +191,13 @@ async function marcarTodasLeidas() {
     } catch (err) { console.error('Error al marcar todas:', err); }
 }
 
-// Cerrar menú de notificaciones al hacer clic fuera
+// Cerrar menú de notificaciones al hacer clic fuera o pulsar Escape
 window.addEventListener('click', function(e) {
     var notif = document.getElementById('notifDropdown');
-    if (notif && !notif.contains(e.target) && notifAbierto) {
-        notifAbierto = false;
-        var menu = document.getElementById('notifMenu');
-        if (menu) menu.style.display = 'none';
-    }
+    if (notif && !notif.contains(e.target) && notifAbierto) cerrarNotifDropdown();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && notifAbierto) cerrarNotifDropdown();
 });
 
 // === GLOBAL THEME CONFIG ===

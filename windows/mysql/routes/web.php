@@ -25,8 +25,27 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect('/dashboard');
     }
-    return view('welcome');
+    $stats = [
+        'trabajadores' => \App\Models\Trabajador::count(),
+        'solicitudes'  => \App\Models\Solicitud::count(),
+        'jubilados'    => \App\Models\Solicitud::where('estado', 'aprobado')->count(),
+        'expedientes'  => \App\Models\Expediente::count(),
+    ];
+    return view('welcome', compact('stats'));
 })->name('welcome');
+
+Route::get('/api/public/stats', function () {
+    $trabajadores = \App\Models\Trabajador::count();
+    $solicitudes = \App\Models\Solicitud::count();
+    $jubilados = \App\Models\Solicitud::where('estado', 'aprobado')->count();
+    $expedientes = \App\Models\Expediente::count();
+    return response()->json([
+        'trabajadores' => $trabajadores,
+        'solicitudes' => $solicitudes,
+        'jubilados' => $jubilados,
+        'expedientes' => $expedientes,
+    ]);
+})->name('public.stats');
 
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
@@ -125,6 +144,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/trabajadores/{id}', [TrabajadorController::class, 'destroy'])->name('trabajadores.destroy');
     Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trabajador');
     Route::get('/trabajadores-stats/dashboard', [TrabajadorController::class, 'dashboardStats']);
+    Route::get('/trabajadores/{id}/antecedentes', [App\Http\Controllers\AntecedenteServicioController::class, 'index']);
+    Route::post('/trabajadores/{id}/antecedentes', [App\Http\Controllers\AntecedenteServicioController::class, 'store']);
+    Route::put('/antecedentes/{id}', [App\Http\Controllers\AntecedenteServicioController::class, 'update']);
+    Route::delete('/antecedentes/{id}', [App\Http\Controllers\AntecedenteServicioController::class, 'destroy']);
+    Route::post('/antecedentes/{id}/documentos', [App\Http\Controllers\AntecedenteServicioController::class, 'subirDocumento']);
+    Route::delete('/antecedente-documentos/{id}', [App\Http\Controllers\AntecedenteServicioController::class, 'eliminarDocumento']);
     Route::get('/exportar/nomina', [NominaExportController::class, 'exportar'])->name('exportar.nomina');
     Route::post('/importar/nomina', [NominaExportController::class, 'importar'])->name('importar.nomina');
     Route::get('/nomina/anios', [NominaController::class, 'anios'])->name('nomina.anios');
@@ -210,6 +235,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/prestaciones/{id}', [PrestacionesController::class, 'show']);
     Route::post('/prestaciones', [PrestacionesController::class, 'store']);
     Route::post('/prestaciones/{id}/comprobante', [PrestacionesController::class, 'comprobante']);
+    Route::post('/prestaciones/{id}/fideicomiso-documento', [PrestacionesController::class, 'subirDocumentoFideicomiso']);
 
     Route::get('/expedientes', [ExpedienteController::class, 'index']);
     Route::get('/expedientes/listos-aprobacion', [ExpedienteController::class, 'listosParaAprobacion']);
@@ -222,6 +248,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/documentos/{id}/estado', [ExpedienteController::class, 'updateDocumentoStatus']);
     Route::post('/documentos/{id}/reemplazar', [ExpedienteController::class, 'reemplazarDocumento']);
     Route::post('/expedientes/{id}/foto-carnet', [ExpedienteController::class, 'updateFotoCarnet']);
+    Route::get('/expedientes/{id}/recibos', [ExpedienteController::class, 'listarRecibos']);
+    Route::post('/expedientes/{id}/recibos', [ExpedienteController::class, 'subirRecibo']);
+    Route::delete('/recibos-pago/{id}', [ExpedienteController::class, 'eliminarRecibo']);
 });
 
 /*
@@ -269,5 +298,15 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::post('/formulas-prestaciones', [App\Http\Controllers\FormulaPrestacionController::class, 'store'])->name('formulas.store');
     Route::put('/formulas-prestaciones/{id}', [App\Http\Controllers\FormulaPrestacionController::class, 'update'])->name('formulas.update');
     Route::delete('/formulas-prestaciones/{id}', [App\Http\Controllers\FormulaPrestacionController::class, 'destroy'])->name('formulas.destroy');
+});
+
+/*
+|-----------------------------
+| REPORTES INSTITUCIONALES
+|-----------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/reportes/proximos-jubilados', [App\Http\Controllers\ReporteController::class, 'proximosJubilados']);
+    Route::get('/reportes/relacion-cargos/{id}', [App\Http\Controllers\ReporteController::class, 'relacionCargos']);
 });
 

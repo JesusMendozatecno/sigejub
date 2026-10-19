@@ -16,10 +16,11 @@ class MasterDataController extends Controller
         'area' => ['table' => 'areas', 'label' => 'Área'],
         'grado' => ['table' => 'grados', 'label' => 'Grado'],
         'nivel-instruccion' => ['table' => 'niveles_instruccion', 'label' => 'Nivel de Instrucción'],
-        'tipo-contrato' => ['table' => 'tipos_contrato', 'label' => 'Tipo de Contrato'],
         'prima' => ['table' => 'primas', 'label' => 'Prima', 'extra_fields' => ['valor', 'fecha_vigencia']],
         'tipo-jubilacion' => ['table' => 'tipos_jubilacion', 'label' => 'Tipo de Jubilación'],
         'unidad-departamento' => ['table' => 'unidades', 'label' => 'Unidad / Departamento'],
+        'tipo-contrato' => ['table' => 'tipos_contrato', 'label' => 'Condición Laboral'],
+        'dedicacion' => ['table' => 'dedicaciones', 'label' => 'Dedicación'],
     ];
 
     private function resolveConfig(string $tipo): array

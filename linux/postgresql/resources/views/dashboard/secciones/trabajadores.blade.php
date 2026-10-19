@@ -1,7 +1,7 @@
 {{-- trabajadores.blade.php - Sección de directorio de trabajadores: tabla DataTable con filtros, modal de registro/edición con formulario completo y modal de confirmación de baja. --}}
 <header class="section-header">
     <div class="header-info">
-        <h1>Directorio de Trabajadores</h1>
+        <h1>Directorio de <span class="text-blue-accent">Trabajadores</span></h1>
         <p>Gestione la información laboral y el estatus institucional de los miembros activos y jubilados.</p>
     </div>
     <div class="header-actions">
@@ -198,6 +198,20 @@
                         <div class="input-group">
                             <label>TIPO DE JUBILACIÓN</label>
                             <select name="tipo_jubilacion_id" id="selectTipoJubilacion">
+                                <option value="" disabled selected>Cargando...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>CONDICIÓN LABORAL</label>
+                            <select name="tipo_contrato_id" id="selectCondicionLaboral">
+                                <option value="" disabled selected>Cargando...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>DEDICACIÓN DOCENTE</label>
+                            <select name="dedicacion" id="selectDedicacion">
                                 <option value="" disabled selected>Cargando...</option>
                             </select>
                         </div>
@@ -453,6 +467,145 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="workers-calendar-footer">
             <i class="fas fa-circle-info"></i>
             <span>Las fechas son estimadas según la edad (60 años) y los años de servicio (25), tomando el requisito que ocurra primero.</span>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Antecedentes de Servicio (lista de períodos) -->
+<div id="modalAntecedentes" class="modal-overlay" style="z-index: 3100;">
+    <div class="modal-delete-box" style="max-width:1000px;padding:0;overflow:hidden;">
+        <div style="padding:20px 24px;border-bottom:1px solid rgba(148,163,184,0.35);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+            <div>
+                <h3 style="margin:0;"><i class="fas fa-clock-rotate-left"></i> Antecedentes de Servicio</h3>
+                <p id="antTrabajadorInfo" style="margin:6px 0 0;font-size:0.8rem;opacity:0.75;">Cargando...</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <button type="button" id="btnVerRelacionCargos" class="btn-export-pdf" style="font-size:0.8rem;padding:9px 14px;">
+                    <i class="fas fa-file-lines"></i> Relación de Cargos (R6)
+                </button>
+                <button type="button" id="btnNuevoAntecedente" class="btn-submit" style="font-size:0.8rem;padding:9px 14px;">
+                    <i class="fas fa-plus"></i> Nuevo período
+                </button>
+                <button type="button" id="btnCerrarAntecedentes" title="Cerrar" style="border:none;background:transparent;font-size:1.7rem;cursor:pointer;line-height:1;opacity:0.7;">&times;</button>
+            </div>
+        </div>
+        <div style="padding:16px 24px;max-height:70vh;overflow:auto;">
+            <p style="font-size:0.79rem;opacity:0.75;margin:0 0 12px;line-height:1.5;">
+                Registre aquí cada período de servicio dentro o fuera de la institución. Al marcar un período vigente en la institución,
+                la condición laboral y la dedicación se reflejan en la ficha actual del trabajador. Adjunte el oficio o providencia
+                de cada cambio (R7).
+            </p>
+            <div id="antLista"><p style="text-align:center;padding:26px;opacity:0.6;">Cargando...</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Formulario de Período de Antecedente -->
+<div id="modalAntecedenteForm" class="modal-overlay" style="z-index: 3200;">
+    <div class="modal-delete-box" style="max-width:620px;text-align:left;">
+        <h3 id="antFormTitulo"><i class="fas fa-calendar-plus"></i> Nuevo Período de Servicio</h3>
+        <form id="formAntecedente" style="margin-top:14px;">
+            <input type="hidden" id="antCampoId" value="">
+            <label style="display:flex;gap:8px;align-items:center;font-size:0.83rem;font-weight:600;margin-bottom:14px;cursor:pointer;">
+                <input type="checkbox" id="antCampoActual" style="width:auto;">
+                Es la institución actual (período vigente)
+            </label>
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>INSTITUCIÓN / ENTIDAD</label>
+                <input type="text" id="antCampoInstitucion" placeholder="Ej: Universidad Bolivariana de Venezuela" required maxlength="150">
+            </div>
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>CARGO</label>
+                <input type="text" id="antCampoCargo" placeholder="Ej: Docente" maxlength="150">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>CONDICIÓN LABORAL</label>
+                    <input type="text" id="antCampoCondicion" list="antListaCondiciones" placeholder="Ej: Contratado" maxlength="100">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>DEDICACIÓN</label>
+                    <input type="text" id="antCampoDedicacion" list="antListaDedicaciones" placeholder="Ej: Tiempo completo" maxlength="100">
+                </div>
+            </div>
+            <datalist id="antListaCondiciones"></datalist>
+            <datalist id="antListaDedicaciones"></datalist>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>FECHA DE INICIO *</label>
+                    <input type="date" id="antCampoInicio" required>
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>FECHA DE FIN</label>
+                    <input type="date" id="antCampoFin">
+                </div>
+            </div>
+            <p style="font-size:0.72rem;opacity:0.65;margin:-4px 0 12px;">Deje "Fecha de fin" vacía si el período continúa vigente.</p>
+            <div class="input-group" style="margin-bottom:6px;">
+                <label>OBSERVACIONES</label>
+                <textarea id="antCampoObs" rows="2" maxlength="2000" placeholder="Detalle del período, reconocimientos, etc."></textarea>
+            </div>
+            <div class="delete-actions" style="margin-top:16px;">
+                <button type="button" class="btn-delete-cancel" id="btnCancelarAntecedente">Cancelar</button>
+                <button type="submit" class="btn-submit" id="btnGuardarAntecedente" style="padding:11px 20px;">Guardar Período</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Documentos de Respaldo del Período (R7) -->
+<div id="modalAntecedenteDocs" class="modal-overlay" style="z-index: 3300;">
+    <div class="modal-delete-box" style="max-width:880px;padding:0;overflow:hidden;text-align:left;">
+        <div style="padding:18px 24px;border-bottom:1px solid rgba(148,163,184,0.35);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+            <div>
+                <h3 style="margin:0;"><i class="fas fa-paperclip"></i> Documentos de Respaldo</h3>
+                <p id="antDocsPeriodoInfo" style="margin:6px 0 0;font-size:0.8rem;opacity:0.75;">—</p>
+            </div>
+            <button type="button" id="btnCerrarAntDocs" title="Cerrar" style="border:none;background:transparent;font-size:1.7rem;cursor:pointer;line-height:1;opacity:0.7;">&times;</button>
+        </div>
+        <div style="padding:16px 24px;max-height:72vh;overflow:auto;">
+            <form id="formAntecedenteDoc" style="background:rgba(148,163,184,0.12);border:1px dashed rgba(148,163,184,0.5);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>TIPO DE DOCUMENTO *</label>
+                        <select id="antDocTipo" required></select>
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>Nº PROVIDENCIA</label>
+                        <input type="text" id="antDocProvidencia" maxlength="50" placeholder="Ej: 001-2024">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>FECHA DE EMISIÓN</label>
+                        <input type="date" id="antDocFecha">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>INSTITUCIÓN EMISORA</label>
+                        <input type="text" id="antDocInstitucion" maxlength="150">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>FOLIO Nº</label>
+                        <input type="text" id="antDocFolioNumero" maxlength="50">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>HOJAS DEL FOLIO</label>
+                        <input type="number" id="antDocFolioHojas" min="1" max="9999" placeholder="Ej: 3">
+                    </div>
+                </div>
+                <div class="input-group" style="margin:10px 0;">
+                    <label>OBSERVACIONES</label>
+                    <input type="text" id="antDocObs" maxlength="2000" placeholder="Referencia del documento">
+                </div>
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="input-group" style="margin-bottom:0;flex:1;min-width:220px;">
+                        <label>ARCHIVO (PDF, JPG o PNG · máx. 100 MB)</label>
+                        <input type="file" id="antDocArchivo" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <button type="submit" class="btn-submit" id="btnGuardarAntDoc" style="padding:11px 18px;font-size:0.82rem;">
+                        <i class="fas fa-upload"></i> Adjuntar
+                    </button>
+                </div>
+            </form>
+            <div id="antDocsLista"><p style="text-align:center;padding:20px;opacity:0.6;">Cargando...</p></div>
         </div>
     </div>
 </div>

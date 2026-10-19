@@ -38,13 +38,15 @@
     let catalogoValorPrevio = '';
 
     // Tipos de catálogo cuyo valor de option es el ID (los demás usan el nombre).
-    const TIPOS_POR_ID = new Set(['cargo', 'nivel-instruccion', 'unidad-departamento', 'tipo-jubilacion']);
+    const TIPOS_POR_ID = new Set(['cargo', 'nivel-instruccion', 'unidad-departamento', 'tipo-jubilacion', 'tipo-contrato']);
     const CATALOGO_ETIQUETAS = {
         'cargo': 'Cargo',
         'grado': 'Grado',
         'nivel-instruccion': 'Nivel de Instrucción',
         'unidad-departamento': 'Unidad / Departamento',
-        'tipo-jubilacion': 'Tipo de Jubilación'
+        'tipo-jubilacion': 'Tipo de Jubilación',
+        'tipo-contrato': 'Condición Laboral',
+        'dedicacion': 'Dedicación'
     };
     // Selects que deben cargarse desde los maestros
     const SELECTS_CATALOGO = [
@@ -52,7 +54,9 @@
         ['grado', 'selectGradoNivel'],
         ['nivel-instruccion', 'selectNivelInstruccion'],
         ['unidad-departamento', 'selectUnidadDepartamento'],
-        ['tipo-jubilacion', 'selectTipoJubilacion']
+        ['tipo-jubilacion', 'selectTipoJubilacion'],
+        ['tipo-contrato', 'selectCondicionLaboral'],
+        ['dedicacion', 'selectDedicacion']
     ];
 
     // ============================================
@@ -158,6 +162,14 @@
                     formData.append('cargo_id', selectCargo.value);
                 } else {
                     formData.delete('cargo_id');
+                }
+
+                // Resolver dedicación como texto (el select devuelve el id del catálogo)
+                const selectDedicacion = document.getElementById('selectDedicacion');
+                if (selectDedicacion) {
+                    const opcionDedicacion = selectDedicacion.selectedOptions[0];
+                    formData.delete('dedicacion');
+                    formData.append('dedicacion', opcionDedicacion?.dataset?.nombre || selectDedicacion.value || '');
                 }
 
                 // Asegurar numero_hijos y hijos_discapacidad si los grupos están ocultos
@@ -480,7 +492,29 @@
                 btnEliminar.onclick = () => window.sigejubEliminarTrabajador(t.id, `${t.nombres} ${t.apellidos}`, btnEliminar);
                 const iconTrash = document.createElement('i'); iconTrash.className = 'fas fa-trash-can';
                 btnEliminar.appendChild(iconTrash);
+                const btnAntecedentes = document.createElement('button');
+                btnAntecedentes.className = 'btn-icon';
+                btnAntecedentes.type = 'button';
+                btnAntecedentes.title = 'Antecedentes de Servicio';
+                btnAntecedentes.dataset.id = t.id;
+                btnAntecedentes.dataset.nombre = t.nombres;
+                btnAntecedentes.dataset.apellidos = t.apellidos;
+                btnAntecedentes.dataset.cedula = t.cedula || '';
+                btnAntecedentes.dataset.cargo = t.cargo || '';
+                btnAntecedentes.dataset.unidad = t.unidad_departamento || '';
+                btnAntecedentes.onclick = function() { abrirAntecedentes(btnAntecedentes); };
+                const iconClock = document.createElement('i'); iconClock.className = 'fas fa-clock-rotate-left';
+                btnAntecedentes.appendChild(iconClock);
+                const btnRelacion = document.createElement('button');
+                btnRelacion.className = 'btn-icon';
+                btnRelacion.type = 'button';
+                btnRelacion.title = 'Relación de Cargos y Tiempo de Servicio (R6)';
+                btnRelacion.onclick = () => window.open('/reportes/relacion-cargos/' + t.id, '_blank');
+                const iconRel = document.createElement('i'); iconRel.className = 'fas fa-file-lines';
+                btnRelacion.appendChild(iconRel);
                 div.appendChild(btnVer);
+                div.appendChild(btnAntecedentes);
+                div.appendChild(btnRelacion);
                 div.appendChild(btnEliminar);
                 tdAcciones.appendChild(div);
 
@@ -541,7 +575,9 @@
                 cargarOpcionesCatalogo('grado', 'selectGradoNivel', t.grado_nivel),
                 cargarOpcionesCatalogo('nivel-instruccion', 'selectNivelInstruccion', t.nivel_instruccion_id),
                 cargarOpcionesCatalogo('unidad-departamento', 'selectUnidadDepartamento', t.unidad_departamento),
-                cargarOpcionesCatalogo('tipo-jubilacion', 'selectTipoJubilacion', t.tipo_jubilacion)
+                cargarOpcionesCatalogo('tipo-jubilacion', 'selectTipoJubilacion', t.tipo_jubilacion),
+                cargarOpcionesCatalogo('tipo-contrato', 'selectCondicionLaboral', t.tipo_contrato_id),
+                cargarOpcionesCatalogo('dedicacion', 'selectDedicacion', t.dedicacion)
 
             ]);
 
@@ -567,6 +603,10 @@
                 setearNivelLegacy(t.nivel_instruccion);
             }
             setearSelectPorId('selectTipoJubilacion', t.tipo_jubilacion_id);
+            if (!setearSelectPorId('selectCondicionLaboral', t.tipo_contrato_id)) {
+                seleccionarValorCatalogo('selectCondicionLaboral', t.tipo_contrato_id);
+            }
+            seleccionarValorCatalogo('selectDedicacion', t.dedicacion || '');
             document.getElementById('inputCuentaBancaria').value = t.cuenta_bancaria || '';
             document.getElementById('inputEspecialidad').value = t.estudio ? (t.estudio.especialidad || '') : '';
             document.getElementById('inputCasaEstudio').value = t.estudio ? (t.estudio.casa_estudio || '') : '';
@@ -913,3 +953,270 @@
         }
     });
 })();
+
+
+// ============================================
+// ANTECEDENTES DE SERVICIO (R1 + R7)
+// ============================================
+let antTrabajadorActual = null;
+let antCatalogo = { condiciones: [], dedicaciones: [], tipos: [] };
+
+function escaparHTML2(text) {
+    if (text == null) return '';
+    const str = String(text);
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+function abrirAntecedentes(btn) {
+    const id = btn.dataset.id;
+    antTrabajadorActual = id;
+    document.getElementById('modalAntecedentes').style.display = 'flex';
+    document.getElementById('btnNuevoAntecedente').dataset.trabajadorId = id;
+    const info = `${btn.dataset.nombre || ''} ${btn.dataset.apellidos || ''} · C.I.: ${btn.dataset.cedula || ''} · ${btn.dataset.cargo || ''} · ${btn.dataset.unidad || ''}`;
+    document.getElementById('antTrabajadorInfo').textContent = info;
+    cargarAntecedentes(id);
+}
+
+function cerrarAntecedentes() {
+    document.getElementById('modalAntecedentes').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnCerrarAnt = document.getElementById('btnCerrarAntecedentes');
+    const btnNuevo = document.getElementById('btnNuevoAntecedente');
+    const modalAnt = document.getElementById('modalAntecedentes');
+    if (btnCerrarAnt) btnCerrarAnt.onclick = cerrarAntecedentes;
+    if (modalAnt) {
+        modalAnt.addEventListener('click', (e) => { if (e.target === modalAnt) cerrarAntecedentes(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modForm = document.getElementById('modalAntecedenteForm');
+                const modDocs = document.getElementById('modalAntecedenteDocs');
+                if (modDocs && modDocs.style.display === 'flex') return cerrarAntDocs();
+                if (modForm && modForm.style.display === 'flex') return cerrarAntForm();
+                if (modalAnt && modalAnt.style.display === 'flex') cerrarAntecedentes();
+            }
+        });
+    }
+    if (btnNuevo) btnNuevo.onclick = () => abrirFormAntecedente('nuevo', null);
+    const btnRelacionCargos = document.getElementById('btnVerRelacionCargos');
+    if (btnRelacionCargos) btnRelacionCargos.onclick = () => {
+        if (antTrabajadorActual) window.open('/reportes/relacion-cargos/' + antTrabajadorActual, '_blank');
+    };
+
+    const formAnt = document.getElementById('formAntecedente');
+    if (formAnt) formAnt.onsubmit = async (e) => {
+        e.preventDefault();
+        const idAnt = document.getElementById('antCampoId').value;
+        const trabajadorId = antTrabajadorActual || document.getElementById('btnNuevoAntecedente').dataset.trabajadorId;
+        const payload = {
+            institucion: document.getElementById('antCampoInstitucion').value,
+            cargo: document.getElementById('antCampoCargo').value || null,
+            condicion_laboral: document.getElementById('antCampoCondicion').value || null,
+            dedicacion: document.getElementById('antCampoDedicacion').value || null,
+            fecha_inicio: document.getElementById('antCampoInicio').value,
+            fecha_fin: document.getElementById('antCampoFin').value || null,
+            observaciones: document.getElementById('antCampoObs').value || null,
+            es_institucion_actual: document.getElementById('antCampoActual').checked ? 1 : 0,
+        };
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        let url, metodo;
+        if (idAnt) { url = '/antecedentes/' + idAnt; metodo = 'PUT'; }
+        else { url = '/trabajadores/' + trabajadorId + '/antecedentes'; metodo = 'POST'; }
+        try {
+            const resp = await fetch(url, { method: metodo, headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }, body: JSON.stringify(payload) });
+            const json = await resp.json().catch(()=>({}));
+            if (resp.ok && json.estado === 'success') {
+                mostrarToast('Antecedente guardado correctamente', 'success');
+                cerrarAntForm();
+                await cargarAntecedentes(trabajadorId);
+            } else {
+                mostrarToast(json.mensaje || 'Error al guardar antecedente', 'danger');
+            }
+        } catch (err) { mostrarToast('Error al guardar antecedente', 'danger'); }
+    };
+    const btnCancelAnt = document.getElementById('btnCancelarAntecedente');
+    if (btnCancelAnt) btnCancelAnt.onclick = cerrarAntForm;
+
+    const formDoc = document.getElementById('formAntecedenteDoc');
+    if (formDoc) formDoc.onsubmit = async (e) => {
+        e.preventDefault();
+        const antId = formDoc.dataset.antecedenteId;
+        const fd = new FormData();
+        fd.append('tipo_documento', document.getElementById('antDocTipo').value);
+        fd.append('numero_providencia', document.getElementById('antDocProvidencia').value || '');
+        fd.append('fecha_emision', document.getElementById('antDocFecha').value || '');
+        fd.append('institucion_emisora', document.getElementById('antDocInstitucion').value || '');
+        fd.append('folio_numero', document.getElementById('antDocFolioNumero').value || '');
+        fd.append('folio_hojas', document.getElementById('antDocFolioHojas').value || '');
+        fd.append('observaciones', document.getElementById('antDocObs').value || '');
+        const file = document.getElementById('antDocArchivo').files[0];
+        if (file) fd.append('archivo', file);
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        try {
+            const resp = await fetch('/antecedentes/' + antId + '/documentos', { method: 'POST', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }, body: fd });
+            const json = await resp.json().catch(()=>({}));
+            if (resp.ok && json.estado === 'success') {
+                mostrarToast('Documento adjuntado', 'success');
+                formDoc.reset();
+                await abrirAntDocs({ dataset: { antecedenteId: antId, info: document.getElementById('antDocsPeriodoInfo').textContent } });
+            } else {
+                mostrarToast(json.mensaje || 'Error al adjuntar', 'danger');
+            }
+        } catch (err) { mostrarToast('Error al adjuntar', 'danger'); }
+    };
+    const btnCerrarDocs = document.getElementById('btnCerrarAntDocs');
+    if (btnCerrarDocs) btnCerrarDocs.onclick = cerrarAntDocs;
+    const modalDocs = document.getElementById('modalAntecedenteDocs');
+    if (modalDocs) modalDocs.addEventListener('click', (e) => { if (e.target === modalDocs) cerrarAntDocs(); });
+    const modalForm = document.getElementById('modalAntecedenteForm');
+    if (modalForm) modalForm.addEventListener('click', (e) => { if (e.target === modalForm) cerrarAntForm(); });
+});
+
+function abrirFormAntecedente(modo, ant) {
+    const mod = document.getElementById('modalAntecedenteForm');
+    if (mod) mod.style.display = 'flex';
+    document.getElementById('antFormTitulo').innerHTML = modo === 'editar' ? '<i class="fas fa-pen"></i> Editar Período de Servicio' : '<i class="fas fa-calendar-plus"></i> Nuevo Período de Servicio';
+    document.getElementById('antCampoId').value = ant ? ant.id : '';
+    document.getElementById('antCampoInstitucion').value = ant ? ant.institucion || '' : '';
+    document.getElementById('antCampoCargo').value = ant ? ant.cargo || '' : '';
+    document.getElementById('antCampoCondicion').value = ant ? ant.condicion_laboral || '' : '';
+    document.getElementById('antCampoDedicacion').value = ant ? ant.dedicacion || '' : '';
+    document.getElementById('antCampoInicio').value = ant ? ant.fecha_inicio || '' : '';
+    document.getElementById('antCampoFin').value = ant && ant.fecha_fin ? ant.fecha_fin : '';
+    document.getElementById('antCampoObs').value = ant ? ant.observaciones || '' : '';
+    document.getElementById('antCampoActual').checked = !!(ant && ant.es_institucion_actual);
+    const dc = document.getElementById('antListaCondiciones');
+    const dd = document.getElementById('antListaDedicaciones');
+    if (dc) dc.innerHTML='';
+    if (dd) dd.innerHTML='';
+    if (antCatalogo.condiciones) antCatalogo.condiciones.forEach(v => { const o=document.createElement('option'); o.value=v; dc.appendChild(o); });
+    if (antCatalogo.dedicaciones) antCatalogo.dedicaciones.forEach(v => { const o=document.createElement('option'); o.value=v; dd.appendChild(o); });
+}
+
+function cerrarAntForm() {
+    const mod = document.getElementById('modalAntecedenteForm');
+    if (mod) mod.style.display = 'none';
+}
+
+async function cargarAntecedentes(id) {
+    try {
+        const resp = await fetch('/trabajadores/' + id + '/antecedentes');
+        const json = await resp.json().catch(()=>({}));
+        antCatalogo = { condiciones: json.condiciones||[], dedicaciones: json.dedicaciones||[], tipos: json.tipos_documento||[] };
+        renderAntecedentes(json.antecedentes || []);
+    } catch (err) {
+        const cont = document.getElementById('antLista');
+        if (cont) cont.innerHTML = '<p style="text-align:center;padding:26px;opacity:0.6;">Error al cargar antecedentes.</p>';
+    }
+}
+
+function renderAntecedentes(items) {
+    const cont = document.getElementById('antLista');
+    if (!cont) return;
+    if (!items.length) { cont.innerHTML = '<p style="text-align:center;padding:26px;opacity:0.6;">No hay antecedentes registrados.</p>'; return; }
+    let html = '<table class="custom-table" style="min-width:700px;"><thead><tr><th>Institución</th><th>Cargo</th><th>Condición</th><th>Dedicación</th><th>Inicio</th><th>Fin</th><th>Vigente</th><th>Docs</th><th>Acciones</th></tr></thead><tbody>';
+    items.forEach(a => {
+        const docs = (a.documentos||[]).length;
+        const vigente = a.es_institucion_actual ? '<span class="type-tag" style="background:#dcfce7;color:#166534;">Sí</span>' : '<span class="type-tag">No</span>';
+        const fin = a.fecha_fin || (a.es_institucion_actual ? '—' : '');
+        html += `<tr data-id="${a.id}">
+            <td><strong>${escaparHTML2(a.institucion)}</strong>${a.observaciones?'<div style="font-size:0.7rem;opacity:0.6;margin-top:2px;">'+escaparHTML2(a.observaciones)+'</div>':''}</td>
+            <td>${escaparHTML2(a.cargo)}</td>
+            <td>${escaparHTML2(a.condicion_laboral)}</td>
+            <td>${escaparHTML2(a.dedicacion)}</td>
+            <td>${a.fecha_inicio||''}</td>
+            <td>${fin}</td>
+            <td>${vigente}</td>
+            <td>${docs}</td>
+            <td>
+                <div class="acciones-cell">
+                    <button type="button" class="btn-icon" title="Editar período" onclick='editarAntecedente(${JSON.stringify(a).replace(/'/g,"&#39;")})'><i class="fas fa-pen"></i></button>
+                    <button type="button" class="btn-icon" title="Documentos (R7)" onclick="abrirAntDocs(this)" data-antecedente-id="${a.id}" data-info="${escaparHTML2(a.institucion)} · ${a.fecha_inicio||''}"><i class="fas fa-paperclip"></i></button>
+                    <button type="button" class="btn-icon btn-eliminar" title="Eliminar" onclick="eliminarAntecedente(${a.id})"><i class="fas fa-trash-can"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    cont.innerHTML = html;
+}
+
+function editarAntecedente(a) {
+    abrirFormAntecedente('editar', a);
+}
+
+async function eliminarAntecedente(id) {
+    if (!confirm('¿Eliminar este antecedente de servicio?')) return;
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    try {
+        const resp = await fetch('/antecedentes/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' } });
+        const json = await resp.json().catch(()=>({}));
+        if (resp.ok && json.estado === 'success') {
+            mostrarToast('Antecedente eliminado', 'success');
+            await cargarAntecedentes(antTrabajadorActual);
+        } else mostrarToast(json.mensaje || 'Error al eliminar', 'danger');
+    } catch (err) { mostrarToast('Error al eliminar', 'danger'); }
+}
+
+async function abrirAntDocs(btn) {
+    const mod = document.getElementById('modalAntecedenteDocs');
+    if (mod) mod.style.display = 'flex';
+    const antId = btn.dataset.antecedenteId;
+    const formDoc = document.getElementById('formAntecedenteDoc');
+    if (formDoc) formDoc.dataset.antecedenteId = antId;
+    const info = document.getElementById('antDocsPeriodoInfo');
+    if (info) info.textContent = btn.dataset.info || '';
+    const sel = document.getElementById('antDocTipo');
+    if (sel) { sel.innerHTML = ''; (antCatalogo.tipos||[]).forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); }); }
+    await cargarAntDocsLista(antId);
+}
+
+function cerrarAntDocs() {
+    const mod = document.getElementById('modalAntecedenteDocs');
+    if (mod) mod.style.display = 'none';
+}
+
+async function cargarAntDocsLista(antId) {
+    const cont = document.getElementById('antDocsLista');
+    if (!cont) return;
+    cont.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.6;">Cargando...</p>';
+    try {
+        const resp = await fetch('/trabajadores/' + antTrabajadorActual + '/antecedentes');
+        const json = await resp.json().catch(()=>({}));
+        const ant = (json.antecedentes||[]).find(x => String(x.id) === String(antId));
+        if (!ant || !ant.documentos.length) { cont.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.6;">No hay documentos adjuntos.</p>'; return; }
+        let html = '<div style="display:grid;gap:10px;">';
+        ant.documentos.forEach(d => {
+            const link = d.archivo ? `<a href="/storage/${d.archivo}" target="_blank" class="btn-icon" title="Ver archivo"><i class="fas fa-eye"></i></a>` : '';
+            html += `<div style="border:1px solid rgba(148,163,184,0.35);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+                <div style="font-size:0.8rem;line-height:1.5;">
+                    <strong>${escaparHTML2(d.tipo_documento)}</strong>
+                    ${d.numero_providencia?'<div>Nº: '+escaparHTML2(d.numero_providencia)+'</div>':''}
+                    ${d.fecha_emision?'<div>Fecha: '+d.fecha_emision+'</div>':''}
+                    ${d.institucion_emisora?'<div>Emisor: '+escaparHTML2(d.institucion_emisora)+'</div>':''}
+                    ${(d.folio_numero||d.folio_hojas)?'<div>Folio: '+escaparHTML2(d.folio_numero)+' '+(d.folio_hojas?(' ('+d.folio_hojas+' hojas)'):'')+'</div>':''}
+                    ${d.observaciones?'<div style="opacity:0.7;">'+escaparHTML2(d.observaciones)+'</div>':''}
+                </div>
+                <div class="acciones-cell">${link}<button type="button" class="btn-icon btn-eliminar" title="Eliminar documento" onclick="eliminarAntDoc(${d.id})"><i class="fas fa-trash-can"></i></button></div>
+            </div>`;
+        });
+        html += '</div>';
+        cont.innerHTML = html;
+    } catch (err) { cont.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.6;">Error al cargar documentos.</p>'; }
+}
+
+async function eliminarAntDoc(id) {
+    if (!confirm('¿Eliminar este documento de respaldo?')) return;
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    try {
+        const resp = await fetch('/antecedente-documentos/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' } });
+        const json = await resp.json().catch(()=>({}));
+        if (resp.ok && json.estado === 'success') {
+            mostrarToast('Documento eliminado', 'success');
+            const antId = document.getElementById('formAntecedenteDoc').dataset.antecedenteId;
+            await cargarAntDocsLista(antId);
+            await cargarAntecedentes(antTrabajadorActual);
+        } else mostrarToast(json.mensaje || 'Error al eliminar', 'danger');
+    } catch (err) { mostrarToast('Error al eliminar', 'danger'); }
+}

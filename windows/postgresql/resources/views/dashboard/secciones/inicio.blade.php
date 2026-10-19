@@ -1,18 +1,25 @@
 {{-- inicio.blade.php - Página de inicio del dashboard: tarjetas de estadísticas, gráfico de solicitudes por mes, vencimientos próximos y feed de actividad reciente. --}}
 <style>
-    .tasa-dolar-card{display:flex;align-items:center;gap:20px;background:linear-gradient(135deg,#1a365d,#1e3a8a);border-radius:16px;padding:24px;color:#fff;flex-wrap:wrap;}
+    /* Panel de la tasa del dólar — usa el color de acento del usuario (--accent)
+       con un tono oscurecido como segundo color del degradado. */
+    .tasa-dolar-card{
+        display:flex;align-items:center;gap:20px;
+        background:linear-gradient(135deg, var(--accent, #1a365d), var(--accent-dark, #1e3a8a));
+        border-radius:16px;padding:24px;color:#fff;flex-wrap:wrap;
+    }
     .tasa-dolar-icon{font-size:2.2rem;opacity:0.75;}
     .tasa-dolar-info{flex:1;min-width:220px;}
     .tasa-dolar-label{font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin:0 0 4px;}
     .tasa-dolar-info h2{font-size:2rem;font-weight:800;margin:0;line-height:1;}
     .tasa-dolar-meta{font-size:0.72rem;opacity:0.65;margin-top:6px;}
     .tasa-dolar-status{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;}
-    body.dark-mode .tasa-dolar-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid #334155;}
+    body.dark-mode .tasa-dolar-card{background:linear-gradient(135deg, var(--accent, #1e293b), #0f172a);border:1px solid #334155;}
+    body.theme-modern .tasa-dolar-card{background:linear-gradient(135deg, var(--accent, #4f46e5), #312e81);}
 </style>
 <header class="welcome-header">
     <div class="welcome-text">
         <p class="subtitle"></p>
-        <h1>Panel de Gestión Integral</h1>
+        <h1>Panel de <span class="text-blue-accent">Gestión Integral</span></h1>
     </div>
     <button class="btn-primary" onclick="switchTab('solicitudes')" type="button">
         <i class="fas fa-circle-plus"></i> Nueva Solicitud

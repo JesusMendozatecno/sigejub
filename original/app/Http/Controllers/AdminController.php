@@ -78,9 +78,10 @@ class AdminController extends Controller
             return response()->json(['mensaje' => 'No puedes eliminar tu propio usuario.'], 422);
         }
         $user = User::findOrFail($id);
-        if ($user->avatar) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
-        }
+
+        // Borra todas las imágenes del usuario (avatar u_{id} en cualquier extensión).
+        app(\App\Services\ImageStorageService::class)->eliminar('avatars', 'u_' . $user->id, $user->avatar);
+
         $user->delete();
         return response()->json(['mensaje' => 'Usuario eliminado.']);
     }
@@ -100,7 +101,7 @@ class AdminController extends Controller
             $query->where('created_at', '>=', now()->subDays($days));
         }
 
-        $activities = $query->with('user')->latest()->paginate(min($request->get('per_page', 5), 100));
+        $activities = $query->with('user')->latest()->paginate(min($request->get('per_page', 20), 100));
 
         return response()->json($activities);
     }
@@ -108,7 +109,7 @@ class AdminController extends Controller
     public function actividadReciente(Request $request)
     {
         return response()->json(
-            Activity::with('user')->latest()->paginate(min($request->get('per_page', 8), 100))
+            Activity::with('user')->latest()->paginate(min($request->get('per_page', 20), 100))
         );
     }
 

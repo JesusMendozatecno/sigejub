@@ -411,11 +411,12 @@
 
         const val = e.target.value.trim();
         if (val.length === 0) {
-            // Sin búsqueda: cargar últimos 10
-            timeoutBusqueda = setTimeout(async () => {
-                const r = await cargarAutocomplete();
-                mostrarAutocomplete(r);
-            }, 200);
+            // Sin texto: se oculta la lista (no mostrar trabajadores hasta que escriba)
+            const listaVacia = document.getElementById('autocompleteList');
+            if (listaVacia) {
+                listaVacia.innerHTML = '';
+                listaVacia.style.display = 'none';
+            }
             return;
         }
         if (val.length < 2) return;
@@ -583,8 +584,12 @@
         // Fecha de solicitud = hoy (por defecto)
         const fFecha = document.querySelector('#formSolicitud [name="fecha_solicitud"]');
         if (fFecha) fFecha.value = hoyLocal();
-        const r = await cargarAutocomplete();
-        mostrarAutocomplete(r);
+        // No se muestran trabajadores hasta que el usuario empiece a escribir
+        const listaAuto = document.getElementById('autocompleteList');
+        if (listaAuto) {
+            listaAuto.innerHTML = '';
+            listaAuto.style.display = 'none';
+        }
     };
 
     function cerrarModalSolicitud() {

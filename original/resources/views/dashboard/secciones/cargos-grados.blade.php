@@ -6,6 +6,8 @@
 body.dark-mode .cg-tabs{background:#1e293b;}
 body.dark-mode .cg-tab.active{background:#0f172a;color:#f1f5f9;}
 body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
+.cg-tabs{flex-wrap:wrap;}
+.cg-tab{flex:1 1 auto;min-width:130px;}
 </style>
 
 <header class="section-header">
@@ -25,6 +27,8 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
     <button class="cg-tab" data-tab="grados" id="tabGrados"><i class="fas fa-graduation-cap"></i> Grados</button>
     <button class="cg-tab" data-tab="unidad-departamento" id="tabUnidades"><i class="fas fa-building"></i> Unidad / Depto</button>
     <button class="cg-tab" data-tab="nivel-instruccion" id="tabNiveles"><i class="fas fa-user-graduate"></i> Nivel de Instrucción</button>
+    <button class="cg-tab" data-tab="tipo-contrato" id="tabCondicion"><i class="fas fa-file-signature"></i> Condición Laboral</button>
+    <button class="cg-tab" data-tab="dedicacion" id="tabDedicacion"><i class="fas fa-clock"></i> Dedicación</button>
 </div>
 
 <div class="search-filter-bar">
@@ -107,8 +111,8 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
 (function(){
     let currentPage = 1;
     let tipoActivo = 'cargo';
-    const MAP = { cargo: 'Cargo', grado: 'Grado', 'unidad-departamento': 'Unidad / Departamento', 'nivel-instruccion': 'Nivel de Instrucción' };
-    const ICONS = { cargo: 'fa-briefcase', grado: 'fa-graduation-cap', 'unidad-departamento': 'fa-building', 'nivel-instruccion': 'fa-user-graduate' };
+    const MAP = { cargo: 'Cargo', grado: 'Grado', 'unidad-departamento': 'Unidad / Departamento', 'nivel-instruccion': 'Nivel de Instrucción', 'tipo-contrato': 'Condición Laboral', dedicacion: 'Dedicación' };
+    const ICONS = { cargo: 'fa-briefcase', grado: 'fa-graduation-cap', 'unidad-departamento': 'fa-building', 'nivel-instruccion': 'fa-user-graduate', 'tipo-contrato': 'fa-file-signature', dedicacion: 'fa-clock' };
 
     function cambiarTipo(tipo) {
         tipoActivo = tipo;
@@ -116,6 +120,8 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
         document.getElementById('tabGrados').classList.toggle('active', tipo === 'grado');
         document.getElementById('tabUnidades').classList.toggle('active', tipo === 'unidad-departamento');
         document.getElementById('tabNiveles').classList.toggle('active', tipo === 'nivel-instruccion');
+        document.getElementById('tabCondicion').classList.toggle('active', tipo === 'tipo-contrato');
+        document.getElementById('tabDedicacion').classList.toggle('active', tipo === 'dedicacion');
         document.getElementById('buscadorCG').value = '';
         document.getElementById('filtroEstadoCG').value = '';
         currentPage = 1;
@@ -126,6 +132,8 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
     document.getElementById('tabGrados')?.addEventListener('click', () => cambiarTipo('grado'));
     document.getElementById('tabUnidades')?.addEventListener('click', () => cambiarTipo('unidad-departamento'));
     document.getElementById('tabNiveles')?.addEventListener('click', () => cambiarTipo('nivel-instruccion'));
+    document.getElementById('tabCondicion')?.addEventListener('click', () => cambiarTipo('tipo-contrato'));
+    document.getElementById('tabDedicacion')?.addEventListener('click', () => cambiarTipo('dedicacion'));
 
     async function cargarDatos(page) {
         page = page || 1;

@@ -108,6 +108,14 @@ class AuthController extends Controller
         'rol' => 'usuario',
     ]);
 
+    // Todo usuario nuevo recibe la imagen de perfil por defecto (avatars/u_{id}.png).
+    $rutaAvatar = app(\App\Services\ImageStorageService::class)
+        ->copiarPorDefecto('avatars', 'u_' . $user->id, public_path('img/avatar-default.png'));
+    if ($rutaAvatar) {
+        $user->avatar = $rutaAvatar;
+        $user->save();
+    }
+
     Activity::log('created', 'usuario', $user->id,
         "Se registró el usuario {$user->nombre} {$user->apellido}");
 

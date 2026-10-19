@@ -128,6 +128,11 @@ class TrabajadorController extends Controller
             'tipo_jubilacion' => $trabajador->tipo_jubilacion_id
                 ? optional(DB::table('tipos_jubilacion')->where('id', $trabajador->tipo_jubilacion_id)->first())->nombre
                 : null,
+            'tipo_contrato_id' => $trabajador->tipo_contrato_id,
+            'tipo_contrato' => $trabajador->tipo_contrato_id
+                ? optional(DB::table('tipos_contrato')->where('id', $trabajador->tipo_contrato_id)->first())->nombre
+                : null,
+            'dedicacion' => $trabajador->dedicacion,
             'estudio' => DB::table('estudios')->where('trabajador_id', $trabajador->id)->first()
                 ?: null,
             'actividad_universitaria_info' => DB::table('actividades_universitarias')->where('trabajador_id', $trabajador->id)->first()
@@ -162,21 +167,23 @@ class TrabajadorController extends Controller
                 'anos_servicio_externo' => 'nullable|integer|min:0|max:60',
                 'nivel_instruccion' => 'nullable|integer|min:1|max:5',
                 'nivel_instruccion_id' => 'nullable|integer|exists:niveles_instruccion,id',
-                'tipo_jubilacion_id' => 'nullable|integer|exists:tipos_jubilacion,id',
-                'especialidad' => 'nullable|string|max:150',
-                'casa_estudio' => 'nullable|string|max:150',
-                'casa_egreso' => 'nullable|string|max:150',
-                'cuenta_bancaria' => 'nullable|string|digits:20',
-                'numero_hijos' => 'nullable|integer|min:0',
-                'hijos_discapacidad' => 'nullable|integer|min:0',
-                'actividad_universitaria' => 'nullable|boolean',
-                'act_univ_tipo' => 'nullable|string|max:150',
-                'act_univ_lugar' => 'nullable|string|max:150',
-                'act_univ_desde' => 'nullable|date',
-                'act_univ_hasta' => 'nullable|date|after_or_equal:act_univ_desde',
-                'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
-                'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
-            ]);
+            'tipo_jubilacion_id' => 'nullable|integer|exists:tipos_jubilacion,id',
+            'tipo_contrato_id' => 'nullable|integer|exists:tipos_contrato,id',
+            'dedicacion' => 'nullable|string|max:100',
+            'especialidad' => 'nullable|string|max:150',
+            'casa_estudio' => 'nullable|string|max:150',
+            'casa_egreso' => 'nullable|string|max:150',
+            'cuenta_bancaria' => 'nullable|string|digits:20',
+            'numero_hijos' => 'nullable|integer|min:0',
+            'hijos_discapacidad' => 'nullable|integer|min:0',
+            'actividad_universitaria' => 'nullable|boolean',
+            'act_univ_tipo' => 'nullable|string|max:150',
+            'act_univ_lugar' => 'nullable|string|max:150',
+            'act_univ_desde' => 'nullable|date',
+            'act_univ_hasta' => 'nullable|date|after_or_equal:act_univ_desde',
+            'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
+            'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
+        ]);
 
             $datos = $validated;
 
@@ -285,6 +292,8 @@ class TrabajadorController extends Controller
                 'nivel_instruccion' => 'nullable|integer|min:1|max:5',
                 'nivel_instruccion_id' => 'nullable|integer|exists:niveles_instruccion,id',
                 'tipo_jubilacion_id' => 'nullable|integer|exists:tipos_jubilacion,id',
+                'tipo_contrato_id' => 'nullable|integer|exists:tipos_contrato,id',
+                'dedicacion' => 'nullable|string|max:100',
                 'especialidad' => 'nullable|string|max:150',
                 'casa_estudio' => 'nullable|string|max:150',
                 'casa_egreso' => 'nullable|string|max:150',

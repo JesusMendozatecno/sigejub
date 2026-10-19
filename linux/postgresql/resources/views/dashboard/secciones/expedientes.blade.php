@@ -104,6 +104,15 @@
                 <p class="empty-state" style="padding: 30px;">No hay documentos cargados.</p>
             </div>
 
+            <div class="documentos-header" style="margin-top:18px;">
+                <h3><i class="fas fa-money-check-dollar" size="18"></i> Recibos de Nómina</h3>
+                <button class="btn-subir-doc" id="btnSubirRecibo"><i class="fas fa-upload" size="16"></i> Adjuntar Recibo</button>
+            </div>
+            <p style="font-size:0.78rem;color:#64748b;margin:-6px 0 10px;">Adjunte los comprobantes de nómina de cada período (PDF, JPG o PNG). El monto en dólares es opcional.</p>
+            <div class="documentos-list" id="recibosList">
+                <p class="empty-state" style="padding: 30px;">No hay recibos de nómina adjuntos.</p>
+            </div>
+
             <div class="historial-card">
                 <h4><i class="fas fa-wave-square" size="16"></i> Actividad del Expediente</h4>
                 <div id="expedienteActividad">
@@ -190,6 +199,42 @@
             <div class="modal-actions" style="justify-content:center;">
                 <button type="button" class="btn-cancel" id="btnCancelarSubirDoc">Cancelar</button>
                 <button type="submit" class="btn-submit">Subir</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para adjuntar recibo de nómina (R3) -->
+<div id="modalSubirRecibo" class="modal-overlay">
+    <div class="modal-delete-box" style="text-align:left;max-width:520px;">
+        <h3 style="text-align:center;"><i class="fas fa-money-check-dollar"></i> Adjuntar Recibo de Nómina</h3>
+        <form id="formSubirRecibo" enctype="multipart/form-data">
+            @csrf
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="input-group" style="margin-bottom:4px;">
+                    <label>PERÍODO</label>
+                    <input type="month" name="periodo" placeholder="AAAA-MM">
+                </div>
+                <div class="input-group" style="margin-bottom:4px;">
+                    <label>MONTO (USD, OPCIONAL)</label>
+                    <input type="number" step="0.01" min="0" name="monto_usd" placeholder="Ej: 250.00" onkeypress="if(!/[0-9.]/.test(event.key))event.preventDefault()">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>CONCEPTO</label>
+                <input type="text" name="concepto" maxlength="150" placeholder="Ej: Nómina enero 2026">
+            </div>
+            <div class="input-group">
+                <label>OBSERVACIONES</label>
+                <input type="text" name="observaciones" maxlength="2000" placeholder="Referencia del comprobante">
+            </div>
+            <div class="input-group">
+                <label>ARCHIVO (PDF, JPG o PNG · máx. 100 MB)</label>
+                <input type="file" name="archivo" required accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="modal-actions" style="justify-content:center;">
+                <button type="button" class="btn-cancel" id="btnCancelarSubirRecibo">Cancelar</button>
+                <button type="submit" class="btn-submit">Adjuntar</button>
             </div>
         </form>
     </div>
@@ -316,6 +361,7 @@
             expedienteDocsActuales = (exp.documentos || []).filter(d => d.estado !== 'rechazado');
             renderChecklistRequeridos(exp.documentos || []);
             renderDocumentos(exp.documentos || []);
+            renderRecibos(exp.recibos || []);
             renderCartaAprobacion(exp);
             cargarActividadExpediente();
         } catch (err) {
@@ -592,6 +638,92 @@
         });
         document.getElementById('btnCancelarSubirDoc')?.addEventListener('click', () => {
             document.getElementById('modalSubirDocumento').style.display = 'none';
+        });
+
+        // === RECIBOS DE NÓMINA (R3) ===
+        function renderRecibos(recibos) {
+            const container = document.getElementById('recibosList');
+            if (!container) return;
+            if (!recibos.length) {
+                container.innerHTML = '<p class="empty-state" style="padding:30px;">No hay recibos de nómina adjuntos.</p>';
+                return;
+            }
+            const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+            container.innerHTML = recibos.map(r => `
+                <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <div style="font-size:0.82rem;line-height:1.55;">
+                        <strong>${esc(r.periodo || '—')}</strong>${r.concepto ? ' · ' + esc(r.concepto) : ''}
+                        ${r.monto_usd ? '<span style="color:#16a34a;font-weight:700;margin-left:8px;">$ ' + Number(r.monto_usd).toFixed(2) + '</span>' : ''}
+                        ${r.observaciones ? '<div style="font-size:0.75rem;color:#64748b;">' + esc(r.observaciones) + '</div>' : ''}
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        ${r.archivo ? `<a href="/storage/${esc(r.archivo)}" target="_blank" class="btn-icon btn-ver" title="Ver recibo"><i class="fas fa-eye"></i></a>` : ''}
+                        <button type="button" class="btn-icon btn-eliminar" title="Eliminar recibo" data-recibo-id="${r.id}"><i class="fas fa-trash-can"></i></button>
+                    </div>
+                </div>`).join('');
+            container.querySelectorAll('[data-recibo-id]').forEach(btn => {
+                btn.addEventListener('click', () => eliminarRecibo(parseInt(btn.dataset.reciboId, 10)));
+            });
+        }
+
+        async function eliminarRecibo(id) {
+            if (!id) return;
+            if (!confirm('¿Eliminar este recibo de nómina?')) return;
+            try {
+                mostrarCargando('Eliminando recibo...');
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
+                const resp = await fetch(`/recibos-pago/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) throw data;
+                mostrarToast(data.mensaje || 'Recibo eliminado.', 'success');
+                abrirDetalle(expedienteActualId);
+            } catch (err) {
+                mostrarToast(err.mensaje || 'Error al eliminar el recibo.', 'error');
+            } finally {
+                ocultarCargando();
+            }
+        }
+
+        document.getElementById('btnSubirRecibo')?.addEventListener('click', () => {
+            if (!expedienteActualId) return;
+            document.getElementById('formSubirRecibo').reset();
+            document.getElementById('modalSubirRecibo').style.display = 'flex';
+        });
+        document.getElementById('btnCancelarSubirRecibo')?.addEventListener('click', () => {
+            document.getElementById('modalSubirRecibo').style.display = 'none';
+        });
+        document.getElementById('modalSubirRecibo')?.addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+        document.getElementById('formSubirRecibo')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!expedienteActualId) return;
+            const formData = new FormData(e.target);
+            const btn = e.target.querySelector('.btn-submit');
+            btn.disabled = true; btn.textContent = 'Subiendo...';
+            try {
+                mostrarCargando('Subiendo recibo...');
+                const resp = await fetch(`/expedientes/${expedienteActualId}/recibos`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw data;
+                mostrarToast(data.mensaje, 'success');
+                document.getElementById('modalSubirRecibo').style.display = 'none';
+                abrirDetalle(expedienteActualId);
+            } catch (err) {
+                mostrarToast(err.mensaje || err.message || 'Error al subir el recibo', 'error');
+            } finally {
+                ocultarCargando();
+                btn.disabled = false; btn.textContent = 'Adjuntar';
+            }
         });
 
         document.getElementById('formSubirDocumento')?.addEventListener('submit', async (e) => {

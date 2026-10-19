@@ -1,0 +1,1175 @@
+/* ============================================================
+   rediseno.css — Capa de modernización visual de SIGEJUB
+   ------------------------------------------------------------
+   Se carga DESPUÉS de dashboard.min.css, dark-mode.css y
+   modern-theme.css (y antes de modal.css / responsive.css /
+   profile.css), por lo que puede refinar tokens y componentes
+   sin tocar la logica ni la estructura de los módulos.
+
+   Contenido:
+     1. Tokens — tema claro
+     2. Tokens — modo oscuro (body.dark-mode)
+     3. Tokens — tema modern (body.theme-modern)
+     4. Base y utilidades globales
+     5. Topbar y cabecera
+     4. Sidebar y menú
+   6. Contenido, tarjetas y encabezados de sección
+   7. Tablas
+   8. Formularios
+   9. Botones
+  10. Badges y estados
+   L. Paginación
+   M. Pestañas (tabs / toggles)
+   N. Menús desplegables
+   O. Estados vacíos, toasts y varios
+   ============================================================ */
+
+/* ============================================================
+   A. TOKENS — MODO CLARO
+   Paleta limpia: fondo gris muy suave, tarjetas blancas,
+   texto slate, bordes de bajo contraste y sombras sutiles.
+   ============================================================ */
+:root {
+    /* Acento (se sobreescribe en línea con el color del usuario) */
+    --accent-light: #3b82f6;
+    --accent-dark: #142c4e;
+    --accent-subtle: rgba(26, 54, 93, 0.08);
+    --accent-hover: #1e40af;
+
+    /* Superficies */
+    --bg-body: #f3f5f9;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --bg-surface: #f1f5f9;
+    --bg-sidebar: #ffffff;
+    --bg-topbar: #ffffff;
+    --bg-input: #ffffff;
+    --bg-input-focus: #ffffff;
+    --bg-overlay: rgba(15, 23, 42, 0.45);
+    --bg-body-overlay: rgba(243, 245, 249, 0.94);
+
+    /* Texto */
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --text-inverse: #ffffff;
+    --text-link: #2563eb;
+
+    /* Bordes */
+    --border: #e6eaf1;
+    --border-light: #eef1f6;
+    --border-focus: #3b82f6;
+    --border-input: #dbe2ec;
+
+    /* Sombras — suaves y modernas */
+    --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.05);
+    --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.05);
+    --shadow-lg: 0 10px 20px -6px rgba(16, 24, 40, 0.10), 0 4px 8px -4px rgba(16, 24, 40, 0.05);
+    --shadow-xl: 0 20px 32px -12px rgba(16, 24, 40, 0.14), 0 8px 12px -8px rgba(16, 24, 40, 0.06);
+    --shadow-2xl: 0 25px 50px -12px rgba(16, 24, 40, 0.22);
+    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.16);
+    --shadow-card: 0 1px 3px rgba(16, 24, 40, 0.05), 0 1px 2px rgba(16, 24, 40, 0.04);
+    /* Variable usada por los estilos de tarjetas del bundle (no estaba definida) */
+    --card-shadow: var(--shadow-card);
+
+    /* Radios coherentes */
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+
+    /* Estados */
+    --success: #059669;
+    --success-light: #ecfdf5;
+    --success-dark: #047857;
+    --warning: #d97706;
+    --warning-light: #fffbeb;
+    --warning-dark: #b45309;
+    --error: #dc2626;
+    --error-light: #fef2f2;
+    --error-dark: #b91c1c;
+    --info: #2563eb;
+    --info-light: #eff6ff;
+    --info-dark: #1d4ed8;
+}
+
+/* ============================================================
+   TOKENS — MODO OSCURO
+   Gris azulado (nada de negro absoluto) con superficies
+   escalonadas y bordes tenues.
+   ============================================================ */
+body.dark-mode {
+    --bg-body: #111827;
+    --bg-card: #1b2638;
+    --bg-card-hover: #202d42;
+    --bg-surface: #202d42;
+    --bg-sidebar: #141d2e;
+    --bg-topbar: #141d2e;
+    --bg-input: #202d42;
+    --bg-input-focus: #27364d;
+    --bg-overlay: rgba(3, 7, 18, 0.6);
+    --bg-body-overlay: rgba(17, 24, 39, 0.95);
+
+    --text-primary: #f1f5f9;
+    --text-secondary: #a6b4c8;
+    --text-muted: #8695ad;
+    --text-inverse: #0b1120;
+    --text-link: #60a5fa;
+
+    --border: #2c3b52;
+    --border-light: #243347;
+    --border-focus: #60a5fa;
+    --border-input: #3a4d68;
+
+    --accent-light: #60a5fa;
+    --accent-subtle: rgba(96, 165, 250, 0.14);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 22px -6px rgba(0, 0, 0, 0.55);
+    --shadow-xl: 0 18px 34px -10px rgba(0, 0, 0, 0.6);
+    --shadow-2xl: 0 26px 50px -12px rgba(0, 0, 0, 0.7);
+    --shadow-focus: 0 0 0 3px rgba(96, 165, 250, 0.22);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --card-shadow: var(--shadow-card);
+
+    /* Estados adaptados al fondo oscuro */
+    --success-light: #064e3b;
+    --success-dark: #6ee7b7;
+    --warning-light: #3d2e00;
+    --warning-dark: #fbbf24;
+    --error-light: #4c1d1d;
+    --error-dark: #fca5a5;
+    --info-light: #1e3a5f;
+    --info-dark: #93c5fd;
+}
+
+/* ============================================================
+   TOKENS — TEMA "MODERN"
+   Estética contemporánea índigo sobre neutros fríos.
+   ============================================================ */
+body.theme-modern {
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --accent-dark: #4f46e5;
+    --accent-subtle: rgba(99, 102, 241, 0.12);
+    --accent-hover: #4f46e5;
+
+    --bg-body: #eef1f8;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f5f7fc;
+    --bg-surface: #eef1f8;
+    --bg-sidebar: #111827;
+    --bg-topbar: #ffffff;
+    --bg-input: #f4f6fb;
+    --bg-input-focus: #ffffff;
+    --bg-body-overlay: rgba(238, 241, 248, 0.94);
+
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+
+    --border: #e2e7f0;
+    --border-light: #eef1f7;
+    --border-input: #d5dbe7;
+
+    --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 4px 12px -4px rgba(16, 24, 40, 0.06);
+    --card-shadow: var(--shadow-card);
+}
+
+/* ============================================================
+   BASE Y GLOBAL
+   ============================================================ */
+::selection {
+    background: var(--accent);
+    color: #ffffff;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--text-muted) 75%, transparent);
+    background-clip: content-box;
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-input) transparent;
+}
+
+/* Anillo de foco accesible y coherente en toda la app */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   TOP BAR Y CABECERA
+   ============================================================ */
+.top-bar {
+    background: var(--bg-topbar);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+}
+
+.header-brand h3 {
+    letter-spacing: -0.01em;
+}
+
+.logo-box {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark)) !important;
+    color: #ffffff;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-sm);
+}
+
+.theme-toggle-btn {
+    border-radius: var(--radius-md) !important;
+    color: var(--text-secondary) !important;
+}
+.theme-toggle-btn:hover {
+    background: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+}
+body.dark-mode .theme-toggle-btn:hover {
+    background: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+}
+
+.notif-trigger {
+    border-radius: var(--radius-md) !important;
+    color: var(--text-secondary) !important;
+}
+.notif-trigger:hover {
+    background: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+}
+
+.notif-menu {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-xl) !important;
+}
+
+.dropdown-trigger {
+    border-radius: var(--radius-full);
+}
+.dropdown-trigger:hover {
+    background: var(--bg-surface);
+}
+.dropdown-trigger p {
+    color: var(--text-primary) !important;
+}
+
+.user-avatar {
+    box-shadow: var(--shadow-xs);
+}
+
+.dropdown-menu {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    padding: 6px 0;
+}
+.dropdown-item {
+    border-radius: var(--radius-sm);
+    margin: 2px 8px;
+    padding: 9px 12px;
+}
+.dropdown-item:hover {
+    background: var(--bg-surface);
+}
+.dropdown-item.text-danger:hover {
+    background: var(--error-light);
+    color: var(--error-dark);
+}
+body.dark-mode .dropdown-item.text-danger {
+    color: #fca5a5;
+}
+body.dark-mode .dropdown-item.text-danger:hover {
+    background: rgba(220, 38, 38, 0.18);
+    color: #fecaca;
+}
+
+/* ============================================================
+   SIDEBAR Y MENÚ
+   ============================================================ */
+.sidebar {
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+}
+
+.sidebar-menu .menu-item {
+    border-radius: var(--radius-md);
+    margin: 2px 8px;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.sidebar-menu .menu-item:hover {
+    background: var(--accent-subtle);
+    color: var(--accent);
+}
+.sidebar-menu .menu-item.active {
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   CONTENIDO, TARJETAS Y ENCABEZADOS DE SECCIÓN
+   ============================================================ */
+.main-content {
+    background: transparent;
+}
+
+.section-header h1 {
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+}
+.section-header p {
+    color: var(--text-muted);
+}
+
+/* Tarjetas / paneles genéricos: unificamos superficie, borde y sombra
+   para los dos temas (los valores duros del bundle se alinean al token) */
+.stat-card,
+.chart-card,
+.chart-container,
+.metric-card,
+.metric-card-styled,
+.metric-card-simple,
+.metric-card-wide,
+.metric-box-white,
+.expediente-card,
+.perfil-expediente,
+.documentos-list,
+.form-card,
+.form-card-form,
+.estado-global-card,
+.recent-activity,
+.historial-card,
+.info-detalle-card,
+.notas-admin-card,
+.docs-card,
+.data-table-container,
+.filters-bar-card,
+.doc-checklist-card,
+.worker-selector-card,
+.income-structure-card,
+.cn-toolbar,
+.cn-stat-card,
+.cn-table-wrap,
+.formula-card,
+.formula-detalle-card,
+.table-wrapper-nomina,
+.prestacion-card,
+.prestacion-info-superior,
+.prestacion-col-izq,
+.prestacion-col-der,
+.modal-resultado-box,
+.modal-tasa-box,
+.doc-tabs,
+.doc-section,
+.doc-empty,
+.doc-checklist-card,
+.audit-card,
+.backup-item,
+.filters-bar-card,
+.global-progress-mini,
+.estado-global-card,
+.income-structure-card,
+.metric-box-white {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+/* Tarjetas de la parrilla (hover con elevación suave) */
+.expediente-card,
+.prestacion-card,
+.metric-card,
+.metric-card-simple,
+.metric-card-wide,
+.stat-card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.expediente-card:hover,
+.prestacion-card:hover,
+.metric-card:hover,
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-input);
+}
+
+.audit-card,
+.documentos-list,
+.estado-global-card,
+.info-detalle-card,
+.notas-admin-card,
+.perfil-expediente,
+.mini-table,
+.doc-item,
+.doc-check,
+.doc-item-row {
+    border-color: var(--border);
+}
+
+/* Filas internas / celdas de listado */
+.doc-item,
+.doc-check {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.doc-item-row:hover {
+    background: var(--bg-card-hover);
+}
+
+/* Inputs/paneles auxiliares que usaban fondos claros fijos */
+.filter-input,
+.currency-input,
+.jubilation-percent-area,
+.input-with-icon input,
+.cn-search-wrap input,
+.cn-date-range input[type=date],
+.filters-bar-card select,
+.filter-group-sm select,
+.form-textarea,
+.filter-group input,
+.filter-group-sm input,
+.filters-bar-card input {
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+}
+
+/* ============================================================
+   TABLAS
+   ============================================================ */
+.custom-table th,
+.cn-table th,
+.admin-table thead th,
+.solicitudes-table thead th,
+.report-table thead th,
+.mini-table thead th,
+.historial-table th,
+.table-wrapper-nomina thead th {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.custom-table td,
+.cn-table td,
+.admin-table td,
+.solicitudes-table td,
+.report-table td,
+.mini-table td,
+.table-wrapper-nomina td {
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
+}
+.custom-table tbody tr:hover td,
+.cn-table tbody tr:hover td,
+.admin-table tbody tr:hover td,
+.solicitudes-table tbody tr:hover td,
+.report-table tbody tr:hover td,
+.mini-table tbody tr:hover td {
+    background: var(--bg-card-hover);
+}
+.custom-table code,
+.cn-table code,
+.admin-table code,
+.table-wrapper-nomina code,
+.codigo-tag,
+.type-tag {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    border-radius: var(--radius-xs);
+    padding: 2px 6px;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.8rem;
+}
+
+/* ============================================================
+   FORMULARIOS
+   ============================================================ */
+.form-input,
+.form-control,
+.input-group input,
+.input-group select,
+.input-group textarea,
+.form-group input,
+.form-group select,
+.form-group textarea,
+input.form-input,
+select.form-input,
+textarea.form-input {
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.form-input:focus,
+.form-control:focus,
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+input.form-input:focus,
+select.form-input:focus,
+textarea.form-input:focus {
+    border-color: var(--border-focus);
+    background: var(--bg-input-focus);
+    box-shadow: var(--shadow-focus);
+    outline: none;
+}
+.form-input::placeholder,
+.form-textarea::placeholder,
+.input-group input::placeholder {
+    color: var(--text-muted);
+}
+.input-group label,
+.form-group label,
+.filter-group label {
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+.btn-primary,
+.btn-primary-dark,
+.btn-submit,
+.btn-sidebar-edit,
+.btn-dark-full,
+.btn-subir-doc,
+.btn-action-primary,
+.btn-action-primary,
+.cn-btn-primary,
+.btn-action-primary {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.btn-primary:hover,
+.btn-primary-dark:hover,
+.btn-submit:hover,
+.btn-subir-doc:hover,
+.btn-action-primary:hover,
+.cn-btn-primary:hover,
+.btn-sidebar-edit:hover {
+    background: var(--accent-dark);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.btn-primary:active,
+.btn-primary-dark:active,
+.btn-submit:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-outline,
+.btn-volver,
+.btn-cancel,
+.btn-cancel-full,
+.btn-white,
+.btn-outline-full,
+.btn-bk-verify,
+.btn-sidebar-cancel,
+.btn-guardar-notas,
+.btn-delete-cancel,
+.btn-ghost-blue,
+.btn-bk-verify,
+.btn-reupload,
+.btn-add-small {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn-outline:hover,
+.btn-cancel:hover,
+.btn-cancel:hover,
+.btn-volver:hover,
+.btn-outline-full:hover,
+.btn-ghost-blue:hover,
+.btn-add-small:hover,
+.btn-delete-cancel:hover,
+.btn-guardar-notas:hover {
+    background: var(--bg-surface);
+    border-color: var(--border-input);
+    color: var(--text-primary);
+}
+
+.btn-outline,
+.btn-outline-full {
+    color: var(--accent);
+}
+.btn-outline:hover,
+.btn-outline-full:hover {
+    color: var(--accent-dark);
+    border-color: var(--accent);
+}
+
+/* Botones de color con acento del usuario */
+.btn-primary-dark,
+.btn-submit,
+.btn-subir-doc,
+.btn-dark-full,
+.btn-sidebar-edit,
+.btn-action-primary {
+    background: var(--accent);
+}
+
+/* Exportación y acciones específicas conservan su semántica */
+.btn-export-excel {
+    background-color: var(--bg-card);
+    color: var(--success-dark);
+    border: 1px solid var(--success-light);
+}
+.btn-export-excel:hover {
+    background-color: var(--success);
+    color: #ffffff;
+    border-color: var(--success);
+}
+
+.btn-logout {
+    background: var(--error-light);
+    color: var(--error-dark);
+    border-radius: var(--radius-md);
+}
+.btn-logout:hover {
+    background: var(--error);
+    color: #ffffff;
+}
+
+/* ============================================================
+   BADGES Y ESTADOS
+   ============================================================ */
+.badge-status,
+.badge-type,
+.ec-badge,
+.status-badge,
+.status-pill,
+.status-tag,
+.trend,
+.type-tag {
+    border-radius: var(--radius-full);
+    font-weight: 600;
+}
+.badge-status.pending,
+.badge-status.approved,
+.badge-status.rejected {
+    border: 1px solid transparent;
+}
+.badge-type {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+}
+.trend.positive {
+    background: var(--success-light);
+    color: var(--success-dark);
+}
+.trend.negative {
+    background: var(--error-light);
+    color: var(--error-dark);
+}
+.trend.neutral {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+}
+
+/* ============================================================
+   PAGINACIÓN
+   ============================================================ */
+.pagination button,
+.cn-btn-pag,
+.activity-pagination .hist-pag-btn,
+.activity-pagination .pag-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.pagination button:hover,
+.cn-btn-pag:hover,
+.activity-pagination .hist-pag-btn:hover,
+.activity-pagination .pag-btn:hover {
+    background: var(--bg-surface);
+    border-color: var(--border-input);
+    color: var(--accent);
+}
+.pagination button.active,
+.cn-btn-pag.active,
+.activity-pagination .hist-pag-btn.active,
+.activity-pagination .pag-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+    box-shadow: var(--shadow-sm);
+}
+.activity-pagination .pag-btn:disabled,
+.activity-pagination .hist-pag-btn:disabled {
+    opacity: 0.5;
+    background: var(--bg-card);
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   PESTAÑAS / TOGGLES
+   ============================================================ */
+.tab-filters,
+.percent-toggle,
+.chart-toggle,
+.pct-toggle {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 4px;
+}
+.tab-filters button,
+.percent-toggle button,
+.chart-toggle button,
+.pct-toggle button {
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.tab-filters button:hover,
+.percent-toggle button:hover,
+.chart-toggle button:hover,
+.pct-toggle button:hover {
+    color: var(--text-primary);
+}
+.tab-filters button.active,
+.percent-toggle button.active,
+.chart-toggle button.active,
+.pct-toggle button.active {
+    background: var(--bg-card);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    font-weight: 600;
+}
+.nomina-tab.active,
+.cg-tab.active,
+.doc-tab.active {
+    background: var(--bg-card);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   ESTADOS VACÍOS, TOASTS Y DETALLES
+   ============================================================ */
+.empty-state {
+    color: var(--text-muted);
+}
+.doc-empty {
+    color: var(--text-muted);
+}
+.toast-container .toast {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Tooltip */
+[data-tooltip]::after {
+    background: var(--text-primary);
+    color: var(--bg-card);
+    border-radius: var(--radius-xs);
+    box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   LIMPIEZA ADICIONAL EN MODO OSCURO
+   Mapea clases con fondo claro fijo que el dark-mode.css base
+   no cubría, para que no queden "cuadros blancos".
+   ============================================================ */
+body.dark-mode .worker-selector-card,
+body.dark-mode .income-structure-card,
+body.dark-mode .filters-bar-card,
+body.dark-mode .doc-checklist-card,
+body.dark-mode .metric-box-white,
+body.dark-mode .audit-card,
+body.dark-mode .backup-item,
+body.dark-mode .documentos-list,
+body.dark-mode .estado-global-card,
+body.dark-mode .info-detalle-card,
+body.dark-mode .notas-admin-card,
+body.dark-mode .mini-table,
+body.dark-mode .doc-tabs,
+body.dark-mode .doc-section,
+body.dark-mode .doc-empty,
+body.dark-mode .global-progress-mini,
+body.dark-mode .currency-input,
+body.dark-mode .jubilation-percent-area,
+body.dark-mode .filter-input,
+body.dark-mode .input-with-icon input,
+body.dark-mode .pagination button,
+body.dark-mode .activity-pagination .hist-pag-btn,
+body.dark-mode .activity-pagination .pag-btn {
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+body.dark-mode .doc-item,
+body.dark-mode .doc-check,
+body.dark-mode .type-tag,
+body.dark-mode .codigo-tag,
+body.dark-mode .badge-type {
+    background: var(--bg-surface);
+    border-color: var(--border);
+    color: var(--text-secondary);
+}
+body.dark-mode .jubilation-percent-area,
+body.dark-mode .currency-input,
+body.dark-mode .filter-input,
+body.dark-mode .input-with-icon input {
+    background: var(--bg-input);
+}
+body.dark-mode .btn-logout {
+    background: rgba(220, 38, 38, 0.18);
+    color: #fca5a5;
+}
+body.dark-mode .btn-logout:hover {
+    background: #dc2626;
+    color: #ffffff;
+}
+body.dark-mode .backup-item {
+    border-color: var(--border);
+}
+
+/* ============================================================
+   COLOR DEL SISTEMA (acento del usuario) — USO GLOBAL
+   ------------------------------------------------------------
+   Petición del usuario: el header (barra superior), los botones
+   de acción (guardar / registrar / exportar) y la palabra clave
+   de los títulos de módulo deben usar SIEMPRE el color de acento
+   configurado por el usuario, en los tres temas (claro, oscuro y
+   modern). El acento llega en la variable --accent (definida en
+   línea en index.blade.php desde auth()->user()->color_acento).
+   ============================================================ */
+
+/* --- 1. TOP BAR: fondo con el color del sistema --------------- */
+.top-bar {
+    background: var(--accent) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 72%, #000000) !important;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+/* Texto e iconos del header en blanco para contrastar con el acento */
+.top-bar .header-brand h3,
+.top-bar .header-brand span,
+.top-bar .header-brand h3 span {
+    color: #ffffff !important;
+}
+.top-bar .theme-toggle-btn,
+.top-bar .notif-trigger {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+.top-bar .theme-toggle-btn:hover,
+.top-bar .notif-trigger:hover {
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+}
+/* El logo se vuelve translúcido para integrarse con la barra de acento */
+.top-bar .logo-box {
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    box-shadow: none;
+}
+/* El buscador central y el chip de usuario se aclaran sobre el acento */
+.top-bar .search-wrapper-centered input {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+.top-bar .search-wrapper-centered input::placeholder,
+.top-bar .search-wrapper-centered i {
+    color: rgba(255, 255, 255, 0.75);
+}
+.top-bar .dropdown-trigger p {
+    color: #ffffff !important;
+}
+/* El menú desplegable de notificaciones sigue siendo una tarjeta clara */
+.top-bar .notif-menu { color: var(--text-primary); }
+
+/* ============================================================
+   BOTONES DE GUARDAR / REGISTRAR / EXPORTAR — COLOR DEL SISTEMA
+   Se colocan al final para ganar a los valores del bundle. No se
+   usa !important para respetar los estilos en línea puntuales
+   (p. ej. el botón rojo de eliminar con background:#dc2626).
+   ============================================================ */
+.btn-primary-dark,
+.btn-submit,
+.btn-guardar-notas,
+.btn-guardar,
+.btn-save,
+.btn-registro,
+.btn-action-primary,
+.btn-subir-doc,
+.btn-dark-full,
+.cn-btn-action.cn-btn-primary,
+.btn-export-excel,
+.btn-export-csv,
+.btn-exportar {
+    background: var(--accent);
+    color: #ffffff;
+    border: 1px solid var(--accent);
+}
+.btn-primary-dark:hover,
+.btn-submit:hover,
+.btn-guardar-notas:hover,
+.btn-guardar:hover,
+.btn-save:hover,
+.btn-registro:hover,
+.btn-action-primary:hover,
+.btn-subir-doc:hover,
+.btn-dark-full:hover,
+.cn-btn-action.cn-btn-primary:hover,
+.btn-export-excel:hover,
+.btn-export-csv:hover,
+.btn-exportar:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: #ffffff;
+    box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   PALABRA CLAVE DE LOS TÍTULOS DE MÓDULO
+   Las vistas envuelven la palabra clave en .text-blue-accent.
+   El color siempre corresponde al acento del sistema.
+   ============================================================ */
+.section-header h1 .text-blue-accent,
+h1 .text-blue-accent {
+    color: var(--accent);
+}
+
+/* ============================================================
+   ITEM ACTIVO DEL MENÚ — CONTRASTE GARANTIZADO EN MODO CLARO
+   Se fija fondo de acento y texto blanco, evitando que cualquier
+   tema deje el texto invisible.
+   ============================================================ */
+.sidebar-menu .menu-item.active,
+.sidebar-menu li.active .menu-item {
+    background: var(--accent);
+    color: #ffffff;
+}
+.sidebar-menu .menu-item.active i {
+    color: #ffffff;
+}
+
+/* Transición suave al plegar/desplegar el menú lateral.
+   (rediseno.css carga después del bundle, por eso aquí y no en layout.css) */
+.sidebar {
+    transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease,
+                padding-left 0.25s ease, padding-right 0.25s ease;
+}
+
+/* El dropdown de notificaciones se dibuja fuera del top-bar:
+   ningún ancestro debe recortarlo con overflow. */
+.top-bar,
+.header-actions {
+    overflow: visible;
+}
+
+/* ============================================================
+   SIDEBAR COLAPSABLE (SOLO ICONOS)
+   El botón (integrado en el header) alterna .collapsed en escritorio;
+   el estado se guarda en localStorage. En móvil abre/cierra el panel
+   off-canvas (.open + overlay).
+   Selector con mayor especificidad (.top-bar .sidebar-toggle) para
+   ganarle a responsive.css que carga después.
+   ============================================================ */
+.top-bar .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.92);
+    border-radius: var(--radius-md);
+    transition: background 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+}
+.top-bar .sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+.top-bar .sidebar-toggle:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.7);
+    outline-offset: 2px;
+}
+/* El chevron rota hacia la derecha cuando el menú está plegado */
+.sidebar-toggle-icon {
+    font-size: 14px;
+    transition: transform 0.25s ease;
+}
+body:has(.sidebar.collapsed) .sidebar-toggle-icon {
+    transform: rotate(180deg);
+}
+/* En móvil el menú se desliza desde la izquierda: el chevron apunta a la derecha */
+@media (max-width: 767px) {
+    .sidebar-toggle-icon { transform: rotate(180deg); }
+}
+
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width) !important;
+    min-width: var(--sidebar-collapsed-width) !important;
+    max-width: var(--sidebar-collapsed-width) !important;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+}
+.sidebar.collapsed .menu-item {
+    font-size: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    height: 44px;
+    width: 100%;
+    margin: 4px auto;
+    border-radius: 10px;
+}
+
+/* El icono conserva su tamaño real y ocupa el centro exacto */
+.sidebar.collapsed .menu-item i {
+    font-size: 17px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    line-height: 1;
+}
+
+/* El item activo al colapsar: asegura que el fondo cubra todo el área clicable */
+.sidebar.collapsed .menu-item.active {
+    background: var(--accent);
+    border-radius: 10px;
+    width: calc(100% - 4px);
+    margin-left: 2px;
+    margin-right: 2px;
+}
+.sidebar.collapsed .sidebar-footer {
+    display: none;
+}
+/* Permite que el tooltip del menú plegado se dibuje fuera del sidebar */
+.sidebar.collapsed,
+.sidebar.collapsed .sidebar-menu,
+.sidebar.collapsed .sidebar-menu ul {
+    overflow: visible;
+}
+/* Tooltip al hacer hover sobre un item del menú plegado */
+.sidebar.collapsed .menu-item:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-body, #0f172a);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 300;
+    pointer-events: none;
+}
+
+/* Mejora el scroll vertical de la tabla de gestión de usuarios en todas las resoluciones */
+#admin-usuarios > .admin-table-wrapper,
+#admin-usuarios > div[style*="overflow-x"] {
+    max-height: clamp(420px, calc(100vh - 360px), 85vh);
+    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+#admin-usuarios .admin-table { margin-bottom: 0; }
+
+/* ============================================================
+   MODAL DE RECORTE DE AVATAR (item 2)
+   El botón "Guardar foto" queda siempre visible pegada al pie
+   de la ventana aunque la imagen del recorte sea grande.
+   ============================================================ */
+#cropModal .modal-box {
+    display: flex;
+    flex-direction: column;
+    max-height: 88vh;
+}
+#cropModal #cropContainer {
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+#cropModal .modal-actions {
+    position: sticky;
+    bottom: 0;
+    flex-shrink: 0;
+    background: var(--bg-card);
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+/* ============================================================
+   FILTRO DE TRABAJADORES — PANEL "TOTAL REGISTRADOS" (item 6)
+   Se alinea verticalmente con la fila de filtros y no se encoge.
+   ============================================================ */
+.filters-bar-card .total-badge-card {
+    flex-shrink: 0;
+    min-width: 180px;
+    min-height: 100%;
+    align-self: stretch;
+    height: auto;
+}
+.filters-bar-card .total-badge-card > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}

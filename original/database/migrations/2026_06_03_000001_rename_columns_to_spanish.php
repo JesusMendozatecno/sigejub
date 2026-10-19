@@ -4,6 +4,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,9 +14,59 @@ return new class extends Migration
         if (!Schema::hasColumn($table, $old) || Schema::hasColumn($table, $new)) {
             return;
         }
+
+        if (DB::connection()->getDriverName() === 'mysql') {
+            // En MySQL/MariaDB se reconstruye la definición leyéndola de SHOW FULL
+            // COLUMNS. No se usa el generador de Laravel porque MariaDB devuelve los
+            // defaults de texto entre comillas en information_schema y Laravel los
+            // reinyecta como default '''valor''', lo que rompe los ENUM con el
+            // error 1067 (Invalid default value) al instalar desde cero.
+            $col = null;
+            foreach (DB::select("SHOW FULL COLUMNS FROM {$this->wrap($table)}") as $candidate) {
+                if (($candidate->Field ?? null) === $old) {
+                    $col = $candidate;
+                    break;
+                }
+            }
+            if ($col) {
+                $def = $col->Type;
+                if (!empty($col->Collation)) {
+                    $def .= ' COLLATE ' . $col->Collation;
+                }
+                $def .= ($col->Null === 'NO') ? ' NOT NULL' : ' NULL';
+
+                $default = $col->Default;
+                $extra = strtolower((string) $col->Extra);
+                if ($default !== null) {
+                    $isExpression = str_contains($extra, 'default_generated')
+                        || preg_match('/^(current_timestamp|now\(\))/i', (string) $default) === 1;
+                    if ($isExpression || (is_numeric($default) && preg_match('/^0\d/', (string) $default) !== 1)) {
+                        $def .= ' DEFAULT ' . $default;
+                    } else {
+                        $def .= " DEFAULT '" . str_replace("'", "''", (string) $default) . "'";
+                    }
+                }
+
+                if (str_contains($extra, 'auto_increment')) {
+                    $def .= ' AUTO_INCREMENT';
+                }
+                if (!empty($col->Comment)) {
+                    $def .= " COMMENT '" . str_replace("'", "''", $col->Comment) . "'";
+                }
+
+                DB::statement("ALTER TABLE {$this->wrap($table)} CHANGE {$this->wrap($old)} {$this->wrap($new)} {$def}");
+                return;
+            }
+        }
+
         Schema::table($table, function (Blueprint $t) use ($old, $new) {
             $t->renameColumn($old, $new);
         });
+    }
+
+    private function wrap(string $identifier): string
+    {
+        return DB::connection()->getQueryGrammar()->wrap($identifier);
     }
 
     private function dropIndex(string $table, string $index): void

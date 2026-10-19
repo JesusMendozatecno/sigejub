@@ -78,9 +78,10 @@ class AdminController extends Controller
             return response()->json(['mensaje' => 'No puedes eliminar tu propio usuario.'], 422);
         }
         $user = User::findOrFail($id);
-        if ($user->avatar) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
-        }
+
+        // Borra todas las imágenes del usuario (avatar u_{id} en cualquier extensión).
+        app(\App\Services\ImageStorageService::class)->eliminar('avatars', 'u_' . $user->id, $user->avatar);
+
         $user->delete();
         return response()->json(['mensaje' => 'Usuario eliminado.']);
     }

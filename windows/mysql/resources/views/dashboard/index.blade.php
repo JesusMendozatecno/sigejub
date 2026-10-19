@@ -12,6 +12,12 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}?v={{ filemtime(public_path('css/dashboard/dark-mode.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/modern-theme.css') }}?v={{ filemtime(public_path('css/dashboard/modern-theme.css')) }}">
+    {{-- Estilos de las ventanas modales --}}
+    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}?v={{ filemtime(public_path('css/dashboard/secciones/modal.css')) }}">
+    {{-- Capa de modernización visual (tokens claro/oscuro/modern + componentes).
+         Va después de modal.css para darle color de acento a sus botones/campos,
+         y ANTES de responsive.css para no romper los ajustes de pantalla. --}}
+    <link rel="stylesheet" href="{{ asset('css/dashboard/rediseno.css') }}?v={{ filemtime(public_path('css/dashboard/rediseno.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/responsive.css') }}?v={{ filemtime(public_path('css/dashboard/responsive.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <script defer src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
@@ -52,25 +58,142 @@
     </script>
 
     <style>
-        :root { --accent: {{ auth()->user()->color_acento ?? '#1a365d' }}; }
-        .notif-trigger { position: relative; padding: 6px; border-radius: 8px; transition: background 0.2s; }
-        .notif-trigger:hover { background: #f1f5f9; }
-        .theme-toggle-btn:hover { background: #f1f5f9; color: #1e293b !important; }
-        body.dark-mode .theme-toggle-btn:hover { background: #334155; color: #e2e8f0 !important; }
-        .notif-badge { display: none; }
-        .notif-badge.show { display: flex !important; }
-        .notif-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; margin-bottom: 2px; }
-        .notif-item:hover { background: #f8fafc; }
-        .notif-item.unread { background: #eff6ff; border-left: 3px solid #2563eb; }
-        .notif-item .notif-time { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
-        .notif-item .notif-title { font-size: 0.8rem; font-weight: 600; color: #0f172a; }
-        .notif-item .notif-msg { font-size: 0.78rem; color: #475569; margin-top: 2px; line-height: 1.3; }
-        body { background: var(--bg-body) url('{{ asset("img/bg/dashboard-bg.jpg") }}') center/cover fixed no-repeat; }
-        body.dark-mode { background: var(--bg-body) url('{{ asset("img/bg/dashboard-bg.jpg") }}') center/cover fixed no-repeat; background-blend-mode: overlay; }
-        .app-container > .sidebar { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
-        body.dark-mode .app-container > .sidebar { background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); }
+        /* Color de acento del usuario (personalización de perfil).
+           --accent-dark se deriva automáticamente para degradados/tintes. */
+        :root {
+            --accent: {{ auth()->user()->color_acento ?? '#1a365d' }};
+            --accent-dark: color-mix(in srgb, var(--accent) 72%, #000 28%);
+            --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+        }
+
+        /* ============================================================
+           NOTIFICACIONES DEL HEADER
+           El trigger y el badge viven dentro de .notif-dropdown, que es
+           el contenedor posicionado. El menú se muestra con .open.
+           ============================================================ */
+        .notif-dropdown { position: relative; overflow: visible; }
+
+        .notif-trigger {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            background: none;
+            border: none;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .notif-trigger:hover { background: var(--bg-surface); color: var(--accent); }
+        .notif-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        .notif-badge {
+            display: none;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            align-items: center;
+            justify-content: center;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+            border-radius: 999px;
+            border: 2px solid var(--accent);
+        }
+        .notif-badge.show { display: flex; }
+
+        .notif-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 360px;
+            max-width: calc(100vw - 24px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+            z-index: 9999;
+            overflow: hidden;
+            animation: notifFadeIn 0.18s ease;
+        }
+        .notif-menu.open { display: block; }
+        @keyframes notifFadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+        .notif-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .notif-header-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+        .notif-mark-all {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .notif-mark-all:hover { text-decoration: underline; }
+
+        .notif-list { padding: 8px; max-height: 380px; overflow-y: auto; }
+        .notif-empty { text-align: center; color: var(--text-muted); padding: 24px 12px; font-size: 0.85rem; margin: 0; }
+
+        .notif-item {
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 2px;
+        }
+        .notif-item:hover { background: var(--bg-surface); }
+        .notif-item.unread { background: var(--info-light); border-left: 3px solid var(--info); }
+        .notif-item .notif-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+        .notif-item .notif-title { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+        .notif-item .notif-msg { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; line-height: 1.3; }
+
+        /* Cabecera izquierda: botón + marca (sin exceso de separación) */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-4);
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            height: var(--sidebar-topbar-height);
+            box-shadow: var(--shadow-sm);
+            z-index: 201;
+            flex-wrap: nowrap;
+        }
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            min-width: 0;
+        }
+
         .main-content .dashboard-render-zone > .content-section { background: transparent; }
-        .dashboard-render-zone > .content-section > * { background: white; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .dashboard-render-zone > .content-section > *:not(.modal-overlay):not(.modal-tasa):not(.modal-resultado) {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-card);
+        }
     </style>
 </head>
 <body>
@@ -88,36 +211,36 @@
 })();
 </script>
 
-<header class="top-bar">
-    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-    </button>
-    <div class="header-brand">
-        <div class="logo-box" style="background: #1a365d; color: white; padding: 8px; border-radius: 8px; font-size: 1.2rem;">🏛️</div>
-        <div>
-            <h3 style="margin:0; font-size: 1.1rem; color: #1e293b;">SIGEJUB</h3>
-            <span style="font-size: 0.65rem; color: #64748b; font-weight: bold; letter-spacing: 0.5px; display: block;">ARQUITECTURA DE CONFIANZA</span>
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Plegar o desplegar el menú lateral" title="Plegar / Desplegar menú">
+                <i class="fas fa-chevron-left sidebar-toggle-icon" aria-hidden="true"></i>
+            </button>
+            <div class="header-brand">
+                <div class="logo-box" style="background: #1a365d; color: white; padding: 8px; border-radius: 8px; font-size: 1.2rem;">🏛️</div>
+                <div>
+                    <h3 style="margin:0; font-size: 1.1rem; color: #1e293b;">SIGEJUB</h3>
+                    <span style="font-size: 0.65rem; color: #64748b; font-weight: bold; letter-spacing: 0.5px; display: block;">ARQUITECTURA DE CONFIANZA</span>
+                </div>
+            </div>
         </div>
-    </div>
 
     <div class="header-actions">
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleHeaderTheme()" title="Cambiar tema de la página" style="background:none;border:none;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;transition:background 0.2s, color 0.2s;">
             <i id="themeToggleIcon" class="fas fa-moon" size="18"></i>
         </button>
         <div class="notif-dropdown" id="notifDropdown">
-            <button class="notif-trigger" onclick="toggleNotifDropdown()" style="background:none;border:none;color:#64748b;cursor:pointer;display:flex;align-items:center;position:relative;">
-                <i class="fas fa-bell" size="20"></i>
-                <span class="notif-badge" id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;">0</span>
+            <button class="notif-trigger" onclick="toggleNotifDropdown()" type="button" aria-label="Notificaciones" aria-expanded="false">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                <span class="notif-badge" id="notifBadge">0</span>
             </button>
-            <div class="notif-menu" id="notifMenu" style="display:none;position:absolute;top:100%;right:0;width:360px;background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.15);z-index:9999;margin-top:8px;max-height:400px;overflow-y:auto;">
-                <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:0.9rem;color:#0f172a;">Notificaciones</strong>
-                    <button onclick="marcarTodasLeidas()" style="background:none;border:none;color:#2563eb;font-size:0.75rem;cursor:pointer;font-weight:600;">Marcar todas leídas</button>
+            <div class="notif-menu" id="notifMenu" role="menu" aria-label="Lista de notificaciones">
+                <div class="notif-header">
+                    <strong class="notif-header-title">Notificaciones</strong>
+                    <button class="notif-mark-all" onclick="marcarTodasLeidas()" type="button">Marcar todas leídas</button>
                 </div>
-                <div id="notifList" style="padding:8px;">
-                    <p style="text-align:center;color:#94a3b8;padding:20px;font-size:0.85rem;">Cargando...</p>
+                <div class="notif-list" id="notifList">
+                    <p class="notif-empty">Cargando...</p>
                 </div>
             </div>
         </div>
@@ -254,6 +377,8 @@
 </div>
 
 <script>window.SIGEJUB_THEME='{{ auth()->user()->tema }}'; window.SIGEJUB_ROL='{{ auth()->user()->rol }}';</script>
+{{-- Gestor central de ventanas modales: solo cierran con su botón (clic fuera y ESC desactivados) --}}
+<script defer src="{{ asset('js/dashboard/modales.js') }}?v={{ filemtime(public_path('js/dashboard/modales.js')) }}"></script>
 <script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
 
 <script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>

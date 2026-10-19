@@ -8,6 +8,24 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                const r = await fetch('/api/public/stats', { cache: 'no-store' });
+                if (!r.ok) return;
+                const d = await r.json();
+                const fmt = (n) => new Intl.NumberFormat('es-VE').format(n);
+                const st1 = document.getElementById('statTrabajadores');
+                const st2 = document.getElementById('statSolicitudes');
+                const st3 = document.getElementById('statJubilados');
+                const st4 = document.getElementById('statExpedientes');
+                if (st1) st1.textContent = fmt(d.trabajadores);
+                if (st2) st2.textContent = fmt(d.solicitudes);
+                if (st3) st3.textContent = fmt(d.jubilados);
+                if (st4) st4.textContent = fmt(d.expedientes);
+            } catch (e) {}
+        });
+    </script>
     <script src="{{ asset('js/theme-welcome.js') }}" defer></script>
 </head>
 <body>
@@ -32,20 +50,25 @@
 
     <main>
         <section class="pw-hero" id="inicio">
-            <div class="pw-hero-content">
-                <div class="pw-hero-logo">
-                    <img src="{{ asset('img/logo-light.svg') }}" alt="SIGEJUB">
+            <div class="pw-hero-grid">
+                <div class="pw-hero-content">
+                    <div class="pw-hero-logo">
+                        <img src="{{ asset('img/logo-light.svg') }}" alt="SIGEJUB">
+                    </div>
+                    <h1 class="pw-hero-title">SIGEJUB 1.0</h1>
+                    <div class="pw-hero-divider"></div>
+                    <p class="pw-hero-subtitle">Sistema Integral de Gestión de Jubilaciones. Administre trabajadores, solicitudes, expedientes y prestaciones en una sola plataforma.</p>
+                    <div class="pw-hero-actions">
+                        <a href="{{ route('login') }}" class="pw-btn pw-btn-primary">
+                            <i class="fas fa-right-to-bracket"></i> Acceder al Sistema
+                        </a>
+                        <a href="#funcionalidades" class="pw-btn pw-btn-outline">
+                            <i class="fas fa-arrow-down"></i> Conocer Más
+                        </a>
+                    </div>
                 </div>
-                <h1 class="pw-hero-title">SIGEJUB 1.0</h1>
-                <div class="pw-hero-divider"></div>
-                <p class="pw-hero-subtitle">Sistema Integral de Gestión de Jubilaciones. Administre trabajadores, solicitudes, expedientes y prestaciones en una sola plataforma.</p>
-                <div class="pw-hero-actions">
-                    <a href="{{ route('login') }}" class="pw-btn pw-btn-primary">
-                        <i class="fas fa-right-to-bracket"></i> Acceder al Sistema
-                    </a>
-                    <a href="#funcionalidades" class="pw-btn pw-btn-outline">
-                        <i class="fas fa-arrow-down"></i> Conocer Más
-                    </a>
+                <div class="pw-hero-image">
+                    <img src="{{ asset('img/jubilacion.png') }}" alt="Atención a jubilados y gestión de prestaciones" loading="lazy">
                 </div>
             </div>
         </section>
@@ -108,20 +131,20 @@
             <div class="pw-section-inner">
                 <div class="pw-stats-grid">
                     <div class="pw-stat-item pw-animate">
-                        <div class="pw-stat-number">1,200+</div>
+                        <div class="pw-stat-number" id="statTrabajadores">{{ number_format($stats['trabajadores'] ?? 0, 0, ',', '.') }}</div>
                         <div class="pw-stat-label">Trabajadores Registrados</div>
                     </div>
                     <div class="pw-stat-item pw-animate">
-                        <div class="pw-stat-number">450+</div>
-                        <div class="pw-stat-label">Solicitudes Procesadas</div>
+                        <div class="pw-stat-number" id="statSolicitudes">{{ number_format($stats['solicitudes'] ?? 0, 0, ',', '.') }}</div>
+                        <div class="pw-stat-label">Solicitudes Registradas</div>
                     </div>
                     <div class="pw-stat-item pw-animate">
-                        <div class="pw-stat-number">380+</div>
-                        <div class="pw-stat-label">Jubilaciones Activas</div>
+                        <div class="pw-stat-number" id="statJubilados">{{ number_format($stats['jubilados'] ?? 0, 0, ',', '.') }}</div>
+                        <div class="pw-stat-label">Solicitudes Aprobadas</div>
                     </div>
                     <div class="pw-stat-item pw-animate">
-                        <div class="pw-stat-number">99%</div>
-                        <div class="pw-stat-label">Disponibilidad del Sistema</div>
+                        <div class="pw-stat-number" id="statExpedientes">{{ number_format($stats['expedientes'] ?? 0, 0, ',', '.') }}</div>
+                        <div class="pw-stat-label">Expedientes Digitalizados</div>
                     </div>
                 </div>
             </div>

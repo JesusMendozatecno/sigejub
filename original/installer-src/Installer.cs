@@ -876,6 +876,21 @@ AppendLog("[7/13] Instalando dependencias (esto puede tardar)...", Color.Yellow)
                     FinishWithError(); return;
                 }
                 AppendLog("[OK] Migraciones ejecutadas", Color.Green);
+
+                // ── 9b: datos iniciales ──
+                // Catálogos maestros + usuario superadmin. El seeder es idempotente,
+                // así que puede ejecutarse también sobre bases ya existentes.
+                AppendLog("[9/13] Cargando datos iniciales (catálogos y usuario administrador)...", Color.Yellow);
+                if (!RunPhp("artisan db:seed --force --no-ansi", out output))
+                {
+                    AppendLog("[AVISO] No se pudieron cargar los datos iniciales: " + Truncate(output, 300), Color.Orange);
+                    AppendLog("[AVISO] Puedes cargarlos luego con: php artisan db:seed --force", Color.Orange);
+                }
+                else
+                {
+                    AppendLog("[OK] Datos iniciales cargados", Color.Green);
+                    AppendLog("     Usuario administrador: superadmin@sigejub.com  /  Contrase\u00f1a: password", Color.White);
+                }
                 SetProgress(74);
 
                 // ── 10: finalizar ──
@@ -893,12 +908,14 @@ AppendLog("[7/13] Instalando dependencias (esto puede tardar)...", Color.Yellow)
                 File.WriteAllText(envPath, env, Utf8NoBom);
                 SetProgress(88);
 
-                // ── 11: acceso directo ──
-                if (createShortcut) CreateShortcut(installPath);
+                // ── 11: vbs de arranque ──
+                // IMPORTANTE: debe escribirse ANTES de crear el acceso directo,
+                // porque CreateShortcut() apunta al .vbs solo si existe en ese momento.
+                WriteLaunchVbs(installPath);
                 SetProgress(95);
 
-                // ── 12: vbs de arranque ──
-                WriteLaunchVbs(installPath);
+                // ── 12: acceso directo ──
+                if (createShortcut) CreateShortcut(installPath);
 
                 // ── 13: desinstalador + registro "Agregar o quitar programas" ──
                 WriteUninstaller(installPath);
@@ -2142,15 +2159,26 @@ File.WriteAllText(dbBat, sb.ToString(), Utf8NoBom);
                 if (string.IsNullOrEmpty(php)) php = "php";
 
                 // sigejub-start.vbs: arranca la BD (si aplica) y el servidor PHP OCULTO
-                // en segundo plano, espera a que levante y abre el navegador en la página.
+                // en segundo plano, ESPERA a que responda (prewarm) y abre el navegador.
+                // - max_execution_time=0: sin limite de 30s, para que un primer arranque
+                //   lento (cache fria, antivirus) no mate la peticion con un FatalError.
+                // - prewarm: no abrir el navegador hasta que la app devuelva 200, para no
+                //   mostrarle al usuario una pagina de error si el servidor aun no esta listo.
                 string vbs = Path.Combine(appPath, "sigejub-start.vbs");
 var sbv = new StringBuilder();
                 sbv.AppendLine("On Error Resume Next");
                 sbv.AppendLine("Set sh = CreateObject(\"WScript.Shell\")");
                 sbv.AppendLine("sh.CurrentDirectory = " + VbsStr(appPath));
                 if (writeDbBat) sbv.AppendLine("sh.Run " + VbsStr(dbBat) + ", 0, False");
-                sbv.AppendLine("sh.Run " + VbsStr(php + " -S 127.0.0.1:" + selectedPort + " -t \"" + VbsInner(appPath + "\\public") + "\"") + ", 0, False");
-                sbv.AppendLine("WScript.Sleep 2500");
+                sbv.AppendLine("sh.Run " + VbsStr(php + " -d max_execution_time=0 -S 127.0.0.1:" + selectedPort + " -t \"" + VbsInner(appPath + "\\public") + "\"") + ", 0, False");
+                sbv.AppendLine("For i = 1 To 30");
+                sbv.AppendLine("    WScript.Sleep 1000");
+                sbv.AppendLine("    Set http = CreateObject(\"MSXML2.ServerXMLHTTP.6.0\")");
+                sbv.AppendLine("    http.SetTimeouts 2000, 2000, 2000, 2000");
+                sbv.AppendLine("    http.Open \"GET\", " + VbsStr("http://127.0.0.1:" + selectedPort + "/") + ", False");
+                sbv.AppendLine("    http.Send");
+                sbv.AppendLine("    If http.Status = 200 Then Exit For");
+                sbv.AppendLine("Next");
                 sbv.AppendLine("sh.Run " + VbsStr("http://localhost:" + selectedPort) + ", 1, False");
                 File.WriteAllText(vbs, sbv.ToString(), Utf8NoBom);
             }

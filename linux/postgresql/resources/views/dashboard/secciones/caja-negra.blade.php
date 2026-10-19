@@ -3,7 +3,7 @@
      Copias de Seguridad: generar, listar, verificar (SHA-256), descargar, eliminar y restaurar (superadmin). --}}
 <header class="section-header">
     <div class="header-info">
-        <h1><i class="fas fa-hard-drive" size="22"></i> Historial</h1>
+        <h1><i class="fas fa-hard-drive" size="22"></i> <span class="text-blue-accent">Historial</span></h1>
         <p>Registro inmutable de auditoría — todas las acciones del sistema.</p>
     </div>
     <div class="header-actions">
@@ -212,6 +212,7 @@
         if (desde) params.set('from', desde);
         if (hasta) params.set('to', hasta);
         params.set('page', cnPagina);
+        params.set('per_page', 20);
 
         const tbody = document.getElementById('cnBody');
         tbody.innerHTML = '<tr><td colspan="8" class="cn-empty">Buscando registros...</td></tr>';
