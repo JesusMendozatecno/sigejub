@@ -12,6 +12,7 @@ use App\Models\Activity;
 use App\Services\NotificationService;
 use App\Services\ValidationService;
 use App\Services\ImageStorageService;
+use App\Services\ArchivoDbService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -73,7 +74,7 @@ class ExpedienteController extends Controller
         $validated = $request->validate([
             'trabajador_id' => 'required|exists:trabajadores,id',
             'solicitud_id' => 'required|exists:solicitudes,id',
-            'foto_carnet' => 'nullable|image|max:2048',
+            'foto_carnet' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         // Validación de negocio: solicitud debe estar aprobada
@@ -146,6 +147,10 @@ class ExpedienteController extends Controller
                 );
             }
             $expedienteId = $documento->expediente_id;
+            if ($documento->archivo) {
+                Storage::disk('public')->delete($documento->archivo);
+                app(ArchivoDbService::class)->eliminar($documento->archivo, 'public');
+            }
             $documento->delete();
             $this->recalcularEstadoGlobal($expedienteId);
             return response()->json([
@@ -168,7 +173,7 @@ class ExpedienteController extends Controller
         $expediente = Expediente::findOrFail($id);
 
         $request->validate([
-            'foto_carnet' => 'required|image|max:2048',
+            'foto_carnet' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $path = app(ImageStorageService::class)->guardar(
@@ -220,6 +225,7 @@ class ExpedienteController extends Controller
         }
 
         $path = $request->file('archivo')->store('expedientes/documentos', 'public');
+        app(ArchivoDbService::class)->respaldar($path, 'public', $request->file('archivo')->getClientOriginalName());
 
         $expediente->documentos()->create([
             'nombre' => $nombre,
@@ -243,12 +249,18 @@ class ExpedienteController extends Controller
             'archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+        $anterior = $documento->archivo;
         $path = $request->file('archivo')->store('expedientes/documentos', 'public');
+        app(ArchivoDbService::class)->respaldar($path, 'public', $request->file('archivo')->getClientOriginalName());
         $documento->update([
             'archivo' => $path,
             'estado' => 'en_revision',
             'nota_rechazo' => null,
         ]);
+        if ($anterior && $anterior !== $path) {
+            Storage::disk('public')->delete($anterior);
+            app(ArchivoDbService::class)->eliminar($anterior, 'public');
+        }
 
         $this->recalcularEstadoGlobal($documento->expediente_id);
 
@@ -282,8 +294,14 @@ class ExpedienteController extends Controller
             'carta' => 'required|file|mimes:pdf,jpg,jpeg,png|max:102400',
         ]);
 
+        $cartaAnterior = $expediente->carta_aprobacion;
         $path = $request->file('carta')->store('expedientes/cartas', 'public');
+        app(ArchivoDbService::class)->respaldar($path, 'public', $request->file('carta')->getClientOriginalName());
         $expediente->update(['carta_aprobacion' => $path]);
+        if ($cartaAnterior && $cartaAnterior !== $path) {
+            Storage::disk('public')->delete($cartaAnterior);
+            app(ArchivoDbService::class)->eliminar($cartaAnterior, 'public');
+        }
 
         $trabajador = $expediente->trabajador;
         $nombre = "{$trabajador->nombres} {$trabajador->apellidos}";
@@ -343,6 +361,7 @@ class ExpedienteController extends Controller
         ]);
 
         $validated['archivo'] = $request->file('archivo')->store('expedientes/recibos', 'public');
+        app(ArchivoDbService::class)->respaldar($validated['archivo'], 'public', $request->file('archivo')->getClientOriginalName());
         $validated['expediente_id'] = $expediente->id;
 
         $recibo = \App\Models\ReciboPago::create($validated);
@@ -366,6 +385,7 @@ class ExpedienteController extends Controller
 
         if ($recibo->archivo) {
             Storage::disk('public')->delete($recibo->archivo);
+            app(ArchivoDbService::class)->eliminar($recibo->archivo, 'public');
         }
         $expedienteId = $recibo->expediente_id;
         $recibo->delete();

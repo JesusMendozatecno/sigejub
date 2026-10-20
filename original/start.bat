@@ -3,13 +3,13 @@ title SIGEJUB - Servidor
 cd /d "%~dp0"
 chcp 65001 >nul 2>&1
 
-:: =============================================
-:: SIN LIMITE DE 30s PARA EL SERVIDOR php -S
-:: php -S (SAPI cli-server) usa max_execution_time=30 de php.ini
-:: y mataba la 1a peticion con "Maximum execution time exceeded"
-:: en arranques lentos. PHP_INI_SCAN_DIR añade este ini ENCIMA de
-:: php.ini sin tocar la instalacion de XAMPP (sin conf.d).
-:: =============================================
+rem =============================================
+rem SIN LIMITE DE 30s PARA EL SERVIDOR php -S
+rem php -S usa max_execution_time=30 de php.ini
+rem y mataba la 1a peticion con Maximum execution time exceeded
+rem en arranques lentos. PHP_INI_SCAN_DIR agrega este ini ENCIMA de
+rem php.ini sin tocar la instalacion de XAMPP
+rem =============================================
 if not exist "%~dp0ini" mkdir "%~dp0ini"
 if not exist "%~dp0ini\sigejub.ini" echo max_execution_time = 0 >"%~dp0ini\sigejub.ini"
 set "PHP_INI_SCAN_DIR=%~dp0ini"
@@ -20,7 +20,7 @@ echo ============================================
 echo.
 
 :: =============================================
-:: BUSCAR PHP — PATH, luego rutas XAMPP comunes
+:: BUSCAR PHP - PATH, luego rutas XAMPP comunes
 :: =============================================
 set PHP_PATH=
 where php >nul 2>&1
@@ -124,12 +124,12 @@ echo [INICIANDO] Servidor en %URL% ...
 powershell -Command "Start-Process -FilePath '%PHP_PATH%' -ArgumentList 'artisan serve --port=%PORT%' -WindowStyle Hidden -WorkingDirectory '%~dp0'"
 
 :: =============================================
-:: ESPERAR A QUE EL PUERTO ESTE LISTO (max 30s)
+rem ESPERAR A QUE EL PUERTO ESTE LISTO max 30s
 :: =============================================
 echo Esperando respuesta del servidor...
 setlocal enabledelayedexpansion
 for /l %%i in (1,1,30) do (
-    timeout /t 1 /nobreak >nul
+    ping -n 2 127.0.0.1 >nul
     netstat -ano 2>nul | findstr /C:":%PORT% " >nul 2>&1
     if !ERRORLEVEL! equ 0 (
         endlocal
@@ -147,6 +147,6 @@ pause >nul
 exit /b 1
 
 :server_ready
-timeout /t 1 /nobreak >nul
+ping -n 2 127.0.0.1 >nul
 start "" "%URL%"
 echo [OK] Servidor corriendo en %URL%

@@ -130,7 +130,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $request->validate([
-            'tema' => 'in:light,dark,modern',
+            'tema' => 'in:light,dark',
             'idioma' => 'in:es,en',
             'color_acento' => 'string|max:7',
         ]);
@@ -254,7 +254,7 @@ class UserController extends Controller
     {
         $request->validate([
             'app_name' => 'nullable|string|max:255',
-            'default_theme' => 'nullable|in:light,dark,modern',
+            'default_theme' => 'nullable|in:light,dark',
             'maintenance_mode' => 'nullable|boolean',
         ]);
 

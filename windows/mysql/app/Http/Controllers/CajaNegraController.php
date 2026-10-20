@@ -167,6 +167,14 @@ class CajaNegraController extends Controller
         fputcsv($handle, ['Fecha', 'Usuario', 'Rol', 'Acción', 'Tipo', 'ID', 'Descripción', 'IP', 'Método', 'Ruta']);
 
         foreach ($activities as $a) {
+            $desc = $a->descripcion ?? '';
+            if (is_string($desc) && strlen($desc) > 0 && in_array($desc[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+                $desc = "'" . $desc;
+            }
+            $ip = $a->direccion_ip ?? '—';
+            if (is_string($ip) && strlen($ip) > 0 && in_array($ip[0], ['=', '+', '-', '@'], true)) {
+                $ip = "'" . $ip;
+            }
             fputcsv($handle, [
                 $a->created_at?->format('d/m/Y H:i:s'),
                 $a->user ? ($a->user->nombre . ' ' . $a->user->apellido) : 'Sistema',
@@ -174,8 +182,8 @@ class CajaNegraController extends Controller
                 AuditService::accionHumana($a->accion),
                 AuditService::entidadHumana($a->tipo_entidad),
                 $a->entidad_id ?? '—',
-                $a->descripcion,
-                $a->direccion_ip ?? '—',
+                $desc,
+                $ip,
                 $a->metodo ?? '—',
                 $a->ruta ?? '—',
             ]);

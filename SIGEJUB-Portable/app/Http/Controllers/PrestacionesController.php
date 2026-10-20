@@ -268,10 +268,12 @@ class PrestacionesController extends Controller
 
         $viejo = $prestacion->fideicomiso_documento;
         $path = $request->file('archivo')->store('prestaciones/fideicomiso', 'public');
+        app(\App\Services\ArchivoDbService::class)->respaldar($path, 'public', $request->file('archivo')->getClientOriginalName());
         $prestacion->update(['fideicomiso_documento' => $path]);
 
         if ($viejo) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($viejo);
+            app(\App\Services\ArchivoDbService::class)->eliminar($viejo, 'public');
         }
 
         Activity::log('updated', 'prestacion', $prestacion->id,

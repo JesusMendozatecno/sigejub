@@ -8,10 +8,8 @@ function inicializarPerfil() {
     if (window.SIGEJUB_PROFILE_THEME === 'dark') {
         document.body.classList.add('dark-mode');
     }
-    if (window.SIGEJUB_PROFILE_THEME === 'modern') {
-        document.body.classList.add('theme-modern');
-    }
     document.documentElement.style.setProperty('--accent', window.SIGEJUB_ACCENT_COLOR || '#1a365d');
+    document.documentElement.style.setProperty('--user-accent', window.SIGEJUB_ACCENT_COLOR || '#087cf0');
     if (document.getElementById('tab-actividad')?.classList.contains('active')) cargarActividad();
 }
 
@@ -270,9 +268,8 @@ async function cerrarOtrasSesiones() {
 async function cambiarTema(tema) {
     document.querySelectorAll('.theme-option').forEach(function(el) { el.classList.remove('selected'); });
     document.querySelector('.theme-option[data-theme="' + tema + '"]')?.classList.add('selected');
-    document.body.classList.remove('dark-mode', 'theme-modern');
+    document.body.classList.remove('dark-mode');
     if (tema === 'dark') document.body.classList.add('dark-mode');
-    if (tema === 'modern') document.body.classList.add('theme-modern');
     try {
         await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ tema: tema }) });
     } catch (err) {}
@@ -289,6 +286,7 @@ async function cambiarColor(color) {
     document.querySelectorAll('.color-preset').forEach(function(el) { el.classList.remove('selected'); });
     document.querySelector('.color-preset[data-color="' + color + '"]')?.classList.add('selected');
     document.documentElement.style.setProperty('--accent', color);
+    document.documentElement.style.setProperty('--user-accent', color);
     try {
         await api('/perfil/configuracion', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify({ color_acento: color }) });
         mostrarToast('Color actualizado', 'success');
@@ -344,7 +342,7 @@ async function cargarActividad(page) {
     page = page || paginaActividad || 1;
     var list = document.getElementById('activityList');
     try {
-        var resp = await Promise.all([api('/perfil/estadisticas'), api('/perfil/actividad?page=' + page + '&per_page=20')]);
+        var resp = await Promise.all([api('/perfil/estadisticas'), api('/perfil/actividad?page=' + page + '&per_page=7')]);
         var stats = await resp[0].json();
         var acts = await resp[1].json();
         document.getElementById('statTrabajadores').textContent = stats.total_trabajadores_capturados || 0;

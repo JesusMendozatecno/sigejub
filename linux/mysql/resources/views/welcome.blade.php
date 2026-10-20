@@ -55,8 +55,9 @@
                     <div class="pw-hero-logo">
                         <img src="{{ asset('img/logo-light.svg') }}" alt="SIGEJUB">
                     </div>
-                    <h1 class="pw-hero-title">SIGEJUB 1.0</h1>
+                    <h1 class="pw-hero-title">SIGEJUB</h1>
                     <div class="pw-hero-divider"></div>
+                    <h2 class="pw-hero-slogan">Tu futuro,<br><span>nuestra prioridad</span></h2>
                     <p class="pw-hero-subtitle">Sistema Integral de Gestión de Jubilaciones. Administre trabajadores, solicitudes, expedientes y prestaciones en una sola plataforma.</p>
                     <div class="pw-hero-actions">
                         <a href="{{ route('login') }}" class="pw-btn pw-btn-primary">
@@ -70,6 +71,25 @@
                 <div class="pw-hero-image">
                     <img src="{{ asset('img/jubilacion.png') }}" alt="Atención a jubilados y gestión de prestaciones" loading="lazy">
                 </div>
+            </div>
+        </section>
+
+        <section class="pw-trust-strip" aria-label="Principios de SIGEJUB">
+            <div class="pw-trust-item">
+                <span class="pw-trust-icon"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
+                <span class="pw-trust-copy"><strong>Seguro</strong><small>Tus datos y procesos protegidos siempre.</small></span>
+            </div>
+            <div class="pw-trust-item">
+                <span class="pw-trust-icon"><i class="fas fa-bolt" aria-hidden="true"></i></span>
+                <span class="pw-trust-copy"><strong>Rápido</strong><small>Accede y gestiona en pocos clics.</small></span>
+            </div>
+            <div class="pw-trust-item">
+                <span class="pw-trust-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+                <span class="pw-trust-copy"><strong>Eficiente</strong><small>Optimiza la administración de jubilaciones.</small></span>
+            </div>
+            <div class="pw-trust-item">
+                <span class="pw-trust-icon"><i class="fas fa-file-lines" aria-hidden="true"></i></span>
+                <span class="pw-trust-copy"><strong>Confiable</strong><small>Información precisa y actualizada.</small></span>
             </div>
         </section>
 

@@ -12,18 +12,142 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/cropperjs/cropper.min.css') }}">
     <script defer src="{{ asset('js/cropperjs/cropper.min.js') }}"></script>
-    <style>:root { --accent: {{ $user->color_acento ?? '#1a365d' }}; }</style>
+    <style>:root {
+        --accent: {{ $user->color_acento ?? '#1a365d' }};
+        /* Color del usuario para la pantalla de carga (independiente del tema). */
+        --user-accent: {{ $user->color_acento ?? '#087cf0' }};
+    }</style>
+
+    <style id="profile-visual-redesign">
+        /* Rediseño visual local de Mi Perfil; no modifica la lógica ni los controles existentes. */
+        body:has(.profile-wrapper) {
+            min-height: 100vh;
+            height: auto;
+            overflow-x: hidden;
+            overflow-y: auto;
+            position: relative;
+            isolation: isolate;
+            background:
+                radial-gradient(ellipse at 8% 8%, rgba(96,165,250,.17) 0%, rgba(96,165,250,0) 31%),
+                radial-gradient(ellipse at 96% 88%, rgba(56,189,248,.13) 0%, rgba(56,189,248,0) 29%),
+                radial-gradient(circle, rgba(59,130,246,.13) 1.1px, transparent 1.5px) 0 0 / 22px 22px,
+                linear-gradient(135deg, #f8fbff 0%, #edf4fc 52%, #f7faff 100%);
+            color: #172b4d;
+        }
+        body:has(.profile-wrapper)::before,
+        body:has(.profile-wrapper)::after {
+            content: "";
+            position: fixed;
+            z-index: -1;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        body:has(.profile-wrapper)::before {
+            width: 340px; height: 340px;
+            top: -190px; right: -105px;
+            border: 1px solid rgba(59,130,246,.14);
+            box-shadow: 0 0 0 28px rgba(59,130,246,.025), 0 0 0 58px rgba(59,130,246,.02);
+        }
+        body:has(.profile-wrapper)::after {
+            width: 270px; height: 270px;
+            left: -155px; bottom: -155px;
+            border: 1px solid rgba(14,165,233,.17);
+            box-shadow: 0 0 0 24px rgba(14,165,233,.035), 0 0 0 50px rgba(14,165,233,.025);
+        }
+        .profile-wrapper { position: relative; z-index: 1; width: min(1280px, 100%); max-width: 1280px; margin: 0 auto; padding: 34px 28px 42px; }
+        .profile-header { justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 28px; }
+        .profile-header .flex-center { align-items: center; gap: 16px !important; }
+        .profile-heading-copy h1 { color: #142d52; font-size: clamp(1.65rem, 2.4vw, 2rem); letter-spacing: -.035em; font-weight: 800; line-height: 1.2; }
+        .profile-page-subtitle { margin-top: 7px; color: #71819a; font-size: .94rem; }
+        .btn-back { width: 46px; height: 46px; border-radius: 50%; border: 1px solid #e2eaf5; background: #fff; color: #2563eb; box-shadow: 0 5px 16px rgba(28,61,108,.09); }
+        .btn-back:hover { background: #eff6ff; color: #1d4ed8; transform: translateY(-1px); }
+        .profile-last-access { font-size: .8rem; color: #8190a7 !important; }
+        .profile-layout { grid-template-columns: minmax(265px, 310px) minmax(0, 1fr); gap: 24px; align-items: start; }
+        .profile-sidebar, .profile-content { border: 1px solid rgba(219,230,244,.85); border-radius: 22px; background: #fff; box-shadow: 0 14px 38px rgba(30,64,115,.075); overflow: hidden; }
+        .profile-card { position: relative; padding: 30px 22px 27px; color: #fff; background: linear-gradient(135deg, var(--accent, #2563eb) 0%, color-mix(in srgb, var(--accent, #2563eb) 82%, #fff) 48%, color-mix(in srgb, var(--accent, #2563eb) 62%, #fff) 100%); border: 0; }
+        .profile-card:before { content: ""; position: absolute; width: 190px; height: 190px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; right: -90px; top: -105px; pointer-events: none; }
+        .profile-card:after { content: ""; position: absolute; width: 135px; height: 135px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; left: -82px; bottom: -75px; pointer-events: none; }
+        .profile-card > * { position: relative; z-index: 1; }
+        .avatar-wrap { width: 112px; height: 112px; margin-bottom: 17px; border: 4px solid rgba(255,255,255,.95); box-shadow: 0 0 0 5px rgba(255,255,255,.16), 0 10px 25px rgba(12,42,100,.22); background: color-mix(in srgb, var(--accent, #2563eb) 78%, #000 22%); }
+        .avatar-wrap .avatar-placeholder { color: rgba(255,255,255,.92); }
+        .avatar-overlay { background: rgba(15,42,92,.48); }
+        .avatar-actions-btns { flex-wrap: wrap; }
+        .profile-card .avatar-actions-btns .btn-primary { background: rgba(255,255,255,.17) !important; border: 1px solid rgba(255,255,255,.45) !important; color: #fff !important; }
+        .profile-card .avatar-actions-btns .btn-danger { box-shadow: 0 3px 10px rgba(127,29,29,.14); }
+        .profile-name { color: #fff; font-size: 1.18rem; font-weight: 800; overflow-wrap: anywhere; }
+        .profile-email { color: rgba(255,255,255,.78); font-size: .84rem; overflow-wrap: anywhere; }
+        .profile-role { display: inline-flex; align-items: center; margin-top: 8px; padding: 6px 12px; border-radius: 999px; background: #fff0f3; color: #be185d; font-size: .72rem; font-weight: 800; border: 1px solid rgba(255,255,255,.6); }
+        .profile-nav { padding: 16px 14px; }
+        .profile-nav-item { gap: 12px; min-height: 46px; padding: 12px 15px; border-radius: 13px; color: #64748b; font-size: .9rem; font-weight: 600; }
+        .profile-nav-item i { width: 20px; font-size: 1rem; }
+        .profile-nav-item:hover { background: #f3f7ff; color: #2563eb; }
+        .profile-nav-item.active { background: #eaf2ff; color: #2563eb; box-shadow: inset 3px 0 0 #3b82f6; }
+        .profile-nav-item[style*="color:#dc2626"] { color: #dc2626 !important; }
+        .profile-nav-item[style*="color:#dc2626"]:hover { background: #fff1f2; color: #b91c1c !important; }
+        .profile-nav-divider { background: #e9eff7; margin: 10px 10px; }
+        .profile-content { padding: 34px 36px; min-width: 0; min-height: 520px; }
+        .profile-section-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+        .profile-section-icon { display: inline-flex; flex: 0 0 48px; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 15px; background: linear-gradient(135deg,#2563eb,#38a0f5); color: #fff; font-size: 1.12rem; box-shadow: 0 7px 15px rgba(37,99,235,.2); }
+        .profile-section-heading .tab-title { margin: 0 0 4px; color: #172f54; font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em; }
+        .profile-section-heading .tab-subtitle { margin: 0; color: #8492a8; font-size: .88rem; }
+        #formProfile .form-group { margin-bottom: 22px; }
+        #formProfile .form-group label { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; color: #4d607b; font-size: .79rem; font-weight: 750; text-transform: none; letter-spacing: .01em; }
+        #formProfile .field-label-icon { width: 15px; color: #4285ee; font-size: .85rem; }
+        #formProfile .form-input { min-height: 47px; padding: 12px 15px; border: 1px solid #e1e9f4; border-radius: 12px; background: #f6f9fd; color: #253a59; font-size: .91rem; box-shadow: inset 0 1px 2px rgba(25,55,95,.015); }
+        #formProfile .form-input:focus { border-color: #77a8fb; background: #fff; box-shadow: 0 0 0 4px rgba(59,130,246,.1); }
+        #formProfile .form-input:disabled { opacity: 1; color: #344865; -webkit-text-fill-color: #344865; cursor: default; }
+        #formProfile .form-group:first-child { position: relative; }
+        #formProfile .form-group:first-child:after { content: "\f078"; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; right: 16px; bottom: 16px; color: #6c8fca; font-size: .75rem; pointer-events: none; }
+        #formProfile .form-group:first-child .form-input { padding-right: 42px; }
+        #formProfile .flex.gap-2.mt-3 { display: flex; flex-direction: column; gap: 10px; margin-top: 28px; }
+        #formProfile .profile-edit-button, #formProfile .profile-save-button, #formProfile #btnCancelarEditar { width: 100%; min-height: 49px; justify-content: center; border-radius: 12px; font-size: .92rem; font-weight: 750; }
+        #formProfile .profile-edit-button { border: 0; color: #fff; background: linear-gradient(100deg,#2563eb 0%,#3b82f6 55%,#1687ef 100%); box-shadow: 0 8px 18px rgba(37,99,235,.22); }
+        #formProfile .profile-edit-button:hover { filter: brightness(1.04); transform: translateY(-1px); box-shadow: 0 11px 22px rgba(37,99,235,.27); }
+        #formProfile .profile-save-button { border: 0; background: linear-gradient(100deg,#059669,#10b981); color: #fff; }
+        #formProfile #btnCancelarEditar { background: #f1f5f9; color: #475569; border: 1px solid #dbe4ef; }
+        @media (max-width: 900px) {
+            .profile-wrapper { padding: 25px 18px 34px; }
+            .profile-layout { grid-template-columns: minmax(230px, 280px) minmax(0,1fr); gap: 16px; }
+            .profile-content { padding: 27px 24px; }
+        }
+        @media (max-width: 700px) {
+            .profile-wrapper { padding: 20px 14px 28px; }
+            .profile-header { align-items: flex-start; }
+            .profile-last-access { display: none; }
+            .profile-layout { grid-template-columns: 1fr; }
+            .profile-card { padding: 25px 18px; }
+            .profile-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+            .profile-nav-divider { display: none; }
+            .profile-nav form { min-width: 0; }
+            .profile-nav-item { padding: 11px 10px; font-size: .82rem; }
+            .profile-content { min-height: 0; padding: 24px 18px; }
+            .profile-section-heading { margin-bottom: 24px; }
+            #formProfile .grid-2 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 420px) {
+            .profile-heading-copy h1 { font-size: 1.45rem; }
+            .profile-page-subtitle { max-width: 250px; font-size: .82rem; }
+            .profile-section-icon { flex-basis: 42px; width: 42px; height: 42px; }
+            .profile-nav { grid-template-columns: 1fr; }
+        }
+    </style>
+
 </head>
 <body>
+@include('partials.loading-overlay')
+<script>document.getElementById('loading-overlay').classList.add('active');</script>
 <div class="profile-wrapper">
     <div class="profile-header">
         <div class="flex-center gap-3">
             <a href="{{ route('dashboard') }}" class="btn-back" title="Volver al dashboard">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1>Mi Perfil</h1>
+            <div class="profile-heading-copy">
+                <h1>Mi Perfil</h1>
+                <p class="profile-page-subtitle">Gestiona tu información personal y de acceso al sistema</p>
+            </div>
         </div>
-        <span class="text-muted">Último acceso: {{ $user->ultimo_acceso ? $user->ultimo_acceso->diffForHumans() : 'Primer ingreso' }}</span>
+        <span class="text-muted profile-last-access">Último acceso: {{ $user->ultimo_acceso ? $user->ultimo_acceso->diffForHumans() : 'Primer ingreso' }}</span>
     </div>
 
     <div class="profile-layout">
@@ -94,40 +218,45 @@
         <div class="profile-content">
             <!-- TAB: MI PERFIL -->
             <div class="profile-tab active" id="tab-perfil">
-                <h2 class="tab-title">Mi Perfil</h2>
-                <p class="tab-subtitle">Información básica de tu cuenta</p>
+                <div class="profile-section-heading">
+                    <span class="profile-section-icon"><i class="fas fa-user"></i></span>
+                    <div>
+                        <h2 class="tab-title">Mi Perfil</h2>
+                        <p class="tab-subtitle">Información básica de tu cuenta</p>
+                    </div>
+                </div>
                 <form id="formProfile">
                     <div class="form-group">
-                        <label>Rol</label>
+                        <label><i class="fas fa-user-tag field-label-icon"></i> Rol</label>
                         <input type="text" class="form-input" value="{{ $user->rol === 'admin' ? 'Administrador' : ($user->rol === 'superadmin' ? 'Superadmin' : 'Usuario') }}" disabled>
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label>Nombre</label>
+                            <label><i class="fas fa-user field-label-icon"></i> Nombre</label>
                             <input type="text" class="form-input" name="nombre" value="{{ $user->nombre }}" disabled oninput="this.value=this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,'')">
                         </div>
                         <div class="form-group">
-                            <label>Apellido</label>
+                            <label><i class="fas fa-user field-label-icon"></i> Apellido</label>
                             <input type="text" class="form-input" name="apellido" value="{{ $user->apellido }}" disabled oninput="this.value=this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,'')">
                         </div>
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label>Correo electrónico</label>
+                            <label><i class="fas fa-envelope field-label-icon"></i> Correo electrónico</label>
                             <input type="email" class="form-input" name="correo" value="{{ $user->correo }}" disabled>
                         </div>
                         <div class="form-group">
-                            <label>Teléfono</label>
+                            <label><i class="fas fa-phone field-label-icon"></i> Teléfono</label>
                             <input type="text" class="form-input" name="telefono" value="{{ $user->telefono }}" disabled oninput="this.value=this.value.replace(/[^0-9+\-\s]/g,'')">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Fecha de nacimiento</label>
+                        <label><i class="fas fa-calendar-days field-label-icon"></i> Fecha de nacimiento</label>
                         <input type="date" class="form-input" name="fecha_nacimiento" value="{{ $user->fecha_nacimiento ? \Carbon\Carbon::parse($user->fecha_nacimiento)->format('Y-m-d') : '' }}" disabled>
                     </div>
                     <div class="flex gap-2 mt-3">
-                        <button type="button" class="btn btn-primary" id="btnEditarPerfil">Editar Datos</button>
-                        <button type="submit" class="btn btn-success" id="btnGuardarPerfil" style="display:none;">Guardar Datos</button>
+                        <button type="button" class="btn btn-primary profile-edit-button" id="btnEditarPerfil"><i class="fas fa-pen-to-square"></i> Editar Datos</button>
+                        <button type="submit" class="btn btn-success profile-save-button" id="btnGuardarPerfil" style="display:none;"><i class="fas fa-floppy-disk"></i> Guardar Datos</button>
                         <button type="button" class="btn btn-secondary" id="btnCancelarEditar" style="display:none;">Cancelar</button>
                     </div>
                 </form>
@@ -193,10 +322,6 @@
                     <div class="theme-option {{ $user->tema === 'dark' ? 'selected' : '' }}" data-theme="dark" onclick="cambiarTema('dark')">
                         <i class="fas fa-moon fa-fw"></i>
                         <span>Oscuro</span>
-                    </div>
-                    <div class="theme-option {{ $user->tema === 'modern' ? 'selected' : '' }}" data-theme="modern" onclick="cambiarTema('modern')">
-                        <i class="fas fa-brush fa-fw"></i>
-                        <span>Moderno</span>
                     </div>
                 </div>
 
@@ -320,7 +445,6 @@
                             <select class="form-input" name="default_theme" style="max-width:200px;">
                                 <option value="light">Claro</option>
                                 <option value="dark">Oscuro</option>
-                                <option value="modern">Moderno</option>
                             </select>
                         </div>
                         <div class="toggle-wrap">
@@ -404,5 +528,32 @@ window.SIGEJUB_ACCENT_COLOR='{{ $user->color_acento ?? "#1a365d" }}';
 {{-- Gestor central de ventanas modales: solo cierran con su botón (clic fuera y ESC desactivados) --}}
 <script defer src="{{ asset('js/dashboard/modales.js') }}?v={{ filemtime(public_path('js/dashboard/modales.js')) }}"></script>
 <script defer src="{{ asset('js/profile.js') }}?v={{ filemtime(public_path('js/profile.js')) }}"></script>
+
+{{-- Pantalla de carga: se oculta al terminar de cargar y se muestra al salir hacia otra página. --}}
+<script>
+(function() {
+    var overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        window.addEventListener('load', function() {
+            setTimeout(function() { overlay.classList.remove('active'); }, 350);
+        });
+    }
+    function mostrarCarga(texto) {
+        if (!overlay) return;
+        var t = document.getElementById('loadingText');
+        if (t && texto) t.textContent = texto;
+        overlay.classList.add('active');
+    }
+    // Salir del perfil hacia el dashboard u otras páginas con pantalla de carga.
+    document.addEventListener('click', function(e) {
+        var a = e.target.closest('a[href]');
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href || href.charAt(0) === '#' || a.target === '_blank' || a.hasAttribute('download')) return;
+        if (a.dataset.noLoading === 'true') return;
+        mostrarCarga(a.dataset.loading || 'Cargando...');
+    }, true);
+})();
+</script>
 </body>
 </html>

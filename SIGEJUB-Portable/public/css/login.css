@@ -44,23 +44,6 @@ body.dark-mode {
     --login-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1b2638 100%);
 }
 
-body.theme-modern {
-    --login-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4f46e5 100%);
-    --login-surface: rgba(255, 255, 255, 0.1);
-    --login-surface-alt: rgba(255, 255, 255, 0.05);
-    --login-primary: #ffffff;
-    --login-primary-hover: rgba(255, 255, 255, 0.9);
-    --login-primary-light: rgba(255, 255, 255, 0.12);
-    --login-text: #ffffff;
-    --login-text-secondary: rgba(255, 255, 255, 0.85);
-    --login-text-muted: rgba(255, 255, 255, 0.55);
-    --login-border: rgba(255, 255, 255, 0.15);
-    --login-input-bg: rgba(255, 255, 255, 0.08);
-    --login-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-    --login-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.3);
-    --login-gradient: linear-gradient(135deg, #312e81 0%, #4338ca 55%, #4f46e5 100%);
-}
-
 /* === RESET === */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -74,11 +57,6 @@ body {
     min-height: 100vh;
     display: flex;
     color: var(--login-text);
-}
-
-body.theme-modern {
-    background: var(--login-bg);
-    background-attachment: fixed;
 }
 
 /* === SPLIT LAYOUT === */
@@ -276,12 +254,6 @@ body.theme-modern {
     color: var(--login-text-muted);
 }
 
-body.theme-modern .login-input {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-}
-
 /* === PASSWORD TOGGLE === */
 .login-password-wrapper {
     position: relative;
@@ -374,16 +346,6 @@ body.theme-modern .login-input {
     transform: none;
 }
 
-body.theme-modern .login-submit {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-body.theme-modern .login-submit:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
 /* === REGISTER LINK === */
 .login-register-link {
     text-align: center;
@@ -447,7 +409,6 @@ body.theme-modern .login-submit:hover {
   --login-text-muted: #7895bd;
   --login-gradient: linear-gradient(145deg,#07346f 0%,#064b9e 56%,#032a60 100%);
 }
-body:not(.dark-mode):not(.theme-modern) { background:#eef7ff; }
 .login-split { min-height:100vh; min-height:100dvh; overflow:hidden; }
 .login-info { flex:0 0 51%; background:linear-gradient(145deg,#073675 0%,#064b9f 54%,#03265a 100%); padding:150px 52px 72px; }
 .login-info::before { background:radial-gradient(circle at 85% 12%,rgba(0,161,255,.22),transparent 32%),linear-gradient(140deg,transparent 60%,rgba(0,127,255,.10)); }
@@ -537,5 +498,3 @@ body.dark-mode .login-form-panel { background:linear-gradient(135deg,#111c30,#17
 body.dark-mode .login-form-wrapper { background:#1b2638;border-color:#2c4261; }
 body.dark-mode .login-input-group.has-leading-icon .login-field-control { background:#202d42;border-color:#2c4261; }
 body.dark-mode .login-input-group.has-leading-icon .login-field-icon { background:#1a2940;border-color:#2c4261; }
-body.theme-modern .login-form-panel { background:rgba(22,25,70,.28); }
-body.theme-modern .login-form-wrapper { background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.22); }

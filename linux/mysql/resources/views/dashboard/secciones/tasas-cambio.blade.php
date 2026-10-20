@@ -31,7 +31,6 @@ body.dark-mode .hist-pag-btn.active{background:#1e40af;border-color:#1e40af;colo
 body.dark-mode .hist-pag-dots{color:#64748b;}
 /* El estilo de la ventana modal (.modal-tasa) vive en css/dashboard/secciones/modal.css */
 body.dark-mode .tasa-actual-card{background:linear-gradient(135deg,var(--accent,#1e293b),#0f172a);border:1px solid #334155;}
-body.theme-modern .tasa-actual-card{background:linear-gradient(135deg,var(--accent,#4f46e5),#312e81);}
 body.dark-mode .historial-table th{color:#94a3b8;border-bottom-color:#334155;}
 body.dark-mode .historial-table td{color:#e2e8f0;border-bottom-color:#334155;}
 body.dark-mode .historial-table tr:hover td{background:#1e293b;}

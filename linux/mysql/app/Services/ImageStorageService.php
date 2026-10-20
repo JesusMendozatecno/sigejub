@@ -25,6 +25,9 @@ class ImageStorageService
     // Ruta de la imagen por defecto (dentro de public/) que se copia a cada usuario nuevo.
     public const AVATAR_POR_DEFECTO = 'img/avatar-default.png';
 
+    /** Extensiones de imagen permitidas (evita SVG, que permite XSS almacenado). */
+    private const EXTENSIONES_SEGURAS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
     /**
      * Guarda la imagen con el nombre determinista indicado y elimina las
      * versiones anteriores (otra extensión u otro nombre aleatorio antiguo).
@@ -39,6 +42,10 @@ class ImageStorageService
     {
         $carpeta = trim($carpeta, '/');
         $extension = strtolower($archivo->getClientOriginalExtension() ?: $archivo->guessExtension() ?: 'jpg');
+        // Whitelist: nunca guardar formatos que permitan ejecución/XSS (ej. svg, html, php).
+        if (!in_array($extension, self::EXTENSIONES_SEGURAS, true)) {
+            $extension = 'jpg';
+        }
         $nombre = $base . '.' . $extension;
         $destino = $carpeta . '/' . $nombre;
 
@@ -46,6 +53,13 @@ class ImageStorageService
         Storage::disk(self::DISCO)->putFileAs($carpeta, $archivo, $nombre);
 
         $this->limpiarVariantes($carpeta, $base, $destino, $rutaAnterior);
+
+        // Respalda el binario en la base de datos (híbrido disco + BD).
+        try {
+            app(ArchivoDbService::class)->respaldar($destino, self::DISCO, $archivo->getClientOriginalName());
+        } catch (\Throwable $e) {
+            // No interrumpir la subida si el respaldo en BD falla.
+        }
 
         return $destino;
     }
@@ -73,6 +87,13 @@ class ImageStorageService
 
         $this->limpiarVariantes($carpeta, $base, $destino, null);
 
+        // Respalda el binario en la base de datos (híbrido disco + BD).
+        try {
+            app(ArchivoDbService::class)->respaldar($destino, self::DISCO, basename($imagenPorDefecto));
+        } catch (\Throwable $e) {
+            // No interrumpir si el respaldo en BD falla.
+        }
+
         return $destino;
     }
 
@@ -95,6 +116,19 @@ class ImageStorageService
 
         if ($rutaActual) {
             Storage::disk(self::DISCO)->delete($rutaActual);
+        }
+
+        // Limpia también los respaldos de la base de datos.
+        try {
+            $db = app(ArchivoDbService::class);
+            if ($base) {
+                $db->eliminarPorBase($carpeta, $base, self::DISCO);
+            }
+            if ($rutaActual) {
+                $db->eliminar($rutaActual, self::DISCO);
+            }
+        } catch (\Throwable $e) {
+            // No interrumpir si falla la limpieza del respaldo.
         }
     }
 

@@ -48,24 +48,6 @@ body.dark-mode {
     --reg-error-bg: #4c1d1d;
 }
 
-body.theme-modern {
-    --reg-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4f46e5 100%);
-    --reg-surface: rgba(255, 255, 255, 0.1);
-    --reg-surface-alt: rgba(255, 255, 255, 0.05);
-    --reg-primary: #ffffff;
-    --reg-primary-hover: rgba(255, 255, 255, 0.9);
-    --reg-primary-light: rgba(255, 255, 255, 0.12);
-    --reg-text: #ffffff;
-    --reg-text-secondary: rgba(255, 255, 255, 0.85);
-    --reg-text-muted: rgba(255, 255, 255, 0.55);
-    --reg-border: rgba(255, 255, 255, 0.15);
-    --reg-input-bg: rgba(255, 255, 255, 0.08);
-    --reg-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-    --reg-gradient: linear-gradient(135deg, #312e81 0%, #4338ca 55%, #4f46e5 100%);
-    --reg-success-bg: rgba(22, 163, 74, 0.15);
-    --reg-error-bg: rgba(220, 38, 38, 0.15);
-}
-
 /* === RESET === */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -79,11 +61,6 @@ body {
     min-height: 100vh;
     display: flex;
     color: var(--reg-text);
-}
-
-body.theme-modern {
-    background: var(--reg-bg);
-    background-attachment: fixed;
 }
 
 /* === SPLIT LAYOUT === */
@@ -310,12 +287,6 @@ body.theme-modern {
     color: var(--reg-text-muted);
 }
 
-body.theme-modern .register-input {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-}
-
 /* === PHONE WRAPPER === */
 .register-phone-wrapper {
     display: flex;
@@ -429,16 +400,6 @@ body.theme-modern .register-input {
     transform: none;
 }
 
-body.theme-modern .register-submit {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-body.theme-modern .register-submit:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
 /* === LOGIN LINK === */
 .register-login-link {
     text-align: center;
@@ -508,7 +469,6 @@ body.theme-modern .register-submit:hover {
 
 /* SIGEJUB AUTH REDESIGN — coherencia visual con inicio de sesión */
 :root { --reg-primary:#087cf0; --reg-primary-hover:#0565d4; --reg-primary-light:rgba(0,132,255,.12); --reg-border:#d8e8ff; --reg-text:#123e7b; --reg-text-secondary:#6686b5; --reg-text-muted:#7895bd; --reg-gradient:linear-gradient(145deg,#073675 0%,#064b9f 54%,#03265a 100%); }
-body:not(.dark-mode):not(.theme-modern) { background:#eef7ff; }
 .register-split { min-height:100vh;min-height:100dvh;overflow:hidden; }
 .register-info { flex:0 0 51%; padding:150px 48px 64px; background:linear-gradient(145deg,#073675 0%,#064b9f 54%,#03265a 100%); }
 .register-info::before { background:radial-gradient(circle at 85% 12%,rgba(0,161,255,.22),transparent 32%),linear-gradient(140deg,transparent 60%,rgba(0,127,255,.10)); }
@@ -535,8 +495,6 @@ body:not(.dark-mode):not(.theme-modern) { background:#eef7ff; }
 @media(max-width:520px) { .register-info{min-height:190px;padding:26px 20px}.register-form-panel{padding:16px 10px 26px}.register-form-wrapper{padding:23px 17px;border-radius:19px}.register-form-title{font-size:25px} }
 body.dark-mode .register-form-panel{background:linear-gradient(135deg,#111c30,#172840)}
 body.dark-mode .register-form-wrapper{background:#1b2638;border-color:#2c4261}
-body.theme-modern .register-form-panel{background:rgba(22,25,70,.28)}
-body.theme-modern .register-form-wrapper{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22)}
 
 .register-info-brand{position:absolute;top:35px;left:clamp(24px,6vw,96px);z-index:3;display:flex;align-items:center;gap:15px;text-align:left}
 .register-info-brand img{width:68px;height:68px;object-fit:contain;padding:11px;border-radius:15px;background:linear-gradient(145deg,#08a7ff,#0874ed)}

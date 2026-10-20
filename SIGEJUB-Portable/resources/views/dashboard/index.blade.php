@@ -56,6 +56,9 @@
             --accent: {{ auth()->user()->color_acento ?? '#1a365d' }};
             --accent-dark: color-mix(in srgb, var(--accent) 72%, #000 28%);
             --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+            /* Color elegido por el usuario para la pantalla de carga.
+               Variable propia que los temas claro/oscuro NO sobrescriben. */
+            --user-accent: {{ auth()->user()->color_acento ?? '#087cf0' }};
         }
 
         /* ============================================================
@@ -192,7 +195,6 @@
 (function(){
     var theme = '{{ auth()->user()->tema }}';
     if (theme === 'dark') document.body.classList.add('dark-mode');
-    if (theme === 'modern') document.body.classList.add('theme-modern');
 })();
 </script>
 
@@ -406,6 +408,18 @@
         ocultarCargando();
     });
 })();
+
+/* === Pantalla de carga al salir del dashboard (perfil, etc.) ===
+   Al navegar a otra página se muestra el overlay hasta que la nueva cargue. */
+document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+    if (a.target === '_blank' || a.hasAttribute('download') || a.dataset.noLoading === 'true') return;
+    if (a.closest('form')) return;
+    mostrarCargando(a.dataset.loading || 'Cargando...');
+}, true);
 </script>
 
 @if(session('success'))
@@ -478,7 +492,7 @@ function syncHeaderThemeIcon() {
 }
 window.toggleHeaderTheme = function() {
     var isDark = document.body.classList.contains('dark-mode');
-    // Alternar entre claro y oscuro (si el usuario está en moderno, pasa a claro)
+    // Alternar entre claro y oscuro
     var el = document.getElementById('themeToggleBtn');
     if (el) { el.style.pointerEvents = 'none'; setTimeout(function(){ el.style.pointerEvents = ''; }, 400); }
     window.cambiarTema(isDark ? 'light' : 'dark');

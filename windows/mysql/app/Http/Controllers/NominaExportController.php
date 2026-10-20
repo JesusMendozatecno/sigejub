@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\NominaExportService;
 use App\Services\NominaImportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class NominaExportController extends Controller
 {
@@ -42,7 +43,7 @@ class NominaExportController extends Controller
                 mkdir($tempDir, 0755, true);
             }
 
-            $filename = 'nomina_import_' . uniqid() . '.xlsx';
+            $filename = 'nomina_import_' . Str::random(40) . '.xlsx';
             $file->move($tempDir, $filename);
 
             $results = $service->importar($tempDir . '/' . $filename, $anio);

@@ -31,9 +31,11 @@
         </div>
     </div>
 
+    <div id="expedientesCarpetas" class="carpetas-chips"></div>
     <div class="expedientes-grid" id="expedientesGrid">
         <p class="empty-state">Cargando expedientes...</p>
     </div>
+    <div class="activity-pagination" id="expedientesPagination"></div>
 </div>
 
 <div id="expediente-detalle" class="hidden">
@@ -284,39 +286,166 @@
     }
 
     // === CARGAR LISTA DE EXPEDIENTES ===
-    async function cargarExpedientes() {
-        const grid = document.getElementById('expedientesGrid');
-        if (!grid) return;
-        try {
-            const result = await cachedFetch('/expedientes', { ttl: 60000 });
-            const raw = result.data;
-            const data = Array.isArray(raw) ? raw : (raw.data || []);
-            grid.innerHTML = '';
-            if (!data.length) {
-                grid.innerHTML = '<p class="empty-state">No hay expedientes registrados. Cree el primero.</p>';
-                return;
+    let expedientesPaginaActual = 1;
+    let expedientesCache = [];
+    let expedientesTotalPaginas = 1;
+
+    // Devuelve la letra (A-Z) de agrupación a partir del nombre del trabajador.
+    function letraCarpetaExpediente(exp) {
+        const t = (exp && exp.trabajador) || {};
+        const base = (t.nombres || t.apellidos || '').trim();
+        const ch = base.charAt(0).toUpperCase();
+        if (!ch) return '#';
+        return /[A-ZÁÉÍÓÚÑ]/.test(ch) ? ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '#';
+    }
+
+    function renderPaginacionExpedientes() {
+        const cont = document.getElementById('expedientesPagination');
+        if (!cont) return;
+        if (expedientesTotalPaginas <= 1) { cont.innerHTML = ''; return; }
+        const cur = expedientesPaginaActual;
+        const last = expedientesTotalPaginas;
+        let html = '<button class="pag-btn" data-p="' + (cur - 1) + '"' + (cur <= 1 ? ' disabled' : '') + '>&lsaquo;</button>';
+        for (let i = 1; i <= last; i++) {
+            if (i === 1 || i === last || (i >= cur - 2 && i <= cur + 2)) {
+                html += '<button class="pag-btn' + (i === cur ? ' active' : '') + '" data-p="' + i + '">' + i + '</button>';
+            } else if (i === cur - 3 || i === cur + 3) {
+                html += '<span class="pag-info">&hellip;</span>';
             }
-            data.forEach(exp => {
+        }
+        html += '<button class="pag-btn" data-p="' + (cur + 1) + '"' + (cur >= last ? ' disabled' : '') + '>&rsaquo;</button>';
+        html += '<span class="pag-info">' + cur + ' de ' + last + '</span>';
+        cont.innerHTML = html;
+        cont.querySelectorAll('.pag-btn[data-p]').forEach(function(b) {
+            b.addEventListener('click', function() {
+                const p = parseInt(this.dataset.p, 10);
+                if (p >= 1 && p <= last && p !== cur) cargarExpedientes(p);
+            });
+        });
+    }
+
+    // Filtra en cliente por texto (nombre/cédula) y estado. Devuelve la lista filtrada.
+    function filtrarExpedientes(lista) {
+        const q = (document.getElementById('buscadorExpedientes')?.value || '').trim().toLowerCase();
+        const estadoF = document.getElementById('filtroEstadoExpediente')?.value || '';
+        return lista.filter(exp => {
+            const t = exp.trabajador || {};
+            if (estadoF !== '') {
+                const est = String(exp.estado_global || 0);
+                if (estadoF === '0' ? est !== '0' : est !== estadoF) return false;
+            }
+            if (q) {
+                const texto = ((t.nombres || '') + ' ' + (t.apellidos || '') + ' ' + (t.cedula || '')).toLowerCase();
+                if (texto.indexOf(q) === -1) return false;
+            }
+            return true;
+        });
+    }
+
+    // Pinta una lista de expedientes agrupada por carpeta alfabética.
+    function pintarExpedientes(lista, grid, carpetasCont) {
+        const grupos = {};
+        lista.forEach(exp => {
+            const letra = letraCarpetaExpediente(exp);
+            (grupos[letra] = grupos[letra] || []).push(exp);
+        });
+        const letras = Object.keys(grupos).sort();
+        grid.innerHTML = '';
+        let htmlGrid = '';
+        let htmlCarpetas = '';
+        letras.forEach(function(letra, idx) {
+            htmlCarpetas += '<button type="button" class="carpeta-chip" data-letra="' + letra + '">' + letra + '<span class="carpeta-chip-count">' + grupos[letra].length + '</span></button>';
+            htmlGrid += '<div class="carpeta-grupo' + (idx === 0 ? ' open' : '') + '" data-letra="' + letra + '">';
+            htmlGrid += '<div class="carpeta-header" role="button" tabindex="0"><i class="fas fa-folder"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' expediente' + (grupos[letra].length === 1 ? '' : 's') + '</span><i class="fas fa-chevron-down carpeta-chevron"></i></div>';
+            htmlGrid += '<div class="expedientes-grid">';
+            grupos[letra].forEach(exp => {
                 const t = exp.trabajador || {};
                 const estado = exp.estado_global || 0;
                 const claseEstado = estado === 100 ? 'completado' : (estado > 0 ? 'progreso' : 'pendiente');
                 const textoEstado = estado === 100 ? 'Completado' : (estado > 0 ? `En Proceso (${estado}%)` : 'Pendiente');
                 const foto = exp.foto_carnet ? `/storage/${exp.foto_carnet}` : '';
-                const card = document.createElement('div');
-                card.className = 'expediente-card';
-                card.onclick = () => abrirDetalle(exp.id);
-                card.innerHTML = `
-                    <div class="ec-foto">
-                        ${foto ? `<img src="${foto}" alt="">` : `<div class="ec-avatar"><i class="fas fa-user" size="28"></i></div>`}
-                    </div>
-                    <div class="ec-info">
-                        <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
-                        <span>${escaparHTML(t.cedula || '—')}</span>
-                        <span class="ec-badge ${claseEstado}">${textoEstado}</span>
+                htmlGrid += `
+                    <div class="expediente-card" data-id="${exp.id}">
+                        <div class="ec-foto">
+                            ${foto ? `<img src="${foto}" alt="">` : `<div class="ec-avatar"><i class="fas fa-user"></i></div>`}
+                        </div>
+                        <div class="ec-info">
+                            <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
+                            <span>${escaparHTML(t.cedula || '—')}</span>
+                            <span class="ec-badge ${claseEstado}">${textoEstado}</span>
+                        </div>
                     </div>
                 `;
-                grid.appendChild(card);
             });
+            htmlGrid += '</div></div>';
+        });
+        grid.innerHTML = htmlGrid;
+        if (carpetasCont) carpetasCont.innerHTML = htmlCarpetas;
+        grid.querySelectorAll('.expediente-card').forEach(card => {
+            card.addEventListener('click', function() { abrirDetalle(parseInt(this.dataset.id, 10)); });
+        });
+
+        // Acordeón: solo una carpeta abierta a la vez.
+        function abrirGrupoExpedientes(letra, scroll) {
+            grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
+                const activo = g.dataset.letra === letra;
+                g.classList.toggle('open', activo);
+                const chev = g.querySelector('.carpeta-header i.carpeta-chevron');
+                const folder = g.querySelector('.carpeta-header i.fa-folder, .carpeta-header i.fa-folder-open');
+                if (folder) folder.className = activo ? 'fas fa-folder-open' : 'fas fa-folder';
+                if (activo && scroll) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            if (carpetasCont) {
+                carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch) {
+                    ch.classList.toggle('active', ch.dataset.letra === letra);
+                });
+            }
+        }
+
+        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
+            const grupo = header.closest('.carpeta-grupo');
+            function toggle() {
+                const estaAbierta = grupo.classList.contains('open');
+                if (estaAbierta) {
+                    grupo.classList.remove('open');
+                    if (carpetasCont) carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch){ ch.classList.remove('active'); });
+                } else {
+                    abrirGrupoExpedientes(grupo.dataset.letra, false);
+                }
+            }
+            header.addEventListener('click', toggle);
+            header.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+        });
+
+        if (carpetasCont) {
+            carpetasCont.querySelectorAll('.carpeta-chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    abrirGrupoExpedientes(this.dataset.letra, true);
+                });
+            });
+        }
+    }
+
+    async function cargarExpedientes(page) {
+        const grid = document.getElementById('expedientesGrid');
+        const carpetasCont = document.getElementById('expedientesCarpetas');
+        if (!grid) return;
+        expedientesPaginaActual = page || 1;
+        try {
+            const result = await cachedFetch('/expedientes?page=' + expedientesPaginaActual + '&per_page=12', { ttl: 60000 });
+            const raw = result.data;
+            const data = Array.isArray(raw) ? raw : (raw.data || []);
+            expedientesCache = data;
+            expedientesTotalPaginas = Array.isArray(raw) ? 1 : (raw.last_page || 1);
+            if (carpetasCont) carpetasCont.innerHTML = '';
+            const filtrados = filtrarExpedientes(data);
+            if (!filtrados.length) {
+                grid.innerHTML = '<p class="empty-state">' + (data.length ? 'No hay expedientes que coincidan con el filtro.' : 'No hay expedientes registrados. Cree el primero.') + '</p>';
+                renderPaginacionExpedientes();
+                return;
+            }
+            pintarExpedientes(filtrados, grid, carpetasCont);
+            renderPaginacionExpedientes();
         } catch (err) {
             console.error('Error al cargar expedientes:', err);
             grid.innerHTML = '<p class="empty-state">Error al cargar expedientes.</p>';
@@ -490,6 +619,22 @@
     document.addEventListener('DOMContentLoaded', () => {
         cargarExpedientes();
 
+        // Buscador y filtro de estado: refiltran la lista ya cargada.
+        const repintarFiltro = () => {
+            const grid = document.getElementById('expedientesGrid');
+            const carpetasCont = document.getElementById('expedientesCarpetas');
+            if (!grid) return;
+            const filtrados = filtrarExpedientes(expedientesCache);
+            if (!filtrados.length) {
+                grid.innerHTML = '<p class="empty-state">No hay expedientes que coincidan con el filtro.</p>';
+                if (carpetasCont) carpetasCont.innerHTML = '';
+                return;
+            }
+            pintarExpedientes(filtrados, grid, carpetasCont);
+        };
+        document.getElementById('buscadorExpedientes')?.addEventListener('input', repintarFiltro);
+        document.getElementById('filtroEstadoExpediente')?.addEventListener('change', repintarFiltro);
+
         // Botón crear expediente
         document.getElementById('btnCrearExpediente')?.addEventListener('click', () => {
             document.getElementById('modalCrearExpediente').style.display = 'flex';
@@ -616,7 +761,7 @@
                 mostrarToast(data.mensaje, 'success');
                 document.getElementById('modalCrearExpediente').style.display = 'none';
                 Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/expedientes')).forEach(k => localStorage.removeItem(k));
-                cargarExpedientes();
+                cargarExpedientes(1);
             } catch (err) {
                 mostrarToast(err.mensaje || err.message || 'Error al crear expediente', 'error');
             } finally {
@@ -934,7 +1079,7 @@
                 if (m.target.id === 'expedientes' && m.target.classList.contains('active')) {
                     if (!document.getElementById('expediente-detalle').classList.contains('hidden')) return;
                     Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/expedientes')).forEach(k => localStorage.removeItem(k));
-                    cargarExpedientes();
+                    cargarExpedientes(1);
                 }
             });
         });

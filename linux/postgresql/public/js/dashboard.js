@@ -49,9 +49,6 @@ function inicializarDashboard() {
     if (window.SIGEJUB_THEME === 'dark') {
         document.body.classList.add('dark-mode');
     }
-    if (window.SIGEJUB_THEME === 'modern') {
-        document.body.classList.add('theme-modern');
-    }
 
     // Notification counter
     cargarContadorNoLeidas();
@@ -205,9 +202,8 @@ window.cambiarTema = async function(tema) {
     // Smooth transition: add a class that enables transitions on all elements
     document.documentElement.classList.add('theme-switching');
 
-    document.body.classList.remove('dark-mode', 'theme-modern');
+    document.body.classList.remove('dark-mode');
     if (tema === 'dark') document.body.classList.add('dark-mode');
-    if (tema === 'modern') document.body.classList.add('theme-modern');
 
     // Save to localStorage for instant load on next visit
     try { localStorage.setItem('sigejub_theme', tema); } catch (e) {}
@@ -230,6 +226,7 @@ window.cambiarTema = async function(tema) {
 
 window.cambiarColor = async function(color) {
     document.documentElement.style.setProperty('--accent', color);
+    document.documentElement.style.setProperty('--user-accent', color);
     document.querySelectorAll('.color-preset').forEach(function(el) { el.classList.remove('selected'); });
     var preset = document.querySelector('.color-preset[data-color="' + color + '"]');
     if (preset) preset.classList.add('selected');

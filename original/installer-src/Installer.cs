@@ -1619,25 +1619,43 @@ AppendLog("[7/13] Instalando dependencias (esto puede tardar)...", Color.Yellow)
 
                 AppendLog("  Inicializando datos de MariaDB...", Color.White);
                 bool initOk = false;
-                string initExe = Path.Combine(binDir, "mariadb-install-db.exe");
-                string initArgs = "--defaults-file=\"" + ini + "\" --datadir=\"" + dataDir + "\" --auth-root-authentication-method=normal --skip-test-db";
-                if (!File.Exists(initExe))
+                string outS = "";
+
+                // Estrategia 1: mariadb-install-db.exe (MariaDB). Se pasan las opciones por CLI
+                // SIN defaults-file (algunas builds de 11.x lo interpretan como variable y fallan).
+                string installDb = Path.Combine(binDir, "mariadb-install-db.exe");
+                if (!File.Exists(installDb)) installDb = Path.Combine(binDir, "mysql_install_db.exe");
+                if (File.Exists(installDb))
                 {
-                    initExe = Path.Combine(binDir, "mysql_install_db.exe");
-                    initArgs = "--defaults-file=\"" + ini + "\" --datadir=\"" + dataDir + "\"";
+                    initOk = RunCmdIn(installDb,
+                        "--basedir=\"" + baseDir + "\" --datadir=\"" + dataDir + "\" --auth-root-authentication-method=normal --skip-test-db",
+                        installPath, out outS);
                 }
-                if (File.Exists(initExe))
+
+                // Estrategia 2: mysqld --initialize-insecure (MySQL y MariaDB recientes).
+                if (!initOk)
                 {
-                    string outS;
-                    initOk = RunCmdIn(initExe, initArgs, installPath, out outS);
-                    if (!initOk) { AppendLog("[ERROR] " + Path.GetFileName(initExe) + ": " + Truncate(outS, 400), Color.Red); return false; }
+                    string outS2;
+                    if (RunCmdIn(mysqld, "--basedir=\"" + baseDir + "\" --datadir=\"" + dataDir + "\" --initialize-insecure", installPath, out outS2))
+                    {
+                        initOk = true;
+                    }
+                    else
+                    {
+                        // Estrategia 3: mysqld leyendo el my.ini.
+                        string outS3;
+                        if (RunCmdIn(mysqld, "--defaults-file=\"" + ini + "\" --initialize-insecure", installPath, out outS3))
+                        {
+                            initOk = true;
+                        }
+                        else
+                        {
+                            outS = outS3;
+                        }
+                    }
                 }
-                else
-                {
-                    string outS;
-                    initOk = RunCmdIn(mysqld, "--defaults-file=\"" + ini + "\" --initialize-insecure", installPath, out outS);
-                    if (!initOk) { AppendLog("[ERROR] mysqld --initialize: " + Truncate(outS, 400), Color.Red); return false; }
-                }
+
+                if (!initOk) { AppendLog("[ERROR] Inicialización de datos: " + Truncate(outS, 400), Color.Red); return false; }
 
                 AppendLog("  Arrancando MariaDB en el puerto " + port + " ...", Color.White);
                 try

@@ -10,6 +10,7 @@ use App\Models\Activity;
 use App\Models\AntecedenteDocumento;
 use App\Models\AntecedenteServicio;
 use App\Models\Trabajador;
+use App\Services\ArchivoDbService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -135,6 +136,7 @@ class AntecedenteServicioController extends Controller
         foreach ($antecedente->documentos as $documento) {
             if ($documento->archivo) {
                 Storage::disk('public')->delete($documento->archivo);
+                app(ArchivoDbService::class)->eliminar($documento->archivo, 'public');
             }
         }
         $antecedente->delete();
@@ -168,6 +170,7 @@ class AntecedenteServicioController extends Controller
 
         if ($request->hasFile('archivo')) {
             $validated['archivo'] = $request->file('archivo')->store('antecedentes/documentos', 'public');
+            app(ArchivoDbService::class)->respaldar($validated['archivo'], 'public', $request->file('archivo')->getClientOriginalName());
         } else {
             unset($validated['archivo']);
         }
@@ -193,6 +196,7 @@ class AntecedenteServicioController extends Controller
 
         if ($documento->archivo) {
             Storage::disk('public')->delete($documento->archivo);
+            app(ArchivoDbService::class)->eliminar($documento->archivo, 'public');
         }
         $documento->delete();
 

@@ -60,31 +60,6 @@ body.dark-mode {
     --pw-btn-hover-border: #60a5fa;
 }
 
-body.theme-modern {
-    --pw-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4f46e5 100%);
-    --pw-surface: rgba(255, 255, 255, 0.12);
-    --pw-surface-alt: rgba(255, 255, 255, 0.08);
-    --pw-primary: #ffffff;
-    --pw-primary-hover: rgba(255, 255, 255, 0.9);
-    --pw-primary-light: rgba(255, 255, 255, 0.15);
-    --pw-accent: #a5b4fc;
-    --pw-text: #ffffff;
-    --pw-text-secondary: rgba(255, 255, 255, 0.85);
-    --pw-text-muted: rgba(255, 255, 255, 0.6);
-    --pw-border: rgba(255, 255, 255, 0.15);
-    --pw-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
-    --pw-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    --pw-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.3);
-    --pw-gradient-hero: linear-gradient(135deg, #312e81 0%, #4338ca 55%, #4f46e5 100%);
-
-    /* Botón "Ingresar" en tema moderno: fondo blanco + texto índigo (alto contraste) */
-    --pw-btn-text: #ffffff;
-    --pw-btn-border: rgba(255, 255, 255, 0.35);
-    --pw-btn-hover-bg: #ffffff;
-    --pw-btn-hover-text: #312e81;
-    --pw-btn-hover-border: #ffffff;
-}
-
 /* === RESET === */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -98,11 +73,6 @@ body {
     color: var(--pw-text);
     line-height: 1.6;
     overflow-x: hidden;
-}
-
-body.theme-modern {
-    background: var(--pw-bg);
-    background-attachment: fixed;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -127,13 +97,6 @@ img { max-width: 100%; height: auto; }
     box-shadow: var(--pw-shadow-sm);
     z-index: 1000;
     transition: background var(--pw-transition), border-color var(--pw-transition);
-}
-
-body.theme-modern .pw-nav {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .pw-nav-inner {
@@ -162,10 +125,6 @@ body.theme-modern .pw-nav {
     font-weight: 700;
     color: var(--pw-primary);
     letter-spacing: 0.5px;
-}
-
-body.theme-modern .pw-nav-brand-text {
-    color: #ffffff;
 }
 
 .pw-nav-links {
@@ -226,14 +185,6 @@ body.theme-modern .pw-nav-brand-text {
     color: var(--pw-btn-hover-text);
     border-color: var(--pw-btn-hover-border);
     outline: none;
-}
-
-/* Garantiza visibilidad del texto "Ingresar" cuando el hover actúa */
-.pw-nav-login:hover,
-.pw-nav-login:focus-visible,
-body.theme-modern .pw-nav-login:hover,
-body.theme-modern .pw-nav-login:focus-visible {
-    color: var(--pw-btn-hover-text) !important;
 }
 
 /* === MOBILE MENU === */
@@ -449,10 +400,6 @@ body.theme-modern .pw-nav-login:focus-visible {
     transition: background var(--pw-transition);
 }
 
-body.theme-modern .pw-features {
-    background: rgba(255, 255, 255, 0.05);
-}
-
 .pw-features-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -489,13 +436,6 @@ body.theme-modern .pw-features {
 
 .pw-feature-card:hover::before {
     transform: scaleX(1);
-}
-
-body.theme-modern .pw-feature-card {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .pw-feature-icon {
@@ -571,10 +511,6 @@ body.theme-modern .pw-feature-card {
     transition: background var(--pw-transition);
 }
 
-body.theme-modern .pw-contact {
-    background: rgba(255, 255, 255, 0.05);
-}
-
 .pw-contact-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -620,12 +556,6 @@ body.theme-modern .pw-contact {
     box-shadow: var(--pw-shadow);
 }
 
-body.theme-modern .pw-contact-form {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
 .pw-form-group {
     margin-bottom: 16px;
 }
@@ -668,14 +598,6 @@ body.theme-modern .pw-contact-form {
     box-shadow: 0 0 0 3px var(--pw-primary-light);
 }
 
-body.theme-modern .pw-form-input,
-body.theme-modern .pw-form-select,
-body.theme-modern .pw-form-textarea {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-}
-
 .pw-form-textarea {
     resize: vertical;
     min-height: 100px;
@@ -699,27 +621,12 @@ body.theme-modern .pw-form-textarea {
     transform: translateY(-1px);
 }
 
-body.theme-modern .pw-form-btn {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-body.theme-modern .pw-form-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
 /* === FOOTER === */
 .pw-footer {
     padding: 40px 24px;
     border-top: 1px solid var(--pw-border);
     background: var(--pw-surface);
     transition: background var(--pw-transition), border-color var(--pw-transition);
-}
-
-body.theme-modern .pw-footer {
-    background: rgba(0, 0, 0, 0.15);
-    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .pw-footer-inner {
@@ -742,10 +649,6 @@ body.theme-modern .pw-footer {
     font-size: 18px;
     font-weight: 700;
     color: var(--pw-primary);
-}
-
-body.theme-modern .pw-footer-brand-name {
-    color: #ffffff;
 }
 
 .pw-footer-copy {
@@ -821,11 +724,6 @@ body.theme-modern .pw-footer-brand-name {
         padding: 16px 24px;
         gap: 12px;
         box-shadow: var(--pw-shadow);
-    }
-
-    body.theme-modern .pw-nav-links {
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(12px);
     }
 
     .pw-nav-links.active {

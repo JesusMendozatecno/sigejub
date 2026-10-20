@@ -18,6 +18,13 @@
     <div class="login-split">
 
         <div class="login-info">
+            <div class="login-info-brand">
+                <img src="{{ asset('img/logo-light.svg') }}" alt="" aria-hidden="true">
+                <div class="login-info-brand-copy">
+                    <strong>SIGEJUB</strong>
+                    <span>Sistema Integral de Gestión de Jubilaciones</span>
+                </div>
+            </div>
             <div class="login-info-content">
                 <div class="login-info-logo">
                     <img src="{{ asset('img/logo-light.svg') }}" alt="SIGEJUB">
@@ -40,9 +47,9 @@
                     @csrf
                     <input type="hidden" name="token" value="{{ $token }}">
 
-                    <div class="login-input-group">
+                    <div class="login-input-group has-leading-icon">
                         <label for="resetEmail">Correo Electrónico</label>
-                        <input class="login-input" type="email" name="correo" id="resetEmail" value="{{ $correo }}" required autocomplete="email">
+                        <div class="login-field-control"><span class="login-field-icon" aria-hidden="true"><i class="fas fa-envelope"></i></span><input class="login-input" type="email" name="correo" id="resetEmail" value="{{ $correo }}" required autocomplete="email"></div>
                     </div>
 
                     <div class="login-input-group">

@@ -19,6 +19,13 @@
     <div class="register-split">
 
         <div class="register-info">
+            <div class="register-info-brand">
+                <img src="{{ asset('img/logo-light.svg') }}" alt="" aria-hidden="true">
+                <div class="register-info-brand-copy">
+                    <strong>SIGEJUB</strong>
+                    <span>Sistema Integral de Gestión de Jubilaciones</span>
+                </div>
+            </div>
             <div class="register-info-content">
                 <div class="register-info-logo">
                     <img src="{{ asset('img/logo-light.svg') }}" alt="SIGEJUB">

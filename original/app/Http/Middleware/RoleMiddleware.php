@@ -25,7 +25,7 @@ class RoleMiddleware
 
         $rolesPermitidos = implode(',', $roles);
 
-        if (!in_array($user->rol, $roles)) {
+        if (!in_array($user->rol, $roles, true)) {
             \App\Services\AuditService::registrar(
                 'unauthorized',
                 'usuario',

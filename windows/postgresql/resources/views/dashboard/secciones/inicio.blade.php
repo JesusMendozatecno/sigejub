@@ -14,11 +14,10 @@
     .tasa-dolar-meta{font-size:0.72rem;opacity:0.65;margin-top:6px;}
     .tasa-dolar-status{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;}
     body.dark-mode .tasa-dolar-card{background:linear-gradient(135deg, var(--accent, #1e293b), #0f172a);border:1px solid #334155;}
-    body.theme-modern .tasa-dolar-card{background:linear-gradient(135deg, var(--accent, #4f46e5), #312e81);}
 </style>
 <header class="welcome-header">
     <div class="welcome-text">
-        <p class="subtitle"></p>
+        <p class="subtitle">Bienvenido a SIGEJUB</p>
         <h1>Panel de <span class="text-blue-accent">Gestión Integral</span></h1>
     </div>
     <button class="btn-primary" onclick="switchTab('solicitudes')" type="button">

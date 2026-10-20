@@ -126,9 +126,11 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
 
 <div id="prestaciones-lista">
     <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:16px;">Trabajadores con solicitud aprobada y expediente registrado</p>
+    <div id="prestacionesCarpetas" class="carpetas-chips"></div>
     <div class="prestaciones-grid-cards" id="prestacionesGrid">
         <p class="empty-state">Cargando...</p>
     </div>
+    <div class="activity-pagination" id="prestacionesPagination"></div>
 </div>
 
 <div id="prestacion-detalle" class="hidden">
@@ -406,47 +408,157 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
         });
     });
 
-    async function cargarPrestaciones() {
+    // === AGRUPACIÓN ALFABÉTICA Y PAGINACIÓN ===
+    let prestacionesPaginaActual = 1;
+    let prestacionesTotalPaginas = 1;
+    let prestacionesCache = [];
+
+    // Letra (A-Z) de la carpeta a partir del nombre del trabajador.
+    function letraCarpetaPrestacion(t) {
+        const base = ((t && (t.nombres || t.apellidos)) || '').trim();
+        const ch = base.charAt(0).toUpperCase();
+        if (!ch) return '#';
+        return /[A-ZÁÉÍÓÚÑ]/.test(ch) ? ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '#';
+    }
+
+    function renderPaginacionPrestaciones() {
+        const cont = document.getElementById('prestacionesPagination');
+        if (!cont) return;
+        if (prestacionesTotalPaginas <= 1) { cont.innerHTML = ''; return; }
+        const cur = prestacionesPaginaActual;
+        const last = prestacionesTotalPaginas;
+        let html = '<button class="pag-btn" data-p="' + (cur - 1) + '"' + (cur <= 1 ? ' disabled' : '') + '>&lsaquo;</button>';
+        for (let i = 1; i <= last; i++) {
+            if (i === 1 || i === last || (i >= cur - 2 && i <= cur + 2)) {
+                html += '<button class="pag-btn' + (i === cur ? ' active' : '') + '" data-p="' + i + '">' + i + '</button>';
+            } else if (i === cur - 3 || i === cur + 3) {
+                html += '<span class="pag-info">&hellip;</span>';
+            }
+        }
+        html += '<button class="pag-btn" data-p="' + (cur + 1) + '"' + (cur >= last ? ' disabled' : '') + '>&rsaquo;</button>';
+        html += '<span class="pag-info">' + cur + ' de ' + last + '</span>';
+        cont.innerHTML = html;
+        cont.querySelectorAll('.pag-btn[data-p]').forEach(function(b) {
+            b.addEventListener('click', function() {
+                const p = parseInt(this.dataset.p, 10);
+                if (p >= 1 && p <= last && p !== cur) cargarPrestaciones(p);
+            });
+        });
+    }
+
+    // Construye la tarjeta de un trabajador (id = trabajador_id).
+    function tarjetaPrestacion(t) {
+        const foto = t.foto_carnet ? '/storage/' + t.foto_carnet : '';
+        let montoHtml = '';
+        if (t.tiene_prestacion && t.monto) {
+            montoHtml = '<span class="pc-monto">Bs. ' + parseFloat(t.monto).toFixed(2) + '</span>';
+        }
+        let titulo = '';
+        const profTarjeta = profesionalizacionDeTrabajador(t);
+        if (profTarjeta) {
+            const texto = String(t.nivel_educativo_texto || '').trim();
+            const nom = texto ? texto : (profTarjeta.etiqueta !== String(profTarjeta.nivel) ? profTarjeta.etiqueta : 'Profesional');
+            titulo = '<span class="pc-titulo"><i class="fas fa-graduation-cap"></i> ' + escaparHTML(nom) + ' · ' + profTarjeta.nivel + '%</span>';
+        }
+        return `
+            <div class="prestacion-card" data-id="${t.id}">
+                <div class="pc-foto">${foto ? '<img src="'+foto+'" alt="">' : '<div class="pc-avatar"><i class="fas fa-user"></i></div>'}</div>
+                <div class="pc-info">
+                    <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
+                    <span class="pc-cedula">${escaparHTML(t.cedula)} · ${escaparHTML(t.cargo)}</span>
+                    ${titulo ? `<div class="pc-row">${titulo}</div>` : ''}
+                    <div class="pc-row">
+                        <span class="pc-anios">${escaparHTML(t.total_anos_servicio) || 0} años</span>
+                        <span class="pc-badge">${escaparHTML(t.tipo_jubilacion)}</span>
+                        ${montoHtml}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // Pinta la lista agrupada por carpeta alfabética.
+    function pintarPrestaciones(items, grid, carpetasCont) {
+        const grupos = {};
+        items.forEach(t => {
+            const letra = letraCarpetaPrestacion(t);
+            (grupos[letra] = grupos[letra] || []).push(t);
+        });
+        const letras = Object.keys(grupos).sort();
+        let htmlGrid = '';
+        let htmlCarpetas = '';
+        letras.forEach(function(letra, idx) {
+            htmlCarpetas += '<button type="button" class="carpeta-chip" data-letra="' + letra + '">' + letra + '<span class="carpeta-chip-count">' + grupos[letra].length + '</span></button>';
+            htmlGrid += '<div class="carpeta-grupo' + (idx === 0 ? ' open' : '') + '" data-letra="' + letra + '">';
+            htmlGrid += '<div class="carpeta-header" role="button" tabindex="0"><i class="fas fa-folder"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' trabajador' + (grupos[letra].length === 1 ? '' : 'es') + '</span><i class="fas fa-chevron-down carpeta-chevron"></i></div>';
+            htmlGrid += '<div class="prestaciones-grid-cards">';
+            grupos[letra].forEach(t => { htmlGrid += tarjetaPrestacion(t); });
+            htmlGrid += '</div></div>';
+        });
+        grid.innerHTML = htmlGrid;
+        if (carpetasCont) carpetasCont.innerHTML = htmlCarpetas;
+        grid.querySelectorAll('.prestacion-card').forEach(card => {
+            card.addEventListener('click', function() { abrirDetalle(parseInt(this.dataset.id, 10)); });
+        });
+
+        // Acordeón: solo una carpeta abierta a la vez.
+        function abrirGrupoPrestaciones(letra, scroll) {
+            grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
+                const activo = g.dataset.letra === letra;
+                g.classList.toggle('open', activo);
+                const folder = g.querySelector('.carpeta-header i.fa-folder, .carpeta-header i.fa-folder-open');
+                if (folder) folder.className = activo ? 'fas fa-folder-open' : 'fas fa-folder';
+                if (activo && scroll) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            if (carpetasCont) {
+                carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch) {
+                    ch.classList.toggle('active', ch.dataset.letra === letra);
+                });
+            }
+        }
+
+        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
+            const grupo = header.closest('.carpeta-grupo');
+            function toggle() {
+                const estaAbierta = grupo.classList.contains('open');
+                if (estaAbierta) {
+                    grupo.classList.remove('open');
+                    if (carpetasCont) carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch){ ch.classList.remove('active'); });
+                } else {
+                    abrirGrupoPrestaciones(grupo.dataset.letra, false);
+                }
+            }
+            header.addEventListener('click', toggle);
+            header.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+        });
+
+        if (carpetasCont) {
+            carpetasCont.querySelectorAll('.carpeta-chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    abrirGrupoPrestaciones(this.dataset.letra, true);
+                });
+            });
+        }
+    }
+
+    async function cargarPrestaciones(page) {
         const grid = document.getElementById('prestacionesGrid');
+        const carpetasCont = document.getElementById('prestacionesCarpetas');
         if (!grid) return;
+        prestacionesPaginaActual = page || 1;
         try {
-            const result = await cachedFetch('/prestaciones?v=2', { ttl: 60000 });
-            const items = Array.isArray(result.data) ? result.data : (result.data.data || []);
-            grid.innerHTML = '';
+            const result = await cachedFetch('/prestaciones?v=2&page=' + prestacionesPaginaActual + '&per_page=12', { ttl: 60000 });
+            const raw = result.data;
+            const items = Array.isArray(raw) ? raw : (raw.data || []);
+            prestacionesCache = items;
+            prestacionesTotalPaginas = Array.isArray(raw) ? 1 : (raw.last_page || 1);
+            if (carpetasCont) carpetasCont.innerHTML = '';
             if (!items.length) {
                 grid.innerHTML = '<p class="empty-state">No hay trabajadores disponibles. Deben tener solicitud aprobada y expediente.</p>';
+                renderPaginacionPrestaciones();
                 return;
             }
-            items.forEach(t => {
-                const foto = t.foto_carnet ? '/storage/' + t.foto_carnet : '';
-                const card = document.createElement('div');
-                card.className = 'prestacion-card';
-                card.onclick = () => abrirDetalle(t.id);
-                let montoHtml = '';
-                if (t.tiene_prestacion && t.monto) {
-                    montoHtml = '<span class="pc-monto">Bs. ' + parseFloat(t.monto).toFixed(2) + '</span>';
-                }
-                let titulo = '';
-                const profTarjeta = profesionalizacionDeTrabajador(t);
-                if (profTarjeta) {
-                    const texto = String(t.nivel_educativo_texto || '').trim();
-                    const nom = texto ? texto : (profTarjeta.etiqueta !== String(profTarjeta.nivel) ? profTarjeta.etiqueta : 'Profesional');
-                    titulo = '<span class="pc-titulo"><i class="fas fa-graduation-cap"></i> ' + escaparHTML(nom) + ' · ' + profTarjeta.nivel + '%</span>';
-                }
-                card.innerHTML = `
-                    <div class="pc-foto">${foto ? '<img src="'+foto+'" alt="">' : '<div class="pc-avatar"><i class="fas fa-user" size="28"></i></div>'}</div>
-                    <div class="pc-info">
-                        <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
-                        <span class="pc-cedula">${escaparHTML(t.cedula)} · ${escaparHTML(t.cargo)}</span>
-                        ${titulo ? `<div class="pc-row">${titulo}</div>` : ''}
-                        <div class="pc-row">
-                            <span class="pc-anios">${escaparHTML(t.total_anos_servicio) || 0} años</span>
-                            <span class="pc-badge">${escaparHTML(t.tipo_jubilacion)}</span>
-                            ${montoHtml}
-                        </div>
-                    </div>`;
-                grid.appendChild(card);
-            });
+            pintarPrestaciones(items, grid, carpetasCont);
+            renderPaginacionPrestaciones();
         } catch (err) {
             console.error('Error prestaciones:', err);
             grid.innerHTML = '<p class="empty-state">Error al cargar datos.</p>';
@@ -874,7 +986,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
     const seccion = document.getElementById('prestaciones');
     if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
 
-    document.addEventListener('DOMContentLoaded', cargarPrestaciones);
-    if (document.getElementById('prestaciones')?.classList.contains('active')) cargarPrestaciones();
+    document.addEventListener('DOMContentLoaded', function() { cargarPrestaciones(1); });
+    if (document.getElementById('prestaciones')?.classList.contains('active')) cargarPrestaciones(1);
 })();
 </script>

@@ -18,11 +18,18 @@
     <div class="login-split">
 
         <div class="login-info">
+            <div class="login-info-brand">
+                <img src="{{ asset('img/logo-light.svg') }}" alt="" aria-hidden="true">
+                <div class="login-info-brand-copy">
+                    <strong>SIGEJUB</strong>
+                    <span>Sistema Integral de Gestión de Jubilaciones</span>
+                </div>
+            </div>
             <div class="login-info-content">
                 <div class="login-info-logo">
                     <img src="{{ asset('img/logo-light.svg') }}" alt="SIGEJUB">
                 </div>
-                <h1 class="login-info-title">Gestión de Jubilaciones</h1>
+                <h1 class="login-info-title">Gestión de <span class="accent">Jubilaciones</span></h1>
                 <p class="login-info-subtitle">Administre de forma integral el proceso jubilatorio de su institución.</p>
                 <div class="login-info-features">
                     <div class="login-info-feature">
@@ -62,18 +69,20 @@
                 <form id="loginForm">
                     @csrf
 
-                    <div class="login-input-group">
+                    <div class="login-input-group has-leading-icon">
                         <label for="loginEmail">Correo Electrónico</label>
-                        <input class="login-input" type="text" name="correo" id="loginEmail" placeholder="tu@correo.com" required autocomplete="username">
+                        <div class="login-field-control"><span class="login-field-icon" aria-hidden="true"><i class="fas fa-envelope"></i></span><input class="login-input" type="text" name="correo" id="loginEmail" placeholder="tu@correo.com" required autocomplete="username"></div>
                     </div>
 
-                    <div class="login-input-group">
+                    <div class="login-input-group has-leading-icon">
                         <label for="loginPassword">Contraseña</label>
-                        <div class="login-password-wrapper">
-                            <input class="login-input" type="password" name="password" id="loginPassword" placeholder="Ingresa tu contraseña" required>
-                            <button type="button" class="login-toggle-password" id="togglePassword">
-                                <i class="fas fa-eye" id="togglePasswordIcon"></i>
-                            </button>
+                        <div class="login-field-control"><span class="login-field-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                            <div class="login-password-wrapper">
+                                <input class="login-input" type="password" name="password" id="loginPassword" placeholder="Ingresa tu contraseña" required autocomplete="current-password">
+                                <button type="button" class="login-toggle-password" id="togglePassword" aria-label="Mostrar contraseña" aria-pressed="false">
+                                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -114,9 +123,11 @@
         if (input.type === 'password') {
             input.type = 'text';
             icon.classList.replace('fa-eye', 'fa-eye-slash');
+            this.setAttribute('aria-label', 'Ocultar contraseña'); this.setAttribute('aria-pressed', 'true');
         } else {
             input.type = 'password';
             icon.classList.replace('fa-eye-slash', 'fa-eye');
+            this.setAttribute('aria-label', 'Mostrar contraseña'); this.setAttribute('aria-pressed', 'false');
         }
     });
 

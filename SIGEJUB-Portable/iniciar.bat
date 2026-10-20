@@ -3,13 +3,13 @@ title SIGEJUB - Servidor
 cd /d "%~dp0"
 chcp 65001 >nul 2>&1
 
-:: =============================================
-:: SIN LIMITE DE 30s PARA EL SERVIDOR php -S
-:: php -S (SAPI cli-server) usa max_execution_time=30 de php.ini
-:: y mataba la 1a peticion con "Maximum execution time exceeded"
-:: en arranques lentos. PHP_INI_SCAN_DIR añade este ini ENCIMA de
-:: php.ini sin tocar la instalacion de XAMPP (sin conf.d).
-:: =============================================
+rem =============================================
+rem SIN LIMITE DE 30s PARA EL SERVIDOR php -S
+rem php -S usa max_execution_time=30 de php.ini
+rem y mataba la 1a peticion con Maximum execution time exceeded
+rem en arranques lentos. PHP_INI_SCAN_DIR agrega este ini ENCIMA de
+rem php.ini sin tocar la instalacion de XAMPP
+rem =============================================
 if not exist "%~dp0ini" mkdir "%~dp0ini"
 if not exist "%~dp0ini\sigejub.ini" echo max_execution_time = 0 >"%~dp0ini\sigejub.ini"
 set "PHP_INI_SCAN_DIR=%~dp0ini"
@@ -20,7 +20,7 @@ echo ============================================
 echo.
 
 :: =============================================
-:: BUSCAR PHP — PATH, luego rutas XAMPP comunes
+:: BUSCAR PHP - PATH, luego rutas XAMPP comunes
 :: =============================================
 set PHP_PATH=
 where php >nul 2>&1
@@ -96,66 +96,92 @@ if not exist ".env" (
     )
 )
 
-:: =============================================
-:: =============================================
-:: ENLACE DE STORAGE (public\storage -> storage\app\public)
-:: =============================================
+rem =============================================
+rem ENLACE DE STORAGE public\storage a storage\app\public
+rem =============================================
 if not exist "public\storage" (
     if exist "storage\app\public" (
         cmd /c mklink /J "public\storage" "storage\app\public" >nul 2>&1
         if not exist "public\storage" "%PHP_PATH%" artisan storage:link >nul 2>&1
     )
 )
-:: LEER PUERTO desde APP_URL en .env
-:: =============================================
+
+rem =============================================
+rem LEER PUERTO desde APP_URL en .env
+rem =============================================
 set PORT=8000
+set "APP_URL_VAL="
 if exist ".env" (
-    for /f "tokens=2 delims==" %%A in ('findstr "^APP_URL=" .env 2^>nul') do set "APP_URL_VAL=%%A"
+    for /f "tokens=2 delims==" %%A in ('findstr /B /C:"APP_URL=" .env 2^>nul') do set "APP_URL_VAL=%%A"
 )
 if defined APP_URL_VAL set "PORT=%APP_URL_VAL:http://localhost:=%"
+if defined APP_URL_VAL set "PORT=%PORT:http://127.0.0.1:=%"
 if "%PORT%"=="" set PORT=8000
 set URL=http://localhost:%PORT%
 
-:: =============================================
-:: VERIFICAR SI EL SERVIDOR YA ESTA CORRIENDO
-:: =============================================
-netstat -ano 2>nul | findstr /C:":%PORT% " >nul 2>&1
+rem =============================================
+rem VERIFICAR SI EL SERVIDOR YA ESTA CORRIENDO
+rem =============================================
+netstat -ano 2>nul | findstr /R /C:":%PORT% .*LISTENING" >nul 2>&1
 if %ERRORLEVEL% equ 0 (
-    echo [OK] Servidor ya disponible en %URL%
+    echo [OK] El servidor ya estaba corriendo en %URL%
     start "" "%URL%"
-    exit /b 0
+    goto :fin_ok
 )
 
-:: =============================================
-:: INICIAR SERVIDOR EN SEGUNDO PLANO
-:: =============================================
+rem =============================================
+rem INICIAR SERVIDOR EN SEGUNDO PLANO (con log)
+rem =============================================
 echo [INICIANDO] Servidor en %URL% ...
-powershell -Command "Start-Process -FilePath '%PHP_PATH%' -ArgumentList 'artisan serve --port=%PORT%' -WindowStyle Hidden -WorkingDirectory '%~dp0'"
+set "SRV_LOG=%~dp0storage\logs\servidor.log"
+set "SRV_ERR=%~dp0storage\logs\servidor-error.log"
+if not exist "%~dp0storage\logs" mkdir "%~dp0storage\logs" >nul 2>&1
 
-:: =============================================
-:: ESPERAR A QUE EL PUERTO ESTE LISTO (max 30s)
-:: =============================================
+rem Lanza php artisan serve oculto, guardando salida y errores en logs.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%PHP_PATH%' -ArgumentList 'artisan','serve','--host=127.0.0.1','--port=%PORT%' -WorkingDirectory '%~dp0' -WindowStyle Hidden -RedirectStandardOutput '%SRV_LOG%' -RedirectStandardError '%SRV_ERR%'"
+
+rem =============================================
+rem ESPERAR A QUE EL PUERTO ESTE LISTO (max 30s)
+rem =============================================
 echo Esperando respuesta del servidor...
+set "SERVER_OK=0"
 setlocal enabledelayedexpansion
 for /l %%i in (1,1,30) do (
-    timeout /t 1 /nobreak >nul
-    netstat -ano 2>nul | findstr /C:":%PORT% " >nul 2>&1
-    if !ERRORLEVEL! equ 0 (
-        endlocal
-        echo [OK] Servidor listo.
-        goto :server_ready
-    )
+    ping -n 2 127.0.0.1 >nul
+    netstat -ano 2>nul | findstr /R /C:":%PORT% .*LISTENING" >nul 2>&1
+    if !ERRORLEVEL! equ 0 set "SERVER_OK=1"
+    if "!SERVER_OK!"=="1" goto :srv_listo
 )
-endlocal
+:srv_listo
+endlocal & set "SERVER_OK=%SERVER_OK%"
 
-echo [TIMEOUT] El servidor no respondio en 30s.
-echo Verifica que PostgreSQL este corriendo (puerto 5433) y la base de datos este configurada en .env
+if "%SERVER_OK%"=="1" goto :server_ready
+
+echo.
+echo [ERROR] El servidor no respondio en 30 segundos.
+echo.
+if exist "%SRV_ERR%" (
+    echo ----- Detalle del error -----
+    type "%SRV_ERR%"
+    echo -----------------------------
+)
+if exist "%SRV_LOG%" (
+    echo ----- Salida del servidor -----
+    type "%SRV_LOG%"
+    echo -------------------------------
+)
+echo.
+echo Verifica que la base de datos este activa y configurada en .env
 echo.
 echo Presiona cualquier tecla para cerrar...
 pause >nul
 exit /b 1
 
 :server_ready
-timeout /t 1 /nobreak >nul
+ping -n 2 127.0.0.1 >nul
 start "" "%URL%"
 echo [OK] Servidor corriendo en %URL%
+echo     Para detenerlo: cierra las ventanas de PHP o usa detener.bat
+
+:fin_ok
+

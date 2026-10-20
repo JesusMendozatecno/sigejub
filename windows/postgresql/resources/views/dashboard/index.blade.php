@@ -10,15 +10,7 @@
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/dark-mode.css') }}?v={{ filemtime(public_path('css/dashboard/dark-mode.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/modern-theme.css') }}?v={{ filemtime(public_path('css/dashboard/modern-theme.css')) }}">
-    {{-- Estilos de las ventanas modales --}}
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones/modal.css') }}?v={{ filemtime(public_path('css/dashboard/secciones/modal.css')) }}">
-    {{-- Capa de modernización visual (tokens claro/oscuro/modern + componentes).
-         Va después de modal.css para darle color de acento a sus botones/campos,
-         y ANTES de responsive.css para no romper los ajustes de pantalla. --}}
-    <link rel="stylesheet" href="{{ asset('css/dashboard/rediseno.css') }}?v={{ filemtime(public_path('css/dashboard/rediseno.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/responsive.css') }}?v={{ filemtime(public_path('css/dashboard/responsive.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones.css') }}?v={{ filemtime(public_path('css/dashboard/secciones.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <script defer src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -64,6 +56,9 @@
             --accent: {{ auth()->user()->color_acento ?? '#1a365d' }};
             --accent-dark: color-mix(in srgb, var(--accent) 72%, #000 28%);
             --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+            /* Color elegido por el usuario para la pantalla de carga.
+               Variable propia que los temas claro/oscuro NO sobrescriben. */
+            --user-accent: {{ auth()->user()->color_acento ?? '#087cf0' }};
         }
 
         /* ============================================================
@@ -185,14 +180,11 @@
             min-width: 0;
         }
 
-        .main-content .dashboard-render-zone > .content-section { background: transparent; }
-        .dashboard-render-zone > .content-section > *:not(.modal-overlay):not(.modal-tasa):not(.modal-resultado) {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 22px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow-card);
+        /* El fondo y las superficies se controlan desde las hojas CSS.
+           Evitamos convertir cada hijo directo de una sección en una tarjeta,
+           ya que puede romper grids, gráficos, modales y layouts anidados. */
+        .main-content .dashboard-render-zone > .content-section {
+            background: transparent;
         }
     </style>
 </head>
@@ -203,11 +195,6 @@
 (function(){
     var theme = '{{ auth()->user()->tema }}';
     if (theme === 'dark') document.body.classList.add('dark-mode');
-    if (theme === 'modern') document.body.classList.add('theme-modern');
-    var saved = localStorage.getItem('sigejub_active_section');
-    if (saved && saved !== 'inicio') {
-        document.write('<style id="tmp-section-style">.content-section.active{display:none!important} #' + saved + '{display:block}</style>');
-    }
 })();
 </script>
 
@@ -314,7 +301,7 @@
     <main class="main-content">
         <div class="dashboard-render-zone">
             
-            <div id="inicio" class="content-section active">
+            <div id="inicio" class="content-section active dashboard-home">
                 @include('dashboard.secciones.inicio')
             </div>
 
@@ -421,6 +408,18 @@
         ocultarCargando();
     });
 })();
+
+/* === Pantalla de carga al salir del dashboard (perfil, etc.) ===
+   Al navegar a otra página se muestra el overlay hasta que la nueva cargue. */
+document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+    if (a.target === '_blank' || a.hasAttribute('download') || a.dataset.noLoading === 'true') return;
+    if (a.closest('form')) return;
+    mostrarCargando(a.dataset.loading || 'Cargando...');
+}, true);
 </script>
 
 @if(session('success'))
@@ -493,7 +492,7 @@ function syncHeaderThemeIcon() {
 }
 window.toggleHeaderTheme = function() {
     var isDark = document.body.classList.contains('dark-mode');
-    // Alternar entre claro y oscuro (si el usuario está en moderno, pasa a claro)
+    // Alternar entre claro y oscuro
     var el = document.getElementById('themeToggleBtn');
     if (el) { el.style.pointerEvents = 'none'; setTimeout(function(){ el.style.pointerEvents = ''; }, 400); }
     window.cambiarTema(isDark ? 'light' : 'dark');

@@ -101,7 +101,7 @@ class AdminController extends Controller
             $query->where('created_at', '>=', now()->subDays($days));
         }
 
-        $activities = $query->with('user')->latest()->paginate(min($request->get('per_page', 5), 100));
+        $activities = $query->with('user')->latest()->paginate(min($request->get('per_page', 20), 100));
 
         return response()->json($activities);
     }
@@ -109,7 +109,7 @@ class AdminController extends Controller
     public function actividadReciente(Request $request)
     {
         return response()->json(
-            Activity::with('user')->latest()->paginate(min($request->get('per_page', 8), 100))
+            Activity::with('user')->latest()->paginate(min($request->get('per_page', 20), 100))
         );
     }
 

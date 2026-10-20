@@ -11,7 +11,7 @@ echo ============================================
 echo.
 
 :: ============================================================
-:: 1) ENCONTRAR PHP (PATH, XAMPP, rutas comunes)
+rem 1) ENCONTRAR PHP - PATH, XAMPP, rutas comunes
 :: ============================================================
 set "PHP_PATH="
 where php >nul 2>&1
@@ -53,7 +53,7 @@ echo [OK] PHP: %PHP_PATH%
 echo.
 
 :: ============================================================
-:: 2) ELEGIR MOTOR (define la variante a copiar)
+rem 2) ELEGIR MOTOR - define la variante a copiar
 :: ============================================================
 echo Motor de base de datos:
 echo   1) MySQL / MariaDB   (variante: windows\mysql)
@@ -108,7 +108,7 @@ echo [OK] Extension !EXT_NAME! disponible
 echo.
 
 :: ============================================================
-:: 3) CARPETA DE INSTALACION
+rem 3) CARPETA DE INSTALACION
 :: ============================================================
 set "DEF_DEST=%USERPROFILE%\SIGEJUB"
 set "DEST="
@@ -140,7 +140,7 @@ if /i not "!REIN!"=="S" if exist "!DEST!\artisan" (
 )
 
 :: ============================================================
-:: 4) COPIAR LA VARIANTE
+rem 4) COPIAR LA VARIANTE
 :: ============================================================
 if not exist "!DEST!" mkdir "!DEST!"
 echo [1/7] Copiando variante a !DEST! ...
@@ -159,7 +159,7 @@ if not exist "!DEST!\artisan" (
 echo [OK] Archivos copiados
 
 :: ============================================================
-:: 5) .ENV (crear y configurar BD)
+rem 5) .ENV - crear y configurar BD
 :: ============================================================
 if not exist "!DEST!\.env" (
     if exist "!DEST!\.env.example" (
@@ -215,7 +215,7 @@ if errorlevel 1 (
 type "%TEMP%\sigejub-bd.log"
 
 :: ============================================================
-:: 6) DEPENDENCIAS (composer) Y APP_KEY
+rem 6) DEPENDENCIAS - composer - Y APP_KEY
 :: ============================================================
 cd /d "!DEST!"
 
@@ -266,7 +266,7 @@ if errorlevel 1 (
 )
 
 :: ============================================================
-:: 7) MIGRACIONES
+rem 7) MIGRACIONES
 :: ============================================================
 echo [5/7] Ejecutando migraciones...
 "%PHP_PATH%" artisan migrate --force --no-ansi >"%TEMP%\sigejub-migrate.log" 2>&1
