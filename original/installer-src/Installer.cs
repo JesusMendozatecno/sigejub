@@ -2194,15 +2194,21 @@ File.WriteAllText(dbBat, sb.ToString(), Utf8NoBom);
                 sbv.AppendLine("On Error Resume Next");
                 sbv.AppendLine("Set fso = CreateObject(\"Scripting.FileSystemObject\")");
                 sbv.AppendLine("Set sh = CreateObject(\"WScript.Shell\")");
-                sbv.AppendLine("base = " + VbsStr(appPath));
+                sbv.AppendLine("q = Chr(34)");
+                // La carpeta se deduce del propio script en vez de grabar una ruta fija:
+                // si el usuario mueve o renombra la instalacion, el acceso directo sigue
+                // funcionando igual.
+                sbv.AppendLine("base = fso.GetParentFolderName(WScript.ScriptFullName)");
+                sbv.AppendLine("If base = \"\" Then base = " + VbsStr(appPath));
                 sbv.AppendLine("sh.CurrentDirectory = base");
-                sbv.AppendLine("If fso.FileExists(base & \"\\start.bat\") Then");
-                sbv.AppendLine("    sh.Run " + VbsStr("\"" + appPath + "\\start.bat\"") + ", 1, False");
+                sbv.AppendLine("bat = base & \"\\start.bat\"");
+                sbv.AppendLine("If fso.FileExists(bat) Then");
+                sbv.AppendLine("    sh.Run (q & bat & q), 1, False");
                 sbv.AppendLine("    WScript.Quit 0");
                 sbv.AppendLine("End If");
                 // Respaldo para instalaciones antiguas sin start.bat
-                if (writeDbBat) sbv.AppendLine("sh.Run " + VbsStr(dbBat) + ", 0, False");
-                sbv.AppendLine("sh.Run " + VbsStr("\"" + php + "\" -d max_execution_time=0 -S 127.0.0.1:" + selectedPort + " -t \"" + VbsInner(appPath + "\\public") + "\"") + ", 0, False");
+                if (writeDbBat) sbv.AppendLine("sh.Run (q & base & \"\\sigejub-start-db.bat\" & q), 0, False");
+                sbv.AppendLine("sh.Run (q & " + VbsStr(php) + " & q & \" -d max_execution_time=0 -S 127.0.0.1:" + selectedPort + " -t \" & q & base & \"\\public\" & q), 0, False");
                 sbv.AppendLine("For i = 1 To 40");
                 sbv.AppendLine("    WScript.Sleep 1000");
                 sbv.AppendLine("    Set http = CreateObject(\"MSXML2.ServerXMLHTTP.6.0\")");
