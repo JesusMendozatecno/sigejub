@@ -7,7 +7,7 @@
     <title>Mi Perfil — SIGEJUB</title>
     <link rel="icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
     <link rel="shortcut icon" href="{{ asset('img/logo-dark.svg') }}" type="image/svg+xml">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ substr(md5_file(public_path('css/dashboard/dashboard.min.css')), 0, 10) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/cropperjs/cropper.min.css') }}">
@@ -526,8 +526,8 @@ window.SIGEJUB_PROFILE_THEME='{{ $user->tema }}';
 window.SIGEJUB_ACCENT_COLOR='{{ $user->color_acento ?? "#1a365d" }}';
 </script>
 {{-- Gestor central de ventanas modales: solo cierran con su botón (clic fuera y ESC desactivados) --}}
-<script defer src="{{ asset('js/dashboard/modales.js') }}?v={{ filemtime(public_path('js/dashboard/modales.js')) }}"></script>
-<script defer src="{{ asset('js/profile.js') }}?v={{ filemtime(public_path('js/profile.js')) }}"></script>
+<script defer src="{{ asset('js/dashboard/modales.js') }}?v={{ substr(md5_file(public_path('js/dashboard/modales.js')), 0, 10) }}"></script>
+<script defer src="{{ asset('js/profile.js') }}?v={{ substr(md5_file(public_path('js/profile.js')), 0, 10) }}"></script>
 
 {{-- Pantalla de carga: se oculta al terminar de cargar y se muestra al salir hacia otra página. --}}
 <script>

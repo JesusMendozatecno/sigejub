@@ -9,8 +9,8 @@
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
     <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
     
-    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones.css') }}?v={{ filemtime(public_path('css/dashboard/secciones.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ substr(md5_file(public_path('css/dashboard/dashboard.min.css')), 0, 10) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/secciones.css') }}?v={{ substr(md5_file(public_path('css/dashboard/secciones.css')), 0, 10) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <script defer src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -366,11 +366,11 @@
 
 <script>window.SIGEJUB_THEME='{{ auth()->user()->tema }}'; window.SIGEJUB_ROL='{{ auth()->user()->rol }}';</script>
 {{-- Gestor central de ventanas modales: solo cierran con su botón (clic fuera y ESC desactivados) --}}
-<script defer src="{{ asset('js/dashboard/modales.js') }}?v={{ filemtime(public_path('js/dashboard/modales.js')) }}"></script>
-<script defer src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
+<script defer src="{{ asset('js/dashboard/modales.js') }}?v={{ substr(md5_file(public_path('js/dashboard/modales.js')), 0, 10) }}"></script>
+<script defer src="{{ asset('js/dashboard.js') }}?v={{ substr(md5_file(public_path('js/dashboard.js')), 0, 10) }}"></script>
 
-<script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ filemtime(public_path('js/secciones/trabajador.js')) }}"></script>
-<script defer src="{{ asset('js/sesion2.js') }}?v={{ filemtime(public_path('js/sesion2.js')) }}"></script>
+<script defer src="{{ asset('js/secciones/trabajador.js') }}?v={{ substr(md5_file(public_path('js/secciones/trabajador.js')), 0, 10) }}"></script>
+<script defer src="{{ asset('js/sesion2.js') }}?v={{ substr(md5_file(public_path('js/sesion2.js')), 0, 10) }}"></script>
 
 @include('partials.toast')
 

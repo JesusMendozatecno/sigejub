@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentación — SIGEJUB</title>
     <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
-    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ filemtime(public_path('css/dashboard/dashboard.min.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ substr(md5_file(public_path('css/dashboard/dashboard.min.css')), 0, 10) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
