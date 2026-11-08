@@ -26,3 +26,5 @@ Thumbs.db
 **/database/*.sqlite
 **/public/build
 **/public/hot
+# Vistas Blade compiladas: se generan en cada instalacion
+**/storage/framework/views/*.php
