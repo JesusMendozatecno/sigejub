@@ -96,26 +96,14 @@ if ($envTexto -match '(?m)^APP_PORT=') {
 
 # ------------------------------------------------------------
 # Lanzadores: reutiliza start.bat / detener.bat de .\original
-# e inyecta el enlace de storage dentro de iniciar.bat
+# start.bat ya crea el enlace public\storage, busca PHP (portable
+# o del sistema), espera la respuesta HTTP y abre el navegador,
+# asi que la portable usa exactamente el mismo iniciador.
 # ------------------------------------------------------------
-$storageBlock = @'
-:: =============================================
-:: ENLACE DE STORAGE (public\storage -> storage\app\public)
-:: =============================================
-if not exist "public\storage" (
-    if exist "storage\app\public" (
-        cmd /c mklink /J "public\storage" "storage\app\public" >nul 2>&1
-        if not exist "public\storage" "%PHP_PATH%" artisan storage:link >nul 2>&1
-    )
-)
-
-'@
-
 $launcher = [System.IO.File]::ReadAllText((Join-Path $src 'start.bat'))
-if ($launcher -notmatch [regex]::Escape('LEER PUERTO desde APP_URL en .env')) {
-    throw 'No se encontro el marcador de puerto en start.bat'
+if ($launcher -notmatch [regex]::Escape('PUERTO (desde APP_URL) Y URL')) {
+    throw 'No se encontro el bloque de puerto en start.bat'
 }
-$launcher = $launcher.Replace(':: LEER PUERTO desde APP_URL en .env', ($storageBlock + ':: LEER PUERTO desde APP_URL en .env'))
 [System.IO.File]::WriteAllText((Join-Path $Destino 'iniciar.bat'), $launcher, $utf8SinBom)
 
 $detener = [System.IO.File]::ReadAllText((Join-Path $src 'detener.bat'))

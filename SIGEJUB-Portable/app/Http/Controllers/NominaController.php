@@ -1,4 +1,8 @@
 <?php
+// Controlador de la nómina institucional.
+// La planilla se organiza por año + mes (la institución carga la nómina mes a mes);
+// las nóminas anuales antiguas (sin mes) se siguen mostrando como "Anual".
+// Los conteos excluyen siempre a los trabajadores dados de baja (soft delete).
 
 namespace App\Http\Controllers;
 
@@ -12,25 +16,49 @@ class NominaController extends Controller
 {
     public function index(Request $request)
     {
-        $periodo = $request->get('periodo');
         $anio = $request->get('anio');
+        $mes = $request->get('mes');
         $tipoNomina = $request->get('tipo_nomina');
-        if ($anio) {
-            $periodo = $anio;
+
+        // Compatibilidad: si llega "periodo" se interpreta como año.
+        if (!$anio && ($periodo = $request->get('periodo'))) {
+            if (preg_match('/^(\d{4})-(\d{1,2})$/', (string) $periodo, $m)) {
+                $anio = $m[1];
+                $mes = $mes ?: (int) $m[2];
+            } else {
+                $anio = $periodo;
+            }
         }
 
         $nomina = null;
-        if ($periodo) {
-            $nomina = Nomina::with('trabajadores')
-                ->where('periodo', $periodo)
-                ->first();
+        if ($anio) {
+            $query = Nomina::with(['trabajadores' => function ($q) {
+                // La relación ya excluye los trabajadores con baja lógica.
+                $q->orderBy('apellidos')->orderBy('nombres');
+            }])->where('periodo', (string) $anio);
+
+            if ($mes !== null && $mes !== '') {
+                $query->where('mes', (int) $mes);
+            } else {
+                $query->whereNull('mes');
+            }
+            $nomina = $query->first();
         }
 
-        $trabajadores = Trabajador::with('tipoContrato')
-            ->orderBy('apellidos', 'asc')
-            ->orderBy('nombres', 'asc')
-            ->get()
-            ->when($anio, fn($rows) => $rows->filter(fn($t) => $nomina && $nomina->trabajadores->contains('id', $t->id)))
+        $coleccion = null;
+        if ($nomina) {
+            $coleccion = $nomina->trabajadores;
+        } elseif (!$anio) {
+            // Sin filtro de período: se listan todos los trabajadores activos.
+            $coleccion = Trabajador::with('tipoContrato')
+                ->orderBy('apellidos')
+                ->orderBy('nombres')
+                ->get();
+        } else {
+            $coleccion = collect();
+        }
+
+        $trabajadores = $coleccion
             ->map(function ($t) use ($nomina) {
                 $pivot = null;
                 if ($nomina) {
@@ -81,6 +109,9 @@ class NominaController extends Controller
             'nomina_id' => $nomina?->id,
             'nomina_codigo' => $nomina?->codigo,
             'nomina_estado' => $nomina?->estado,
+            'nomina_mes' => $nomina?->mes,
+            'nomina_mes_nombre' => $nomina?->mes_nombre,
+            'total_general' => $nomina ? (float) $nomina->total_general : 0,
         ]);
     }
 
@@ -144,24 +175,56 @@ class NominaController extends Controller
         return $totalGeneral;
     }
 
+    /**
+     * Años y meses con nómina registrada.
+     * Solo cuenta trabajadores vigentes (excluye bajas lógicas) para que el
+     * panel no muestre planillas "infladas" con personal ya retirado.
+     */
     public function anios()
     {
-        $anios = DB::table('nominas as n')
+        $filas = DB::table('nominas as n')
             ->leftJoin('nomina_trabajador as nt', 'nt.nomina_id', '=', 'n.id')
-            ->select('n.periodo', 'n.id')
-            ->selectRaw('COUNT(nt.trabajador_id) as total_trabajadores')
-            ->groupBy('n.periodo', 'n.id')
+            ->leftJoin('trabajadores as t', function ($join) {
+                $join->on('t.id', '=', 'nt.trabajador_id')->whereNull('t.deleted_at');
+            })
+            ->select('n.id', 'n.periodo', 'n.mes', 'n.estado', 'n.total_general')
+            ->selectRaw('COUNT(t.id) as total_trabajadores')
+            ->groupBy('n.id', 'n.periodo', 'n.mes', 'n.estado', 'n.total_general')
             ->orderByDesc('n.periodo')
-            ->get()
-            ->groupBy('periodo')
-            ->map(function ($items, $periodo) {
+            ->orderByDesc('n.mes')
+            ->get();
+
+        $anios = $filas->groupBy('periodo')->map(function ($items, $periodo) {
+            $meses = $items->map(function ($fila) {
                 return [
-                    'anio' => $periodo,
-                    'total_trabajadores' => $items->sum('total_trabajadores'),
+                    'nomina_id' => (int) $fila->id,
+                    'mes' => $fila->mes !== null ? (int) $fila->mes : null,
+                    'nombre' => $fila->mes !== null ? (Nomina::MESES[(int) $fila->mes] ?? 'Anual') : 'Anual',
+                    'total_trabajadores' => (int) $fila->total_trabajadores,
+                    'estado' => $fila->estado,
+                    'total_general' => (float) $fila->total_general,
                 ];
             })
-            ->values();
+                ->sortBy(fn($m) => $m['mes'] ?? 0)
+                ->values();
 
-        return response()->json(['anios' => $anios]);
+            $ultimo = $meses->last();
+
+            return [
+                'anio' => $periodo,
+                'meses' => $meses,
+                'planillas' => $meses->count(),
+                // El año muestra la plantilla del mes más reciente.
+                'total_trabajadores' => $ultimo['total_trabajadores'] ?? 0,
+                'total_general' => $meses->sum('total_general'),
+            ];
+        })->values();
+
+        return response()->json([
+            'anios' => $anios,
+            // Total real de trabajadores vigentes registrados en el sistema.
+            'total_registrados' => Trabajador::count(),
+            'meses' => Nomina::MESES,
+        ]);
     }
 }

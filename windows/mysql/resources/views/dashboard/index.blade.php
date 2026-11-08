@@ -1,4 +1,4 @@
-{{-- dashboard/index.blade.php - Layout principal del dashboard con sidebar de navegación, header, secciones dinámicas, loading overlay y notificaciones. --}}
+﻿{{-- dashboard/index.blade.php - Layout principal del dashboard con sidebar de navegación, header, secciones dinámicas, loading overlay y notificaciones. --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <script defer src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="app-boot" content="{{ now()->timestamp }}">
 
     <script>
     window.escaparHTML = function(str) {

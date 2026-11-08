@@ -22,11 +22,31 @@ class Solicitud extends Model
         'tipo_jubilacion',
         'observaciones',
         'estado',
+        'trabajador_nombres',
+        'trabajador_apellidos',
+        'trabajador_cedula',
     ];
 
     public function trabajador(): BelongsTo
     {
-        return $this->belongsTo(Trabajador::class);
+        return $this->belongsTo(Trabajador::class)->withTrashed();
+    }
+
+    public function getTrabajadorNombreCompletoAttribute(): string
+    {
+        if ($this->trabajador) {
+            return trim(($this->trabajador->nombres ?? '') . ' ' . ($this->trabajador->apellidos ?? ''));
+        }
+        $snap = trim(($this->trabajador_nombres ?? '') . ' ' . ($this->trabajador_apellidos ?? ''));
+        return $snap !== '' ? $snap : '—';
+    }
+
+    public function getTrabajadorCedulaAttribute(): ?string
+    {
+        if ($this->trabajador) {
+            return $this->trabajador->cedula ?? null;
+        }
+        return $this->attributes['trabajador_cedula'] ?? null;
     }
 
     public function expediente(): HasOne

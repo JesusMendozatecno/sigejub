@@ -36,4 +36,27 @@ class ValidationService
     {
         return !Expediente::where('trabajador_id', $trabajadorId)->exists();
     }
+
+    /**
+     * Verificar que el trabajador pueda acceder al cálculo de prestaciones.
+     * Basta con tener expediente digital y que su solicitud, si existe, no esté
+     * rechazada: el expediente puede abrirse sin solicitud aprobada.
+     */
+    public static function trabajadorAptoParaPrestaciones(int $trabajadorId): bool
+    {
+        $tieneExpediente = Expediente::where('trabajador_id', $trabajadorId)->exists();
+        if (!$tieneExpediente) {
+            return false;
+        }
+
+        $rechazada = Solicitud::where('trabajador_id', $trabajadorId)
+            ->where('estado', 'rechazado')
+            ->exists();
+
+        $tieneOtraVigente = Solicitud::where('trabajador_id', $trabajadorId)
+            ->whereIn('estado', ['pendiente', 'revision', 'aprobado'])
+            ->exists();
+
+        return !$rechazada || $tieneOtraVigente;
+    }
 }

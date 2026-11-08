@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Expediente extends Model
@@ -21,7 +22,9 @@ class Expediente extends Model
 
     public function trabajador(): BelongsTo
     {
-        return $this->belongsTo(Trabajador::class);
+        // Se incluyen trabajadores dados de baja: el expediente es histórico y
+        // debe seguir mostrando el nombre aunque el trabajador ya no esté activo.
+        return $this->belongsTo(Trabajador::class)->withTrashed();
     }
 
     public function solicitud(): BelongsTo
@@ -37,5 +40,19 @@ class Expediente extends Model
     public function recibos(): HasMany
     {
         return $this->hasMany(ReciboPago::class);
+    }
+
+    /**
+     * Cláusulas de la convención colectiva aplicables al expediente.
+     * Se usan para sumar sus beneficios al cálculo de prestaciones.
+     */
+    public function clausulas(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ClausulaConvencion::class,
+            'expediente_clausula',
+            'expediente_id',
+            'clausula_id'
+        )->withPivot('observaciones')->withTimestamps();
     }
 }

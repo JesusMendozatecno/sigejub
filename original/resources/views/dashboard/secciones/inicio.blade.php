@@ -222,41 +222,27 @@
     }
 
     async function cargarEstadisticasInicio() {
-        const ttlStats = 120000;
-        const statsKey = 'sigejub_cache_stats_inicio';
-        var cached = localStorage.getItem(statsKey);
-        var skipRender = false;
-        if (cached) {
-            try {
-                var p = JSON.parse(cached);
-                if (Date.now() - p.ts < ttlStats) {
-                    renderEstadisticasInicio(p.data);
-                    skipRender = true;
-                }
-            } catch (e) {}
-        }
-
+        // Los indicadores se leen de /estadisticas/dashboard, que los cuenta
+        // directamente en la base de datos (sin caché) para que nunca se
+        // muestren cifras viejas.
         try {
-            const [cTrab, cStats, cMes, cVenc] = await Promise.all([
-                cachedFetch('/trabajadores?per_page=1'),
-                cachedFetch('/solicitudes/estadisticas'),
-                cachedFetch('/solicitudes/por-mes'),
+            const [stats, venc] = await Promise.all([
+                fetch('/estadisticas/dashboard').then(r => r.json()),
                 cachedFetch('/solicitudes/vencimientos'),
             ]);
 
-            const stats = cStats.data;
-            const data = {
-                totalTrab: cTrab.data.total || 0,
-                totalPend: stats.pendiente || 0,
-                totalAprob: stats.aprobado || 0,
-                totalRech: stats.rechazado || 0,
-                porMes: cMes.data,
-                vencimientos: cVenc.data,
-            };
+            const sol = stats.solicitudes || {};
+            const trab = stats.trabajadores || {};
 
-            localStorage.setItem(statsKey, JSON.stringify({ ts: Date.now(), data: data }));
-
-            if (!skipRender) renderEstadisticasInicio(data);
+            renderEstadisticasInicio({
+                totalTrab: trab.total || 0,
+                totalPend: sol.pendiente || 0,
+                totalAprob: sol.aprobado || 0,
+                totalRech: sol.rechazado || 0,
+                porMes: sol.por_mes || [],
+                porTipoMes: sol.por_tipo_mes || {},
+                vencimientos: venc.data,
+            });
         } catch (err) {
             console.error('Error al cargar estadísticas:', err);
         }

@@ -42,7 +42,8 @@ class Prestacion extends Model
 
     public function trabajador()
     {
-        return $this->belongsTo(Trabajador::class);
+        // Los cálculos históricos conservan el nombre aunque el trabajador esté dado de baja.
+        return $this->belongsTo(Trabajador::class)->withTrashed();
     }
 
     public function tasaCambio()

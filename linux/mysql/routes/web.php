@@ -15,6 +15,8 @@ use App\Http\Controllers\NominaExportController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\MasterDataController;
+use App\Http\Controllers\ClausulaConvencionController;
+use App\Http\Controllers\EstadisticasController;
 
 /*
 |-----------------------------
@@ -154,6 +156,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/importar/nomina', [NominaExportController::class, 'importar'])->name('importar.nomina');
     Route::get('/nomina/anios', [NominaController::class, 'anios'])->name('nomina.anios');
     Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
+    // Cláusulas de la convención colectiva (catálogo y asignación)
+    Route::get('/clausulas-convencion', [ClausulaConvencionController::class, 'index'])->name('clausulas.index');
+    Route::get('/estadisticas/dashboard', [EstadisticasController::class, 'dashboard'])->name('estadisticas.dashboard');
     Route::post('/nomina/trabajador/{id}/actualizar', [NominaController::class, 'actualizarTrabajador'])->name('nomina.actualizarTrabajador');
     Route::post('/nomina/trabajador/{id}/eliminar', [NominaController::class, 'eliminarTrabajador'])->name('nomina.eliminarTrabajador');
 });
@@ -251,6 +256,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/expedientes/{id}/recibos', [ExpedienteController::class, 'listarRecibos']);
     Route::post('/expedientes/{id}/recibos', [ExpedienteController::class, 'subirRecibo']);
     Route::delete('/recibos-pago/{id}', [ExpedienteController::class, 'eliminarRecibo']);
+    // Cláusulas de convención colectiva del expediente
+    Route::get('/expedientes/{id}/clausulas', [ExpedienteController::class, 'clausulas']);
+    Route::put('/expedientes/{id}/clausulas', [ExpedienteController::class, 'actualizarClausulas']);
 });
 
 /*
@@ -260,6 +268,10 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
+    Route::post('/clausulas-convencion', [ClausulaConvencionController::class, 'store'])->name('clausulas.store');
+    Route::put('/clausulas-convencion/{id}', [ClausulaConvencionController::class, 'update'])->name('clausulas.update');
+    Route::delete('/clausulas-convencion/{id}', [ClausulaConvencionController::class, 'destroy'])->name('clausulas.destroy');
+
     Route::get('/master/{tipo}', [MasterDataController::class, 'index'])->name('master.index');
     Route::post('/master/{tipo}', [MasterDataController::class, 'store'])->name('master.store');
     Route::get('/master/{tipo}/{id}', [MasterDataController::class, 'show'])->name('master.show');

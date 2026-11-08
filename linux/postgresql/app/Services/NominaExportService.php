@@ -23,24 +23,31 @@ class NominaExportService
         $this->outputPath = storage_path('app/templates/export_temp.xlsx');
     }
 
-    public function exportar(?string $periodo = null, ?string $tipo = null): string
+    public function exportar(?string $periodo = null, ?string $tipo = null, ?int $mes = null): string
     {
         $spreadsheet = IOFactory::load($this->templatePath);
 
-        $trabajadores = Trabajador::with('tipoContrato')
-            ->orderBy('apellidos')
-            ->orderBy('nombres')
-            ->get();
-
         $pivotQuery = NominaTrabajador::query()
             ->join('nominas', 'nominas.id', '=', 'nomina_trabajador.nomina_id')
-            ->select('nomina_trabajador.*', 'nominas.periodo');
+            ->select('nomina_trabajador.*', 'nominas.periodo', 'nominas.mes');
 
         if ($periodo) {
             $pivotQuery->where('nominas.periodo', $periodo);
         }
 
+        if ($mes !== null) {
+            $pivotQuery->where('nominas.mes', $mes);
+        }
+
         $pivots = $pivotQuery->get()->groupBy('trabajador_id');
+
+        // Al exportar un período concreto solo viajan los trabajadores de esa
+        // planilla; sin período se exporta el directorio completo.
+        $trabajadores = Trabajador::with('tipoContrato')
+            ->when($periodo !== null, fn($q) => $q->whereIn('id', $pivots->keys()->all() ?: [0]))
+            ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->get();
 
         $grupos = [
             'ADM' => [],

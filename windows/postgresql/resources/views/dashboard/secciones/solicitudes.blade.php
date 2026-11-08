@@ -161,7 +161,7 @@
                         <select name="tipo_jubilacion" id="inputTipoJubilacion">
                             <option value="">Seleccione...</option>
                             <option value="Antigüedad">Antigüedad</option>
-                            <option value="Invalidez">Invalidez</option>
+                            <option value="Incapacidad">Incapacidad</option>
                             <option value="Especial">Especial</option>
                         </select>
                     </div>
@@ -506,7 +506,7 @@
 
             data.data.forEach(s => {
                 const t = s.trabajador || {};
-                const nombre = [t.nombres, t.apellidos].filter(Boolean).join(' ') || '—';
+                const nombre = [t.nombres || s.trabajador_nombres, t.apellidos || s.trabajador_apellidos].filter(Boolean).join(' ') || '—';
                 const unidad = t.unidad_departamento || '—';
                 const folio = `#SOL-${String(s.id).padStart(4, '0')}`;
                 const fecha = s.fecha_solicitud ? new Date(s.fecha_solicitud + 'T12:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
@@ -529,7 +529,9 @@
                     <td>${escaparHTML(fecha)}</td>
                     <td><span class="badge-status ${escaparHTML(badgeClass)}">${escaparHTML(badgeText)}</span></td>
                     <td class="actions">
+                        <i class="fas fa-eye btn-icon btn-ver-solicitud" title="Ver" data-id="${escaparHTML(String(s.id))}"></i>
                         <i class="fas fa-pen btn-icon btn-editar-solicitud" title="Editar" data-id="${escaparHTML(String(s.id))}"></i>
+                        <i class="fas fa-trash btn-icon btn-eliminar-solicitud" title="Eliminar" data-id="${escaparHTML(String(s.id))}" style="color:#dc2626;"></i>
                     </td>
                 `;
                 tbody.appendChild(fila);
@@ -542,6 +544,32 @@
             console.error('Error al cargar solicitudes:', err);
         }
     }
+
+    // Delegación para acciones de solicitudes
+    document.getElementById('tbodySolicitudes').addEventListener('click', function(e) {
+        const btnEditar = e.target.closest('.btn-editar-solicitud');
+        if (btnEditar) { abrirModalEditarSolicitud(btnEditar.dataset.id); return; }
+        const btnVer = e.target.closest('.btn-ver-solicitud');
+        if (btnVer) { if(typeof abrirModalVerSolicitud==='function'){ abrirModalVerSolicitud(btnVer.dataset.id); } return; }
+        const btnEliminar = e.target.closest('.btn-eliminar-solicitud');
+        if (btnEliminar) { if(typeof window.eliminarSolicitud==='function'){ window.eliminarSolicitud(btnEliminar.dataset.id); } return; }
+    });
+
+    window.eliminarSolicitud = async function(id) {
+        if(!confirm('¿Está seguro que desea eliminar esta solicitud?')) return;
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const resp = await fetch('/solicitudes/'+id, { method: 'DELETE', headers: {'X-CSRF-TOKEN': token, 'Accept': 'application/json'} });
+            const data = await resp.json();
+            if(resp.ok && data.estado === 'success'){
+                if(typeof mostrarToast==='function'){ mostrarToast(data.mensaje || 'Solicitud eliminada correctamente','success'); } else { alert(data.mensaje || 'Solicitud eliminada correctamente'); }
+                cargarSolicitudes(currentStatus);
+                if(typeof cargarMetricas==='function') cargarMetricas();
+            }else{
+                if(typeof mostrarToast==='function'){ mostrarToast(data.mensaje || 'No se pudo eliminar','error'); } else { alert(data.mensaje || 'No se pudo eliminar'); }
+            }
+        }catch(err){ console.error(err); if(typeof mostrarToast==='function'){ mostrarToast('Error interno','error'); } else { alert('Error interno'); } }
+    };
 
     // === 4. CARGAR MÉTRICAS ===
     async function cargarMetricas() {

@@ -101,7 +101,7 @@ class TrabajadorController extends Controller
      */
     public function show($id)
     {
-        $trabajador = Trabajador::findOrFail($id);
+        $trabajador = Trabajador::withTrashed()->findOrFail($id);
 
         return response()->json([
             'id' => $trabajador->id,
@@ -141,6 +141,10 @@ class TrabajadorController extends Controller
             'estatus' => $trabajador->estatus,
             'porcentaje_antiguedad' => $trabajador->porcentaje_antiguedad,
             'porcentaje_caja_ahorro' => $trabajador->porcentaje_caja_ahorro,
+            'clausulas_convencion' => $trabajador->clausulas_convencion ?? [],
+            'antecedentes_externos' => $trabajador->antecedentesServicio()
+                ->orderByDesc('fecha_inicio')
+                ->get(['id', 'institucion', 'cargo', 'condicion_laboral', 'dedicacion', 'fecha_inicio', 'fecha_fin', 'observaciones']),
             'created_at' => $trabajador->created_at,
             'updated_at' => $trabajador->updated_at,
         ]);
@@ -183,6 +187,18 @@ class TrabajadorController extends Controller
             'act_univ_hasta' => 'nullable|date|after_or_equal:act_univ_desde',
             'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
             'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
+            // Períodos trabajados en otras instituciones (se guardan como antecedentes).
+            'antecedentes_externos' => 'nullable|array',
+            'antecedentes_externos.*.institucion' => 'nullable|string|max:150',
+            'antecedentes_externos.*.cargo' => 'nullable|string|max:150',
+            'antecedentes_externos.*.condicion_laboral' => 'nullable|string|max:100',
+            'antecedentes_externos.*.dedicacion' => 'nullable|string|max:100',
+            'antecedentes_externos.*.fecha_inicio' => 'nullable|date',
+            'antecedentes_externos.*.fecha_fin' => 'nullable|date',
+            'antecedentes_externos.*.observaciones' => 'nullable|string|max:2000',
+            // Cláusulas de la convención colectiva aplicables al trabajador.
+            'clausulas_convencion' => 'nullable|array',
+            'clausulas_convencion.*' => 'integer|exists:clausulas_convencion,id',
         ]);
 
             $datos = $validated;
@@ -218,6 +234,8 @@ class TrabajadorController extends Controller
             $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
             $datos['anos_servicio_externo'] = $datos['anos_servicio_externo'] ?? 0;
             $datos['asignacion'] = 'Manual';
+            $datos['clausulas_convencion'] = $this->normalizarClausulas($request->input('clausulas_convencion', []));
+            unset($datos['antecedentes_externos']);
 
             $estudios = [
                 'nivel_instruccion_id' => $validated['nivel_instruccion_id'] ?? null,
@@ -244,6 +262,7 @@ class TrabajadorController extends Controller
 
             $this->actualizarEstudios($trabajador->id, $estudios, true);
             $this->actualizarActividadesUniversitarias($trabajador->id, $actividad, true);
+            $this->guardarAntecedentesExternos($trabajador, $request->input('antecedentes_externos', []));
 
             Activity::log('created', 'trabajador', $trabajador->id,
                 "Se registró al trabajador {$trabajador->nombres} {$trabajador->apellidos}");
@@ -307,6 +326,16 @@ class TrabajadorController extends Controller
                 'act_univ_hasta' => 'nullable|date|after_or_equal:act_univ_desde',
                 'porcentaje_antiguedad' => 'nullable|numeric|min:0|max:100',
                 'porcentaje_caja_ahorro' => 'nullable|numeric|min:0',
+                'antecedentes_externos' => 'nullable|array',
+                'antecedentes_externos.*.institucion' => 'nullable|string|max:150',
+                'antecedentes_externos.*.cargo' => 'nullable|string|max:150',
+                'antecedentes_externos.*.condicion_laboral' => 'nullable|string|max:100',
+                'antecedentes_externos.*.dedicacion' => 'nullable|string|max:100',
+                'antecedentes_externos.*.fecha_inicio' => 'nullable|date',
+                'antecedentes_externos.*.fecha_fin' => 'nullable|date',
+                'antecedentes_externos.*.observaciones' => 'nullable|string|max:2000',
+                'clausulas_convencion' => 'nullable|array',
+                'clausulas_convencion.*' => 'integer|exists:clausulas_convencion,id',
             ]);
 
             $datos = $validated;
@@ -341,6 +370,8 @@ class TrabajadorController extends Controller
             $datos['actividad_universitaria'] = $request->boolean('actividad_universitaria');
             $datos['porcentaje_caja_ahorro'] = $datos['porcentaje_caja_ahorro'] ?? 0;
             $datos['anos_servicio_externo'] = $datos['anos_servicio_externo'] ?? ($request->anos_servicio_externo ?? 0);
+            $datos['clausulas_convencion'] = $this->normalizarClausulas($request->input('clausulas_convencion', []));
+            unset($datos['antecedentes_externos']);
 
             $estudios = [
                 'nivel_instruccion_id' => $validated['nivel_instruccion_id'] ?? null,
@@ -367,6 +398,12 @@ class TrabajadorController extends Controller
 
             $this->actualizarEstudios($trabajador->id, $estudios);
             $this->actualizarActividadesUniversitarias($trabajador->id, $actividad);
+            $this->guardarAntecedentesExternos($trabajador, $request->input('antecedentes_externos', []));
+
+            // Si ya tiene expediente, las cláusulas se reflejan en él.
+            if ($expediente = $trabajador->expediente) {
+                $expediente->clausulas()->sync($datos['clausulas_convencion']);
+            }
 
             Activity::log('updated', 'trabajador', $trabajador->id,
                 "Se actualizó el expediente de {$trabajador->nombres} {$trabajador->apellidos}");
@@ -442,6 +479,17 @@ class TrabajadorController extends Controller
     {
         try {
             $trabajador = Trabajador::findOrFail($id);
+            // Guardar snapshot en solicitudes antes de eliminar
+            $solicitudes = \App\Models\Solicitud::where('trabajador_id', $trabajador->id)->get();
+            foreach ($solicitudes as $sol) {
+                if (empty($sol->trabajador_nombres)) {
+                    $sol->update([
+                        'trabajador_nombres' => $trabajador->nombres,
+                        'trabajador_apellidos' => $trabajador->apellidos,
+                        'trabajador_cedula' => $trabajador->cedula,
+                    ]);
+                }
+            }
             $trabajador->delete();
 
             Activity::log('deleted', 'trabajador', $id,
@@ -525,6 +573,73 @@ class TrabajadorController extends Controller
         } else {
             DB::table('actividades_universitarias')->where('trabajador_id', $trabajadorId)->delete();
         }
+    }
+
+    /**
+     * Registra los períodos que el trabajador cumplió en otras instituciones.
+     * Se guardan como antecedentes de servicio externos (es_institucion_actual = false)
+     * para que alimenten la relación de cargos y el tiempo de servicio previo.
+     */
+    private function guardarAntecedentesExternos(Trabajador $trabajador, $antecedentes): void
+    {
+        if (!is_array($antecedentes) || empty($antecedentes)) {
+            return;
+        }
+
+        $creados = 0;
+        foreach ($antecedentes as $fila) {
+            $institucion = trim((string) ($fila['institucion'] ?? ''));
+            $inicio = $fila['fecha_inicio'] ?? null;
+
+            // Solo se guardan filas con institución y fecha de inicio; el resto
+            // son filas vacías que el usuario dejó sin completar.
+            if ($institucion === '' || empty($inicio)) {
+                continue;
+            }
+
+            $trabajador->antecedentesServicio()->create([
+                'institucion' => $institucion,
+                'es_institucion_actual' => false,
+                'cargo' => $fila['cargo'] ?? null,
+                'condicion_laboral' => $fila['condicion_laboral'] ?? null,
+                'dedicacion' => $fila['dedicacion'] ?? null,
+                'fecha_inicio' => $inicio,
+                'fecha_fin' => $fila['fecha_fin'] ?? null,
+                'observaciones' => $fila['observaciones'] ?? null,
+            ]);
+            $creados++;
+        }
+
+        if ($creados > 0) {
+            Activity::log('created', 'antecedente_servicio', $trabajador->id,
+                "Se registraron {$creados} antecedente(s) en otras instituciones para {$trabajador->nombres} {$trabajador->apellidos}");
+        }
+    }
+
+    /**
+     * Limpia la lista de cláusulas de convención colectiva enviada por el cliente.
+     */
+    private function normalizarClausulas($ids): array
+    {
+        if (!is_array($ids)) {
+            return [];
+        }
+
+        $limpios = collect($ids)
+            ->map(fn($v) => (int) (is_array($v) ? ($v['id'] ?? 0) : $v))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($limpios)) {
+            return [];
+        }
+
+        return DB::table('clausulas_convencion')
+            ->whereIn('id', $limpios)
+            ->pluck('id')
+            ->all();
     }
 
 }

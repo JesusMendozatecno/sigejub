@@ -1,4 +1,4 @@
-{{-- prestaciones.blade.php --}}
+﻿{{-- prestaciones.blade.php --}}
 <style>
 .prestaciones-grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
 .prestacion-card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
@@ -208,6 +208,14 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
                 <div class="resumen-primas" id="sidebarPrimasResumen">
                     <p style="color:#94a3b8;font-size:0.8rem;">Presione "Calcular Prestaciones" para ver el resumen.</p>
                 </div>
+
+                <div class="subtitulo-sec" style="margin-top:14px;"><i class="fas fa-file-contract"></i> Cláusulas de Convención Colectiva</div>
+                <div class="resumen-primas" id="sidebarClausulasResumen">
+                    <p style="color:#94a3b8;font-size:0.8rem;">Este expediente no tiene cláusulas asignadas.</p>
+                </div>
+                <p id="clausulasNota" style="font-size:0.72rem;color:#64748b;margin:6px 0 0;line-height:1.45;">
+                    Las cláusulas se asignan en el expediente del trabajador y su beneficio se suma al total de prestaciones.
+                </p>
                 <div class="total-prestacion-box">
                     <p>MONTO TOTAL PRESTACIONES</p>
                     <h2 id="totalPrestacionDisplay">Bs. 0,00</h2>
@@ -241,6 +249,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
             <div class="modal-rfila"><span class="ml">Sueldo Integral Mensual</span><span class="mr" id="mrSueldoIntegral">Bs. 0,00</span></div>
             <div class="modal-rfila"><span class="ml">Porcentaje Aplicable</span><span class="mr" id="mrPorcentaje">100%</span></div>
             <div class="modal-rfila"><span class="ml">Años de Servicio</span><span class="mr" id="mrAnios">0</span></div>
+            <div class="modal-rfila"><span class="ml">Cláusulas de convención colectiva</span><span class="mr" id="mrClausulas">Bs. 0,00</span></div>
             <div class="modal-rfila"><span class="ml">MONTO TOTAL PRESTACIONES</span><span class="mr" id="mrTotal">Bs. 0,00</span></div>
             <div class="modal-rfila"><span class="ml">Fideicomiso</span><span class="mr" id="mrFideicomiso">Bs. 0,00</span></div>
             <div class="modal-rfila total"><span class="ml">TOTAL GENERAL (Prestaciones + Fideicomiso)</span><span class="mr" id="mrTotalGeneral">Bs. 0,00</span></div>
@@ -258,15 +267,26 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
 
 <div class="modal-overlay" id="modalAnioPrestacion" style="z-index:5500;">
     <div class="modal-delete-box" style="text-align:left;max-width:420px;">
-        <h3 style="text-align:center;"><i class="fas fa-calendar-alt"></i> Año de la Prestación</h3>
+        <h3 style="text-align:center;"><i class="fas fa-calendar-alt"></i> Período de la Prestación</h3>
         <p style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;">
-            Indique el año de la nómina a la que pertenece esta prestación.
+            Indique el mes y el año de la nómina a la que pertenece esta prestación.
         </p>
-        <div class="input-group">
-            <label>AÑO DE LA PRESTACIÓN</label>
-            <select id="anioPrestacionSelect" required>
-                <option value="">Seleccione el año</option>
-            </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="input-group">
+                <label>MES DE LA PRESTACIÓN</label>
+                <select id="mesPrestacionSelect" required>
+                    <option value="">Seleccione el mes</option>
+                    @foreach (\App\Models\Nomina::MESES as $numMes => $nombreMes)
+                        <option value="{{ $numMes }}" @if ($numMes === (int) now()->month) selected @endif>{{ $nombreMes }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="input-group">
+                <label>AÑO DE LA PRESTACIÓN</label>
+                <select id="anioPrestacionSelect" required>
+                    <option value="">Seleccione el año</option>
+                </select>
+            </div>
         </div>
         <div class="modal-actions" style="justify-content:center;">
             <button type="button" class="btn-cancel" id="btnCancelarAnioPrestacion">Cancelar</button>
@@ -284,6 +304,66 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
     let ultimoCalculo = null;
     let monedaActual = 'Bs';
     let tasaActual = 0;
+    let clausulasActuales = [];
+
+    // Monto en Bs. que aporta una cláusula de la convención colectiva.
+    // Las cláusulas informativas (p. ej. la Cláusula 55 de pensión) no suman:
+    // su efecto ya está en el porcentaje de jubilación (100% / 82.5%).
+    function montoClausula(clausula, sueldoBase, sueldoIntegral, anios) {
+        const valor = parseFloat(clausula.valor) || 0;
+        let monto = 0;
+        switch (clausula.tipo_calculo) {
+            case 'porcentaje_sueldo_base': monto = sueldoBase * (valor / 100); break;
+            case 'porcentaje_sueldo_integral': monto = sueldoIntegral * (valor / 100); break;
+            case 'dias_sueldo_integral': monto = sueldoIntegral > 0 ? (sueldoIntegral / 30) * valor : 0; break;
+            case 'monto_fijo': monto = valor; break;
+            default: monto = 0;
+        }
+        if (clausula.por_anio) monto = monto * (parseFloat(anios) || 0);
+        return monto;
+    }
+
+    // Descripción corta de la regla de cálculo de la cláusula.
+    function detalleClausula(c) {
+        const valor = parseFloat(c.valor) || 0;
+        let texto = '';
+        switch (c.tipo_calculo) {
+            case 'porcentaje_sueldo_base': texto = valor + '% del sueldo base'; break;
+            case 'porcentaje_sueldo_integral': texto = valor + '% del sueldo integral'; break;
+            case 'dias_sueldo_integral': texto = valor + ' días de salario integral'; break;
+            case 'monto_fijo': texto = fmtBs(valor) + ' fijo'; break;
+            default: texto = 'Informativa (sin monto adicional)'; break;
+        }
+        if (c.por_anio) texto += ' por año de servicio';
+        return texto;
+    }
+
+    // Pinta la lista de cláusulas del expediente. Si recibe montos calculados,
+    // los muestra; si no, solo describe el beneficio.
+    function renderClausulas(calculados) {
+        const cont = document.getElementById('sidebarClausulasResumen');
+        if (!cont) return;
+        if (!clausulasActuales.length) {
+            cont.innerHTML = '<p style="color:#94a3b8;font-size:0.8rem;">Este expediente no tiene cláusulas asignadas.</p>';
+            return;
+        }
+        cont.innerHTML = clausulasActuales.map(c => {
+            const monto = calculados && calculados[c.id] !== undefined ? calculados[c.id] : null;
+            const etiqueta = 'Cláusula ' + escaparHTML(c.numero) + ' · ' + escaparHTML(c.nombre);
+            const valorHtml = monto === null
+                ? '<span style="color:#94a3b8;font-size:0.72rem;">' + escaparHTML(detalleClausula(c)) + '</span>'
+                : (monto > 0
+                    ? '<span class="r-value" style="color:#0f766e;">' + fmtEnMoneda(monto, monedaActual) + '</span>'
+                    : '<span style="color:#94a3b8;font-size:0.72rem;">Sin monto adicional</span>');
+            return '<div class="resumen-item" title="' + escaparHTML(c.descripcion || '') + '">' +
+                '<span class="r-label">' + etiqueta + '</span>' + valorHtml + '</div>';
+        }).join('');
+    }
+
+    // Restaura las cláusulas que ya venían guardadas dentro de los detalles.
+    function clausulasDesdeDetalles(detalles) {
+        return (detalles || []).filter(d => String(d.codigo || '').indexOf('CLAUSULA_') === 0);
+    }
 
     // Escala de profesionalización por nivel académico (se aplica siempre el mayor, sin sumar).
     const NIVELES_PROFESIONALIZACION = [
@@ -414,8 +494,9 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
     let prestacionesCache = [];
 
     // Letra (A-Z) de la carpeta a partir del nombre del trabajador.
+    // Agrupa por la primera letra del APELLIDO (orden alfabético institucional).
     function letraCarpetaPrestacion(t) {
-        const base = ((t && (t.nombres || t.apellidos)) || '').trim();
+        const base = ((t && (t.apellidos || t.nombres)) || '').trim();
         const ch = base.charAt(0).toUpperCase();
         if (!ch) return '#';
         return /[A-ZÁÉÍÓÚÑ]/.test(ch) ? ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '#';
@@ -476,8 +557,15 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
             </div>`;
     }
 
-    // Pinta la lista agrupada por carpeta alfabética.
+    // Pinta la lista agrupada por carpeta alfabética (vista drilldown).
     function pintarPrestaciones(items, grid, carpetasCont) {
+        if (!items || items.length === 0) {
+            if (carpetasCont) { carpetasCont.innerHTML = ''; carpetasCont.classList.remove('hidden'); carpetasCont.style.display = ''; }
+            grid.innerHTML = '<p class="empty-state">No hay prestaciones registradas</p>';
+            const btnVolver = document.getElementById('btnVolverCarpetasPres');
+            if (btnVolver) { btnVolver.classList.add('hidden'); btnVolver.style.display = 'none'; }
+            return;
+        }
         const grupos = {};
         items.forEach(t => {
             const letra = letraCarpetaPrestacion(t);
@@ -486,58 +574,80 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
         const letras = Object.keys(grupos).sort();
         let htmlGrid = '';
         let htmlCarpetas = '';
-        letras.forEach(function(letra, idx) {
+
+        htmlGrid += '<button type="button" class="btn-volver-carpetas" id="btnVolverCarpetasPres" style="display:none;"><i class="fas fa-arrow-left"></i> Volver a carpetas</button>';
+
+        letras.forEach(letra => {
             htmlCarpetas += '<button type="button" class="carpeta-chip" data-letra="' + letra + '">' + letra + '<span class="carpeta-chip-count">' + grupos[letra].length + '</span></button>';
-            htmlGrid += '<div class="carpeta-grupo' + (idx === 0 ? ' open' : '') + '" data-letra="' + letra + '">';
-            htmlGrid += '<div class="carpeta-header" role="button" tabindex="0"><i class="fas fa-folder"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' trabajador' + (grupos[letra].length === 1 ? '' : 'es') + '</span><i class="fas fa-chevron-down carpeta-chevron"></i></div>';
+            htmlGrid += '<div class="carpeta-grupo carpeta-drilldown" data-letra="' + letra + '" style="display:none;">';
+            htmlGrid += '<div class="carpeta-header"><i class="fas fa-folder-open"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' trabajador' + (grupos[letra].length === 1 ? '' : 'es') + '</span></div>';
             htmlGrid += '<div class="prestaciones-grid-cards">';
             grupos[letra].forEach(t => { htmlGrid += tarjetaPrestacion(t); });
             htmlGrid += '</div></div>';
         });
         grid.innerHTML = htmlGrid;
         if (carpetasCont) carpetasCont.innerHTML = htmlCarpetas;
+
         grid.querySelectorAll('.prestacion-card').forEach(card => {
             card.addEventListener('click', function() { abrirDetalle(parseInt(this.dataset.id, 10)); });
         });
 
-        // Acordeón: solo una carpeta abierta a la vez.
-        function abrirGrupoPrestaciones(letra, scroll) {
+        const btnVolver = document.getElementById('btnVolverCarpetasPres');
+
+        function abrirCarpeta(letra) {
+            if (!carpetasCont) return;
+            carpetasCont.classList.add('hidden');
+            carpetasCont.style.display = 'none';
             grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
-                const activo = g.dataset.letra === letra;
-                g.classList.toggle('open', activo);
-                const folder = g.querySelector('.carpeta-header i.fa-folder, .carpeta-header i.fa-folder-open');
-                if (folder) folder.className = activo ? 'fas fa-folder-open' : 'fas fa-folder';
-                if (activo && scroll) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const activa = g.dataset.letra === letra;
+                g.classList.toggle('carpeta-activa', activa);
+                g.classList.toggle('hidden', !activa);
+                // El grupo nace con display:none en línea; hay que alternarlo
+                // explícitamente o la carpeta nunca se abre (o no se cierra).
+                g.style.display = activa ? '' : 'none';
             });
-            if (carpetasCont) {
-                carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch) {
-                    ch.classList.toggle('active', ch.dataset.letra === letra);
-                });
+            if (btnVolver) {
+                btnVolver.classList.remove('hidden');
+                btnVolver.onclick = function() {
+                    volverACarpetasPres();
+                };
             }
+            const sec = document.getElementById('seccion-prestaciones');
+            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
-            const grupo = header.closest('.carpeta-grupo');
-            function toggle() {
-                const estaAbierta = grupo.classList.contains('open');
-                if (estaAbierta) {
-                    grupo.classList.remove('open');
-                    if (carpetasCont) carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch){ ch.classList.remove('active'); });
-                } else {
-                    abrirGrupoPrestaciones(grupo.dataset.letra, false);
-                }
-            }
-            header.addEventListener('click', toggle);
-            header.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    function volverACarpetasPres() {
+        if (carpetasCont) {
+            carpetasCont.classList.remove('hidden');
+            carpetasCont.style.display = '';
+        }
+        grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
+            g.classList.remove('carpeta-activa');
+            g.classList.add('hidden');
+            g.style.display = 'none';
         });
+        const btnVolver = document.getElementById('btnVolverCarpetasPres');
+        if (btnVolver) {
+            btnVolver.classList.add('hidden');
+            btnVolver.style.display = 'none';
+        }
+    }
 
         if (carpetasCont) {
             carpetasCont.querySelectorAll('.carpeta-chip').forEach(chip => {
                 chip.addEventListener('click', function() {
-                    abrirGrupoPrestaciones(this.dataset.letra, true);
+                    abrirCarpeta(this.dataset.letra);
                 });
             });
         }
+        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
+            const grupo = header.closest('.carpeta-grupo');
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function(e) {
+                if (e.target.closest('.prestacion-card')) return;
+                abrirCarpeta(grupo.dataset.letra);
+            });
+        });
     }
 
     async function cargarPrestaciones(page) {
@@ -574,6 +684,8 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
             const data = await resp.json();
             datosTrabajador = data.trabajador;
             primasDisponibles = data.primas || [];
+            clausulasActuales = data.clausulas || [];
+            renderClausulas(null);
 
             document.getElementById('prestaciones-lista').classList.add('hidden');
             document.getElementById('prestacion-detalle').classList.remove('hidden');
@@ -618,11 +730,17 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
                 );
                 // Restaurar resumen, total y porcentaje desde datos guardados
                 if (savedDetalles.length) {
+                    const esClausula = d => String(d.codigo || '').indexOf('CLAUSULA_') === 0;
                     const resumenHtml = savedDetalles
-                        .filter(d => d.monto > 0)
+                        .filter(d => d.monto > 0 && !esClausula(d))
                         .map(d => '<div class="resumen-item"><span class="r-label">' + escaparHTML(d.nombre) + '</span><span class="r-value">' + fmtBs(d.monto) + '</span></div>')
                         .join('');
-                    document.getElementById('sidebarPrimasResumen').innerHTML = resumenHtml;
+                    document.getElementById('sidebarPrimasResumen').innerHTML = resumenHtml || '<p style="color:#94a3b8;font-size:0.8rem;">Sin primas activas</p>';
+                    const montosGuardados = {};
+                    savedDetalles.filter(esClausula).forEach(d => {
+                        montosGuardados[parseInt(String(d.codigo).replace('CLAUSULA_', ''), 10)] = parseFloat(d.monto) || 0;
+                    });
+                    renderClausulas(montosGuardados);
                 }
                 const savedMonto = parseFloat(data.prestacion.monto) || 0;
                 document.getElementById('totalPrestacionDisplay').textContent = fmtBs(savedMonto);
@@ -649,6 +767,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
             } else {
                 btnComp.classList.add('hidden');
                 document.getElementById('totalPrestacionDisplay').textContent = 'Bs. 0,00';
+                renderClausulas(null);
                 document.getElementById('sidebarPrimasResumen').innerHTML = '<p style="color:#94a3b8;font-size:0.8rem;">Presione "Calcular Prestaciones" para ver el resumen.</p>';
                 document.getElementById('inputSueldoBase').value = (datosTrabajador.sueldo_base || 0).toFixed(2);
                 const inputFideiV = document.getElementById('inputFideicomisoMonto');
@@ -791,8 +910,28 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
             }
         });
 
+        const totalAnios = datosTrabajador.total_anos_servicio || 0;
         const sueldoIntegral = sueldoBase + totalPrimas;
-        const totalPrestaciones = sueldoIntegral * (porcentajeActual / 100) * (datosTrabajador.total_anos_servicio || 0);
+        let totalPrestaciones = sueldoIntegral * (porcentajeActual / 100) * totalAnios;
+
+        // Cláusulas de la convención colectiva asignadas en el expediente:
+        // su monto se calcula con el sueldo base/integral y los años de servicio,
+        // y se suma al monto de prestaciones.
+        const montosClausulas = {};
+        let totalClausulas = 0;
+        clausulasActuales.forEach(c => {
+            const monto = montoClausula(c, sueldoBase, sueldoIntegral, totalAnios);
+            montosClausulas[c.id] = monto;
+            totalClausulas += monto;
+            detalles.push({
+                codigo: 'CLAUSULA_' + c.id,
+                nombre: 'Cláusula ' + c.numero + ' · ' + c.nombre,
+                valor_unitario: c.valor,
+                monto: monto,
+                tipo_calculo: c.tipo_calculo
+            });
+        });
+        totalPrestaciones += totalClausulas;
 
         ultimoCalculo = { sueldoBase, totalPrimas, sueldoIntegral, totalPrestaciones, detalles };
 
@@ -800,6 +939,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
         document.getElementById('sidebarPrimasResumen').innerHTML = resumenHtml.length
             ? resumenHtml.join('')
             : '<p style="color:#94a3b8;font-size:0.8rem;">Sin primas activas</p>';
+        renderClausulas(montosClausulas);
         document.getElementById('totalPrestacionDisplay').textContent = fmtEnMoneda(totalPrestaciones, monedaResumen);
         actualizarTotalesFideicomiso(totalPrestaciones, monedaResumen);
 
@@ -808,7 +948,8 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
         document.getElementById('mrTotalPrimas').textContent = fmtEnMoneda(totalPrimas, monedaResumen);
         document.getElementById('mrSueldoIntegral').textContent = fmtEnMoneda(sueldoIntegral, monedaResumen);
         document.getElementById('mrPorcentaje').textContent = porcentajeActual + '%';
-        document.getElementById('mrAnios').textContent = datosTrabajador.total_anos_servicio || 0;
+        document.getElementById('mrAnios').textContent = totalAnios;
+        document.getElementById('mrClausulas').textContent = fmtEnMoneda(totalClausulas, monedaResumen);
         document.getElementById('mrTotal').textContent = fmtEnMoneda(totalPrestaciones, monedaResumen);
         document.getElementById('mrFideicomiso').textContent = fmtEnMoneda(fideicomisoBs(), monedaResumen);
         document.getElementById('mrTotalGeneral').textContent = fmtEnMoneda(totalPrestaciones + fideicomisoBs(), monedaResumen);
@@ -832,6 +973,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
                 html += '<option value="' + a + '">' + a + '</option>';
             }
             sel.innerHTML = html;
+            sel.value = String(anioActual);
         }
         document.getElementById('modalAnioPrestacion').style.display = 'flex';
     }
@@ -842,13 +984,19 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
 
     document.getElementById('btnConfirmarAnioPrestacion').addEventListener('click', function() {
         const sel = document.getElementById('anioPrestacionSelect');
+        const selMes = document.getElementById('mesPrestacionSelect');
         if (!sel || !sel.value) {
             mostrarToast('Debe seleccionar el año de la prestación.', 'warning');
             return;
         }
+        if (!selMes || !selMes.value) {
+            mostrarToast('Debe seleccionar el mes de la prestación.', 'warning');
+            return;
+        }
         const anio = sel.value;
+        const mes = selMes.value;
         cerrarModalAnioPrestacion();
-        guardarPrestacion(ultimoCalculo.sueldoBase, ultimoCalculo.totalPrimas, ultimoCalculo.sueldoIntegral, ultimoCalculo.totalPrestaciones, ultimoCalculo.detalles, anio);
+        guardarPrestacion(ultimoCalculo.sueldoBase, ultimoCalculo.totalPrimas, ultimoCalculo.sueldoIntegral, ultimoCalculo.totalPrestaciones, ultimoCalculo.detalles, anio, mes);
     });
     document.getElementById('btnCancelarAnioPrestacion').addEventListener('click', cerrarModalAnioPrestacion);
     document.getElementById('modalAnioPrestacion').addEventListener('click', function(e) {
@@ -897,7 +1045,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
         }
     });
 
-    async function guardarPrestacion(sueldoBase, totalPrimas, sueldoIntegral, totalPrestaciones, detalles, anio) {
+    async function guardarPrestacion(sueldoBase, totalPrimas, sueldoIntegral, totalPrestaciones, detalles, anio, mes) {
         try {
             mostrarCargando('Guardando cálculo...');
             const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -907,6 +1055,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
                 body: JSON.stringify({
                     trabajador_id: trabajadorActualId,
                     anio: anio,
+                    mes: mes ? parseInt(mes, 10) : null,
                     sueldo_base: sueldoBase,
                     monto: totalPrestaciones,
                     anios_servicio: datosTrabajador.total_anos_servicio || 0,

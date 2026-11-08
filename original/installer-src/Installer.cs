@@ -2173,23 +2173,37 @@ AppendLog("[7/13] Instalando dependencias (esto puede tardar)...", Color.Yellow)
 File.WriteAllText(dbBat, sb.ToString(), Utf8NoBom);
                 }
 
+                // sigejub-start.vbs: delega TODO el arranque en start.bat, que ya sabe
+                // localizar PHP (portable o del sistema), preparar .env/APP_KEY, crear el
+                // enlace public\storage, leer el puerto de APP_URL, arrancar el servidor
+                // con registro en storage\logs, esperar la respuesta HTTP y abrir el
+                // navegador. Asi el acceso directo funciona igual en cualquier equipo y,
+                // si algo falla, el usuario ve el motivo en pantalla.
+                //
+                // Antes se generaba aqui un 'php -S' directo con la ruta de php.exe sin
+                // comillas: si la instalacion estaba en una carpeta con espacios
+                // (C:\Program Files\SIGEJUB) el servidor no arrancaba y el acceso directo
+                // parecia no hacer nada.
+                string vbs = Path.Combine(appPath, "sigejub-start.vbs");
+                string bat = Path.Combine(appPath, "start.bat");
                 string php = phpExe;
                 if (string.IsNullOrEmpty(php)) php = "php";
 
-                // sigejub-start.vbs: arranca la BD (si aplica) y el servidor PHP OCULTO
-                // en segundo plano, ESPERA a que responda (prewarm) y abre el navegador.
-                // - max_execution_time=0: sin limite de 30s, para que un primer arranque
-                //   lento (cache fria, antivirus) no mate la peticion con un FatalError.
-                // - prewarm: no abrir el navegador hasta que la app devuelva 200, para no
-                //   mostrarle al usuario una pagina de error si el servidor aun no esta listo.
-                string vbs = Path.Combine(appPath, "sigejub-start.vbs");
-var sbv = new StringBuilder();
+                var sbv = new StringBuilder();
+                sbv.AppendLine("' SIGEJUB - Lanzador del sistema (generado por el instalador)");
                 sbv.AppendLine("On Error Resume Next");
+                sbv.AppendLine("Set fso = CreateObject(\"Scripting.FileSystemObject\")");
                 sbv.AppendLine("Set sh = CreateObject(\"WScript.Shell\")");
-                sbv.AppendLine("sh.CurrentDirectory = " + VbsStr(appPath));
+                sbv.AppendLine("base = " + VbsStr(appPath));
+                sbv.AppendLine("sh.CurrentDirectory = base");
+                sbv.AppendLine("If fso.FileExists(base & \"\\start.bat\") Then");
+                sbv.AppendLine("    sh.Run " + VbsStr("\"" + appPath + "\\start.bat\"") + ", 1, False");
+                sbv.AppendLine("    WScript.Quit 0");
+                sbv.AppendLine("End If");
+                // Respaldo para instalaciones antiguas sin start.bat
                 if (writeDbBat) sbv.AppendLine("sh.Run " + VbsStr(dbBat) + ", 0, False");
-                sbv.AppendLine("sh.Run " + VbsStr(php + " -d max_execution_time=0 -S 127.0.0.1:" + selectedPort + " -t \"" + VbsInner(appPath + "\\public") + "\"") + ", 0, False");
-                sbv.AppendLine("For i = 1 To 30");
+                sbv.AppendLine("sh.Run " + VbsStr("\"" + php + "\" -d max_execution_time=0 -S 127.0.0.1:" + selectedPort + " -t \"" + VbsInner(appPath + "\\public") + "\"") + ", 0, False");
+                sbv.AppendLine("For i = 1 To 40");
                 sbv.AppendLine("    WScript.Sleep 1000");
                 sbv.AppendLine("    Set http = CreateObject(\"MSXML2.ServerXMLHTTP.6.0\")");
                 sbv.AppendLine("    http.SetTimeouts 2000, 2000, 2000, 2000");

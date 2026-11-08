@@ -73,6 +73,16 @@
                 <div class="info-row"><span>Edad</span><strong id="detalleEdad">—</strong></div>
             </div>
 
+            <div class="info-detalle-card" id="clausulasCardExpediente">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+                    <h4 style="margin:0;font-size:0.8rem;color:#0f172a;"><i class="fas fa-file-contract" size="14"></i> Cláusulas de Convención</h4>
+                    <button type="button" class="btn-guardar-notas" id="btnGestionarClausulas" style="padding:5px 10px;">Gestionar</button>
+                </div>
+                <div id="clausulasAsignadas">
+                    <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Sin cláusulas asignadas</p>
+                </div>
+            </div>
+
             <div class="notas-admin-card">
                 <h4><i class="fas fa-pen" size="14"></i> Notas del Admin</h4>
                 <textarea id="notasAdminInput" placeholder="Agregar nota..."></textarea>
@@ -125,12 +135,29 @@
     </div>
 </div>
 
+<div id="modalClausulasExpediente" class="modal-overlay" data-no-close-outside="true">
+    <div class="modal-delete-box" style="text-align:left;max-width:680px;">
+        <h3 style="text-align:center;"><i class="fas fa-file-contract"></i> Cláusulas de la Convención Colectiva</h3>
+        <p style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:14px;">
+            Marque las cláusulas que aplican al trabajador. Su beneficio se suma automáticamente
+            en el cálculo de prestaciones.
+        </p>
+        <div id="listaClausulasExpediente" style="max-height:360px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;padding:6px;">
+            <p style="padding:16px;color:#94a3b8;font-size:0.82rem;margin:0;">Cargando cláusulas...</p>
+        </div>
+        <div class="modal-actions" style="justify-content:center;">
+            <button type="button" class="btn-cancel" id="btnCancelarClausulasExpediente">Cancelar</button>
+            <button type="button" class="btn-submit" id="btnGuardarClausulasExpediente">Guardar cláusulas</button>
+        </div>
+    </div>
+</div>
+
 <div id="modalCrearExpediente" class="modal-overlay">
     <div class="modal-container" style="max-width: 720px; height: auto; max-height: 90vh;">
         <aside class="modal-sidebar">
             <span class="badge-new">NUEVO EXPEDIENTE</span>
             <h1>Crear<br>Expediente<br>Digital</h1>
-            <p>Busque al trabajador por su cédula. Debe tener una solicitud registrada.</p>
+            <p>Busque al trabajador por su cédula. Puede crear el expediente con o sin una solicitud registrada.</p>
         </aside>
         <main class="modal-form-content">
             <button class="btn-close-absolute" id="closeModalExpediente" type="button">&times;</button>
@@ -271,6 +298,7 @@
 (function() {
     let expedienteActualId = null;
     let expedienteDocsActuales = [];
+    let clausulasExpediente = [];
 
     const ICONOS_DOC = {
         'Cédula de Identidad': 'fa-user-check',
@@ -290,10 +318,11 @@
     let expedientesCache = [];
     let expedientesTotalPaginas = 1;
 
-    // Devuelve la letra (A-Z) de agrupación a partir del nombre del trabajador.
+    // Devuelve la letra (A-Z) de agrupación a partir del APELLIDO del trabajador
+    // (el orden alfabético de archivo se hace por apellido).
     function letraCarpetaExpediente(exp) {
         const t = (exp && exp.trabajador) || {};
-        const base = (t.nombres || t.apellidos || '').trim();
+        const base = (t.apellidos || t.nombres || '').trim();
         const ch = base.charAt(0).toUpperCase();
         if (!ch) return '#';
         return /[A-ZÁÉÍÓÚÑ]/.test(ch) ? ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '#';
@@ -342,7 +371,7 @@
         });
     }
 
-    // Pinta una lista de expedientes agrupada por carpeta alfabética.
+    // Pinta una lista de expedientes agrupada por carpeta alfabética (vista drilldown).
     function pintarExpedientes(lista, grid, carpetasCont) {
         const grupos = {};
         lista.forEach(exp => {
@@ -353,10 +382,13 @@
         grid.innerHTML = '';
         let htmlGrid = '';
         let htmlCarpetas = '';
-        letras.forEach(function(letra, idx) {
+
+        htmlGrid += '<button type="button" class="btn-volver-carpetas hidden" id="btnVolverCarpetasExp"><i class="fas fa-arrow-left"></i> Volver a carpetas</button>';
+
+        letras.forEach(letra => {
             htmlCarpetas += '<button type="button" class="carpeta-chip" data-letra="' + letra + '">' + letra + '<span class="carpeta-chip-count">' + grupos[letra].length + '</span></button>';
-            htmlGrid += '<div class="carpeta-grupo' + (idx === 0 ? ' open' : '') + '" data-letra="' + letra + '">';
-            htmlGrid += '<div class="carpeta-header" role="button" tabindex="0"><i class="fas fa-folder"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' expediente' + (grupos[letra].length === 1 ? '' : 's') + '</span><i class="fas fa-chevron-down carpeta-chevron"></i></div>';
+            htmlGrid += '<div class="carpeta-grupo carpeta-drilldown hidden" data-letra="' + letra + '">';
+            htmlGrid += '<div class="carpeta-header"><i class="fas fa-folder-open"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' expediente' + (grupos[letra].length === 1 ? '' : 's') + '</span></div>';
             htmlGrid += '<div class="expedientes-grid">';
             grupos[letra].forEach(exp => {
                 const t = exp.trabajador || {};
@@ -381,49 +413,69 @@
         });
         grid.innerHTML = htmlGrid;
         if (carpetasCont) carpetasCont.innerHTML = htmlCarpetas;
+
         grid.querySelectorAll('.expediente-card').forEach(card => {
             card.addEventListener('click', function() { abrirDetalle(parseInt(this.dataset.id, 10)); });
         });
 
-        // Acordeón: solo una carpeta abierta a la vez.
-        function abrirGrupoExpedientes(letra, scroll) {
+        const btnVolver = document.getElementById('btnVolverCarpetasExp');
+
+        function abrirCarpeta(letra) {
+            if (!carpetasCont) return;
+            carpetasCont.classList.add('hidden');
+            carpetasCont.style.display = 'none';
             grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
-                const activo = g.dataset.letra === letra;
-                g.classList.toggle('open', activo);
-                const chev = g.querySelector('.carpeta-header i.carpeta-chevron');
-                const folder = g.querySelector('.carpeta-header i.fa-folder, .carpeta-header i.fa-folder-open');
-                if (folder) folder.className = activo ? 'fas fa-folder-open' : 'fas fa-folder';
-                if (activo && scroll) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const activa = g.dataset.letra === letra;
+                g.classList.toggle('carpeta-activa', activa);
+                g.classList.toggle('hidden', !activa);
+                // El grupo se oculta/muestra también en línea: si no, una vez
+                // que se vuelve a las carpetas la letra no se puede abrir más.
+                g.style.display = activa ? '' : 'none';
             });
-            if (carpetasCont) {
-                carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch) {
-                    ch.classList.toggle('active', ch.dataset.letra === letra);
-                });
+            if (btnVolver) {
+                btnVolver.classList.remove('hidden');
+                btnVolver.onclick = function() {
+                    volverACarpetasExp();
+                };
             }
+            // Subir al inicio de la sección
+            const sec = document.getElementById('seccion-expedientes');
+            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
-            const grupo = header.closest('.carpeta-grupo');
-            function toggle() {
-                const estaAbierta = grupo.classList.contains('open');
-                if (estaAbierta) {
-                    grupo.classList.remove('open');
-                    if (carpetasCont) carpetasCont.querySelectorAll('.carpeta-chip').forEach(function(ch){ ch.classList.remove('active'); });
-                } else {
-                    abrirGrupoExpedientes(grupo.dataset.letra, false);
-                }
-            }
-            header.addEventListener('click', toggle);
-            header.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    function volverACarpetasExp() {
+        if (carpetasCont) {
+            carpetasCont.classList.remove('hidden');
+            carpetasCont.style.display = '';
+        }
+        grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
+            g.classList.remove('carpeta-activa');
+            g.classList.add('hidden');
+            g.style.display = 'none';
         });
+        const btnVolver = document.getElementById('btnVolverCarpetasExp');
+        if (btnVolver) {
+            btnVolver.classList.add('hidden');
+            btnVolver.style.display = 'none';
+        }
+    }
 
         if (carpetasCont) {
             carpetasCont.querySelectorAll('.carpeta-chip').forEach(chip => {
                 chip.addEventListener('click', function() {
-                    abrirGrupoExpedientes(this.dataset.letra, true);
+                    abrirCarpeta(this.dataset.letra);
                 });
             });
         }
+        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
+            const grupo = header.closest('.carpeta-grupo');
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function(e) {
+                // Evitar que al hacer clic en tarjeta se dispare
+                if (e.target.closest('.expediente-card')) return;
+                abrirCarpeta(grupo.dataset.letra);
+            });
+        });
     }
 
     async function cargarExpedientes(page) {
@@ -491,6 +543,8 @@
             renderChecklistRequeridos(exp.documentos || []);
             renderDocumentos(exp.documentos || []);
             renderRecibos(exp.recibos || []);
+            clausulasExpediente = exp.clausulas || [];
+            renderClausulasExpediente();
             renderCartaAprobacion(exp);
             cargarActividadExpediente();
         } catch (err) {
@@ -615,6 +669,149 @@
         cargarExpedientes();
     };
 
+    // === CLÁUSULAS DE CONVENCIÓN COLECTIVA ===
+    function renderClausulasExpediente() {
+        const cont = document.getElementById('clausulasAsignadas');
+        if (!cont) return;
+        if (!clausulasExpediente.length) {
+            cont.innerHTML = '<p style="font-size:0.78rem;color:#94a3b8;margin:0;">Sin cláusulas asignadas</p>';
+            return;
+        }
+        cont.innerHTML = clausulasExpediente.map(c =>
+            '<div style="font-size:0.78rem;line-height:1.45;padding:4px 0;border-bottom:1px solid #f1f5f9;">' +
+                '<strong>Cláusula ' + escaparHTML(c.numero) + '</strong> · ' + escaparHTML(c.nombre) +
+                '<div style="font-size:0.72rem;color:#64748b;">' + escaparHTML(descripcionClausula(c)) + '</div>' +
+            '</div>'
+        ).join('');
+    }
+
+    function descripcionClausula(c) {
+        const valor = parseFloat(c.valor) || 0;
+        let texto;
+        switch (c.tipo_calculo) {
+            case 'porcentaje_sueldo_base': texto = valor + '% del sueldo base'; break;
+            case 'porcentaje_sueldo_integral': texto = valor + '% del sueldo integral'; break;
+            case 'dias_sueldo_integral': texto = valor + ' días de salario integral'; break;
+            case 'monto_fijo': texto = 'Bs. ' + valor.toFixed(2) + ' fijos'; break;
+            default: texto = 'Informativa (sin monto adicional)'; break;
+        }
+        if (c.por_anio) texto += ' por año de servicio';
+        return texto;
+    }
+
+    async function abrirModalClausulas() {
+        if (!expedienteActualId) return;
+        const cont = document.getElementById('listaClausulasExpediente');
+        cont.innerHTML = '<p style="padding:16px;color:#94a3b8;font-size:0.82rem;margin:0;">Cargando cláusulas...</p>';
+        document.getElementById('modalClausulasExpediente').style.display = 'flex';
+        try {
+            const resp = await fetch('/expedientes/' + expedienteActualId + '/clausulas');
+            const data = await resp.json();
+            const disponibles = data.disponibles || [];
+            const marcadas = new Set((data.seleccionadas || []).map(c => parseInt(c.id, 10)));
+            if (!disponibles.length) {
+                cont.innerHTML = '<p style="padding:16px;color:#94a3b8;font-size:0.82rem;margin:0;">No hay cláusulas registradas. Créelas en Cargos y Grados → Cláusulas.</p>';
+                return;
+            }
+            cont.innerHTML = disponibles.map(c =>
+                '<label style="display:flex;gap:10px;align-items:flex-start;padding:10px;border-bottom:1px solid #f1f5f9;cursor:pointer;">' +
+                    '<input type="checkbox" value="' + c.id + '"' + (marcadas.has(parseInt(c.id, 10)) ? ' checked' : '') + ' style="margin-top:3px;">' +
+                    '<span style="font-size:0.82rem;line-height:1.45;">' +
+                        '<strong>Cláusula ' + escaparHTML(c.numero) + '</strong> · ' + escaparHTML(c.nombre) +
+                        '<div style="font-size:0.75rem;color:#64748b;">' + escaparHTML(descripcionClausula(c)) + '</div>' +
+                        (c.descripcion ? '<div style="font-size:0.72rem;color:#94a3b8;margin-top:2px;">' + escaparHTML(c.descripcion) + '</div>' : '') +
+                    '</span>' +
+                '</label>'
+            ).join('');
+        } catch (err) {
+            cont.innerHTML = '<p style="padding:16px;color:#dc2626;font-size:0.82rem;margin:0;">Error al cargar las cláusulas.</p>';
+        }
+    }
+
+    async function guardarClausulas() {
+        if (!expedienteActualId) return;
+        const btn = document.getElementById('btnGuardarClausulasExpediente');
+        const ids = Array.from(document.querySelectorAll('#listaClausulasExpediente input[type="checkbox"]:checked'))
+            .map(i => parseInt(i.value, 10));
+        btn.disabled = true; btn.textContent = 'Guardando...';
+        try {
+            const resp = await fetch('/expedientes/' + expedienteActualId + '/clausulas', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                body: JSON.stringify({ clausulas: ids })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw data;
+            mostrarToast(data.mensaje || 'Cláusulas actualizadas.', 'success');
+            document.getElementById('modalClausulasExpediente').style.display = 'none';
+            abrirDetalle(expedienteActualId);
+        } catch (err) {
+            mostrarToast(err.mensaje || 'Error al guardar las cláusulas.', 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Guardar cláusulas';
+        }
+    }
+
+    document.getElementById('btnGestionarClausulas')?.addEventListener('click', abrirModalClausulas);
+    document.getElementById('btnCancelarClausulasExpediente')?.addEventListener('click', function() {
+        document.getElementById('modalClausulasExpediente').style.display = 'none';
+    });
+    document.getElementById('btnGuardarClausulasExpediente')?.addEventListener('click', guardarClausulas);
+
+    // === RECIBOS DE NÓMINA ===
+    // Estas funciones viven en el ámbito del módulo porque `abrirDetalle` las
+    // invoca al abrir el expediente (antes estaban dentro de DOMContentLoaded
+    // y provocaban un ReferenceError).
+    function renderRecibos(recibos) {
+        const container = document.getElementById('recibosList');
+        if (!container) return;
+        if (!recibos || !recibos.length) {
+            container.innerHTML = '<p class="empty-state" style="padding:30px;">No hay recibos de nómina adjuntos.</p>';
+            return;
+        }
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+        container.innerHTML = recibos.map(r => `
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div style="font-size:0.82rem;line-height:1.55;">
+                    <strong>${esc(r.periodo || '—')}</strong>${r.concepto ? ' · ' + esc(r.concepto) : ''}
+                    ${r.monto_usd ? '<span style="color:#16a34a;font-weight:700;margin-left:8px;">$ ' + Number(r.monto_usd).toFixed(2) + '</span>' : ''}
+                    ${r.observaciones ? '<div style="font-size:0.75rem;color:#64748b;">' + esc(r.observaciones) + '</div>' : ''}
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    ${r.archivo ? `<a href="/storage/${esc(r.archivo)}" target="_blank" class="btn-icon btn-ver" title="Ver recibo"><i class="fas fa-eye"></i></a>` : ''}
+                    <button type="button" class="btn-icon btn-eliminar" title="Eliminar recibo" data-recibo-id="${r.id}"><i class="fas fa-trash-can"></i></button>
+                </div>
+            </div>`).join('');
+        container.querySelectorAll('[data-recibo-id]').forEach(btn => {
+            btn.addEventListener('click', () => eliminarRecibo(parseInt(btn.dataset.reciboId, 10)));
+        });
+    }
+
+    async function eliminarRecibo(id) {
+        if (!id) return;
+        if (!confirm('¿Eliminar este recibo de nómina?')) return;
+        try {
+            mostrarCargando('Eliminando recibo...');
+            const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
+            const resp = await fetch(`/recibos-pago/${id}`, {
+                method: 'DELETE',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) throw data;
+            mostrarToast(data.mensaje || 'Recibo eliminado.', 'success');
+            abrirDetalle(expedienteActualId);
+        } catch (err) {
+            mostrarToast(err.mensaje || 'Error al eliminar el recibo.', 'error');
+        } finally {
+            ocultarCargando();
+        }
+    }
+
     // === INICIALIZAR ===
     document.addEventListener('DOMContentLoaded', () => {
         cargarExpedientes();
@@ -670,9 +867,11 @@
                 const s = data.solicitud;
                 document.getElementById('teNombre').textContent = `${t.nombres} ${t.apellidos}`;
                 document.getElementById('teCedula').textContent = `Cédula: ${t.cedula}`;
-                document.getElementById('teSolicitud').textContent = `Solicitud: ${s.tipo_jubilacion || '—'} (${s.estado})`;
+                document.getElementById('teSolicitud').textContent = s
+                    ? `Solicitud: ${s.tipo_jubilacion || '—'} (${s.estado})`
+                    : 'Sin solicitud asociada (se puede crear el expediente igual).';
                 document.getElementById('inputTrabajadorId').value = t.id;
-                document.getElementById('inputSolicitudId').value = s.id;
+                document.getElementById('inputSolicitudId').value = s ? s.id : '';
                 resultado.classList.remove('hidden');
             } catch (err) {
                 errorDiv.textContent = 'Error de conexión';
@@ -785,52 +984,6 @@
             document.getElementById('modalSubirDocumento').style.display = 'none';
         });
 
-        // === RECIBOS DE NÓMINA (R3) ===
-        function renderRecibos(recibos) {
-            const container = document.getElementById('recibosList');
-            if (!container) return;
-            if (!recibos.length) {
-                container.innerHTML = '<p class="empty-state" style="padding:30px;">No hay recibos de nómina adjuntos.</p>';
-                return;
-            }
-            const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-            container.innerHTML = recibos.map(r => `
-                <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-                    <div style="font-size:0.82rem;line-height:1.55;">
-                        <strong>${esc(r.periodo || '—')}</strong>${r.concepto ? ' · ' + esc(r.concepto) : ''}
-                        ${r.monto_usd ? '<span style="color:#16a34a;font-weight:700;margin-left:8px;">$ ' + Number(r.monto_usd).toFixed(2) + '</span>' : ''}
-                        ${r.observaciones ? '<div style="font-size:0.75rem;color:#64748b;">' + esc(r.observaciones) + '</div>' : ''}
-                    </div>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        ${r.archivo ? `<a href="/storage/${esc(r.archivo)}" target="_blank" class="btn-icon btn-ver" title="Ver recibo"><i class="fas fa-eye"></i></a>` : ''}
-                        <button type="button" class="btn-icon btn-eliminar" title="Eliminar recibo" data-recibo-id="${r.id}"><i class="fas fa-trash-can"></i></button>
-                    </div>
-                </div>`).join('');
-            container.querySelectorAll('[data-recibo-id]').forEach(btn => {
-                btn.addEventListener('click', () => eliminarRecibo(parseInt(btn.dataset.reciboId, 10)));
-            });
-        }
-
-        async function eliminarRecibo(id) {
-            if (!id) return;
-            if (!confirm('¿Eliminar este recibo de nómina?')) return;
-            try {
-                mostrarCargando('Eliminando recibo...');
-                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
-                const resp = await fetch(`/recibos-pago/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
-                });
-                const data = await resp.json().catch(() => ({}));
-                if (!resp.ok) throw data;
-                mostrarToast(data.mensaje || 'Recibo eliminado.', 'success');
-                abrirDetalle(expedienteActualId);
-            } catch (err) {
-                mostrarToast(err.mensaje || 'Error al eliminar el recibo.', 'error');
-            } finally {
-                ocultarCargando();
-            }
-        }
 
         document.getElementById('btnSubirRecibo')?.addEventListener('click', () => {
             if (!expedienteActualId) return;

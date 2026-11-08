@@ -19,7 +19,7 @@ class MasterDataController extends Controller
         'prima' => ['table' => 'primas', 'label' => 'Prima', 'extra_fields' => ['valor', 'fecha_vigencia']],
         'tipo-jubilacion' => ['table' => 'tipos_jubilacion', 'label' => 'Tipo de Jubilación'],
         'unidad-departamento' => ['table' => 'unidades', 'label' => 'Unidad / Departamento'],
-        'tipo-contrato' => ['table' => 'tipos_contrato', 'label' => 'Condición Laboral'],
+        'tipo-contrato' => ['table' => 'tipos_contrato', 'label' => 'Categoría'],
         'dedicacion' => ['table' => 'dedicaciones', 'label' => 'Dedicación'],
     ];
 

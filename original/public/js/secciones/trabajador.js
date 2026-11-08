@@ -86,6 +86,10 @@
                 // Cargar opciones de catálogos
                 SELECTS_CATALOGO.forEach(([tipo, selectId]) => cargarOpcionesCatalogo(tipo, selectId));
 
+                // Antecedentes en otra institución y cláusulas de convención vacíos
+                if (typeof limpiarAntecedentesExternos === 'function') limpiarAntecedentesExternos();
+                if (typeof cargarClausulasTrabajador === 'function') cargarClausulasTrabajador([]);
+
                 modalTitle.innerHTML = "Registrar<br>Nuevo<br>Trabajador";
                 modalDescription.textContent = "Complete el expediente institucional para iniciar el cálculo de antigüedad.";
                 if (btnHabilitarEdicion) btnHabilitarEdicion.style.display = 'none';
@@ -206,6 +210,8 @@
                     mostrarToast(data.mensaje || 'Operación completada con éxito.', 'success');
                     if (window.limpiarCacheSigejub) window.limpiarCacheSigejub();
                     form.reset();
+                    if (typeof limpiarAntecedentesExternos === 'function') limpiarAntecedentesExternos();
+                    if (typeof cargarClausulasTrabajador === 'function') cargarClausulasTrabajador([]);
                     // Resetear checkboxes manualmente (form.reset no resetea checkboxes personalizados)
                     document.getElementById('checkTieneHijos').checked = false;
                     toggleHijosFields();
@@ -631,6 +637,15 @@
             document.getElementById('inputActUnivHasta').value = actUniv.hasta || '';
             if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
             if (typeof actualizarContadorActividadUniversitaria === 'function') actualizarContadorActividadUniversitaria();
+
+            // Antecedentes en otras instituciones y cláusulas de convención del trabajador
+            if (typeof limpiarAntecedentesExternos === 'function') limpiarAntecedentesExternos();
+            if (typeof crearFilaAntecedenteExterno === 'function') {
+                (t.antecedentes_externos || []).forEach(a => crearFilaAntecedenteExterno(a));
+            }
+            if (typeof cargarClausulasTrabajador === 'function') {
+                cargarClausulasTrabajador(t.clausulas_convencion || []);
+            }
 
             habilitarCamposFormulario(false);  // Deshabilita todos los campos (solo lectura)
 
@@ -1220,3 +1235,99 @@ async function eliminarAntDoc(id) {
         } else mostrarToast(json.mensaje || 'Error al eliminar', 'danger');
     } catch (err) { mostrarToast('Error al eliminar', 'danger'); }
 }
+// ============================================
+// ANTECEDENTES EN OTRA INSTITUCIÓN — filas dinámicas del modal del trabajador
+// ============================================
+let contadorAntecedentesExternos = 0;
+
+function escTexto(valor) {
+    return String(valor == null ? '' : valor).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
+function crearFilaAntecedenteExterno(datos) {
+    const cont = document.getElementById('filasAntecedentesExternos');
+    if (!cont) return;
+    datos = datos || {};
+    const i = contadorAntecedentesExternos++;
+    const row = document.createElement('div');
+    row.className = 'antecedente-externo-row';
+    row.style.cssText = 'display:grid;grid-template-columns:1.4fr 1.2fr 1fr 1fr 36px;gap:8px;align-items:end;margin-bottom:8px;';
+    row.innerHTML =
+        '<div class="input-group" style="margin:0;">' +
+            '<label>INSTITUCIÓN</label>' +
+            '<input type="text" name="antecedentes_externos[' + i + '][institucion]" maxlength="150" placeholder="Ej: Universidad Central de Venezuela" value="' + escTexto(datos.institucion) + '">' +
+        '</div>' +
+        '<div class="input-group" style="margin:0;">' +
+            '<label>CARGO</label>' +
+            '<input type="text" name="antecedentes_externos[' + i + '][cargo]" maxlength="150" placeholder="Ej: Analista" value="' + escTexto(datos.cargo) + '">' +
+        '</div>' +
+        '<div class="input-group" style="margin:0;">' +
+            '<label>DESDE</label>' +
+            '<input type="date" name="antecedentes_externos[' + i + '][fecha_inicio]" value="' + escTexto(datos.fecha_inicio) + '">' +
+        '</div>' +
+        '<div class="input-group" style="margin:0;">' +
+            '<label>HASTA</label>' +
+            '<input type="date" name="antecedentes_externos[' + i + '][fecha_fin]" value="' + escTexto(datos.fecha_fin) + '">' +
+        '</div>' +
+        '<button type="button" class="btn-icon btn-eliminar" data-quitar-antecedente title="Quitar antecedente"><i class="fas fa-trash-can"></i></button>';
+    row.querySelector('[data-quitar-antecedente]').addEventListener('click', function() { row.remove(); });
+    cont.appendChild(row);
+    return row;
+}
+
+function limpiarAntecedentesExternos() {
+    const cont = document.getElementById('filasAntecedentesExternos');
+    if (cont) cont.innerHTML = '';
+    contadorAntecedentesExternos = 0;
+}
+
+// ============================================
+// CLÁUSULAS DE CONVENCIÓN COLECTIVA — selección en el trabajador
+// ============================================
+function descripcionClausulaTrabajador(c) {
+    const valor = parseFloat(c.valor) || 0;
+    let texto;
+    switch (c.tipo_calculo) {
+        case 'porcentaje_sueldo_base': texto = valor + '% del sueldo base'; break;
+        case 'porcentaje_sueldo_integral': texto = valor + '% del sueldo integral'; break;
+        case 'dias_sueldo_integral': texto = valor + ' días de salario integral'; break;
+        case 'monto_fijo': texto = 'Bs. ' + valor.toFixed(2) + ' fijos'; break;
+        default: texto = 'Informativa (sin monto adicional)'; break;
+    }
+    if (c.por_anio) texto += ' por año de servicio';
+    return texto;
+}
+
+async function cargarClausulasTrabajador(seleccionadas) {
+    const cont = document.getElementById('listaClausulasTrabajador');
+    if (!cont) return;
+    const marcadas = new Set((seleccionadas || []).map(function(v) { return parseInt(v, 10); }));
+    try {
+        const resp = await fetch('/clausulas-convencion?per_page=200');
+        const data = await resp.json();
+        const lista = (data.data || []).filter(function(c) { return !!c.activo; });
+        if (!lista.length) {
+            cont.innerHTML = '<p style="font-size:0.8rem;color:#94a3b8;margin:0;">No hay cláusulas registradas. Créelas en Cargos y Grados → Cláusulas.</p>';
+            return;
+        }
+        cont.innerHTML = lista.map(function(c) {
+            const checked = marcadas.has(parseInt(c.id, 10)) ? ' checked' : '';
+            return '<label style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#f8fafc;">' +
+                '<input type="checkbox" name="clausulas_convencion[]" value="' + c.id + '"' + checked + ' style="margin-top:3px;accent-color:#2563eb;">' +
+                '<span style="font-size:0.82rem;line-height:1.45;">' +
+                    '<strong>Cláusula ' + escTexto(c.numero) + '</strong> · ' + escTexto(c.nombre) +
+                    '<div style="font-size:0.75rem;color:#64748b;">' + escTexto(descripcionClausulaTrabajador(c)) + '</div>' +
+                '</span></label>';
+        }).join('');
+    } catch (err) {
+        cont.innerHTML = '<p style="font-size:0.8rem;color:#dc2626;margin:0;">Error al cargar las cláusulas.</p>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('btnAgregarAntecedenteExterno')?.addEventListener('click', function() {
+        crearFilaAntecedenteExterno({});
+    });
+});

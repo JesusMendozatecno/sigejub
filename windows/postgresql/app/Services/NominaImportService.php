@@ -17,15 +17,26 @@ class NominaImportService
         'OBREROS' => ['headerRow' => 4, 'dataStart' => 5, 'cols' => 'Z'],
     ];
 
-    public function importar(string $filePath, ?string $anio = null): array
+    public function importar(string $filePath, ?string $anio = null, ?int $mes = null): array
     {
         $anio = $anio ?: (string) now()->year;
+        $mes = ($mes !== null && $mes >= 1 && $mes <= 12) ? (int) $mes : null;
 
-        $nomina = Nomina::where('periodo', $anio)->first();
+        // La institución carga la nómina mes a mes: cada año+mes es una planilla.
+        $nomina = Nomina::where('periodo', $anio)
+            ->when($mes !== null, fn($q) => $q->where('mes', $mes))
+            ->when($mes === null, fn($q) => $q->whereNull('mes'))
+            ->first();
+
         if (!$nomina) {
+            $codigo = $mes !== null
+                ? 'NOM-' . $anio . '-' . str_pad((string) $mes, 2, '0', STR_PAD_LEFT)
+                : 'NOM-' . $anio;
+
             $nomina = Nomina::create([
-                'codigo' => 'NOM-' . $anio,
+                'codigo' => $codigo,
                 'periodo' => $anio,
+                'mes' => $mes,
                 'estado' => 'borrador',
                 'total_general' => 0,
             ]);
@@ -43,6 +54,8 @@ class NominaImportService
 
         $results = [
             'anio' => $anio,
+            'mes' => $mes,
+            'mes_nombre' => $mes !== null ? (Nomina::MESES[$mes] ?? '') : 'Anual',
             'encontrados' => 0,
             'nuevos' => 0,
             'ya_existentes' => 0,

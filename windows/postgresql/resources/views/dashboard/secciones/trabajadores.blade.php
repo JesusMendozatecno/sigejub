@@ -204,7 +204,7 @@
                     </div>
                     <div class="form-row-2">
                         <div class="input-group">
-                            <label>CONDICIÓN LABORAL</label>
+                            <label>CATEGORÍA</label>
                             <select name="tipo_contrato_id" id="selectCondicionLaboral">
                                 <option value="" disabled selected>Cargando...</option>
                             </select>
@@ -307,7 +307,28 @@
                     </div>
                 </section>
 
-        
+                <section class="form-section">
+                    <h3><i class="fas fa-building-columns"></i> Antecedentes en Otra Institución</h3>
+                    <p style="font-size:0.8rem;color:#64748b;margin:-4px 0 12px;">
+                        Si el trabajador laboró antes en otro ente u organismo, regístrelo aquí. Estos años se
+                        consideran para la antigüedad cuando corresponda.
+                    </p>
+                    <div id="filasAntecedentesExternos"></div>
+                    <button type="button" class="btn-outline" id="btnAgregarAntecedenteExterno" style="margin-top:4px;">
+                        <i class="fas fa-plus"></i> Agregar institución
+                    </button>
+                </section>
+
+                <section class="form-section">
+                    <h3><i class="fas fa-file-contract"></i> Cláusulas de Convención Colectiva</h3>
+                    <p style="font-size:0.8rem;color:#64748b;margin:-4px 0 12px;">
+                        Marque las cláusulas que amparan al trabajador. Se copian automáticamente a su expediente
+                        y se aplican en el cálculo de prestaciones.
+                    </p>
+                    <div id="listaClausulasTrabajador" style="display:grid;gap:8px;">
+                        <p style="font-size:0.8rem;color:#94a3b8;margin:0;">Cargando cláusulas...</p>
+                    </div>
+                </section>
 
                 <div class="modal-actions">
                     <button type="submit" class="btn-submit" id="btnSubmitTrabajador">Registrar Trabajador</button>

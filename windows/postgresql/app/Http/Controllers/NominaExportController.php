@@ -11,10 +11,12 @@ class NominaExportController extends Controller
 {
     public function exportar(Request $request, NominaExportService $service)
     {
-        $fecha = now()->format('Y-m');
         $tipo = $request->get('tipo_nomina');
         $anio = $request->get('anio');
-        $path = $service->exportar(periodo: $anio, tipo: $tipo);
+        $mes = $request->get('mes') !== null && $request->get('mes') !== '' ? (int) $request->get('mes') : null;
+
+        $fecha = $mes ? $anio . '-' . str_pad((string) $mes, 2, '0', STR_PAD_LEFT) : ($anio ?: now()->format('Y-m'));
+        $path = $service->exportar(periodo: $anio, tipo: $tipo, mes: $mes);
 
         $prefix = match($tipo) {
             'DOC' => 'DOC',
@@ -28,15 +30,16 @@ class NominaExportController extends Controller
     }
 
     public function importar(Request $request, NominaImportService $service)
-    {
-        $request->validate([
-            'archivo' => 'required|file|mimes:xlsx,xls|max:10240',
-            'anio' => 'required|digits:4',
-        ]);
+    {            $request->validate([
+                'archivo' => 'required|file|mimes:xlsx,xls|max:10240',
+                'anio' => 'required|digits:4',
+                'mes' => 'nullable|integer|min:1|max:12',
+            ]);
 
         try {
             $file = $request->file('archivo');
             $anio = $request->input('anio');
+            $mes = $request->filled('mes') ? (int) $request->input('mes') : null;
 
             $tempDir = storage_path('app/temp');
             if (!is_dir($tempDir)) {
@@ -46,11 +49,11 @@ class NominaExportController extends Controller
             $filename = 'nomina_import_' . Str::random(40) . '.xlsx';
             $file->move($tempDir, $filename);
 
-            $results = $service->importar($tempDir . '/' . $filename, $anio);
+            $results = $service->importar($tempDir . '/' . $filename, $anio, $mes);
 
             @unlink($tempDir . '/' . $filename);
 
-            $msg = "Año de la nómina: {$anio}<br>";
+            $msg = "Período de la nómina: {$anio}" . ($mes ? ' · ' . $results['mes_nombre'] : '') . '<br>';
             $msg .= "Trabajadores encontrados: {$results['encontrados']}<br>";
             $msg .= "Trabajadores nuevos registrados: {$results['nuevos']}<br>";
             $msg .= "Trabajadores ya registrados: {$results['ya_existentes']}<br>";

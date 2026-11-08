@@ -22,6 +22,9 @@ function switchTab(id) {
         targetMenu.classList.add('active');
         targetSection.classList.add('active');
         localStorage.setItem('sigejub_active_section', id);
+        // Cada vez que se entra a una sección se descarta la caché de las
+        // consultas: así las listas no muestran datos desactualizados.
+        if (window.limpiarCacheSigejub) window.limpiarCacheSigejub();
     }
 }
 

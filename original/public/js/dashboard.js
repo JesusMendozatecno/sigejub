@@ -1,4 +1,31 @@
-/**
+﻿// SEGURIDAD: borrar cache de navegación al reiniciar servidor
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const metaBoot = document.querySelector('meta[name="app-boot"]');
+        const serverBoot = metaBoot ? metaBoot.getAttribute('content') : '0';
+        const key = 'sigejub_boot_id';
+        const last = sessionStorage.getItem(key);
+        if (last && last !== serverBoot) {
+            // Servidor reiniciado -> limpiar estado guardado
+            ['seccion_activa','expedientes_seccion','prestaciones_seccion','dashboard_state','sidebar_state'].forEach(k => localStorage.removeItem(k));
+            sessionStorage.clear();
+        }
+        sessionStorage.setItem(key, serverBoot);
+    } catch(e) {}
+});// SEGURIDAD: evitar restaurar sesión tras reinicio/fallo del servidor
+document.addEventListener('DOMContentLoaded', function() {
+    const serverBoot = document.querySelector('meta[name="app-boot"]')?.content || Date.now();
+    const lastBoot = sessionStorage.getItem('sigejub-boot');
+    if (!lastBoot) {
+        sessionStorage.setItem('sigejub-boot', serverBoot);
+    } else if (lastBoot !== serverBoot) {
+        // Servidor reiniciado - forzar volver al dashboard/inicio y limpiar navegación guardada
+        sessionStorage.setItem('sigejub-boot', serverBoot);
+        localStorage.removeItem('seccion_activa');
+        localStorage.removeItem('expedientes_seccion');
+        localStorage.removeItem('prestaciones_seccion');
+    }
+});/**
  * dashboard.js — Script principal del dashboard.
  * Gestiona navegación por pestañas, sidebar, carga de secciones y modales.
  */

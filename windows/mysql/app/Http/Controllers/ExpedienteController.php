@@ -38,25 +38,31 @@ class ExpedienteController extends Controller
 
     public function buscarTrabajador(Request $request)
     {
-        $cedula = $request->get('cedula');
-        $cedula = trim($cedula);
+        $cedula = trim((string) $request->get('cedula'));
 
         // Buscar coincidencia exacta primero
         $trabajador = Trabajador::where('cedula', $cedula)->first();
 
-        // Si no encontró, intentar sin el prefijo (V-, E-, etc.)
+        // Si no encontró, intentar sin el prefijo (V-, E-, etc.) y solo por el número
         if (!$trabajador) {
             $trabajador = Trabajador::where('cedula', 'like', "%{$cedula}%")->first();
+        }
+        if (!$trabajador) {
+            $soloNumeros = preg_replace('/[^0-9]/', '', $cedula);
+            if ($soloNumeros !== '') {
+                $trabajador = Trabajador::where('cedula', 'like', "%{$soloNumeros}%")->first();
+            }
         }
 
         if (!$trabajador) {
             return response()->json(['error' => 'Trabajador no encontrado'], 404);
         }
 
-        $solicitud = Solicitud::where('trabajador_id', $trabajador->id)->first();
-        if (!$solicitud) {
-            return response()->json(['error' => 'El trabajador no tiene ninguna solicitud registrada'], 404);
-        }
+        // La solicitud es opcional: el expediente se puede abrir incluso si el
+        // trabajador todavía no tiene solicitud registrada.
+        $solicitud = Solicitud::where('trabajador_id', $trabajador->id)
+            ->orderByDesc('created_at')
+            ->first();
 
         $yaTieneExpediente = Expediente::where('trabajador_id', $trabajador->id)->exists();
         if ($yaTieneExpediente) {
@@ -66,6 +72,7 @@ class ExpedienteController extends Controller
         return response()->json([
             'trabajador' => $trabajador,
             'solicitud' => $solicitud,
+            'tiene_solicitud' => (bool) $solicitud,
         ]);
     }
 
@@ -73,16 +80,18 @@ class ExpedienteController extends Controller
     {
         $validated = $request->validate([
             'trabajador_id' => 'required|exists:trabajadores,id',
-            'solicitud_id' => 'required|exists:solicitudes,id',
+            // La solicitud dejó de ser obligatoria: el expediente puede abrirse
+            // antes de que el trabajador tenga una solicitud aprobada.
+            'solicitud_id' => 'nullable|exists:solicitudes,id',
             'foto_carnet' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // Validación de negocio: solicitud debe estar aprobada
-        $solicitud = Solicitud::findOrFail($validated['solicitud_id']);
-        if ($solicitud->estado !== 'aprobado') {
+        if (empty($validated['solicitud_id'])) {
+            $validated['solicitud_id'] = null;
+        } elseif (!$this->solicitudPerteneceAlTrabajador((int) $validated['solicitud_id'], (int) $validated['trabajador_id'])) {
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Solo se puede crear expediente con solicitud aprobada.',
+                'mensaje' => 'La solicitud indicada no pertenece al trabajador seleccionado.',
             ], 422);
         }
 
@@ -103,6 +112,10 @@ class ExpedienteController extends Controller
 
         $expediente = Expediente::create($validated);
 
+        // Si el trabajador ya traía cláusulas de la convención colectiva
+        // seleccionadas desde su ficha, se aplican al nuevo expediente.
+        $this->copiarClausulasDelTrabajador($expediente);
+
         if ($foto) {
             $expediente->foto_carnet = app(ImageStorageService::class)
                 ->guardar($foto, 'expedientes/fotos', 'exp_' . $expediente->id);
@@ -122,8 +135,102 @@ class ExpedienteController extends Controller
 
     public function show($id)
     {
-        $expediente = Expediente::with('trabajador', 'solicitud', 'documentos', 'recibos')->findOrFail($id);
+        $expediente = Expediente::with('trabajador', 'solicitud', 'documentos', 'recibos', 'clausulas')
+            ->findOrFail($id);
         return response()->json($expediente);
+    }
+
+    /**
+     * Cláusulas de la convención colectiva del expediente: listado y selección.
+     */
+    public function clausulas($id)
+    {
+        $expediente = Expediente::with('clausulas')->findOrFail($id);
+
+        return response()->json([
+            'expediente_id' => $expediente->id,
+            'disponibles' => $this->catalogoClausulas(),
+            'seleccionadas' => $expediente->clausulas->map(fn($c) => [
+                'id' => $c->id,
+                'numero' => $c->numero,
+                'nombre' => $c->nombre,
+                'tipo_calculo' => $c->tipo_calculo,
+                'valor' => (float) $c->valor,
+                'por_anio' => (bool) $c->por_anio,
+                'observaciones' => $c->pivot->observaciones ?? null,
+            ])->values(),
+        ]);
+    }
+
+    public function actualizarClausulas(Request $request, $id)
+    {
+        $expediente = Expediente::findOrFail($id);
+
+        $validated = $request->validate([
+            'clausulas' => 'nullable|array',
+            'clausulas.*' => 'integer|exists:clausulas_convencion,id',
+            'observaciones' => 'nullable|string|max:255',
+        ]);
+
+        $ids = collect($validated['clausulas'] ?? [])
+            ->map(fn($v) => (int) $v)
+            ->unique()
+            ->values();
+
+        $sync = $ids->mapWithKeys(fn($clausulaId) => [
+            $clausulaId => ['observaciones' => $validated['observaciones'] ?? null],
+        ])->all();
+
+        $expediente->clausulas()->sync($sync);
+
+        $trabajador = $expediente->trabajador;
+        Activity::log('updated', 'expediente', $expediente->id,
+            'Se actualizaron las cláusulas de convención colectiva del expediente de '
+            . ($trabajador ? "{$trabajador->nombres} {$trabajador->apellidos}" : "ID {$expediente->trabajador_id}"));
+
+        return response()->json([
+            'estado' => 'success',
+            'mensaje' => 'Cláusulas de la convención colectiva actualizadas.',
+            'seleccionadas' => $expediente->clausulas()->get()->map(fn($c) => $c->id)->values(),
+        ]);
+    }
+
+    /**
+     * Catálogo de cláusulas activas para los selectores.
+     */
+    private function catalogoClausulas()
+    {
+        return \App\Models\ClausulaConvencion::activas()
+            ->orderBy('numero')
+            ->get(['id', 'numero', 'nombre', 'descripcion', 'tipo_calculo', 'valor', 'por_anio']);
+    }
+
+    private function solicitudPerteneceAlTrabajador(int $solicitudId, int $trabajadorId): bool
+    {
+        return Solicitud::where('id', $solicitudId)
+            ->where('trabajador_id', $trabajadorId)
+            ->exists();
+    }
+
+    /**
+     * Copia al expediente las cláusulas que el trabajador tenía seleccionadas
+     * en su ficha antes de tener expediente digital.
+     */
+    private function copiarClausulasDelTrabajador(Expediente $expediente): void
+    {
+        $ids = $expediente->trabajador?->clausulas_convencion ?? [];
+        $ids = collect(is_array($ids) ? $ids : [])
+            ->map(fn($v) => (int) (is_array($v) ? ($v['id'] ?? 0) : $v))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        $validas = \App\Models\ClausulaConvencion::whereIn('id', $ids)->pluck('id');
+        $expediente->clausulas()->syncWithoutDetaching($validas->all());
     }
 
     public function updateDocumentoStatus(Request $request, $id)

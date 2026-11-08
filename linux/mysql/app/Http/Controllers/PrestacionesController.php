@@ -21,10 +21,14 @@ class PrestacionesController extends Controller
 {
     public function index(Request $request)
     {
-        $expedientes = Expediente::with(['trabajador.prestacion', 'solicitud'])
+        // El expediente ya no exige solicitud: se incluyen los que no tienen
+        // solicitud y los que la tienen aprobada. Los expedientes cuya solicitud
+        // fue rechazada quedan fuera del cálculo.
+        $expedientes = Expediente::with(['trabajador.prestacion', 'solicitud', 'clausulas'])
             ->whereHas('trabajador')
-            ->whereHas('solicitud', function ($q) {
-                $q->where('estado', 'aprobado');
+            ->where(function ($q) {
+                $q->whereNull('solicitud_id')
+                  ->orWhereHas('solicitud', fn($s) => $s->where('estado', 'aprobado'));
             })
             ->where('estado_global', 100)
             ->paginate(min($request->get('per_page', 50), 100))
@@ -45,7 +49,8 @@ class PrestacionesController extends Controller
                     'foto_carnet' => $exp->foto_carnet,
                     'expediente_id' => $exp->id,
                     'solicitud_id' => $exp->solicitud_id,
-                    'tipo_jubilacion' => $exp->solicitud->tipo_jubilacion ?? '—',
+                    'tipo_jubilacion' => $exp->solicitud->tipo_jubilacion ?? 'Sin solicitud',
+                    'clausulas' => $exp->clausulas->count(),
                     'tiene_prestacion' => $prestacion ? true : false,
                     'monto' => $prestacion->monto ?? null,
                     'anios_servicio_calc' => $prestacion->anios_servicio ?? null,
@@ -62,13 +67,34 @@ class PrestacionesController extends Controller
 
     public function show($id)
     {
-        $trabajador = Trabajador::findOrFail($id);
-        $expediente = Expediente::where('trabajador_id', $id)->firstOrFail();
-        $solicitud = Solicitud::findOrFail($expediente->solicitud_id);
+        // Se permite abrir expedientes de trabajadores dados de baja (histórico).
+        $trabajador = Trabajador::withTrashed()->findOrFail($id);
+        $expediente = Expediente::with('clausulas')->where('trabajador_id', $id)->firstOrFail();
+        // La solicitud es opcional: un expediente puede abrirse sin solicitud.
+        $solicitud = $expediente->solicitud_id ? Solicitud::find($expediente->solicitud_id) : null;
         $prestacion = Prestacion::where('trabajador_id', $id)->first();
         $primas = \App\Models\Prima::activos()->get();
 
         $tasaActual = TasaCambio::obtenerTasaActual();
+
+        // Cláusulas de la convención colectiva aplicables al expediente con el
+        // monto que cada una aporta al cálculo (0 en las informativas).
+        $sueldoBaseT = (float) ($trabajador->sueldo_base ?? 0);
+        $aniosT = (float) ($trabajador->total_anos_servicio ?? 0);
+        $clausulas = $expediente->clausulas->map(function ($c) use ($sueldoBaseT, $aniosT) {
+            return [
+                'id' => $c->id,
+                'numero' => $c->numero,
+                'nombre' => $c->nombre,
+                'descripcion' => $c->descripcion,
+                'tipo_calculo' => $c->tipo_calculo,
+                'etiqueta_tipo' => \App\Models\ClausulaConvencion::TIPOS[$c->tipo_calculo] ?? $c->tipo_calculo,
+                'valor' => (float) $c->valor,
+                'por_anio' => (bool) $c->por_anio,
+                'observaciones' => $c->pivot->observaciones ?? null,
+                'monto_referencia' => $c->monto($sueldoBaseT, $sueldoBaseT, $aniosT),
+            ];
+        })->values();
 
         return response()->json([
             'trabajador' => [
@@ -100,10 +126,13 @@ class PrestacionesController extends Controller
                 'estado_global' => $expediente->estado_global,
             ],
             'solicitud' => [
-                'tipo_jubilacion' => $solicitud->tipo_jubilacion,
-                'periodo' => $solicitud->periodo,
-                'fecha_solicitud' => $solicitud->fecha_solicitud,
+                'id' => $solicitud?->id,
+                'tipo_jubilacion' => $solicitud->tipo_jubilacion ?? 'Sin solicitud',
+                'estado' => $solicitud->estado ?? null,
+                'periodo' => $solicitud?->periodo,
+                'fecha_solicitud' => $solicitud?->fecha_solicitud,
             ],
+            'clausulas' => $clausulas,
             'prestacion' => $prestacion ? [
                 'id' => $prestacion->id,
                 'monto' => $prestacion->monto,
@@ -148,8 +177,10 @@ class PrestacionesController extends Controller
             'detalles' => 'nullable|array',
             'sueldo_integral' => 'nullable|numeric',
             'total_primas' => 'nullable|numeric',
+            'total_clausulas' => 'nullable|numeric|min:0',
             'porcentaje_jubilacion' => 'nullable|numeric',
             'anio' => 'required|integer|between:1900,' . date('Y'),
+            'mes' => 'nullable|integer|min:1|max:12',
             'fideicomiso_monto' => 'nullable|numeric|min:0|max:999999999999',
             'fideicomiso_observaciones' => 'nullable|string|max:2000',
         ]);
@@ -163,10 +194,10 @@ class PrestacionesController extends Controller
             ], 422);
         }
 
-        if (!ValidationService::trabajadorConSolicitudAprobada($request->trabajador_id)) {
+        if (!ValidationService::trabajadorAptoParaPrestaciones((int) $request->trabajador_id)) {
             return response()->json([
                 'estado' => 'error',
-                'mensaje' => 'Solo se pueden calcular prestaciones para trabajadores con solicitud aprobada.',
+                'mensaje' => 'El trabajador debe tener un expediente digital y su solicitud no puede estar rechazada.',
             ], 422);
         }
 
@@ -206,11 +237,15 @@ class PrestacionesController extends Controller
 
         $detalles = $request->detalles ?? [];
         $anioPrestacion = (string) $request->anio;
+        $mesPrestacion = $request->filled('mes') ? (int) $request->mes : null;
 
-        $codigoNomina = 'NOM-' . $anioPrestacion;
+        // La planilla es mensual: el código incluye el mes cuando se indicó.
+        $codigoNomina = $mesPrestacion
+            ? 'NOM-' . $anioPrestacion . '-' . str_pad((string) $mesPrestacion, 2, '0', STR_PAD_LEFT)
+            : 'NOM-' . $anioPrestacion;
 
         $nomina = Nomina::firstOrCreate(
-            ['periodo' => $anioPrestacion],
+            ['periodo' => $anioPrestacion, 'mes' => $mesPrestacion],
             ['codigo' => $codigoNomina, 'estado' => 'borrador']
         );
 
@@ -248,8 +283,10 @@ class PrestacionesController extends Controller
         $nombre = "{$t->nombres} {$t->apellidos}";
         NotificationService::prestacionCalculada($nombre, $request->monto);
 
+        $periodoNomina = $mesPrestacion ? $anioPrestacion . ' · ' . (Nomina::MESES[$mesPrestacion] ?? '') : $anioPrestacion;
+
         return response()->json([
-            'mensaje' => 'Prestaciones guardadas y nómina ' . $anioPrestacion . ' generada correctamente.',
+            'mensaje' => 'Prestaciones guardadas y nómina ' . $periodoNomina . ' generada correctamente.',
             'prestacion' => $prestacion,
         ]);
     }
@@ -290,7 +327,8 @@ class PrestacionesController extends Controller
     {
         $trabajador = Trabajador::findOrFail($id);
         $expediente = Expediente::where('trabajador_id', $id)->firstOrFail();
-        $solicitud = Solicitud::findOrFail($expediente->solicitud_id);
+        // Puede no existir solicitud: el comprobante se emite con el expediente.
+        $solicitud = $expediente->solicitud_id ? Solicitud::find($expediente->solicitud_id) : null;
         $prestacion = Prestacion::where('trabajador_id', $id)->first();
 
         $sueldoBase = (float) ($request->sueldo_base ?? $trabajador->sueldo_base ?? 0);

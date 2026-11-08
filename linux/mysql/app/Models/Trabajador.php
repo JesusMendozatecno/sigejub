@@ -63,11 +63,13 @@ class Trabajador extends Model
         'grado_cargo',
         'unidad_id',
         'tipo_jubilacion_id',
+        'clausulas_convencion',
     ];
 
     protected $casts = [
         'asignacion' => 'string',
         'actividad_universitaria' => 'boolean',
+        'clausulas_convencion' => 'array',
     ];
 
     public function getEstatusAttribute()

@@ -1,152 +1,255 @@
 @echo off
-title SIGEJUB - Servidor
+setlocal EnableExtensions EnableDelayedExpansion
+title SIGEJUB - Iniciando sistema
 cd /d "%~dp0"
 chcp 65001 >nul 2>&1
 
-rem =============================================
-rem SIN LIMITE DE 30s PARA EL SERVIDOR php -S
-rem php -S usa max_execution_time=30 de php.ini
-rem y mataba la 1a peticion con Maximum execution time exceeded
-rem en arranques lentos. PHP_INI_SCAN_DIR agrega este ini ENCIMA de
-rem php.ini sin tocar la instalacion de XAMPP
-rem =============================================
-if not exist "%~dp0ini" mkdir "%~dp0ini"
-if not exist "%~dp0ini\sigejub.ini" echo max_execution_time = 0 >"%~dp0ini\sigejub.ini"
-set "PHP_INI_SCAN_DIR=%~dp0ini"
+set "APP_DIR=%~dp0"
+if "%APP_DIR:~-1%"=="\" set "APP_DIR=%APP_DIR:~0,-1%"
+set "LOG_DIR=%APP_DIR%\storage\logs"
+if not exist "%LOG_DIR%" mkdir "%LOG_DIR%" >nul 2>&1
+set "STARTLOG=%LOG_DIR%\arranque.log"
+set "SRV_LOG=%LOG_DIR%\servidor.log"
+set "SRV_ERR=%LOG_DIR%\servidor-error.log"
 
-echo ============================================
-echo  SIGEJUB - Sistema de Jubilaciones
-echo ============================================
+echo ==================================================
+echo  SIGEJUB - Sistema Integral de Gestion de Jubilaciones
+echo ==================================================
 echo.
 
-:: =============================================
-:: BUSCAR PHP - PATH, luego rutas XAMPP comunes
-:: =============================================
-set PHP_PATH=
-where php >nul 2>&1
-if %ERRORLEVEL% equ 0 (
-    for /f "delims=" %%i in ('where php') do (
+rem ==================================================
+rem SIN LIMITE DE 30s PARA EL SERVIDOR php -S
+rem php -S usa max_execution_time=30 de php.ini y eso
+rem cortaba la primera peticion en arranques lentos.
+rem PHP_INI_SCAN_DIR agrega este ini ENCIMA de php.ini
+rem sin tocar la instalacion de XAMPP.
+rem ==================================================
+if not exist "%APP_DIR%\ini" mkdir "%APP_DIR%\ini" >nul 2>&1
+if not exist "%APP_DIR%\ini\sigejub.ini" echo max_execution_time = 0 >"%APP_DIR%\ini\sigejub.ini"
+set "PHP_INI_SCAN_DIR=%APP_DIR%\ini"
+
+rem ==================================================
+rem 1. LOCALIZAR PHP
+rem    Orden: PHP portable incluido en la instalacion,
+rem    PATH del sistema y rutas conocidas de XAMPP.
+rem ==================================================
+set "PHP_PATH="
+if exist "%APP_DIR%\php\php.exe" set "PHP_PATH=%APP_DIR%\php\php.exe"
+
+if not defined PHP_PATH (
+    for /f "delims=" %%i in ('where php 2^>nul') do (
         if not defined PHP_PATH set "PHP_PATH=%%i"
     )
 )
 
 if not defined PHP_PATH (
-    for %%P in (C D E F) do (
-        if exist "%%P:\xampp\php\php.exe" set "PHP_PATH=%%P:\xampp\php\php.exe"
-        if defined PHP_PATH goto :php_found
-    )
-    for %%P in (C D E F) do (
-        if exist "%%P:\php\php.exe" set "PHP_PATH=%%P:\php\php.exe"
-        if defined PHP_PATH goto :php_found
-    )
-    for %%P in (C D E F) do (
-        if exist "%%P:\Program Files\php\php.exe" set "PHP_PATH=%%P:\Program Files\php\php.exe"
-        if defined PHP_PATH goto :php_found
-    )
-    for %%P in (C D E F) do (
-        if exist "%%P:\Program Files (x86)\php\php.exe" set "PHP_PATH=%%P:\Program Files (x86)\php\php.exe"
-        if defined PHP_PATH goto :php_found
+    for %%P in (C D E F G) do (
+        if not defined PHP_PATH if exist "%%P:\xampp\php\php.exe" set "PHP_PATH=%%P:\xampp\php\php.exe"
     )
 )
-
-:php_found
 if not defined PHP_PATH (
-    echo [ERROR] PHP no fue encontrado.
-    echo.
-    echo Se busco en: PATH del sistema, C:\xampp\php, C:\php, C:\Program Files\php
-    echo.
-    pause
-    exit /b 1
+    for %%P in (C D E F G) do (
+        if not defined PHP_PATH if exist "%%P:\php\php.exe" set "PHP_PATH=%%P:\php\php.exe"
+    )
+)
+if not defined PHP_PATH (
+    for %%P in (C D E F G) do (
+        if not defined PHP_PATH if exist "%%P:\Program Files\php\php.exe" set "PHP_PATH=%%P:\Program Files\php\php.exe"
+    )
+)
+if not defined PHP_PATH (
+    for %%P in (C D E F G) do (
+        if not defined PHP_PATH if exist "%%P:\Program Files (x86)\php\php.exe" set "PHP_PATH=%%P:\Program Files (x86)\php\php.exe"
+    )
 )
 
-echo [OK] PHP encontrado en: %PHP_PATH%
+if not defined PHP_PATH goto :sin_php
+echo [OK] PHP: %PHP_PATH%
 echo.
 
-:: =============================================
-:: VERIFICAR PHP Y ARTISAN
-:: =============================================
+rem ==================================================
+rem 2. VERIFICAR PHP Y ARTISAN
+rem ==================================================
 "%PHP_PATH%" -r "echo 'PHP_OK';" >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo [ERROR] PHP no responde. Verifica la instalacion.
-    pause
-    exit /b 1
-)
-if not exist "artisan" (
-    echo [ERROR] No se encuentra el archivo 'artisan' en el directorio actual.
-    echo.
-    echo         Ejecuta start.bat desde: C:\xampp\htdocs\sigejub 2
-    echo         O desde la carpeta donde instalaste SIGEJUB.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto :php_mudo
+if not exist "%APP_DIR%\artisan" goto :sin_artisan
+if not exist "%APP_DIR%\vendor\autoload.php" goto :sin_vendor
 
-:: =============================================
-:: CREAR .env si no existe
-:: =============================================
-if not exist ".env" (
-    if exist ".env.example" (
-        echo [SETUP] Creando archivo .env...
-        copy ".env.example" ".env" >nul 2>&1
-        "%PHP_PATH%" artisan key:generate --force
-        echo [SETUP] .env creado y APP_KEY generada.
-        echo.
+rem ==================================================
+rem 3. ARCHIVO .env Y APP_KEY
+rem ==================================================
+if not exist "%APP_DIR%\.env" (
+    if exist "%APP_DIR%\.env.example" (
+        echo [SETUP] Creando archivo .env ...
+        copy "%APP_DIR%\.env.example" "%APP_DIR%\.env" >nul 2>&1
     ) else (
-        echo [AVISO] No se encontro .env.example
-        echo.
+        goto :sin_env
+    )
+)
+findstr /B /C:"APP_KEY=base64:" "%APP_DIR%\.env" >nul 2>&1
+if errorlevel 1 (
+    echo [SETUP] Generando APP_KEY ...
+    "%PHP_PATH%" artisan key:generate --force >nul 2>&1
+)
+
+rem ==================================================
+rem 4. ENLACE public\storage -> storage\app\public
+rem ==================================================
+if not exist "%APP_DIR%\public\storage" (
+    if exist "%APP_DIR%\storage\app\public" (
+        cmd /c mklink /J "%APP_DIR%\public\storage" "%APP_DIR%\storage\app\public" >nul 2>&1
+        if not exist "%APP_DIR%\public\storage" "%PHP_PATH%" artisan storage:link >nul 2>&1
     )
 )
 
-:: =============================================
-:: LEER PUERTO desde APP_URL en .env
-:: =============================================
-set PORT=8000
-if exist ".env" (
-    for /f "tokens=2 delims==" %%A in ('findstr "^APP_URL=" .env 2^>nul') do set "APP_URL_VAL=%%A"
-)
-if defined APP_URL_VAL set "PORT=%APP_URL_VAL:http://localhost:=%"
-if "%PORT%"=="" set PORT=8000
-set URL=http://localhost:%PORT%
-
-:: =============================================
-:: VERIFICAR SI EL SERVIDOR YA ESTA CORRIENDO
-:: =============================================
-netstat -ano 2>nul | findstr /C:":%PORT% " >nul 2>&1
-if %ERRORLEVEL% equ 0 (
-    echo [OK] Servidor ya disponible en %URL%
-    start "" "%URL%"
-    exit /b 0
+rem ==================================================
+rem 5. BASE DE DATOS PORTATIL (si el instalador la incluyo)
+rem ==================================================
+if exist "%APP_DIR%\sigejub-start-db.bat" (
+    call "%APP_DIR%\sigejub-start-db.bat"
 )
 
-:: =============================================
-:: INICIAR SERVIDOR EN SEGUNDO PLANO
-:: =============================================
-echo [INICIANDO] Servidor en %URL% ...
-powershell -Command "Start-Process -FilePath '%PHP_PATH%' -ArgumentList 'artisan serve --port=%PORT%' -WindowStyle Hidden -WorkingDirectory '%~dp0'"
-
-:: =============================================
-rem ESPERAR A QUE EL PUERTO ESTE LISTO max 30s
-:: =============================================
-echo Esperando respuesta del servidor...
-setlocal enabledelayedexpansion
-for /l %%i in (1,1,30) do (
-    ping -n 2 127.0.0.1 >nul
-    netstat -ano 2>nul | findstr /C:":%PORT% " >nul 2>&1
-    if !ERRORLEVEL! equ 0 (
-        endlocal
-        echo [OK] Servidor listo.
-        goto :server_ready
-    )
+rem ==================================================
+rem 6. PUERTO (desde APP_URL) Y URL
+rem ==================================================
+set "APP_URL_VAL="
+set "PORT="
+if exist "%APP_DIR%\.env" (
+    for /f "usebackq tokens=2 delims==" %%A in (`findstr /B /C:"APP_URL=" "%APP_DIR%\.env"`) do set "APP_URL_VAL=%%A"
 )
-endlocal
+if defined APP_URL_VAL (
+    set "PORT=!APP_URL_VAL:http://localhost:=!"
+    set "PORT=!PORT:http://127.0.0.1:=!"
+    set "PORT=!PORT:https://localhost:=!"
+    set "PORT=!PORT:https://127.0.0.1:=!"
+    set "PORT=!PORT:http://=!"
+    set "PORT=!PORT:https://=!"
+    for /f "tokens=1 delims=/" %%B in ("!PORT!") do set "PORT=%%B"
+    set "PORT=!PORT:*:=!"
+)
+if not defined PORT set "PORT=8000"
+set "PORT=!PORT: =!"
+echo !PORT!| findstr /R "^[0-9][0-9]*$" >nul 2>&1
+if errorlevel 1 set "PORT=8000"
+set "URL=http://localhost:!PORT!"
 
-echo [TIMEOUT] El servidor no respondio en 30s.
-echo Verifica que PostgreSQL este corriendo y la base de datos este configurada en .env
+echo [INFO] Direccion del sistema: !URL!
 echo.
-echo Presiona cualquier tecla para cerrar...
+
+rem ==================================================
+rem 7. SI EL SERVIDOR YA RESPONDE, SOLO ABRIR EL NAVEGADOR
+rem ==================================================
+call :esperar "1"
+if "!SERVIDOR_OK!"=="1" (
+    echo [OK] El servidor ya estaba en ejecucion.
+    start "" "!URL!"
+    goto :fin_ok
+)
+
+rem ==================================================
+rem 8. INICIAR EL SERVIDOR EN SEGUNDO PLANO
+rem ==================================================
+echo [INICIANDO] Servidor en !URL! ...
+if exist "%SRV_LOG%" del "%SRV_LOG%" >nul 2>&1
+if exist "%SRV_ERR%" del "%SRV_ERR%" >nul 2>&1
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%PHP_PATH%' -ArgumentList 'artisan','serve','--host=127.0.0.1','--port=!PORT!' -WorkingDirectory '%APP_DIR%' -WindowStyle Hidden -RedirectStandardOutput '%SRV_LOG%' -RedirectStandardError '%SRV_ERR%'"
+
+echo Esperando la respuesta del servidor (max 60s) ...
+call :esperar "60"
+
+if "!SERVIDOR_OK!"=="1" (
+    echo [OK] Servidor listo.
+    start "" "!URL!"
+    goto :fin_ok
+)
+
+rem ==================================================
+rem 9. FALLO: REGISTRAR Y AVISAR AL USUARIO
+rem ==================================================
+echo [%DATE% %TIME%] ERROR: el servidor no respondio en !URL! >>"%STARTLOG%"
+if exist "%SRV_ERR%" type "%SRV_ERR%" >>"%STARTLOG%" 2>nul
+if exist "%SRV_LOG%" type "%SRV_LOG%" >>"%STARTLOG%" 2>nul
+
+echo.
+echo [ERROR] No se pudo iniciar el servidor.
+echo.
+if exist "%SRV_ERR%" (
+    echo ----- Detalle del error -----
+    type "%SRV_ERR%"
+    echo -----------------------------
+)
+if exist "%SRV_LOG%" (
+    echo ----- Salida del servidor -----
+    type "%SRV_LOG%"
+    echo -------------------------------
+)
+echo.
+echo Revisa que la base de datos este activa y configurada en .env
+echo Registro completo: %STARTLOG%
+echo.
+powershell -NoProfile -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('No se pudo iniciar SIGEJUB.' + [Environment]::NewLine + [Environment]::NewLine + 'Revisa que la base de datos este activa.' + [Environment]::NewLine + 'Detalle en: %STARTLOG%','SIGEJUB','OK','Warning')" >nul 2>&1
 pause >nul
 exit /b 1
 
-:server_ready
-ping -n 2 127.0.0.1 >nul
-start "" "%URL%"
-echo [OK] Servidor corriendo en %URL%
+rem ==================================================
+rem SUBRUTINA: esperar a que http://127.0.0.1:PORT responda 200
+rem Recibe el numero de intentos (1 segundo cada uno)
+rem ==================================================
+:esperar
+set "SERVIDOR_OK=0"
+set /a "INTENTOS=%~1"
+if %INTENTOS% LSS 1 set "INTENTOS=1"
+for /l %%i in (1,1,%INTENTOS%) do (
+    powershell -NoProfile -Command "try { $r = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:!PORT!/' -TimeoutSec 3; if ($r.StatusCode -eq 200) { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
+    if not errorlevel 1 (
+        set "SERVIDOR_OK=1"
+        goto :eof
+    )
+    ping -n 2 127.0.0.1 >nul
+)
+goto :eof
+
+:fin_ok
+echo.
+echo [OK] SIGEJUB esta disponible en !URL!
+echo     Para detener el servidor ejecuta detener.bat
+ping -n 3 127.0.0.1 >nul
+endlocal
+exit /b 0
+
+:sin_php
+echo [ERROR] No se encontro PHP 8.2 o superior.
+echo.
+echo Se busco en: %APP_DIR%\php, PATH, C:\xampp\php, C:\php,
+echo              C:\Program Files\php y C:\Program Files (x86)\php
+echo.
+echo Reinstala SIGEJUB para incluir PHP o instala XAMPP.
+powershell -NoProfile -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('No se encontro PHP en el equipo.' + [Environment]::NewLine + [Environment]::NewLine + 'Reinstala SIGEJUB para incluir PHP o instala XAMPP.','SIGEJUB','OK','Warning')" >nul 2>&1
+pause >nul
+exit /b 1
+
+:php_mudo
+echo [ERROR] PHP no responde. Puede faltar el runtime VC++.
+powershell -NoProfile -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('PHP no responde. Instala el runtime Microsoft Visual C++ x64 y vuelve a intentar.','SIGEJUB','OK','Warning')" >nul 2>&1
+pause >nul
+exit /b 1
+
+:sin_artisan
+echo [ERROR] No se encuentra el archivo 'artisan' en %APP_DIR%.
+echo         Ejecuta este iniciador desde la carpeta de instalacion de SIGEJUB.
+pause >nul
+exit /b 1
+
+:sin_vendor
+echo [ERROR] Faltan las dependencias de la aplicacion (carpeta vendor).
+echo         Reinstala SIGEJUB.
+powershell -NoProfile -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Faltan las dependencias de la aplicacion (carpeta vendor).' + [Environment]::NewLine + 'Reinstala SIGEJUB.','SIGEJUB','OK','Warning')" >nul 2>&1
+pause >nul
+exit /b 1
+
+:sin_env
+echo [ERROR] No existe .env ni .env.example en la instalacion.
+echo         Reinstala SIGEJUB.
+pause >nul
+exit /b 1

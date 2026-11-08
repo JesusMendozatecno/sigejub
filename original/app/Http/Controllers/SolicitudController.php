@@ -19,7 +19,7 @@ class SolicitudController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Solicitud::with('trabajador');
+        $query = Solicitud::with(['trabajador' => function($q){ $q->withTrashed(); }]);
 
         if ($estado = $request->get('estado')) {
             $estadosValidos = ['pendiente', 'aprobado', 'rechazado', 'revision'];
@@ -153,7 +153,8 @@ class SolicitudController extends Controller
             ]);
 
             // Verificar si tiene solicitud rechazada → reutilizar
-            $solicitudRechazada = Solicitud::where('trabajador_id', $validated['trabajador_id'])
+            $solicitudRechazada = Solicitud::with(['trabajador' => function($q){ $q->withTrashed(); }])
+                ->where('trabajador_id', $validated['trabajador_id'])
                 ->where('estado', 'rechazado')
                 ->first();
 
@@ -188,8 +189,16 @@ class SolicitudController extends Controller
             $validated['estado'] = 'revision';
 
             $solicitud = Solicitud::create($validated);
-
-            $t = $solicitud->load('trabajador')->trabajador;
+            // Copia de los datos del trabajador en la solicitud (para que el
+            // nombre siga visible aunque el trabajador se dé de baja).
+            $t = Trabajador::withTrashed()->find($solicitud->trabajador_id);
+            if ($t && empty($solicitud->trabajador_nombres)) {
+                $solicitud->update([
+                    'trabajador_nombres' => $t->nombres,
+                    'trabajador_apellidos' => $t->apellidos,
+                    'trabajador_cedula' => $t->cedula,
+                ]);
+            }
             $nombre = $t ? "{$t->nombres} {$t->apellidos}" : "ID {$validated['trabajador_id']}";
             Activity::log('created', 'solicitud', $solicitud->id,
                 "Se registró una solicitud de jubilación para {$nombre}");
@@ -214,7 +223,7 @@ class SolicitudController extends Controller
 
     public function show($id)
     {
-        $solicitud = Solicitud::with('trabajador')->findOrFail($id);
+        $solicitud = Solicitud::with(['trabajador' => function($q){ $q->withTrashed(); }])->findOrFail($id);
         return response()->json($solicitud);
     }
 
