@@ -14,8 +14,10 @@ class TasaCambioController extends Controller
         $query = TasaCambio::with('usuario');
 
         if ($search = $request->get('search')) {
-            $query->where('fuente', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('fuente', 'like', "%{$search}%")
                   ->orWhere('observacion', 'like', "%{$search}%");
+            });
         }
 
         if ($request->boolean('solo_activas')) {

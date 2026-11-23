@@ -134,9 +134,25 @@ function onAvatarSelect(e) {
                 aspectRatio: 1,
                 viewMode: 1,
                 dragMode: 'move',
-                cropBoxResizable: true,
+                cropBoxResizable: false,
                 cropBoxMovable: true,
+                autoCropArea: 0.88,
+                guides: false,
+                background: false,
+                toggleDragModeOnDblclick: false,
+                checkOrientation: false,
             });
+            // Ajusta la foto para que cubra el recorte circular (sin franjas vacías) y la centra.
+            setTimeout(function () {
+                if (!cropper) return;
+                var img = cropper.getImageData();
+                if (!img.naturalWidth) return;
+                cropper.zoomTo(Math.max(
+                    container.clientWidth / img.naturalWidth,
+                    container.clientHeight / img.naturalHeight
+                ));
+                cropper.center();
+            }, 150);
         }, 200);
     };
     reader.readAsDataURL(file);

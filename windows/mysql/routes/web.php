@@ -237,15 +237,18 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/prestaciones', [PrestacionesController::class, 'index']);
+    Route::get('/prestaciones/letras', [PrestacionesController::class, 'letras']);
     Route::get('/prestaciones/{id}', [PrestacionesController::class, 'show']);
     Route::post('/prestaciones', [PrestacionesController::class, 'store']);
     Route::post('/prestaciones/{id}/comprobante', [PrestacionesController::class, 'comprobante']);
     Route::post('/prestaciones/{id}/fideicomiso-documento', [PrestacionesController::class, 'subirDocumentoFideicomiso']);
 
     Route::get('/expedientes', [ExpedienteController::class, 'index']);
+    Route::get('/expedientes/letras', [ExpedienteController::class, 'letras']);
     Route::get('/expedientes/listos-aprobacion', [ExpedienteController::class, 'listosParaAprobacion']);
     Route::get('/expedientes/buscar-trabajador', [ExpedienteController::class, 'buscarTrabajador']);
     Route::post('/expedientes', [ExpedienteController::class, 'store']);
+    Route::get('/expedientes/{id}/exportar', [ExpedienteController::class, 'exportar']);
     Route::get('/expedientes/{id}', [ExpedienteController::class, 'show']);
     Route::put('/expedientes/{id}/notas', [ExpedienteController::class, 'updateNotas']);
     Route::post('/expedientes/{id}/carta-aprobacion', [ExpedienteController::class, 'subirCartaAprobacion']);
@@ -321,4 +324,3 @@ Route::middleware('auth')->group(function () {
     Route::get('/reportes/proximos-jubilados', [App\Http\Controllers\ReporteController::class, 'proximosJubilados']);
     Route::get('/reportes/relacion-cargos/{id}', [App\Http\Controllers\ReporteController::class, 'relacionCargos']);
 });
-

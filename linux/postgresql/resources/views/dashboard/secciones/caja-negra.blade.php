@@ -571,7 +571,11 @@
     });
 
     /* ===== INIT ===== */
+    // Solo carga si la sección ya está visible; si no, lo hace el observer
+    // de abajo al activarse, evitando 4 peticiones innecesarias al entrar.
     document.addEventListener('DOMContentLoaded', () => {
+        const sec = document.getElementById('caja-negra');
+        if (!sec || !sec.classList.contains('active')) return;
         cargarStats();
         cargarUsuarios();
         cargarCajaNegra();

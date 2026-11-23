@@ -37,8 +37,11 @@ class MasterDataController extends Controller
         $query = DB::table($config['table']);
 
         if ($search = $request->get('search')) {
-            $query->where('nombre', 'like', "%{$search}%")
+            // Agrupado: sin el paréntesis el orWhere anula el filtro de activos.
+            $query->where(function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%")
                   ->orWhere('codigo', 'like', "%{$search}%");
+            });
         }
 
         if ($request->boolean('solo_activos')) {

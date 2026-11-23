@@ -126,7 +126,7 @@ class MasterDataSeeder extends Seeder
         // --- TIPOS DE JUBILACIÓN ---
         $jubilaciones = [
             ['nombre' => 'Antigüedad', 'codigo' => 'ANT', 'activo' => true],
-            ['nombre' => 'Invalidez', 'codigo' => 'INV', 'activo' => true],
+            ['nombre' => 'Incapacidad', 'codigo' => 'INC', 'activo' => true],
             ['nombre' => 'Especial', 'codigo' => 'ESP', 'activo' => true],
         ];
         $this->seedMissing('tipos_jubilacion', $jubilaciones);

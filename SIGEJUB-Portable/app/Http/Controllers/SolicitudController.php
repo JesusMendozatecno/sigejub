@@ -86,7 +86,9 @@ class SolicitudController extends Controller
 
             $total = Solicitud::count();
             $aprobadas = Solicitud::where('estado', 'aprobado')->count();
-            $tasaAprobacion = $total > 0 ? round(($aprobadas / $total) * 100) : 0;
+            $rechazadas = Solicitud::where('estado', 'rechazado')->count();
+            $resueltas = $aprobadas + $rechazadas;
+            $tasaAprobacion = $resueltas > 0 ? round(($aprobadas / $resueltas) * 100) : 0;
 
             $recientes = Solicitud::with('trabajador')
                 ->orderBy('created_at', 'desc')

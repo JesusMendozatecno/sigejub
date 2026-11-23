@@ -1,0 +1,102 @@
+.dashboard-render-zone table,
+.profile-wrapper table,
+.doc-wrapper table {
+    width: 100%;
+    border: 1px solid var(--border, #dbe4ef);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    background: var(--bg-card, #fff);
+}
+
+.dashboard-render-zone table thead th,
+.profile-wrapper table thead th,
+.doc-wrapper table thead th {
+    padding: 13px 15px;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent, #1a365d) 58%, #000);
+    background: color-mix(in srgb, var(--accent, #1a365d) 72%, #000 28%) !important;
+    color: #fff !important;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.35;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.dashboard-render-zone table thead tr:first-child th:first-child,
+.profile-wrapper table thead tr:first-child th:first-child,
+.doc-wrapper table thead tr:first-child th:first-child {
+    border-top-left-radius: 11px;
+}
+
+.dashboard-render-zone table thead tr:first-child th:last-child,
+.profile-wrapper table thead tr:first-child th:last-child,
+.doc-wrapper table thead tr:first-child th:last-child {
+    border-top-right-radius: 11px;
+}
+
+body.dark-mode .dashboard-render-zone table thead th,
+body.dark-mode .profile-wrapper table thead th,
+body.dark-mode .doc-wrapper table thead th {
+    background: color-mix(in srgb, var(--accent, #1a365d) 72%, #000 28%) !important;
+    color: #fff !important;
+}
+
+.dashboard-render-zone table tbody td,
+.dashboard-render-zone table tbody th,
+.profile-wrapper table tbody td,
+.profile-wrapper table tbody th,
+.doc-wrapper table tbody td,
+.doc-wrapper table tbody th {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-light, #e5ebf3);
+    color: var(--text-primary, #1e293b);
+    vertical-align: middle;
+}
+
+.dashboard-render-zone table tbody tr:nth-child(even) td,
+.dashboard-render-zone table tbody tr:nth-child(even) th,
+.profile-wrapper table tbody tr:nth-child(even) td,
+.profile-wrapper table tbody tr:nth-child(even) th,
+.doc-wrapper table tbody tr:nth-child(even) td,
+.doc-wrapper table tbody tr:nth-child(even) th {
+    background: color-mix(in srgb, var(--accent, #1a365d) 3%, var(--bg-card, #fff));
+}
+
+.dashboard-render-zone table tbody tr:hover td,
+.dashboard-render-zone table tbody tr:hover th,
+.profile-wrapper table tbody tr:hover td,
+.profile-wrapper table tbody tr:hover th,
+.doc-wrapper table tbody tr:hover td,
+.doc-wrapper table tbody tr:hover th {
+    background: color-mix(in srgb, var(--accent, #1a365d) 9%, var(--bg-card, #fff));
+}
+
+.dashboard-render-zone table tbody tr:last-child td,
+.dashboard-render-zone table tbody tr:last-child th,
+.profile-wrapper table tbody tr:last-child td,
+.profile-wrapper table tbody tr:last-child th,
+.doc-wrapper table tbody tr:last-child td,
+.doc-wrapper table tbody tr:last-child th {
+    border-bottom: 0;
+}
+
+body.dark-mode .dashboard-render-zone table tbody tr:nth-child(even) td,
+body.dark-mode .dashboard-render-zone table tbody tr:nth-child(even) th,
+body.dark-mode .profile-wrapper table tbody tr:nth-child(even) td,
+body.dark-mode .profile-wrapper table tbody tr:nth-child(even) th,
+body.dark-mode .doc-wrapper table tbody tr:nth-child(even) td,
+body.dark-mode .doc-wrapper table tbody tr:nth-child(even) th {
+    background: color-mix(in srgb, var(--accent, #1a365d) 7%, var(--bg-card, #1e293b));
+}
+
+body.dark-mode .dashboard-render-zone table tbody tr:hover td,
+body.dark-mode .dashboard-render-zone table tbody tr:hover th,
+body.dark-mode .profile-wrapper table tbody tr:hover td,
+body.dark-mode .profile-wrapper table tbody tr:hover th,
+body.dark-mode .doc-wrapper table tbody tr:hover td,
+body.dark-mode .doc-wrapper table tbody tr:hover th {
+    background: color-mix(in srgb, var(--accent, #1a365d) 13%, var(--bg-card, #1e293b)) !important;
+}

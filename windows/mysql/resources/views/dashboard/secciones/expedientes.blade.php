@@ -2,6 +2,407 @@
 <style>
 .carta-indicator { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; transition: background .2s; }
 .carta-indicator:hover { background: #e2e8f0; }
+/* ==== Autocompletado de cédula: 5 resultados visibles y scroll para los demás ==== */
+#autocompleteExpediente { max-height: 222px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent, #2563eb) #e2e8f0; }
+#autocompleteExpediente::-webkit-scrollbar { width: 9px; }
+#autocompleteExpediente::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 0 8px 8px 0; }
+#autocompleteExpediente::-webkit-scrollbar-thumb { background: var(--accent, #2563eb); border-radius: 8px; border: 2px solid #e2e8f0; }
+#autocompleteExpediente::-webkit-scrollbar-thumb:hover { background: var(--accent-dark, #1a365d); }
+#autocompleteExpediente .autocomplete-item { height: 44px; box-sizing: border-box; padding: 6px 14px; display: flex; flex-direction: column; justify-content: center; }
+.cedula-hint-expediente { font-size: 0.72rem; color: #64748b; margin: 4px 0 0; }
+body.dark-mode .cedula-hint-expediente { color: #cbd5e1; }
+.btn-exportar-expediente { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #2563eb; border-radius: 7px; background: #eff6ff; color: #1d4ed8; padding: 6px 9px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.btn-exportar-expediente:hover { background: #dbeafe; }
+
+/* ==== Expedientes: tarjetas oscuras tipo colección, con la paleta del sistema ==== */
+#expedientes #expedientesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+    align-items: stretch;
+}
+#expedientes .grupo-alfabetico { margin: 0; min-width: 0; }
+#expedientes .grupo-alfabetico-detalle { grid-column: 1 / -1; min-width: 0; }
+
+/* ---- Tarjeta de letra ---- */
+#expedientes .grupo-alfabetico-header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-height: 0;
+    padding: 20px;
+    overflow: hidden;
+    text-align: left;
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 60%, #7f9cc4);
+    border-radius: 14px;
+    background:
+        radial-gradient(130% 100% at 100% 0%, color-mix(in srgb, var(--accent, #1a365d) 70%, transparent) 0%, transparent 62%),
+        linear-gradient(160deg, #0f1a2b 0%, #15243a 52%, #1a365d 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .20);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+#expedientes .grupo-alfabetico-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1px);
+    background-size: 15px 15px;
+    opacity: .55;
+    -webkit-mask-image: linear-gradient(155deg, #000 0%, transparent 72%);
+    mask-image: linear-gradient(155deg, #000 0%, transparent 72%);
+}
+#expedientes .grupo-alfabetico-header:hover,
+#expedientes .grupo-alfabetico-header:focus-visible {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 18%, #a8c4ea);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, .34);
+    outline: none;
+}
+#expedientes .grupo-alfabetico-header:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #1a365d) 40%, transparent), 0 18px 34px rgba(15, 23, 42, .34);
+}
+#expedientes .grupo-alfabetico-card-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+}
+#expedientes .grupo-alfabetico-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .12);
+    color: #eaf2ff;
+    font-size: 1.15rem;
+}
+#expedientes .grupo-alfabetico-badge {
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .24);
+    background: rgba(255, 255, 255, .14);
+    color: #eaf2ff;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+#expedientes .grupo-alfabetico-letra {
+    position: relative;
+    z-index: 1;
+    font-size: 1.5rem;
+    line-height: 1;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: -.5px;
+    color: #fff;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, .45);
+}
+#expedientes .grupo-alfabetico-count {
+    position: relative;
+    z-index: 1;
+    color: rgba(214, 227, 245, .78);
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+/* ---- Cabecera de la letra abierta ---- */
+#expedientes .grupo-alfabetico-detail-header {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 55%, #7f9cc4);
+    border-radius: 18px;
+    background:
+        radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--accent, #1a365d) 62%, transparent) 0%, transparent 66%),
+        linear-gradient(140deg, #0f1a2b 0%, #1a365d 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .20);
+}
+#expedientes .grupo-alfabetico-detail-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+#expedientes .grupo-alfabetico-detail-header .btn-volver-expedientes-letras {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    padding: 8px 15px;
+    border: 1px solid rgba(255, 255, 255, .30);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .10);
+    color: #eaf2ff;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+#expedientes .grupo-alfabetico-detail-header .btn-volver-expedientes-letras:hover {
+    background: rgba(255, 255, 255, .20);
+    border-color: rgba(255, 255, 255, .45);
+}
+#expedientes .grupo-alfabetico-detail-header h2 {
+    margin: 10px 0 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: -.5px;
+    color: #fff;
+}
+#expedientes .grupo-alfabetico-detail-header p {
+    margin: 0;
+    font-size: .8rem;
+    font-weight: 600;
+    color: rgba(214, 227, 245, .78);
+}
+
+/* ---- Tarjetas de trabajador ---- */
+#expedientes .grupo-alfabetico-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    gap: 16px;
+    margin-top: 0;
+}
+#expedientes .expediente-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 50%, #6f8fbb);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #17263c 0%, #101a2b 100%);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, .18);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+#expedientes .expediente-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 14%, #a8c4ea);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, .32);
+}
+#expedientes .expediente-card .ec-foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 132px;
+    flex: 0 0 132px;
+    border-radius: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--accent, #1a365d) 78%, transparent) 0%, transparent 72%),
+        linear-gradient(160deg, #1a365d 0%, #101a2b 100%);
+}
+#expedientes .expediente-card .ec-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+    border-radius: 0;
+}
+#expedientes .expediente-card .ec-avatar {
+    width: 62px;
+    height: 62px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .12);
+    color: #dbe8f8;
+    font-size: 1.4rem;
+}
+#expedientes .expediente-card .ec-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin: 0;
+    padding: 13px 15px 15px;
+}
+#expedientes .expediente-card .ec-info strong {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
+    margin: 0;
+    font-size: .95rem;
+    line-height: 1.3;
+    font-weight: 800;
+    color: #fff;
+}
+#expedientes .expediente-card .ec-info > span {
+    font-size: .74rem;
+    font-weight: 600;
+    color: rgba(203, 216, 234, .75);
+}
+#expedientes .expediente-card .ec-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin: 0;
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .55);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    font-size: .63rem;
+    font-weight: 800;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+#expedientes .expediente-card .ec-badge.pendiente { color: #fcd34d; border-color: rgba(252, 211, 77, .45); background: rgba(120, 53, 15, .60); }
+#expedientes .expediente-card .ec-badge.progreso { color: #bfdbfe; border-color: rgba(147, 197, 253, .45); background: rgba(30, 58, 138, .60); }
+#expedientes .expediente-card .ec-badge.completado { color: #a7f3d0; border-color: rgba(110, 231, 183, .45); background: rgba(6, 78, 59, .60); }
+#expedientes .expediente-card .ec-info { flex: 1 1 auto; }
+#expedientes .expediente-card .btn-exportar-expediente {
+    justify-content: center;
+    width: 100%;
+    margin-top: auto;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, .26);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .10);
+    color: #eaf2ff;
+    font-size: .74rem;
+    transition: background .2s ease, border-color .2s ease;
+}
+#expedientes .expediente-card .btn-exportar-expediente:hover {
+    background: rgba(255, 255, 255, .20);
+    border-color: rgba(255, 255, 255, .45);
+}
+#expedientes .expediente-letter-pagination {
+    border-top: 0;
+    margin-top: 18px;
+    padding-top: 0;
+}
+
+body.dark-mode #expedientes .grupo-alfabetico-header,
+body.dark-mode #expedientes .grupo-alfabetico-detail-header,
+body.dark-mode #expedientes .expediente-card {
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 55%, #3b4f6d);
+}
+
+/* ==== Modo claro: las mismas tarjetas en tonos claros del sistema ==== */
+body:not(.dark-mode) #expedientes .grupo-alfabetico-header {
+    border-color: #cddcf0;
+    background:
+        radial-gradient(130% 100% at 100% 0%, rgba(37, 99, 235, .12) 0%, transparent 62%),
+        linear-gradient(160deg, #ffffff 0%, #f5f9ff 55%, #e9f1fb 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-header::before {
+    background-image: radial-gradient(rgba(26, 54, 93, .10) 1px, transparent 1px);
+    opacity: .5;
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-header:hover,
+body:not(.dark-mode) #expedientes .grupo-alfabetico-header:focus-visible {
+    border-color: #9dbbe4;
+    box-shadow: 0 16px 30px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-header:focus-visible {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .28), 0 16px 30px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-icon {
+    border-color: #cfdff5;
+    background: #eef4fc;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-badge {
+    border-color: #cfdff5;
+    background: #eef4fc;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-letra {
+    color: #1a365d;
+    text-shadow: 0 6px 18px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-count { color: #5b7799; }
+body:not(.dark-mode) #expedientes .grupo-alfabetico-detail-header {
+    border-color: #cddcf0;
+    background:
+        radial-gradient(120% 100% at 0% 0%, rgba(37, 99, 235, .12) 0%, transparent 66%),
+        linear-gradient(140deg, #ffffff 0%, #eaf1fb 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-detail-header .btn-volver-expedientes-letras {
+    border-color: #bfd3ee;
+    background: #eef4fc;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-detail-header .btn-volver-expedientes-letras:hover {
+    background: #dfeafb;
+    border-color: #9dbbe4;
+}
+body:not(.dark-mode) #expedientes .grupo-alfabetico-detail-header h2 { color: #1a365d; }
+body:not(.dark-mode) #expedientes .grupo-alfabetico-detail-header p { color: #5b7799; }
+body:not(.dark-mode) #expedientes .expediente-card {
+    border-color: #dbe6f5;
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, .07);
+}
+body:not(.dark-mode) #expedientes .expediente-card:hover {
+    border-color: #b6cdea;
+    box-shadow: 0 16px 30px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #expedientes .expediente-card .ec-foto {
+    background:
+        radial-gradient(120% 100% at 50% 0%, rgba(37, 99, 235, .16) 0%, transparent 72%),
+        linear-gradient(160deg, #e8f0fb 0%, #f7fafe 100%);
+}
+body:not(.dark-mode) #expedientes .expediente-card .ec-avatar {
+    border-color: #cfdff5;
+    background: #ffffff;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #expedientes .expediente-card .ec-info strong { color: #0f172a; }
+body:not(.dark-mode) #expedientes .expediente-card .ec-info > span { color: #5b7799; }
+body:not(.dark-mode) #expedientes .expediente-card .btn-exportar-expediente {
+    border-color: #bfd3ee;
+    background: #eef4fc;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #expedientes .expediente-card .btn-exportar-expediente:hover {
+    background: #dfeafb;
+    border-color: #9dbbe4;
+}
+body:not(.dark-mode) #expedientes .expediente-card .ec-badge.pendiente { color: #92400e; border-color: #fcd34d; background: #fef3c7; }
+body:not(.dark-mode) #expedientes .expediente-card .ec-badge.progreso { color: #1e40af; border-color: #93c5fd; background: #dbeafe; }
+body:not(.dark-mode) #expedientes .expediente-card .ec-badge.completado { color: #166534; border-color: #86efac; background: #dcfce7; }
+
+/* ==== Modal Crear Expediente: la lista de sugerencias va pegada al campo ==== */
+#modalCrearExpediente .busqueda-cedula-field { position: relative; flex: 1 1 auto; min-width: 0; display: flex; }
+#modalCrearExpediente .busqueda-cedula-field input { flex: 1 1 auto; width: 100%; }
+#modalCrearExpediente #autocompleteExpediente { top: calc(100% + 4px); z-index: 1200; }
 </style>
 <div id="expedientes-lista">
     <header class="section-header">
@@ -30,12 +431,9 @@
             </select>
         </div>
     </div>
-
-    <div id="expedientesCarpetas" class="carpetas-chips"></div>
     <div class="expedientes-grid" id="expedientesGrid">
         <p class="empty-state">Cargando expedientes...</p>
     </div>
-    <div class="activity-pagination" id="expedientesPagination"></div>
 </div>
 
 <div id="expediente-detalle" class="hidden">
@@ -45,6 +443,9 @@
             <span>Volver a Expedientes</span>
         </button>
         <div class="detalle-header-right">
+            <button type="button" class="btn-subir-doc" id="btnExportarExpediente">
+                <i class="fas fa-download"></i> Exportar expediente
+            </button>
             <div class="carta-indicator" id="cartaIndicator" title="Carta de aprobación del consejo" style="cursor:pointer;">
                 <i class="fas fa-scroll" id="cartaIcon" style="font-size:1.3rem;color:#475569;"></i>
             </div>
@@ -165,9 +566,14 @@
                 @csrf
                 <section class="form-section">
                     <h3><i class="fas fa-search"></i> Buscar Trabajador</h3>
-                    <div class="busqueda-cedula-row">
-                        <input type="text" id="inputBuscarCedula" placeholder="Ingrese la cédula (V-00000000)" required pattern="[VEJPGvejpg]-?\d{5,10}" title="Formato: V-12345678" onkeypress="if(!/[VEJPGvejpg0-9\-]/.test(event.key))event.preventDefault()">
-                        <button type="button" class="btn-submit" id="btnBuscarTrabajador">Buscar</button>
+                    <div class="busqueda-cedula-container">
+                        <div class="busqueda-cedula-row">
+                            <div class="busqueda-cedula-field">
+                                <input type="text" id="inputBuscarCedula" placeholder="V-12345678" autocomplete="off" aria-autocomplete="list" aria-controls="autocompleteExpediente" aria-expanded="false" required pattern="[VEJPGvejpg]-?\d{5,10}" title="Formato: V-12345678" onkeypress="if(!/[VEJPGvejpg0-9\-]/.test(event.key))event.preventDefault()">
+                                <div id="autocompleteExpediente" class="autocomplete-list" role="listbox"></div>
+                            </div>
+                        </div>
+                        <p class="cedula-hint-expediente">Escriba <strong>V-</strong> para ver los primeros trabajadores o complete la cédula para filtrar.</p>
                     </div>
                     <div id="resultadoBusqueda" class="hidden">
                         <div class="trabajador-encontrado">
@@ -299,6 +705,54 @@
     let expedienteActualId = null;
     let expedienteDocsActuales = [];
     let clausulasExpediente = [];
+    let expedienteNombreActual = '';
+
+    async function exportarExpediente(id, nombre, boton) {
+        if (!id) return;
+        let selectorArchivo = null;
+        if (window.showSaveFilePicker) {
+            try {
+                selectorArchivo = await window.showSaveFilePicker({
+                    suggestedName: `Expediente_${id}_${nombre || 'trabajador'}.zip`,
+                    types: [{ description: 'Archivo ZIP', accept: { 'application/zip': ['.zip'] } }],
+                });
+            } catch (error) {
+                if (error.name === 'AbortError') return;
+                console.error('Error al abrir el selector de destino:', error);
+                mostrarToast('No se pudo abrir el selector para guardar el expediente.', 'error');
+                return;
+            }
+        }
+        if (boton) boton.disabled = true;
+        try {
+            const respuesta = await fetch(`/expedientes/${id}/exportar`, { headers: { 'Accept': 'application/zip' } });
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => ({}));
+                throw new Error(error.message || 'No se pudo exportar el expediente.');
+            }
+            const archivo = await respuesta.blob();
+            if (selectorArchivo) {
+                const writable = await selectorArchivo.createWritable();
+                await writable.write(archivo);
+                await writable.close();
+            } else {
+                const url = URL.createObjectURL(archivo);
+                const enlace = document.createElement('a');
+                enlace.href = url;
+                enlace.download = `Expediente_${id}_${nombre || 'trabajador'}.zip`;
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+            mostrarToast('Expediente exportado correctamente.', 'success');
+        } catch (error) {
+            console.error('Error al exportar expediente:', error);
+            mostrarToast(error.message || 'No se pudo exportar el expediente.', 'error');
+        } finally {
+            if (boton) boton.disabled = false;
+        }
+    }
 
     const ICONOS_DOC = {
         'Cédula de Identidad': 'fa-user-check',
@@ -314,205 +768,262 @@
     }
 
     // === CARGAR LISTA DE EXPEDIENTES ===
-    let expedientesPaginaActual = 1;
-    let expedientesCache = [];
-    let expedientesTotalPaginas = 1;
+    let expedientesGrupos = [];
+    let expedienteLetraAbierta = null;
+    let expedientePaginaActualPorLetra = {};
+    let expedientesSolicitudResumen = 0;
+    let expedientesSeccionCargada = false;
+    let expedientesCargaInicialEnCurso = false;
+    const expedientesPaginasCache = new Map();
+    const expedientesSolicitudesPorLetra = {};
 
-    // Devuelve la letra (A-Z) de agrupación a partir del APELLIDO del trabajador
-    // (el orden alfabético de archivo se hace por apellido).
-    function letraCarpetaExpediente(exp) {
-        const t = (exp && exp.trabajador) || {};
-        const base = (t.apellidos || t.nombres || '').trim();
-        const ch = base.charAt(0).toUpperCase();
-        if (!ch) return '#';
-        return /[A-ZÁÉÍÓÚÑ]/.test(ch) ? ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '#';
+    function parametrosFiltroExpedientes() {
+        const parametros = new URLSearchParams();
+        const busqueda = (document.getElementById('buscadorExpedientes')?.value || '').trim();
+        const estado = document.getElementById('filtroEstadoExpediente')?.value || '';
+        if (busqueda) parametros.set('search', busqueda);
+        if (estado !== '') parametros.set('estado', estado);
+        return parametros;
     }
 
-    function renderPaginacionExpedientes() {
-        const cont = document.getElementById('expedientesPagination');
-        if (!cont) return;
-        if (expedientesTotalPaginas <= 1) { cont.innerHTML = ''; return; }
-        const cur = expedientesPaginaActual;
-        const last = expedientesTotalPaginas;
-        let html = '<button class="pag-btn" data-p="' + (cur - 1) + '"' + (cur <= 1 ? ' disabled' : '') + '>&lsaquo;</button>';
-        for (let i = 1; i <= last; i++) {
-            if (i === 1 || i === last || (i >= cur - 2 && i <= cur + 2)) {
-                html += '<button class="pag-btn' + (i === cur ? ' active' : '') + '" data-p="' + i + '">' + i + '</button>';
-            } else if (i === cur - 3 || i === cur + 3) {
-                html += '<span class="pag-info">&hellip;</span>';
-            }
-        }
-        html += '<button class="pag-btn" data-p="' + (cur + 1) + '"' + (cur >= last ? ' disabled' : '') + '>&rsaquo;</button>';
-        html += '<span class="pag-info">' + cur + ' de ' + last + '</span>';
-        cont.innerHTML = html;
-        cont.querySelectorAll('.pag-btn[data-p]').forEach(function(b) {
-            b.addEventListener('click', function() {
-                const p = parseInt(this.dataset.p, 10);
-                if (p >= 1 && p <= last && p !== cur) cargarExpedientes(p);
-            });
-        });
-    }
+    function renderGruposExpedientes() {
+        const grid = document.getElementById('expedientesGrid');
+        if (!grid) return;
 
-    // Filtra en cliente por texto (nombre/cédula) y estado. Devuelve la lista filtrada.
-    function filtrarExpedientes(lista) {
-        const q = (document.getElementById('buscadorExpedientes')?.value || '').trim().toLowerCase();
-        const estadoF = document.getElementById('filtroEstadoExpediente')?.value || '';
-        return lista.filter(exp => {
-            const t = exp.trabajador || {};
-            if (estadoF !== '') {
-                const est = String(exp.estado_global || 0);
-                if (estadoF === '0' ? est !== '0' : est !== estadoF) return false;
-            }
-            if (q) {
-                const texto = ((t.nombres || '') + ' ' + (t.apellidos || '') + ' ' + (t.cedula || '')).toLowerCase();
-                if (texto.indexOf(q) === -1) return false;
-            }
-            return true;
-        });
-    }
+        const gruposVisibles = expedienteLetraAbierta
+            ? expedientesGrupos.filter(grupo => grupo.letra === expedienteLetraAbierta)
+            : expedientesGrupos;
 
-    // Pinta una lista de expedientes agrupada por carpeta alfabética (vista drilldown).
-    function pintarExpedientes(lista, grid, carpetasCont) {
-        const grupos = {};
-        lista.forEach(exp => {
-            const letra = letraCarpetaExpediente(exp);
-            (grupos[letra] = grupos[letra] || []).push(exp);
-        });
-        const letras = Object.keys(grupos).sort();
-        grid.innerHTML = '';
-        let htmlGrid = '';
-        let htmlCarpetas = '';
-
-        htmlGrid += '<button type="button" class="btn-volver-carpetas hidden" id="btnVolverCarpetasExp"><i class="fas fa-arrow-left"></i> Volver a carpetas</button>';
-
-        letras.forEach(letra => {
-            htmlCarpetas += '<button type="button" class="carpeta-chip" data-letra="' + letra + '">' + letra + '<span class="carpeta-chip-count">' + grupos[letra].length + '</span></button>';
-            htmlGrid += '<div class="carpeta-grupo carpeta-drilldown hidden" data-letra="' + letra + '">';
-            htmlGrid += '<div class="carpeta-header"><i class="fas fa-folder-open"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' expediente' + (grupos[letra].length === 1 ? '' : 's') + '</span></div>';
-            htmlGrid += '<div class="expedientes-grid">';
-            grupos[letra].forEach(exp => {
-                const t = exp.trabajador || {};
-                const estado = exp.estado_global || 0;
-                const claseEstado = estado === 100 ? 'completado' : (estado > 0 ? 'progreso' : 'pendiente');
-                const textoEstado = estado === 100 ? 'Completado' : (estado > 0 ? `En Proceso (${estado}%)` : 'Pendiente');
-                const foto = exp.foto_carnet ? `/storage/${exp.foto_carnet}` : '';
-                htmlGrid += `
-                    <div class="expediente-card" data-id="${exp.id}">
-                        <div class="ec-foto">
-                            ${foto ? `<img src="${foto}" alt="">` : `<div class="ec-avatar"><i class="fas fa-user"></i></div>`}
+        grid.innerHTML = gruposVisibles.map(grupo => {
+            const abierta = grupo.letra === expedienteLetraAbierta;
+            const letra = escaparHTML(grupo.letra);
+            const cantidad = Number(grupo.total) || 0;
+            const etiqueta = cantidad === 1 ? 'EXPEDIENTE' : 'EXPEDIENTES';
+            if (abierta) {
+                return `
+                    <section class="grupo-alfabetico grupo-alfabetico-detalle is-open" data-letra="${letra}">
+                        <div class="grupo-alfabetico-detail-header">
+                            <div class="grupo-alfabetico-detail-top">
+                                <button type="button" class="btn-volver btn-volver-expedientes-letras">
+                                    <i class="fas fa-arrow-left"></i> Volver a letras
+                                </button>
+                                <span class="grupo-alfabetico-badge">${cantidad} ${etiqueta}</span>
+                            </div>
+                            <h2>Expedientes ${letra}</h2>
+                            <p>${cantidad} trabajador${cantidad === 1 ? '' : 'es'}</p>
                         </div>
-                        <div class="ec-info">
-                            <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
-                            <span>${escaparHTML(t.cedula || '—')}</span>
-                            <span class="ec-badge ${claseEstado}">${textoEstado}</span>
+                        <div class="grupo-alfabetico-panel">
+                            <div class="expedientes-grid grupo-alfabetico-grid"><p class="empty-state">Cargando expedientes...</p></div>
+                            <div class="activity-pagination expediente-letter-pagination"></div>
                         </div>
-                    </div>
+                    </section>
                 `;
-            });
-            htmlGrid += '</div></div>';
-        });
-        grid.innerHTML = htmlGrid;
-        if (carpetasCont) carpetasCont.innerHTML = htmlCarpetas;
+            }
 
+            return `
+                <section class="grupo-alfabetico" data-letra="${letra}">
+                    <button type="button" class="grupo-alfabetico-header" aria-expanded="false" data-letra="${letra}">
+                        <span class="grupo-alfabetico-card-top">
+                            <span class="grupo-alfabetico-icon"><i class="fas fa-folder"></i></span>
+                            <span class="grupo-alfabetico-badge">${cantidad} ${etiqueta}</span>
+                        </span>
+                        <span class="grupo-alfabetico-letra">${letra}</span>
+                        <span class="grupo-alfabetico-count">${cantidad} trabajador${cantidad === 1 ? '' : 'es'}</span>
+                    </button>
+                </section>
+            `;
+        }).join('');
+
+        grid.querySelectorAll('.grupo-alfabetico-header').forEach(boton => {
+            boton.addEventListener('click', function() {
+                const letra = this.dataset.letra;
+                expedienteLetraAbierta = letra;
+                renderGruposExpedientes();
+                cargarExpedientes(letra, expedientePaginaActualPorLetra[letra] || 1);
+            });
+        });
+        grid.querySelector('.btn-volver-expedientes-letras')?.addEventListener('click', function() {
+            expedienteLetraAbierta = null;
+            renderGruposExpedientes();
+        });
+    }
+
+    function pintarExpedientes(lista, grid) {
+        const html = lista.map(exp => {
+            const t = exp.trabajador || {};
+            const estado = Number(exp.estado_global) || 0;
+            const claseEstado = estado === 100 ? 'completado' : (estado > 0 ? 'progreso' : 'pendiente');
+            const textoEstado = estado === 100 ? 'Completado' : (estado > 0 ? `En Proceso (${estado}%)` : 'Pendiente');
+            const foto = exp.foto_carnet ? `/storage/${exp.foto_carnet}` : '';
+            const nombreArchivo = `${t.nombres || ''}_${t.apellidos || ''}`.trim().replace(/[^\p{L}\p{N}_-]+/gu, '_');
+            return `
+                <div class="expediente-card" data-id="${exp.id}">
+                    <div class="ec-foto">
+                        ${foto ? `<img src="${foto}" alt="">` : `<div class="ec-avatar"><i class="fas fa-user"></i></div>`}
+                    </div>
+                    <div class="ec-info">
+                        <strong>${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</strong>
+                        <span>${escaparHTML(t.cedula || '—')}</span>
+                        <span class="ec-badge ${claseEstado}">${textoEstado}</span>
+                        <button type="button" class="btn-exportar-expediente" data-id="${exp.id}" data-nombre="${escaparHTML(nombreArchivo)}" style="margin-top:8px;">
+                            <i class="fas fa-download"></i> Exportar expediente
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        grid.innerHTML = html;
         grid.querySelectorAll('.expediente-card').forEach(card => {
             card.addEventListener('click', function() { abrirDetalle(parseInt(this.dataset.id, 10)); });
         });
-
-        const btnVolver = document.getElementById('btnVolverCarpetasExp');
-
-        function abrirCarpeta(letra) {
-            if (!carpetasCont) return;
-            carpetasCont.classList.add('hidden');
-            carpetasCont.style.display = 'none';
-            grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
-                const activa = g.dataset.letra === letra;
-                g.classList.toggle('carpeta-activa', activa);
-                g.classList.toggle('hidden', !activa);
-                // El grupo se oculta/muestra también en línea: si no, una vez
-                // que se vuelve a las carpetas la letra no se puede abrir más.
-                g.style.display = activa ? '' : 'none';
-            });
-            if (btnVolver) {
-                btnVolver.classList.remove('hidden');
-                btnVolver.onclick = function() {
-                    volverACarpetasExp();
-                };
-            }
-            // Subir al inicio de la sección
-            const sec = document.getElementById('seccion-expedientes');
-            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-    function volverACarpetasExp() {
-        if (carpetasCont) {
-            carpetasCont.classList.remove('hidden');
-            carpetasCont.style.display = '';
-        }
-        grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
-            g.classList.remove('carpeta-activa');
-            g.classList.add('hidden');
-            g.style.display = 'none';
-        });
-        const btnVolver = document.getElementById('btnVolverCarpetasExp');
-        if (btnVolver) {
-            btnVolver.classList.add('hidden');
-            btnVolver.style.display = 'none';
-        }
-    }
-
-        if (carpetasCont) {
-            carpetasCont.querySelectorAll('.carpeta-chip').forEach(chip => {
-                chip.addEventListener('click', function() {
-                    abrirCarpeta(this.dataset.letra);
-                });
-            });
-        }
-        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
-            const grupo = header.closest('.carpeta-grupo');
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', function(e) {
-                // Evitar que al hacer clic en tarjeta se dispare
-                if (e.target.closest('.expediente-card')) return;
-                abrirCarpeta(grupo.dataset.letra);
+        grid.querySelectorAll('.btn-exportar-expediente').forEach(boton => {
+            boton.addEventListener('click', function(event) {
+                event.stopPropagation();
+                exportarExpediente(this.dataset.id, this.dataset.nombre, this);
             });
         });
     }
 
-    async function cargarExpedientes(page) {
-        const grid = document.getElementById('expedientesGrid');
-        const carpetasCont = document.getElementById('expedientesCarpetas');
-        if (!grid) return;
-        expedientesPaginaActual = page || 1;
+    function renderPaginacionExpedientes(letra, paginaActual, ultimaPagina) {
+        const grupo = Array.from(document.querySelectorAll('#expedientesGrid .grupo-alfabetico'))
+            .find(elemento => elemento.dataset.letra === letra);
+        const contenedor = grupo?.querySelector('.expediente-letter-pagination');
+        if (!contenedor) return;
+        if (ultimaPagina <= 1) {
+            contenedor.innerHTML = '';
+            return;
+        }
+
+        const paginas = new Set([1, ultimaPagina]);
+        for (let pagina = Math.max(2, paginaActual - 2); pagina <= Math.min(ultimaPagina - 1, paginaActual + 2); pagina++) {
+            paginas.add(pagina);
+        }
+
+        let html = `<button type="button" class="pag-btn" data-p="${paginaActual - 1}" ${paginaActual <= 1 ? 'disabled' : ''}>&lsaquo;</button>`;
+        let paginaAnterior = 0;
+        Array.from(paginas).sort((a, b) => a - b).forEach(pagina => {
+            if (paginaAnterior && pagina - paginaAnterior > 1) html += '<span class="pag-info">&hellip;</span>';
+            html += `<button type="button" class="pag-btn${pagina === paginaActual ? ' active' : ''}" data-p="${pagina}">${pagina}</button>`;
+            paginaAnterior = pagina;
+        });
+        html += `<button type="button" class="pag-btn" data-p="${paginaActual + 1}" ${paginaActual >= ultimaPagina ? 'disabled' : ''}>&rsaquo;</button>`;
+        html += `<span class="pag-info">${paginaActual} de ${ultimaPagina}</span>`;
+        contenedor.innerHTML = html;
+        contenedor.querySelectorAll('.pag-btn[data-p]').forEach(boton => {
+            boton.addEventListener('click', function() {
+                const pagina = parseInt(this.dataset.p, 10);
+                if (pagina >= 1 && pagina <= ultimaPagina && pagina !== paginaActual) {
+                    cargarExpedientes(letra, pagina);
+                }
+            });
+        });
+    }
+
+    async function cargarExpedientes(letra, pagina) {
+        const grupo = Array.from(document.querySelectorAll('#expedientesGrid .grupo-alfabetico'))
+            .find(elemento => elemento.dataset.letra === letra);
+        const lista = grupo?.querySelector('.grupo-alfabetico-grid');
+        if (!lista || expedienteLetraAbierta !== letra) return;
+
+        const solicitud = (expedientesSolicitudesPorLetra[letra] || 0) + 1;
+        expedientesSolicitudesPorLetra[letra] = solicitud;
+        lista.innerHTML = '<p class="empty-state">Cargando expedientes...</p>';
+        const parametros = parametrosFiltroExpedientes();
+        parametros.set('letra', letra);
+        parametros.set('page', pagina);
+        parametros.set('per_page', '10');
+        const url = '/expedientes?' + parametros.toString();
         try {
-            const result = await cachedFetch('/expedientes?page=' + expedientesPaginaActual + '&per_page=12', { ttl: 60000 });
-            const raw = result.data;
-            const data = Array.isArray(raw) ? raw : (raw.data || []);
-            expedientesCache = data;
-            expedientesTotalPaginas = Array.isArray(raw) ? 1 : (raw.last_page || 1);
-            if (carpetasCont) carpetasCont.innerHTML = '';
-            const filtrados = filtrarExpedientes(data);
-            if (!filtrados.length) {
-                grid.innerHTML = '<p class="empty-state">' + (data.length ? 'No hay expedientes que coincidan con el filtro.' : 'No hay expedientes registrados. Cree el primero.') + '</p>';
-                renderPaginacionExpedientes();
-                return;
+            let raw = expedientesPaginasCache.get(url);
+            if (!raw) {
+                const respuesta = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!respuesta.ok) throw new Error('No se pudieron cargar los expedientes de esta letra.');
+                raw = await respuesta.json();
+                expedientesPaginasCache.set(url, raw);
             }
-            pintarExpedientes(filtrados, grid, carpetasCont);
-            renderPaginacionExpedientes();
+            if (expedientesSolicitudesPorLetra[letra] !== solicitud || expedienteLetraAbierta !== letra) return;
+
+            const data = Array.isArray(raw.data) ? raw.data : [];
+            const paginaActual = Number(raw.current_page) || pagina;
+            const ultimaPagina = Number(raw.last_page) || 1;
+            expedientePaginaActualPorLetra[letra] = paginaActual;
+            if (!data.length) {
+                lista.innerHTML = '<p class="empty-state">No hay expedientes que coincidan con esta letra y los filtros seleccionados.</p>';
+            } else {
+                pintarExpedientes(data, lista);
+            }
+            renderPaginacionExpedientes(letra, paginaActual, ultimaPagina);
         } catch (err) {
             console.error('Error al cargar expedientes:', err);
-            grid.innerHTML = '<p class="empty-state">Error al cargar expedientes.</p>';
+            if (expedientesSolicitudesPorLetra[letra] === solicitud && expedienteLetraAbierta === letra) {
+                lista.innerHTML = '<p class="empty-state">Error al cargar los expedientes de esta letra.</p>';
+            }
+        }
+    }
+
+    async function cargarResumenExpedientes(reiniciarPaginas) {
+        const grid = document.getElementById('expedientesGrid');
+        if (!grid) return;
+        const solicitud = ++expedientesSolicitudResumen;
+        if (reiniciarPaginas) {
+            expedientePaginaActualPorLetra = {};
+            expedientesPaginasCache.clear();
+        }
+        grid.innerHTML = '<p class="empty-state">Cargando expedientes...</p>';
+        const parametros = parametrosFiltroExpedientes();
+
+        try {
+            const respuesta = await fetch('/expedientes/letras?' + parametros.toString(), {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!respuesta.ok) throw new Error('No se pudo cargar la organización de expedientes.');
+            const raw = await respuesta.json();
+            if (solicitud !== expedientesSolicitudResumen) return;
+
+            expedientesSeccionCargada = true;
+            expedientesGrupos = Array.isArray(raw.letras) ? raw.letras : [];
+            if (!expedientesGrupos.length) {
+                expedienteLetraAbierta = null;
+                const hayFiltro = parametros.has('search') || parametros.has('estado');
+                grid.innerHTML = '<p class="empty-state">' + (hayFiltro ? 'No hay expedientes que coincidan con el filtro.' : 'No hay expedientes registrados. Cree el primero.') + '</p>';
+                return;
+            }
+
+            const letrasDisponibles = expedientesGrupos.map(grupo => grupo.letra);
+            if (!expedienteLetraAbierta || !letrasDisponibles.includes(expedienteLetraAbierta)) {
+                if (parametros.has('search') || parametros.has('estado')) {
+                    expedienteLetraAbierta = letrasDisponibles[0];
+                } else {
+                    expedienteLetraAbierta = null;
+                }
+            }
+            renderGruposExpedientes();
+            if (expedienteLetraAbierta) {
+                cargarExpedientes(expedienteLetraAbierta, expedientePaginaActualPorLetra[expedienteLetraAbierta] || 1);
+            }
+        } catch (err) {
+            console.error('Error al cargar la organización de expedientes:', err);
+            if (solicitud === expedientesSolicitudResumen) {
+                expedientesSeccionCargada = false;
+                grid.innerHTML = '<p class="empty-state">Error al cargar los expedientes.</p>';
+            }
         }
     }
 
     // === ABRIR DETALLE ===
     async function abrirDetalle(id) {
         expedienteActualId = id;
+        expedientesPaginasCache.clear();
         try {
             mostrarCargando('Cargando expediente...');
             const resp = await fetch(`/expedientes/${id}`);
             const exp = await resp.json();
             const t = exp.trabajador || {};
             const sol = exp.solicitud || {};
+            expedienteNombreActual = `${t.nombres || ''}_${t.apellidos || ''}`.trim().replace(/[^\p{L}\p{N}_-]+/gu, '_');
 
             document.getElementById('expedientes-lista').classList.add('hidden');
             document.getElementById('expediente-detalle').classList.remove('hidden');
@@ -666,8 +1177,13 @@
         document.getElementById('expediente-detalle').classList.add('hidden');
         document.getElementById('expedientes-lista').classList.remove('hidden');
         expedienteActualId = null;
-        cargarExpedientes();
+        const sec = document.getElementById('seccion-expedientes');
+        if (sec) sec.scrollIntoView({ behavior: 'auto', block: 'start' });
     };
+
+    document.getElementById('btnExportarExpediente')?.addEventListener('click', function() {
+        exportarExpediente(expedienteActualId, expedienteNombreActual, this);
+    });
 
     // === CLÁUSULAS DE CONVENCIÓN COLECTIVA ===
     function renderClausulasExpediente() {
@@ -710,7 +1226,7 @@
             const disponibles = data.disponibles || [];
             const marcadas = new Set((data.seleccionadas || []).map(c => parseInt(c.id, 10)));
             if (!disponibles.length) {
-                cont.innerHTML = '<p style="padding:16px;color:#94a3b8;font-size:0.82rem;margin:0;">No hay cláusulas registradas. Créelas en Cargos y Grados → Cláusulas.</p>';
+                cont.innerHTML = '<p style="padding:16px;color:#94a3b8;font-size:0.82rem;margin:0;">No hay cláusulas registradas. Créelas en Catálogos del sistema → Cláusulas de Convención.</p>';
                 return;
             }
             cont.innerHTML = disponibles.map(c =>
@@ -814,44 +1330,144 @@
 
     // === INICIALIZAR ===
     document.addEventListener('DOMContentLoaded', () => {
-        cargarExpedientes();
-
-        // Buscador y filtro de estado: refiltran la lista ya cargada.
-        const repintarFiltro = () => {
-            const grid = document.getElementById('expedientesGrid');
-            const carpetasCont = document.getElementById('expedientesCarpetas');
-            if (!grid) return;
-            const filtrados = filtrarExpedientes(expedientesCache);
-            if (!filtrados.length) {
-                grid.innerHTML = '<p class="empty-state">No hay expedientes que coincidan con el filtro.</p>';
-                if (carpetasCont) carpetasCont.innerHTML = '';
-                return;
-            }
-            pintarExpedientes(filtrados, grid, carpetasCont);
-        };
-        document.getElementById('buscadorExpedientes')?.addEventListener('input', repintarFiltro);
-        document.getElementById('filtroEstadoExpediente')?.addEventListener('change', repintarFiltro);
+        // La búsqueda y el estado actualizan los conteos de todos los grupos.
+        let debounceExpedientes = null;
+        document.getElementById('buscadorExpedientes')?.addEventListener('input', function() {
+            clearTimeout(debounceExpedientes);
+            debounceExpedientes = setTimeout(function() { cargarResumenExpedientes(true); }, 300);
+        });
+        document.getElementById('filtroEstadoExpediente')?.addEventListener('change', function() {
+            cargarResumenExpedientes(true);
+        });
 
         // Botón crear expediente
         document.getElementById('btnCrearExpediente')?.addEventListener('click', () => {
             document.getElementById('modalCrearExpediente').style.display = 'flex';
             document.getElementById('inputBuscarCedula').value = '';
+            clearTimeout(debounceAutocompleteExpediente);
+            ocultarAutocompleteExpediente();
+            restablecerHintCedulaExpediente();
             document.getElementById('resultadoBusqueda').classList.add('hidden');
             document.getElementById('errorBusqueda').classList.add('hidden');
             document.getElementById('formCrearExpediente').reset();
         });
 
         // Cerrar modal crear
-        const cerrarCrear = () => document.getElementById('modalCrearExpediente').style.display = 'none';
+        const cerrarCrear = () => {
+            ocultarAutocompleteExpediente();
+            restablecerHintCedulaExpediente();
+            document.getElementById('modalCrearExpediente').style.display = 'none';
+        };
         document.getElementById('closeModalExpediente')?.addEventListener('click', cerrarCrear);
         document.getElementById('btnCancelarExpediente')?.addEventListener('click', cerrarCrear);
 
-        // Búsqueda de trabajador por cédula
-        document.getElementById('btnBuscarTrabajador')?.addEventListener('click', async () => {
-            const cedula = document.getElementById('inputBuscarCedula').value.trim();
+        const inputBuscarCedula = document.getElementById('inputBuscarCedula');
+        const listaAutocompleteExpediente = document.getElementById('autocompleteExpediente');
+        let trabajadoresAutocompleteExpediente = [];
+        let indiceAutocompleteExpediente = -1;
+        let debounceAutocompleteExpediente = null;
+        let versionAutocompleteExpediente = 0;
+
+        function restablecerHintCedulaExpediente() {
+            const hint = document.querySelector('.cedula-hint-expediente');
+            if (hint) hint.innerHTML = 'Escriba <strong>V-</strong> para ver los primeros trabajadores o complete la cédula para filtrar.';
+        }
+
+        function ocultarAutocompleteExpediente() {
+            versionAutocompleteExpediente++;
+            trabajadoresAutocompleteExpediente = [];
+            listaAutocompleteExpediente.innerHTML = '';
+            listaAutocompleteExpediente.style.display = 'none';
+            inputBuscarCedula.setAttribute('aria-expanded', 'false');
+            indiceAutocompleteExpediente = -1;
+        }
+
+        function mostrarAutocompleteExpediente(trabajadores) {
+            trabajadoresAutocompleteExpediente = trabajadores;
+            indiceAutocompleteExpediente = -1;
+            const cedulaEscrita = inputBuscarCedula.value.trim();
+            const cedulaCompleta = /^[VEJPG]-?\d{5,10}$/i.test(cedulaEscrita);
+            const normalizarCedula = valor => String(valor || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+            const exacto = cedulaCompleta
+                ? trabajadores.find(t => normalizarCedula(t.cedula) === normalizarCedula(cedulaEscrita))
+                : null;
+
+            // Con la cédula completa se muestra la fila encontrada y además se carga
+            // directamente la ficha; así siempre hay algo visible bajo el input.
+            if (exacto) {
+                inputBuscarCedula.value = exacto.cedula;
+                listaAutocompleteExpediente.innerHTML =
+                    `<div class="autocomplete-item" role="option" aria-selected="false" data-index="0">
+                        <span class="auto-name">${escaparHTML(exacto.nombres)} ${escaparHTML(exacto.apellidos)}</span>
+                        <span class="auto-cedula">${escaparHTML(exacto.cedula)}</span>
+                    </div>`;
+                listaAutocompleteExpediente.style.display = 'block';
+                inputBuscarCedula.setAttribute('aria-expanded', 'true');
+                const hintExacto = document.querySelector('.cedula-hint-expediente');
+                if (hintExacto) {
+                    hintExacto.innerHTML = 'Trabajador encontrado: <strong>' + escaparHTML(exacto.nombres) + ' ' + escaparHTML(exacto.apellidos) + '</strong>';
+                }
+                buscarTrabajador(exacto.cedula, true);
+                return;
+            }
+
+            const hint = document.querySelector('.cedula-hint-expediente');
+            if (hint) {
+                hint.innerHTML = trabajadores.length > 5
+                    ? 'Mostrando 5 de <strong>' + trabajadores.length + '</strong> · desplácese para ver más'
+                    : 'Escriba <strong>V-</strong> para ver los primeros trabajadores o complete la cédula para filtrar.';
+            }
+            if (!trabajadores.length) {
+                listaAutocompleteExpediente.innerHTML = '<div class="autocomplete-empty">No se encontraron trabajadores con esa cédula.</div>';
+                // El desplegable puede quedar vacío; se consulta el endpoint oficial por si el trabajador existe.
+                if (cedulaCompleta) buscarTrabajador(cedulaEscrita);
+            } else {
+                listaAutocompleteExpediente.innerHTML = trabajadores.map((trabajador, indice) =>
+                    `<div class="autocomplete-item" role="option" aria-selected="false" data-index="${indice}">
+                        <span class="auto-name">${escaparHTML(trabajador.nombres)} ${escaparHTML(trabajador.apellidos)}</span>
+                        <span class="auto-cedula">${escaparHTML(trabajador.cedula)}</span>
+                    </div>`
+                ).join('');
+            }
+            listaAutocompleteExpediente.style.display = 'block';
+            inputBuscarCedula.setAttribute('aria-expanded', 'true');
+        }
+
+        async function cargarAutocompleteExpediente(search) {
+            const version = ++versionAutocompleteExpediente;
+            listaAutocompleteExpediente.innerHTML = '<div class="autocomplete-empty">Buscando trabajadores...</div>';
+            listaAutocompleteExpediente.style.display = 'block';
+            inputBuscarCedula.setAttribute('aria-expanded', 'true');
+
+            try {
+                const url = `/trabajadores/autocomplete?search=${encodeURIComponent(search)}&incluir_con_solicitud=1`;
+                const response = await fetch(url, { headers: { Accept: 'application/json' } });
+                if (!response.ok) throw new Error('No se pudieron cargar los trabajadores.');
+                const trabajadores = await response.json();
+                if (!Array.isArray(trabajadores)) throw new Error('La respuesta de trabajadores no es válida.');
+                if (version !== versionAutocompleteExpediente) return;
+                mostrarAutocompleteExpediente(trabajadores);
+            } catch (error) {
+                if (version !== versionAutocompleteExpediente) return;
+                console.error('Error en el autocompletado de trabajadores:', error);
+                listaAutocompleteExpediente.innerHTML = '<div class="autocomplete-empty">No se pudo completar la búsqueda.</div>';
+                listaAutocompleteExpediente.style.display = 'block';
+                inputBuscarCedula.setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        async function buscarTrabajador(cedula = inputBuscarCedula.value.trim(), mantenerListaVisible = false) {
             if (!cedula) return;
+            if (!mantenerListaVisible) ocultarAutocompleteExpediente();
             const errorDiv = document.getElementById('errorBusqueda');
             const resultado = document.getElementById('resultadoBusqueda');
+            const cedulaValida = /^[VEJPG]-?\d{5,10}$/i.test(cedula);
+            if (!cedulaValida) {
+                errorDiv.textContent = 'Seleccione un trabajador de la lista o complete una cédula válida.';
+                errorDiv.classList.remove('hidden');
+                resultado.classList.add('hidden');
+                return;
+            }
             errorDiv.classList.add('hidden');
             try {
                 mostrarCargando('Buscando trabajador...');
@@ -873,19 +1489,89 @@
                 document.getElementById('inputTrabajadorId').value = t.id;
                 document.getElementById('inputSolicitudId').value = s ? s.id : '';
                 resultado.classList.remove('hidden');
+                if (mantenerListaVisible) {
+                    resultado.scrollIntoView({ block: 'nearest' });
+                }
             } catch (err) {
+                console.error('Error al buscar trabajador para expediente:', err);
                 errorDiv.textContent = 'Error de conexión';
                 errorDiv.classList.remove('hidden');
             } finally {
                 ocultarCargando();
             }
+        }
+
+        inputBuscarCedula?.addEventListener('input', () => {
+            clearTimeout(debounceAutocompleteExpediente);
+            versionAutocompleteExpediente++;
+            document.getElementById('resultadoBusqueda').classList.add('hidden');
+            document.getElementById('errorBusqueda').classList.add('hidden');
+            document.getElementById('inputTrabajadorId').value = '';
+            document.getElementById('inputSolicitudId').value = '';
+
+            const search = inputBuscarCedula.value.trim();
+            // Igual que en Solicitudes: la lista aparece recién al escribir la letra y el guion (V-).
+            if (!/^[VEJPG]-/i.test(search)) {
+                ocultarAutocompleteExpediente();
+                restablecerHintCedulaExpediente();
+                return;
+            }
+
+            debounceAutocompleteExpediente = setTimeout(() => cargarAutocompleteExpediente(search), 250);
+        });
+
+        listaAutocompleteExpediente?.addEventListener('click', event => {
+            const item = event.target.closest('.autocomplete-item');
+            if (!item) return;
+            const trabajador = trabajadoresAutocompleteExpediente[Number(item.dataset.index)];
+            if (!trabajador) return;
+            inputBuscarCedula.value = trabajador.cedula;
+            buscarTrabajador(trabajador.cedula);
         });
 
         // Enter en búsqueda
-        document.getElementById('inputBuscarCedula')?.addEventListener('keydown', (e) => {
+        inputBuscarCedula?.addEventListener('keydown', (e) => {
+            const items = Array.from(listaAutocompleteExpediente.querySelectorAll('.autocomplete-item'));
+            if (e.key === 'ArrowDown' && items.length) {
+                e.preventDefault();
+                indiceAutocompleteExpediente = Math.min(indiceAutocompleteExpediente + 1, items.length - 1);
+                items.forEach((item, index) => {
+                    item.classList.toggle('highlighted', index === indiceAutocompleteExpediente);
+                    item.setAttribute('aria-selected', index === indiceAutocompleteExpediente ? 'true' : 'false');
+                });
+                items[indiceAutocompleteExpediente].scrollIntoView({ block: 'nearest' });
+                return;
+            }
+            if (e.key === 'ArrowUp' && items.length) {
+                e.preventDefault();
+                indiceAutocompleteExpediente = Math.max(indiceAutocompleteExpediente - 1, 0);
+                items.forEach((item, index) => {
+                    item.classList.toggle('highlighted', index === indiceAutocompleteExpediente);
+                    item.setAttribute('aria-selected', index === indiceAutocompleteExpediente ? 'true' : 'false');
+                });
+                items[indiceAutocompleteExpediente].scrollIntoView({ block: 'nearest' });
+                return;
+            }
+            if (e.key === 'Escape') {
+                ocultarAutocompleteExpediente();
+                return;
+            }
             if (e.key === 'Enter') {
                 e.preventDefault();
-                document.getElementById('btnBuscarTrabajador').click();
+                const indice = indiceAutocompleteExpediente >= 0 ? indiceAutocompleteExpediente : 0;
+                const trabajador = items.length ? trabajadoresAutocompleteExpediente[indice] : null;
+                if (trabajador) {
+                    inputBuscarCedula.value = trabajador.cedula;
+                    buscarTrabajador(trabajador.cedula);
+                } else {
+                    buscarTrabajador();
+                }
+            }
+        });
+
+        document.addEventListener('click', event => {
+            if (!inputBuscarCedula.contains(event.target) && !listaAutocompleteExpediente.contains(event.target)) {
+                ocultarAutocompleteExpediente();
             }
         });
 
@@ -960,7 +1646,7 @@
                 mostrarToast(data.mensaje, 'success');
                 document.getElementById('modalCrearExpediente').style.display = 'none';
                 Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/expedientes')).forEach(k => localStorage.removeItem(k));
-                cargarExpedientes(1);
+                cargarResumenExpedientes(true);
             } catch (err) {
                 mostrarToast(err.mensaje || err.message || 'Error al crear expediente', 'error');
             } finally {
@@ -1226,18 +1912,25 @@
             if (e.target === this) cerrarCarta();
         });
 
-        // Observador para recargar al cambiar de pestaña
+        // Cargar al abrir por primera vez; las visitas posteriores conservan la lista.
+        const cargarAlEntrar = () => {
+            if (expedientesSeccionCargada || expedientesCargaInicialEnCurso) return;
+            expedientesCargaInicialEnCurso = true;
+            cargarResumenExpedientes(false).finally(() => {
+                expedientesCargaInicialEnCurso = false;
+            });
+        };
         const observer = new MutationObserver((mutations) => {
             mutations.forEach(m => {
                 if (m.target.id === 'expedientes' && m.target.classList.contains('active')) {
                     if (!document.getElementById('expediente-detalle').classList.contains('hidden')) return;
-                    Object.keys(localStorage).filter(k => k.startsWith('sigejub_cache_/expedientes')).forEach(k => localStorage.removeItem(k));
-                    cargarExpedientes(1);
+                    cargarAlEntrar();
                 }
             });
         });
         const seccion = document.getElementById('expedientes');
         if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
+        if (seccion?.classList.contains('active')) cargarAlEntrar();
     });
 })();
 </script>

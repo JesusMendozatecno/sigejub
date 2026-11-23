@@ -27,7 +27,7 @@
 .hist-pag-dots{min-width:28px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#94a3b8;font-weight:700;}
 body.dark-mode .hist-pag-btn{background:#1e293b;border-color:#334155;color:#94a3b8;}
 body.dark-mode .hist-pag-btn:hover{background:#334155;color:#f1f5f9;}
-body.dark-mode .hist-pag-btn.active{background:#1e40af;border-color:#1e40af;color:white;}
+body.dark-mode .hist-pag-btn.active{background:var(--accent,#1a365d);border-color:var(--accent,#1a365d);color:white;}
 body.dark-mode .hist-pag-dots{color:#64748b;}
 /* El estilo de la ventana modal (.modal-tasa) vive en css/dashboard/secciones/modal.css */
 body.dark-mode .tasa-actual-card{background:linear-gradient(135deg,var(--accent,#1e293b),#0f172a);border:1px solid #334155;}
@@ -67,9 +67,6 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
             <div class="tasa-actions" id="tasaAdminActions" style="display:none;">
                 <button class="tasa-btn tasa-btn-success" id="btnSincronizarTasa">
                     <i class="fas fa-sync-alt"></i> Sincronizar API
-                </button>
-                <button class="tasa-btn tasa-btn-primary" id="btnRegistrarTasa2">
-                    <i class="fas fa-edit"></i> Registrar Manual
                 </button>
             </div>
         </div>
@@ -132,7 +129,7 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
             </div>
             <div class="modal-tasa-actions">
                 <button type="button" class="btn-cancel" id="btnCancelarTasa" style="padding:10px 18px;border-radius:8px;font-size:0.82rem;font-weight:600;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;">Cancelar</button>
-                <button type="submit" class="btn-submit" id="btnSubmitTasa" style="padding:10px 18px;border-radius:8px;font-size:0.82rem;font-weight:600;border:none;background:#1a365d;color:white;cursor:pointer;">Registrar</button>
+                <button type="submit" class="btn-submit" id="btnSubmitTasa" style="padding:10px 18px;border-radius:8px;font-size:0.82rem;font-weight:600;border:none;color:white;cursor:pointer;">Registrar</button>
             </div>
         </form>
     </div>
@@ -150,12 +147,12 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
 
         badge.style.display = 'inline-flex';
         const estados = {
-            actualizada: { color: '#4ade80', bg: 'rgba(74,222,128,0.15)', txt: '#166534', label: '🟢 Actualizada' },
-            disponible: { color: '#facc15', bg: 'rgba(250,204,21,0.15)', txt: '#92400e', label: '🟡 Última disponible' },
-            desactualizada: { color: '#f87171', bg: 'rgba(248,113,113,0.15)', txt: '#991b1b', label: '🔴 Desactualizada' },
-            no_disponible: { color: '#f87171', bg: 'rgba(248,113,113,0.15)', txt: '#991b1b', label: '🔴 No disponible' },
+            actualizada: { color: '#15803d', bg: '#dcfce7', txt: '#000000', label: 'Actualizada' },
+            disponible: { color: '#a16207', bg: '#fef3c7', txt: '#92400e', label: 'Última disponible' },
+            desactualizada: { color: '#b91c1c', bg: '#fee2e2', txt: '#991b1b', label: 'Desactualizada' },
+            no_disponible: { color: '#b91c1c', bg: '#fee2e2', txt: '#991b1b', label: 'No disponible' },
         };
-        const cfg = estados[data.estado] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.15)', txt: '#475569', label: data.etiqueta || '—' };
+        const cfg = estados[data.estado] || { color: '#64748b', bg: '#e2e8f0', txt: '#334155', label: data.etiqueta || '—' };
         dot.style.background = cfg.color;
         badge.style.background = cfg.bg;
         badge.style.color = cfg.txt;
@@ -254,7 +251,6 @@ body.dark-mode #tasaEstadoBadge{background:#1e293b;color:#e2e8f0;}
     }
 
     document.getElementById('btnRegistrarTasa')?.addEventListener('click', abrirModal);
-    document.getElementById('btnRegistrarTasa2')?.addEventListener('click', abrirModal);
     document.getElementById('btnCancelarTasa')?.addEventListener('click', cerrarModal);
     document.getElementById('modalRegistrarTasa')?.addEventListener('click', function(e) {
         if (e.target === this) cerrarModal();

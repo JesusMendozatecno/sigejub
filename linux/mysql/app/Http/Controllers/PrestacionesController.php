@@ -16,22 +16,61 @@ use App\Models\TasaCambio;
 use App\Services\NotificationService;
 use App\Services\ValidationService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class PrestacionesController extends Controller
 {
+    private const INICIALES_ALFABETICAS = [
+        'A' => ['A', 'Á', 'À', 'Ä', 'Â'],
+        'B' => ['B'],
+        'C' => ['C'],
+        'D' => ['D'],
+        'E' => ['E', 'É', 'È', 'Ë', 'Ê'],
+        'F' => ['F'],
+        'G' => ['G'],
+        'H' => ['H'],
+        'I' => ['I', 'Í', 'Ì', 'Ï', 'Î'],
+        'J' => ['J'],
+        'K' => ['K'],
+        'L' => ['L'],
+        'M' => ['M'],
+        'N' => ['N', 'Ñ'],
+        'O' => ['O', 'Ó', 'Ò', 'Ö', 'Ô'],
+        'P' => ['P'],
+        'Q' => ['Q'],
+        'R' => ['R'],
+        'S' => ['S'],
+        'T' => ['T'],
+        'U' => ['U', 'Ú', 'Ù', 'Ü', 'Û'],
+        'V' => ['V'],
+        'W' => ['W'],
+        'X' => ['X'],
+        'Y' => ['Y'],
+        'Z' => ['Z'],
+    ];
+
     public function index(Request $request)
     {
-        // El expediente ya no exige solicitud: se incluyen los que no tienen
-        // solicitud y los que la tienen aprobada. Los expedientes cuya solicitud
-        // fue rechazada quedan fuera del cálculo.
-        $expedientes = Expediente::with(['trabajador.prestacion', 'solicitud', 'clausulas'])
-            ->whereHas('trabajador')
-            ->where(function ($q) {
-                $q->whereNull('solicitud_id')
-                  ->orWhereHas('solicitud', fn($s) => $s->where('estado', 'aprobado'));
-            })
-            ->where('estado_global', 100)
-            ->paginate(min($request->get('per_page', 50), 100))
+        $request->validate([
+            'letra' => ['sometimes', 'string', 'regex:/^[A-Za-z#]$/'],
+        ]);
+
+        $query = $this->consultaPrestaciones();
+        $this->aplicarBusquedaPrestaciones($query, $request);
+
+        $letra = mb_strtoupper(trim((string) $request->get('letra')), 'UTF-8');
+        if ($letra !== '') {
+            $this->aplicarFiltroLetra($query, $letra);
+        }
+
+        $expedientes = $query
+            ->select('expedientes.*')
+            ->with(['trabajador.prestacion', 'solicitud', 'clausulas'])
+            ->orderByRaw("LOWER(COALESCE(t.nombres, ''))")
+            ->orderByRaw("LOWER(COALESCE(t.apellidos, ''))")
+            ->orderBy('expedientes.id')
+            ->paginate(min((int) $request->get('per_page', 10), 100))
             ->through(function ($exp) {
                 $t = $exp->trabajador;
                 if (!$t) return null;
@@ -57,12 +96,108 @@ class PrestacionesController extends Controller
                 ];
             });
 
-        // Filter out null entries from paginated results
         $expedientes->setCollection(
             $expedientes->getCollection()->filter()->values()
         );
 
         return response()->json($expedientes);
+    }
+
+    public function letras(Request $request)
+    {
+        $expedientesPorInicial = $this->consultaPrestaciones()
+            ->selectRaw($this->inicialPrestacionSql('t.') . ' as inicial');
+        $this->aplicarBusquedaPrestaciones($expedientesPorInicial, $request);
+
+        $conteos = DB::query()
+            ->fromSub($expedientesPorInicial->toBase(), 'prestaciones_por_inicial')
+            ->select('inicial')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('inicial')
+            ->get();
+
+        $totalesPorLetra = [];
+        foreach ($conteos as $conteo) {
+            $letra = $this->normalizarInicial($conteo->inicial);
+            $totalesPorLetra[$letra] = ($totalesPorLetra[$letra] ?? 0) + (int) $conteo->total;
+        }
+
+        uksort($totalesPorLetra, static function ($a, $b) {
+            if ($a === '#') return $b === '#' ? 0 : 1;
+            if ($b === '#') return -1;
+            return strcmp($a, $b);
+        });
+
+        $letras = [];
+        foreach ($totalesPorLetra as $letra => $total) {
+            $letras[] = ['letra' => $letra, 'total' => $total];
+        }
+
+        return response()->json(['letras' => $letras]);
+    }
+
+    private function consultaPrestaciones(): Builder
+    {
+        return Expediente::query()
+            ->join('trabajadores as t', 'expedientes.trabajador_id', '=', 't.id')
+            ->whereHas('trabajador')
+            ->where(function ($query) {
+                $query->whereNull('expedientes.solicitud_id')
+                    ->orWhereHas('solicitud', fn($solicitud) => $solicitud->where('estado', 'aprobado'));
+            })
+            ->where('expedientes.estado_global', 100);
+    }
+
+    private function aplicarBusquedaPrestaciones(Builder $query, Request $request): void
+    {
+        $search = trim((string) $request->get('search', ''));
+        if ($search === '') return;
+
+        $query->whereHas('trabajador', function ($trabajador) use ($search) {
+            $trabajador->where(function ($subquery) use ($search) {
+                $subquery->where('nombres', 'like', "%{$search}%")
+                    ->orWhere('apellidos', 'like', "%{$search}%")
+                    ->orWhere('cedula', 'like', "%{$search}%");
+            });
+        });
+    }
+
+    private function aplicarFiltroLetra(Builder $query, string $letra): void
+    {
+        $inicialSql = $this->inicialPrestacionSql();
+        $variantes = self::INICIALES_ALFABETICAS[$letra] ?? null;
+
+        $query->whereHas('trabajador', function ($trabajador) use ($inicialSql, $variantes) {
+            if ($variantes === null) {
+                $alfabeto = array_merge(...array_values(self::INICIALES_ALFABETICAS));
+                $marcadores = implode(',', array_fill(0, count($alfabeto), '?'));
+                $trabajador->whereRaw($inicialSql . ' NOT IN (' . $marcadores . ')', $alfabeto);
+                return;
+            }
+
+            $marcadores = implode(',', array_fill(0, count($variantes), '?'));
+            $trabajador->whereRaw($inicialSql . ' IN (' . $marcadores . ')', $variantes);
+        });
+    }
+
+    private function inicialPrestacionSql(string $prefijo = ''): string
+    {
+        return "UPPER(SUBSTR(COALESCE(NULLIF(TRIM({$prefijo}nombres), ''), NULLIF(TRIM({$prefijo}apellidos), ''), ''), 1, 1))";
+    }
+
+    private function normalizarInicial(?string $inicial): string
+    {
+        $inicial = mb_strtoupper(mb_substr(trim((string) $inicial), 0, 1, 'UTF-8'), 'UTF-8');
+        $inicial = strtr($inicial, [
+            'Á' => 'A', 'À' => 'A', 'Ä' => 'A', 'Â' => 'A',
+            'É' => 'E', 'È' => 'E', 'Ë' => 'E', 'Ê' => 'E',
+            'Í' => 'I', 'Ì' => 'I', 'Ï' => 'I', 'Î' => 'I',
+            'Ñ' => 'N',
+            'Ó' => 'O', 'Ò' => 'O', 'Ö' => 'O', 'Ô' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Ü' => 'U', 'Û' => 'U',
+        ]);
+
+        return preg_match('/^[A-Z]$/', $inicial) ? $inicial : '#';
     }
 
     public function show($id)

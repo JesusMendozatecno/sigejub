@@ -5,6 +5,8 @@
 **Fecha:** Octubre 2026 | **Versión Base:** Laravel 12.x / PHP 8.2+ / MySQL & PostgreSQL  
 **Estado:** Aprobado y alineado con prioridades de desarrollo  
 
+> **Estado de implementación verificado (2026-11-08):** la prioridad de las listas de Expedientes y Prestaciones por nombre está aplicada en las seis copias; la búsqueda de expedientes se realiza en backend y las búsquedas de fórmulas/tasas agrupan sus condiciones OR. Los servicios de cálculo y evaluación de fórmulas, los Form Requests y el cliente `public/js/core/api-client.js` siguen siendo propuestas pendientes, no deben leerse como funcionalidades ya disponibles.
+
 ---
 
 ## 1. Resumen Ejecutivo y Justificación

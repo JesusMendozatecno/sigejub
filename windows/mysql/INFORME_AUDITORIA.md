@@ -53,3 +53,11 @@ Se documentan para no reintentar sin necesidad:
 - 7 archivos modificados, sin commitear (a la espera de aprobación).
 - Riesgo residual de los cambios: **bajo**. Ninguno toca lógica de negocio, seguridad ni diseño.
 - El `->limit(100)` en `verificar()` asume que los backups a confirmar son recientes; si algún día se verifica un backup anterior al centésimo más reciente, se usaría el filtrado PHP siguiente (que ya existía) — comportamiento equivalente salvo en historiales >100 sin coincidencia.
+
+## Addendum de cambios posteriores — 2026-11-08
+
+Este addendum no reemplaza la auditoría histórica anterior. En las seis copias de la aplicación se sincronizaron dos correcciones: Expedientes y Prestaciones ordenan por nombre, apellido e ID; además, las letras A-Z de sus grupos se calculan con el nombre. Las búsquedas de tasas y fórmulas agrupan los `orWhere` para que no anulen filtros adicionales.
+
+Archivos funcionales revisados en esta copia: `app/Http/Controllers/ExpedienteController.php`, `app/Http/Controllers/PrestacionesController.php`, `app/Http/Controllers/TasaCambioController.php`, `app/Http/Controllers/FormulaPrestacionController.php`, `resources/views/dashboard/secciones/expedientes.blade.php` y `resources/views/dashboard/secciones/prestaciones.blade.php`.
+
+Validación registrada: `php artisan test --stop-on-failure` ejecutado desde `SIGEJUB-Portable/` con SQLite: 3 pruebas pasaron y 7 pruebas específicas de PostgreSQL se omitieron por usar SQLite. Esto no equivale a certificar la matriz MySQL/PostgreSQL.

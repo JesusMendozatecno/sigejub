@@ -33,6 +33,7 @@
             tr:nth-child(even) { background: #f8fafc !important; }
         }
     </style>
+<link rel="stylesheet" href="{{ asset('css/scrollbars.css') }}?v={{ substr(md5_file(public_path('css/scrollbars.css')), 0, 10) }}">
 </head>
 <body>
     <div class="no-print">

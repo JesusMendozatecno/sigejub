@@ -4,13 +4,38 @@
     .autocomplete-list {
         position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
         background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
-        max-height: 280px; overflow-y: auto; display: none;
+        max-height: 222px; overflow-y: auto; display: none;
         box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin-top: 4px;
     }
-    .autocomplete-list .autocomplete-item {
-        padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9;
-        transition: background 0.15s; display: flex; flex-direction: column;
+    .autocomplete-list {
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent, #2563eb) #e2e8f0;
     }
+    .autocomplete-list::-webkit-scrollbar { width: 9px; }
+    .autocomplete-list::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 0 8px 8px 0; }
+    .autocomplete-list::-webkit-scrollbar-thumb {
+        background: var(--accent, #2563eb); border-radius: 8px; border: 2px solid #e2e8f0;
+    }
+    .autocomplete-list::-webkit-scrollbar-thumb:hover { background: var(--accent-dark, #1a365d); }
+    .autocomplete-list .autocomplete-item {
+        height: 44px; box-sizing: border-box;
+        padding: 6px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s; display: flex; flex-direction: column;
+        justify-content: center;
+    }
+    .btn-agregar-trabajador {
+        flex: 0 0 42px; width: 42px; height: 42px;
+        display: none; align-items: center; justify-content: center;
+        border: 1px solid var(--accent-dark, #1a365d); border-radius: 8px;
+        background: var(--accent, #2563eb); color: #fff;
+        font-size: 1.1rem; font-weight: 700; cursor: pointer;
+    }
+    .btn-agregar-trabajador.visible { display: inline-flex; }
+    .btn-agregar-trabajador:hover { background: var(--accent-dark, #1a365d); }
+    .cedula-hint { font-size: 0.72rem; color: #64748b; margin: 4px 0 0; }
+    body.dark-mode .autocomplete-list { background: var(--bg-card, #1e293b); border-color: var(--border, #334155); }
+    body.dark-mode .autocomplete-item .auto-name { color: #f1f5f9; }
+    body.dark-mode .autocomplete-empty { color: #cbd5e1; }
     .autocomplete-list .autocomplete-item:last-child { border-bottom: none; }
     .autocomplete-list .autocomplete-item:hover,
     .autocomplete-list .autocomplete-item.highlighted { background: #eff6ff; }
@@ -56,6 +81,7 @@
                 <th>FOLIO</th>
                 <th>TRABAJADOR</th>
                 <th>TIPO DE RETIRO</th>
+                <th>AÑOS DE SERVICIO</th>
                 <th>FECHA APERTURA</th>
                 <th>ESTATUS</th>
                 <th>ACCIONES</th>
@@ -109,16 +135,6 @@
             <span class="badge-new">NUEVO REGISTRO</span>
             <h1>Registro de Solicitud de Jubilación</h1>
             <p>Complete cuidadosamente todos los campos requeridos para iniciar el proceso de retiro administrativo del trabajador.</p>
-            <div class="modal-info-list">
-                <div class="info-item">
-                    <i class="fas fa-circle-info"></i>
-                    <span>Los documentos PDF deben ser legibles y estar actualizados.</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-shield-check"></i>
-                    <span>Este proceso cumple con la normativa de seguridad de datos institucionales.</span>
-                </div>
-            </div>
         </aside>
 
         <main class="modal-form-content">
@@ -127,33 +143,39 @@
                 @csrf
                 <section class="form-section">
                     <h3><i class="fas fa-file-lines"></i> Información General</h3>
-                    <div class="form-row-3">
-                        <div class="input-group" style="position:relative;">
-                            <label>TRABAJADOR</label>
-                            <input type="text" id="inputBusquedaTrabajador" placeholder="Escriba nombre o cédula..." autocomplete="off" required>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>TRABAJADOR (CÉDULA)</label>
+                            <div style="display:flex;gap:6px;align-items:flex-start;">
+                                <div style="position:relative;flex:1;min-width:0;">
+                                    <input type="text" id="inputBusquedaTrabajador" placeholder="V-12345678" autocomplete="off" required>
+                                    <div id="autocompleteList" class="autocomplete-list"></div>
+                                </div>
+                                <button type="button" id="btnAgregarTrabajador" class="btn-agregar-trabajador" title="Agregar trabajador no registrado"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <p class="cedula-hint">Escriba <strong>V-</strong> para ver los primeros trabajadores o complete la cédula para filtrar.</p>
                             <input type="hidden" name="trabajador_id" id="hiddenTrabajadorId">
-                            <div id="autocompleteList" class="autocomplete-list"></div>
                         </div>
                         <div class="input-group">
                             <label>FECHA SOLICITUD</label>
                             <input type="date" name="fecha_solicitud" required>
                         </div>
-                        <div class="input-group">
-                            <label>PERIODO</label>
-                            <input type="hidden" name="periodo" id="periodoComb">
-                            <div style="display:flex;gap:8px;">
-                                <select name="periodo_anio" id="periodoAnio" required style="max-height:180px;">
-                                    @php $anioActual = (int) date('Y'); @endphp
-                                    @for ($a = $anioActual; $a >= 1900; $a--)
-                                        <option value="{{ $a }}" @if ($a === $anioActual) selected @endif>{{ $a }}</option>
-                                    @endfor
-                                </select>
-                                <select name="periodo_semestre" id="periodoSemestre" required>
-                                    <option value="">Semestre...</option>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                </select>
-                            </div>
+                    </div>
+                    <div class="input-group periodo-solicitud-group">
+                        <label>PERIODO</label>
+                        <input type="hidden" name="periodo" id="periodoComb">
+                        <div style="display:flex;gap:8px;">
+                            <select name="periodo_anio" id="periodoAnio" required style="max-height:180px;">
+                                @php $anioActual = (int) date('Y'); @endphp
+                                @for ($a = $anioActual; $a >= 1900; $a--)
+                                    <option value="{{ $a }}" @if ($a === $anioActual) selected @endif>{{ $a }}</option>
+                                @endfor
+                            </select>
+                            <select name="periodo_semestre" id="periodoSemestre" required>
+                                <option value="">Semestre...</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                            </select>
                         </div>
                     </div>
                     <div class="input-group">
@@ -169,17 +191,31 @@
 
                 <section class="form-section">
                     <h3><i class="fas fa-user"></i> Datos del Trabajador</h3>
+                    <div class="input-group">
+                        <label>NOMBRE COMPLETO</label>
+                        <input type="text" id="displayNombreCompleto" readonly disabled placeholder="Seleccione un trabajador...">
+                    </div>
+                    {{-- La cédula ya se captura arriba: se conserva oculta para el autocompletado. --}}
+                    <input type="hidden" id="displayCedula" value="">
                     <div class="form-row-2">
-<div class="form-row-2">
                         <div class="input-group">
-                            <label>NOMBRE COMPLETO</label>
-                            <input type="text" id="displayNombreCompleto" readonly disabled placeholder="Seleccione un trabajador...">
+                            <label>AÑOS DE SERVICIO</label>
+                            <input type="text" id="displayAnosServicio" readonly disabled placeholder="—">
                         </div>
                         <div class="input-group">
-                            <label>CÉDULA</label>
-                            <input type="text" id="displayCedula" readonly disabled placeholder="Se escoge al seleccionar el trabajador">
+                            <label>CARGO</label>
+                            <input type="text" id="displayCargo" readonly disabled placeholder="—">
                         </div>
                     </div>
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label>GRADO</label>
+                            <input type="text" id="displayGrado" readonly disabled placeholder="—">
+                        </div>
+                        <div class="input-group">
+                            <label>DEPARTAMENTO</label>
+                            <input type="text" id="displayDepartamento" readonly disabled placeholder="—">
+                        </div>
                     </div>
                 </section>
 
@@ -223,6 +259,10 @@
                             <option value="aprobado">Aprobado</option>
                             <option value="rechazado">Rechazado</option>
                         </select>
+                    </div>
+                    <div class="input-group" style="margin-top: 12px;">
+                        <label>AÑOS DE SERVICIO</label>
+                        <input type="text" id="editAnosServicio" readonly>
                     </div>
                     <div class="input-group" style="margin-top: 12px;">
                         <label>OBSERVACIONES</label>
@@ -347,15 +387,27 @@
         if (!lista) return;
         trabajadoresCache = resultados;
         autocompleteIndex = -1;
+        const btnAgregar = document.getElementById('btnAgregarTrabajador');
+        const hint = document.querySelector('.cedula-hint');
+        const total = resultados ? resultados.length : 0;
+        if (hint) {
+            hint.innerHTML = total > 5
+                ? 'Mostrando 5 de <strong>' + total + '</strong> · desplácese para ver más'
+                : 'Escriba <strong>V-</strong> para ver los primeros trabajadores o complete la cédula para filtrar.';
+        }
 
         if (!resultados || resultados.length === 0) {
-            lista.innerHTML = '<div class="autocomplete-empty">No se encontró un trabajador con ese dato.<br>' +
-                '<button type="button" style="margin-top:10px;padding:8px 14px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;" ' +
-                'onclick="irARegistrarTrabajador()"><i class="fas fa-user-plus"></i> Registrar trabajador</button></div>';
+            lista.innerHTML = '<div class="autocomplete-empty">No se encontró un trabajador con esa cédula.<br>' +
+                'Use el botón <strong>+</strong> para registrarlo.</div>';
             lista.style.display = 'block';
+            if (btnAgregar) {
+                btnAgregar.dataset.cedula = document.getElementById('inputBusquedaTrabajador').value.trim();
+                btnAgregar.classList.add('visible');
+            }
             return;
         }
 
+        if (btnAgregar) btnAgregar.classList.remove('visible');
         lista.innerHTML = resultados.map((t, i) =>
             `<div class="autocomplete-item" data-index="${i}" data-id="${t.id}">
                 <span class="auto-name">${escaparHTML(t.nombres)} ${escaparHTML(t.apellidos)}</span>
@@ -369,14 +421,26 @@
         document.getElementById('hiddenTrabajadorId').value = trabajador.id;
         document.getElementById('displayNombreCompleto').value = `${trabajador.nombres} ${trabajador.apellidos}`;
         document.getElementById('displayCedula').value = trabajador.cedula;
-        document.getElementById('inputBusquedaTrabajador').value = `${trabajador.nombres} ${trabajador.apellidos}`;
+        document.getElementById('inputBusquedaTrabajador').value = trabajador.cedula;
         document.getElementById('autocompleteList').style.display = 'none';
-        document.getElementById('displayNombreCompleto').disabled = false;
-        document.getElementById('displayCedula').disabled = false;
-        // Autocargar el tipo de jubilación desde el expediente del trabajador
+        document.getElementById('btnAgregarTrabajador')?.classList.remove('visible');
+        ['displayNombreCompleto', 'displayCedula', 'displayAnosServicio', 'displayCargo', 'displayGrado', 'displayDepartamento']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+
+        // Cargar el resto de los datos del trabajador y el tipo de jubilación.
         fetch(`/trabajadores/${trabajador.id}`)
             .then(r => r.json())
             .then(t => {
+                const poner = (id, valor) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = (valor === null || valor === undefined || valor === '') ? '—' : valor;
+                };
+                poner('displayNombreCompleto', t.nombre_completo || `${t.nombres || ''} ${t.apellidos || ''}`.trim());
+                poner('displayCedula', t.cedula);
+                poner('displayAnosServicio', t.total_anos_servicio == null ? '—' : `${t.total_anos_servicio} años`);
+                poner('displayCargo', t.cargo);
+                poner('displayGrado', t.grado_nivel);
+                poner('displayDepartamento', t.unidad_departamento);
                 const selTipo = document.getElementById('inputTipoJubilacion');
                 if (selTipo && t.tipo_jubilacion) {
                     const op = Array.from(selTipo.options).find(o => o.value === t.tipo_jubilacion);
@@ -388,10 +452,14 @@
 
     function limpiarSeleccion() {
         document.getElementById('hiddenTrabajadorId').value = '';
-        document.getElementById('displayNombreCompleto').value = '';
-        document.getElementById('displayCedula').value = '';
-        document.getElementById('displayNombreCompleto').disabled = true;
-        document.getElementById('displayCedula').disabled = true;
+        ['displayNombreCompleto', 'displayCedula', 'displayAnosServicio', 'displayCargo', 'displayGrado', 'displayDepartamento']
+            .forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.value = '';
+                el.disabled = true;
+            });
+        document.getElementById('btnAgregarTrabajador')?.classList.remove('visible');
         const selTipo = document.getElementById('inputTipoJubilacion');
         if (selTipo) selTipo.value = '';
     }
@@ -410,6 +478,7 @@
         }
 
         const val = e.target.value.trim();
+        document.getElementById('btnAgregarTrabajador')?.classList.remove('visible');
         if (val.length === 0) {
             // Sin texto: se oculta la lista (no mostrar trabajadores hasta que escriba)
             const listaVacia = document.getElementById('autocompleteList');
@@ -419,7 +488,15 @@
             }
             return;
         }
-        if (val.length < 2) return;
+        // Con solo "V-" ya se listan los primeros resultados en orden alfabético.
+        if (!/^V-/i.test(val)) {
+            const listaIncompleta = document.getElementById('autocompleteList');
+            if (listaIncompleta) {
+                listaIncompleta.innerHTML = '';
+                listaIncompleta.style.display = 'none';
+            }
+            return;
+        }
 
         timeoutBusqueda = setTimeout(async () => {
             const r = await cargarAutocomplete(val);
@@ -482,11 +559,22 @@
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
-    // Botón "Registrar trabajador" cuando el autocomplete no encuentra resultados
-    window.irARegistrarTrabajador = function() {
+    // Botón "+" junto a la cédula: da de alta al trabajador cuando no fue encontrado.
+    function registrarTrabajadorDesdeCedula(cedula = '') {
         cerrarModalSolicitud();
         if (typeof switchTab === 'function') switchTab('trabajadores');
+        if (typeof window.abrirRegistroTrabajadorConCedula === 'function') {
+            window.abrirRegistroTrabajadorConCedula(cedula);
+        }
+    }
+
+    window.irARegistrarTrabajador = function() {
+        registrarTrabajadorDesdeCedula(document.getElementById('inputBusquedaTrabajador')?.value.trim() || '');
     };
+
+    document.getElementById('btnAgregarTrabajador')?.addEventListener('click', function() {
+        registrarTrabajadorDesdeCedula(this.dataset.cedula || document.getElementById('inputBusquedaTrabajador').value.trim());
+    });
 
     async function cargarSolicitudes(estado = 'all') {
         const params = estado !== 'all' ? `?estado=${estado}` : '';
@@ -499,7 +587,7 @@
             tbody.innerHTML = '';
 
             if (!data.data || data.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #888;">No hay solicitudes registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #888;">No hay solicitudes registradas</td></tr>';
                 document.getElementById('solicitudesCounter').textContent = 'Mostrando 0 solicitudes';
                 return;
             }
@@ -526,10 +614,10 @@
                         </div>
                     </td>
                     <td>${escaparHTML(tipoJub)}</td>
+                    <td>${escaparHTML(t.total_anos_servicio == null ? '—' : `${t.total_anos_servicio} años`)}</td>
                     <td>${escaparHTML(fecha)}</td>
                     <td><span class="badge-status ${escaparHTML(badgeClass)}">${escaparHTML(badgeText)}</span></td>
                     <td class="actions">
-                        <i class="fas fa-eye btn-icon btn-ver-solicitud" title="Ver" data-id="${escaparHTML(String(s.id))}"></i>
                         <i class="fas fa-pen btn-icon btn-editar-solicitud" title="Editar" data-id="${escaparHTML(String(s.id))}"></i>
                         <i class="fas fa-trash btn-icon btn-eliminar-solicitud" title="Eliminar" data-id="${escaparHTML(String(s.id))}" style="color:#dc2626;"></i>
                     </td>
@@ -549,8 +637,6 @@
     document.getElementById('tbodySolicitudes').addEventListener('click', function(e) {
         const btnEditar = e.target.closest('.btn-editar-solicitud');
         if (btnEditar) { abrirModalEditarSolicitud(btnEditar.dataset.id); return; }
-        const btnVer = e.target.closest('.btn-ver-solicitud');
-        if (btnVer) { if(typeof abrirModalVerSolicitud==='function'){ abrirModalVerSolicitud(btnVer.dataset.id); } return; }
         const btnEliminar = e.target.closest('.btn-eliminar-solicitud');
         if (btnEliminar) { if(typeof window.eliminarSolicitud==='function'){ window.eliminarSolicitud(btnEliminar.dataset.id); } return; }
     });
@@ -661,6 +747,7 @@
                 document.getElementById('editFolio').textContent = folio;
                 const t = s.trabajador || {};
                 document.getElementById('editTrabajadorNombre').textContent = [t.nombres, t.apellidos].filter(Boolean).join(' ') || '—';
+                document.getElementById('editAnosServicio').value = t.total_anos_servicio == null ? '—' : `${t.total_anos_servicio} años`;
                 document.getElementById('editEstado').value = s.estado;
                 document.getElementById('formEditarSolicitud').querySelector('[name="observaciones"]').value = s.observaciones || '';
 

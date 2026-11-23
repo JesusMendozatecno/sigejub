@@ -324,8 +324,8 @@ class NominaImportService
     protected function normalizarGenero($value): string
     {
         $v = strtoupper(trim((string) $value));
-        if (in_array($v, ['M', 'MASCULINO', 'HOMBRE', 'MALE'])) return 'M';
-        if (in_array($v, ['F', 'FEMENINO', 'MUJER', 'FEMALE'])) return 'F';
+        if (in_array($v, ['M', 'MAS', 'MASCULINO', 'HOMBRE', 'MALE'])) return 'M';
+        if (in_array($v, ['F', 'FEM', 'FEMENINO', 'MUJER', 'FEMALE'])) return 'F';
         return '';
     }
 

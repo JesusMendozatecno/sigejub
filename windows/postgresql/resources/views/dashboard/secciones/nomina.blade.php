@@ -74,6 +74,252 @@ body.dark-mode .btn-accion-del:hover { background: #5f0f0f; }
 .nomina-total-asis { margin-top: 14px; padding: 12px; border-radius: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; text-align: center; font-weight: 800; color: #15803d; font-size: 0.9rem; }
 body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; color: #86efac; }
 /* La rejilla .modal-grid de la ventana de edición vive en css/dashboard/secciones/modal.css */
+/* ==== Cabecera de año y mes: regreso, título y contador alineados ==== */
+#nomina .nomina-anio-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 20px 0 8px;
+    padding: 14px 18px;
+    border: 1px solid #e8edf5;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+#nomina .nomina-anio-header > .btn-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    width: auto;
+    height: auto;
+    padding: 9px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    color: #1e3a8a;
+    font-size: .78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+#nomina .nomina-anio-header > .btn-back:hover { background: #f8fafc; border-color: #cbd5e1; }
+#nomina .nomina-anio-header > div:not(.total-badge-card) { flex: 1 1 240px; min-width: 0; }
+#nomina .nomina-anio-header h2 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: #0f172a;
+}
+#nomina .nomina-anio-header .nomina-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 5px; font-size: .78rem; color: #64748b; font-weight: 600; }
+#nomina .nomina-anio-header .total-badge-card { flex: 0 0 auto; margin-left: auto; }
+
+body.dark-mode #nomina .nomina-anio-header { background: #1e293b; border-color: #334155; }
+body.dark-mode #nomina .nomina-anio-header h2 { color: #f1f5f9; }
+body.dark-mode #nomina .nomina-anio-header .nomina-breadcrumb { color: #94a3b8; }
+body.dark-mode #nomina .nomina-anio-header > .btn-back { background: #0f172a; border-color: #334155; color: #93c5fd; }
+
+/* ==== Estandarizado con Expedientes: tarjetas de año/mes y cabecera de año abierto ==== */
+/* Reutiliza la misma receta de color, borde, sombra y textura que las tarjetas de letra. */
+#nomina .nomina-anio-card,
+#nomina .nomina-mes-card {
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 60%, #7f9cc4);
+    border-radius: 14px;
+    background:
+        radial-gradient(130% 100% at 100% 0%, color-mix(in srgb, var(--accent, #1a365d) 70%, transparent) 0%, transparent 62%),
+        linear-gradient(160deg, #0f1a2b 0%, #15243a 52%, #1a365d 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .20);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+#nomina .nomina-anio-card::after { content: none; display: none; }
+#nomina .nomina-anio-card::before,
+#nomina .nomina-mes-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1px);
+    background-size: 15px 15px;
+    opacity: .55;
+    -webkit-mask-image: linear-gradient(155deg, #000 0%, transparent 72%);
+    mask-image: linear-gradient(155deg, #000 0%, transparent 72%);
+}
+#nomina .nomina-anio-card:hover,
+#nomina .nomina-mes-card:hover,
+#nomina .nomina-anio-card:focus-visible,
+#nomina .nomina-mes-card:focus-visible {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 18%, #a8c4ea);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, .34);
+    outline: none;
+}
+#nomina .nomina-anio-card .na-folder,
+#nomina .nomina-anio-card .na-anio,
+#nomina .nomina-anio-card .na-count,
+#nomina .nomina-mes-card .nm-mes,
+#nomina .nomina-mes-card .nm-meta,
+#nomina .nomina-mes-card .nm-total { position: relative; z-index: 1; }
+#nomina .nomina-anio-card .na-tag { position: absolute; z-index: 2; }
+#nomina .nomina-anio-card .na-folder {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .12);
+    color: #eaf2ff;
+    font-size: 1.15rem;
+}
+#nomina .nomina-anio-card .na-anio {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-style: italic;
+    line-height: 1;
+    letter-spacing: -.5px;
+    color: #fff;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, .45);
+}
+#nomina .nomina-anio-card .na-count { font-size: .75rem; font-weight: 600; color: rgba(214, 227, 245, .78); }
+#nomina .nomina-anio-card .na-tag {
+    top: 12px;
+    right: 12px;
+    padding: 3px 8px;
+    border: 1px solid rgba(255, 255, 255, .24);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .14);
+    color: #eaf2ff;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+#nomina .nomina-mes-card { padding: 16px 18px; }
+#nomina .nomina-mes-card .nm-mes { font-size: 1rem; font-weight: 800; font-style: italic; color: #fff; }
+#nomina .nomina-mes-card .nm-meta { margin-top: 6px; font-size: .75rem; font-weight: 600; color: rgba(214, 227, 245, .78); }
+#nomina .nomina-mes-card .nm-total { margin-top: 8px; font-size: .78rem; font-weight: 800; color: #86efac; }
+#nomina .nomina-anio-card.vacia,
+#nomina .nomina-mes-card.sin-datos {
+    border-style: dashed;
+    background: linear-gradient(160deg, #101a2a 0%, #16233a 100%);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .16);
+    opacity: .74;
+}
+#nomina .nomina-anio-card.vacia .na-anio,
+#nomina .nomina-mes-card.sin-datos .nm-mes { color: rgba(226, 236, 250, .72); text-shadow: none; }
+#nomina .nomina-anio-card.vacia .na-count,
+#nomina .nomina-mes-card.sin-datos .nm-meta { color: rgba(199, 214, 235, .62); font-weight: 500; }
+#nomina .nomina-anio-card.vacia .na-folder { background: rgba(255, 255, 255, .07); color: rgba(226, 236, 250, .62); }
+
+/* ---- Cabecera del año abierto (igual a la cabecera de la letra abierta) ---- */
+#nomina .nomina-anio-header {
+    position: relative;
+    overflow: hidden;
+    margin: 20px 0 18px;
+    padding: 20px 22px;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 55%, #7f9cc4);
+    border-radius: 18px;
+    background:
+        radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--accent, #1a365d) 62%, transparent) 0%, transparent 66%),
+        linear-gradient(140deg, #0f1a2b 0%, #1a365d 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .20);
+}
+#nomina .nomina-anio-header h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: -.5px;
+    line-height: 1.2;
+    color: #fff;
+}
+#nomina .nomina-anio-header .nomina-breadcrumb { color: rgba(214, 227, 245, .78); }
+#nomina .nomina-anio-header .nomina-breadcrumb strong { color: #eaf2ff; }
+#nomina .nomina-anio-header > .btn-back {
+    padding: 8px 15px;
+    border: 1px solid rgba(255, 255, 255, .30);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .10);
+    color: #eaf2ff;
+    font-size: .75rem;
+    font-weight: 700;
+    box-shadow: none;
+}
+#nomina .nomina-anio-header > .btn-back:hover { background: rgba(255, 255, 255, .20); border-color: rgba(255, 255, 255, .45); }
+#nomina .nomina-anio-header .total-badge-card {
+    border: 1px solid rgba(255, 255, 255, .24);
+    background: rgba(255, 255, 255, .12);
+    box-shadow: none;
+}
+#nomina .nomina-anio-header .total-badge-card p { color: rgba(234, 242, 255, .82); }
+#nomina .nomina-anio-header .total-badge-card h2 { font-size: 1.35rem; font-style: normal; letter-spacing: 0; color: #fff; }
+#nomina .nomina-anio-header .total-badge-card .icon-bg { color: rgba(255, 255, 255, .32); }
+
+body.dark-mode #nomina .nomina-anio-header {
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 55%, #7f9cc4);
+    background:
+        radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--accent, #1a365d) 62%, transparent) 0%, transparent 66%),
+        linear-gradient(140deg, #0f1a2b 0%, #1a365d 100%);
+}
+body.dark-mode #nomina .nomina-anio-header > .btn-back { background: rgba(255, 255, 255, .10); border-color: rgba(255, 255, 255, .30); color: #eaf2ff; }
+body.dark-mode #nomina .nomina-anio-header > .btn-back:hover { background: rgba(255, 255, 255, .20); }
+body.dark-mode #nomina .nomina-anio-header .nomina-breadcrumb { color: rgba(214, 227, 245, .78); }
+
+/* ---- Modo claro: la misma receta en tonos claros del sistema ---- */
+body:not(.dark-mode) #nomina .nomina-anio-card,
+body:not(.dark-mode) #nomina .nomina-mes-card {
+    border-color: #cddcf0;
+    background:
+        radial-gradient(130% 100% at 100% 0%, rgba(37, 99, 235, .12) 0%, transparent 62%),
+        linear-gradient(160deg, #ffffff 0%, #f5f9ff 55%, #e9f1fb 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+}
+body:not(.dark-mode) #nomina .nomina-anio-card::before,
+body:not(.dark-mode) #nomina .nomina-mes-card::before { background-image: radial-gradient(rgba(26, 54, 93, .10) 1px, transparent 1px); opacity: .5; }
+body:not(.dark-mode) #nomina .nomina-anio-card:hover,
+body:not(.dark-mode) #nomina .nomina-mes-card:hover { border-color: #9dbbe4; box-shadow: 0 16px 30px rgba(26, 54, 93, .14); }
+body:not(.dark-mode) #nomina .nomina-anio-card .na-folder { border-color: #cfdff5; background: #eef4fc; color: #1d4ed8; }
+body:not(.dark-mode) #nomina .nomina-anio-card .na-anio { color: #1a365d; text-shadow: 0 6px 18px rgba(26, 54, 93, .14); }
+body:not(.dark-mode) #nomina .nomina-anio-card .na-count { color: #5b7799; }
+body:not(.dark-mode) #nomina .nomina-anio-card .na-tag { border-color: #cfdff5; background: #eef4fc; color: #1d4ed8; }
+body:not(.dark-mode) #nomina .nomina-mes-card .nm-mes { color: #1a365d; }
+body:not(.dark-mode) #nomina .nomina-mes-card .nm-meta { color: #5b7799; }
+body:not(.dark-mode) #nomina .nomina-mes-card .nm-total { color: #047857; }
+body:not(.dark-mode) #nomina .nomina-anio-card.vacia,
+body:not(.dark-mode) #nomina .nomina-mes-card.sin-datos { border-style: dashed; background: linear-gradient(160deg, #ffffff 0%, #f7fafe 100%); box-shadow: 0 4px 12px rgba(15, 23, 42, .06); opacity: .88; }
+body:not(.dark-mode) #nomina .nomina-anio-card.vacia .na-anio,
+body:not(.dark-mode) #nomina .nomina-mes-card.sin-datos .nm-mes { color: #94a3b8; }
+body:not(.dark-mode) #nomina .nomina-anio-card.vacia .na-count,
+body:not(.dark-mode) #nomina .nomina-mes-card.sin-datos .nm-meta { color: #a8b6c8; }
+body:not(.dark-mode) #nomina .nomina-anio-card.vacia .na-folder { border-color: #e2e8f0; background: #f1f5f9; color: #94a3b8; }
+body:not(.dark-mode) #nomina .nomina-anio-header {
+    border-color: #cddcf0;
+    background:
+        radial-gradient(120% 100% at 0% 0%, rgba(37, 99, 235, .12) 0%, transparent 66%),
+        linear-gradient(140deg, #ffffff 0%, #eaf1fb 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+}
+body:not(.dark-mode) #nomina .nomina-anio-header h2 { color: #1a365d; }
+body:not(.dark-mode) #nomina .nomina-anio-header .nomina-breadcrumb { color: #5b7799; }
+body:not(.dark-mode) #nomina .nomina-anio-header .nomina-breadcrumb strong { color: #1a365d; }
+body:not(.dark-mode) #nomina .nomina-anio-header > .btn-back { border-color: #bfd3ee; background: #eef4fc; color: #1d4ed8; }
+body:not(.dark-mode) #nomina .nomina-anio-header > .btn-back:hover { background: #dfeafb; border-color: #9dbbe4; }
+body:not(.dark-mode) #nomina .nomina-anio-header .total-badge-card { border-color: #cfdff5; background: #eef4fc; }
+body:not(.dark-mode) #nomina .nomina-anio-header .total-badge-card p { color: #1d4ed8; }
+body:not(.dark-mode) #nomina .nomina-anio-header .total-badge-card h2 { color: #1d4ed8; }
+body:not(.dark-mode) #nomina .nomina-anio-header .total-badge-card .icon-bg { color: #bfdbfe; }
 </style>
 
 <header class="section-header">
@@ -107,6 +353,7 @@ body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; 
         </div>
     </div>
     <div class="nomina-anios-grid" id="nominaAniosGrid"></div>
+    <div class="nomina-anios-pagination activity-pagination" id="nominaAniosPagination"></div>
 </div>
 
 {{-- VISTA 2: MESES DEL AÑO --}}
@@ -218,10 +465,12 @@ body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; 
 
 <div id="modalImportarNomina" class="modal-overlay" data-no-close-outside="true">
     <div class="modal-delete-box" style="text-align:left;max-width:560px;">
-        <h3 style="text-align:center;"><i class="fas fa-file-import"></i> Importar Nómina del Mes</h3>
-        <p style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;">
-            Suba el archivo Excel con formato oficial (hojas ADM / DOC / OBREROS) y seleccione el mes y el año de la planilla.
-        </p>
+        <div id="importarNominaHeader">
+            <h3 style="text-align:center;"><i class="fas fa-file-import"></i> Importar Nómina del Mes</h3>
+            <p style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;">
+                Suba el archivo Excel con formato oficial (hojas ADM / DOC / OBREROS) y seleccione el mes y el año de la planilla.
+            </p>
+        </div>
         <form id="formImportarNomina">
             @csrf
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -252,7 +501,7 @@ body.dark-mode .nomina-total-asis { background: #14532d; border-color: #166534; 
         </form>
         <div id="resultadoImportacion" style="display:none;margin-top:16px;padding:12px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;font-size:0.85rem;"></div>
         <div style="text-align:center;margin-top:12px;">
-            <button type="button" class="btn-submit" id="btnCerrarImportacion" style="display:none;background:#64748b;width:auto;padding:10px 28px;">Cerrar</button>
+            <button type="button" class="btn-primary-dark" id="btnCerrarImportacion" style="display:none;width:auto;padding:10px 28px;">Aceptar</button>
         </div>
     </div>
 </div>
@@ -329,6 +578,8 @@ let mesNominaActual = '';
 let filasNomina = [];
 let indiceEliminarNomina = null;
 let aniosNominaCache = [];
+const ANIOS_POR_PAGINA = 10;
+let paginaAniosNomina = 1;
 const MESES_NOMINA = @json(\App\Models\Nomina::MESES);
 
 document.querySelectorAll('.nomina-tab').forEach(tab => {
@@ -485,28 +736,65 @@ window.cargarAniosNomina = function() {
         .then(r => r.json())
         .then(resp => {
             aniosNominaCache = (resp && resp.anios) || [];
-            const grid = document.getElementById('nominaAniosGrid');
-            if (grid) {
-                let html = '';
-                aniosNominaCache.forEach(a => {
-                    const sinDatos = !a.planillas;
-                    html += '<div class="nomina-anio-card' + (sinDatos ? ' vacia' : '') + '" onclick="abrirAnioNomina(\'' + a.anio + '\')">' +
-                        '<span class="na-tag">' + (sinDatos ? 'Sin planillas' : a.planillas + ' planilla' + (a.planillas === 1 ? '' : 's')) + '</span>' +
-                        '<div class="na-folder"><i class="fas fa-folder' + (sinDatos ? '' : '-open') + '"></i></div>' +
-                        '<div class="na-anio">' + a.anio + '</div>' +
-                        '<div class="na-count">' + a.total_trabajadores + ' trabajador' + (a.total_trabajadores === 1 ? '' : 'es') + ' vigentes</div>' +
-                        '</div>';
-                });
-                if (!html) {
-                    html = '<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:40px 20px;border:1px dashed #cbd5e1;border-radius:12px;">' +
-                        'Aún no hay nóminas registradas. Presione <strong>Importar Nómina</strong> para cargar la primera.</div>';
-                }
-                grid.innerHTML = html;
-            }
+            const totalPaginas = Math.max(1, Math.ceil(aniosNominaCache.length / ANIOS_POR_PAGINA));
+            if (paginaAniosNomina > totalPaginas) paginaAniosNomina = totalPaginas;
+            renderizarAniosNomina();
+            renderPaginacionAniosNomina(totalPaginas);
             const badge = document.getElementById('totalTrabajadoresAnios');
             if (badge && resp) badge.textContent = resp.total_registrados ?? 0;
         })
         .catch(err => console.error(err));
+};
+
+window.renderizarAniosNomina = function() {
+    const grid = document.getElementById('nominaAniosGrid');
+    if (!grid) return;
+    const inicio = (paginaAniosNomina - 1) * ANIOS_POR_PAGINA;
+    const visibles = aniosNominaCache.slice(inicio, inicio + ANIOS_POR_PAGINA);
+    let html = '';
+    visibles.forEach(a => {
+        const sinDatos = !a.planillas;
+        html += '<div class="nomina-anio-card' + (sinDatos ? ' vacia' : '') + '" onclick="abrirAnioNomina(\'' + a.anio + '\')">' +
+            '<span class="na-tag">' + (sinDatos ? 'Sin planillas' : a.planillas + ' planilla' + (a.planillas === 1 ? '' : 's')) + '</span>' +
+            '<div class="na-folder"><i class="fas fa-folder' + (sinDatos ? '' : '-open') + '"></i></div>' +
+            '<div class="na-anio">' + a.anio + '</div>' +
+            '<div class="na-count">' + a.total_trabajadores + ' trabajador' + (a.total_trabajadores === 1 ? '' : 'es') + ' vigentes</div>' +
+            '</div>';
+    });
+    if (!html) {
+        html = '<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:40px 20px;border:1px dashed #cbd5e1;border-radius:12px;">' +
+            'Aún no hay nóminas registradas. Presione <strong>Importar Nómina</strong> para cargar la primera.</div>';
+    }
+    grid.innerHTML = html;
+};
+
+window.renderPaginacionAniosNomina = function(totalPaginas) {
+    const contenedor = document.getElementById('nominaAniosPagination');
+    if (!contenedor) return;
+    if (totalPaginas <= 1) {
+        contenedor.innerHTML = '';
+        return;
+    }
+    let html = '<button type="button" class="pag-btn" data-p="' + (paginaAniosNomina - 1) + '" ' +
+        (paginaAniosNomina <= 1 ? 'disabled' : '') + '>&lsaquo;</button>';
+    for (let pagina = 1; pagina <= totalPaginas; pagina++) {
+        html += '<button type="button" class="pag-btn' + (pagina === paginaAniosNomina ? ' active' : '') +
+            '" data-p="' + pagina + '">' + pagina + '</button>';
+    }
+    html += '<button type="button" class="pag-btn" data-p="' + (paginaAniosNomina + 1) + '" ' +
+        (paginaAniosNomina >= totalPaginas ? 'disabled' : '') + '>&rsaquo;</button>';
+    html += '<span class="pag-info">' + paginaAniosNomina + ' de ' + totalPaginas + '</span>';
+    contenedor.innerHTML = html;
+    contenedor.querySelectorAll('.pag-btn').forEach(boton => {
+        boton.addEventListener('click', function() {
+            const pagina = parseInt(this.dataset.p, 10);
+            if (pagina >= 1 && pagina <= totalPaginas && pagina !== paginaAniosNomina) {
+                paginaAniosNomina = pagina;
+                renderizarAniosNomina();
+                renderPaginacionAniosNomina(totalPaginas);
+            }
+        });
+    });
 };
 
 function poblarSelectorAnios(sel) {
@@ -535,7 +823,7 @@ window.abrirAnioNomina = function(anio) {
         const info = cargados[mes];
         if (info) {
             html += '<button type="button" class="nomina-mes-card" onclick="abrirMesNomina(\'' + anio + '\',' + mes + ')">' +
-                '<div class="nm-mes"><i class="fas fa-folder-open" style="color:#1d4ed8;"></i> ' + MESES_NOMINA[String(mes)] + '</div>' +
+                '<div class="nm-mes"><i class="fas fa-folder-open"></i> ' + MESES_NOMINA[String(mes)] + '</div>' +
                 '<div class="nm-meta">' + info.total_trabajadores + ' trabajador' + (info.total_trabajadores === 1 ? '' : 'es') + ' · ' + (info.estado || 'borrador') + '</div>' +
                 '<div class="nm-total">' + fmtBsNom(info.total_general) + '</div>' +
                 '</button>';
@@ -682,7 +970,12 @@ function cargarNomina() {
         });
 }
 
-document.addEventListener('DOMContentLoaded', function() { cargarAniosNomina(); });
+document.addEventListener('DOMContentLoaded', function() {
+    // Carga inicial solo si la sección ya está visible; el observer de abajo
+    // se encarga del resto al abrir Nómina.
+    var sec = document.getElementById('nomina');
+    if (sec && sec.classList.contains('active')) cargarAniosNomina();
+});
 
 const observerNomina = new MutationObserver(function(mutations) {
     mutations.forEach(function(m) {
@@ -696,11 +989,37 @@ const observerNomina = new MutationObserver(function(mutations) {
 const secNomina = document.getElementById('nomina');
 if (secNomina) observerNomina.observe(secNomina, { attributes: true, attributeFilter: ['class'] });
 
-document.getElementById('btnCancelarImportar')?.addEventListener('click', () => document.getElementById('modalImportarNomina').style.display = 'none');
+function restaurarFormularioImportacion() {
+    const header = document.getElementById('importarNominaHeader');
+    const form = document.getElementById('formImportarNomina');
+    const resultado = document.getElementById('resultadoImportacion');
+    const boton = document.getElementById('btnCerrarImportacion');
+    if (header) header.style.display = '';
+    if (form) { form.style.display = ''; form.reset(); }
+    if (resultado) { resultado.style.display = 'none'; resultado.innerHTML = ''; }
+    if (boton) { boton.style.display = 'none'; boton.textContent = 'Aceptar'; }
+}
+
+function mostrarEstadoImportacion(exito) {
+    const header = document.getElementById('importarNominaHeader');
+    const form = document.getElementById('formImportarNomina');
+    const boton = document.getElementById('btnCerrarImportacion');
+    if (header) header.style.display = exito ? 'none' : '';
+    if (form) form.style.display = exito ? 'none' : '';
+    if (boton) {
+        boton.style.display = 'inline-flex';
+        boton.textContent = exito ? 'Aceptar' : 'Cerrar';
+        boton.style.background = '';
+    }
+}
+
+document.getElementById('btnCancelarImportar')?.addEventListener('click', () => {
+    document.getElementById('modalImportarNomina').style.display = 'none';
+    restaurarFormularioImportacion();
+});
 document.getElementById('btnCerrarImportacion')?.addEventListener('click', () => {
     document.getElementById('modalImportarNomina').style.display = 'none';
-    document.getElementById('formImportarNomina').reset();
-    document.getElementById('resultadoImportacion').style.display = 'none';
+    restaurarFormularioImportacion();
 });
 
 document.getElementById('formImportarNomina')?.addEventListener('submit', async function(e) {
@@ -733,7 +1052,7 @@ document.getElementById('formImportarNomina')?.addEventListener('submit', async 
             html += '</ul>';
         }
         resultado.innerHTML = html;
-        document.getElementById('btnCerrarImportacion').style.display = 'inline-block';
+        mostrarEstadoImportacion(true);
         mostrarToast('Importación completada correctamente', 'success');
         await cargarAniosNomina();
         if (data.datos && data.datos.anio) {
@@ -745,7 +1064,7 @@ document.getElementById('formImportarNomina')?.addEventListener('submit', async 
         resultado.style.background = '#fef2f2';
         resultado.style.borderColor = '#fecaca';
         resultado.innerHTML = '<strong style="color:#dc2626;">' + (err.mensaje || err.message || 'Error al importar') + '</strong>';
-        document.getElementById('btnCerrarImportacion').style.display = 'inline-block';
+        mostrarEstadoImportacion(false);
         mostrarToast(err.mensaje || 'Error al importar', 'error');
     } finally {
         ocultarCargando();

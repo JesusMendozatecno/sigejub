@@ -9,6 +9,15 @@ use Tests\TestCase;
 
 class PostgreSQLTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (DB::connection()->getDriverName() !== 'pgsql' && $this->name() !== 'test_connection_is_alive') {
+            $this->markTestSkipped('PostgreSQL-specific integration test; current driver is ' . DB::connection()->getDriverName() . '.');
+        }
+    }
+
     public function test_database_driver_is_pgsql(): void
     {
         $driver = DB::connection()->getDriverName();

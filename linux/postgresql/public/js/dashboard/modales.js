@@ -49,6 +49,111 @@
         return MARCAS_VISIBLE.indexOf(el.style.display) !== -1;
     }
 
+    function crearBotonCerrar(modal, dialogo, zonaContenido) {
+        var boton = dialogo.querySelector(
+            '.modal-standard-close, .btn-close-absolute, .workers-calendar-close, .cn-modal-close, button[title="Cerrar"], button[aria-label*="Cerrar"]'
+        );
+        if (!boton) {
+            boton = document.createElement('button');
+            boton.textContent = '\u00d7';
+            boton.setAttribute('title', 'Cerrar');
+        }
+        boton.type = 'button';
+        boton.classList.add('modal-standard-close');
+        if (!boton.hasAttribute('aria-label')) boton.setAttribute('aria-label', 'Cerrar ventana');
+        boton.setAttribute('data-modal-close', modal.id);
+        zonaContenido.insertBefore(boton, zonaContenido.firstChild);
+    }
+
+    function normalizarDialogo(modal, dialogo) {
+        if (dialogo.classList.contains('modal-standardized')) return;
+
+        /* El recorte de foto de perfil conserva su propio diseño: es una
+           ventana compacta con el círculo centrado, sin panel lateral. */
+        if (modal.id === 'cropModal') return;
+
+        dialogo.setAttribute('role', 'dialog');
+        dialogo.setAttribute('aria-modal', 'true');
+        var zonaContenido = dialogo.querySelector(':scope > .modal-form-content');
+        if (dialogo.classList.contains('modal-container') && zonaContenido) {
+            dialogo.classList.add('modal-standardized');
+            crearBotonCerrar(modal, dialogo, zonaContenido);
+            return;
+        }
+
+        var tituloOriginal = dialogo.querySelector('h1, h2, h3, h4');
+        var descripcionOriginal = dialogo.querySelector(':scope > p');
+        var contenido = document.createElement('main');
+        contenido.className = 'modal-standard-content';
+
+        var info = document.createElement('aside');
+        info.className = 'modal-standard-info';
+        var distintivo = document.createElement('span');
+        distintivo.className = 'modal-standard-badge';
+        distintivo.textContent = 'SIGEJUB';
+        if (tituloOriginal) {
+            tituloOriginal.classList.add('modal-standard-title');
+            info.appendChild(tituloOriginal);
+        } else {
+            var tituloInfo = document.createElement('h2');
+            tituloInfo.className = 'modal-standard-title';
+            tituloInfo.textContent = modal.getAttribute('aria-label') || 'Información';
+            info.appendChild(tituloInfo);
+        }
+        info.insertBefore(distintivo, info.firstChild);
+        if (descripcionOriginal) {
+            descripcionOriginal.classList.add('modal-standard-description');
+            info.appendChild(descripcionOriginal);
+        } else {
+            var descripcion = document.createElement('p');
+            descripcion.className = 'modal-standard-description';
+            descripcion.textContent = 'Revisa la información de esta ventana y utiliza el panel de trabajo para completar la acción.';
+            info.appendChild(descripcion);
+        }
+
+        while (dialogo.firstChild) {
+            contenido.appendChild(dialogo.firstChild);
+        }
+        dialogo.classList.add('modal-standardized', 'modal-standardized-legacy');
+        dialogo.appendChild(info);
+        dialogo.appendChild(contenido);
+        crearBotonCerrar(modal, dialogo, contenido);
+    }
+
+    function normalizarModales(contenedor) {
+        var selector = [
+            '.modal-overlay > .modal-container',
+            '.modal-overlay > .modal-delete-box',
+            '.modal-overlay > .modal-box',
+            '.modal-overlay > .workers-calendar-modal',
+            '.modal-tasa > .modal-tasa-box',
+            '.modal-resultado > .modal-resultado-box'
+        ].join(', ');
+
+        if (contenedor.matches && contenedor.matches(selector)) {
+            var modalPadre = contenedor.parentElement;
+            if (modalPadre && modalPadre.id) normalizarDialogo(modalPadre, contenedor);
+        }
+        if (contenedor.querySelectorAll) {
+            contenedor.querySelectorAll(selector).forEach(function (dialogo) {
+                var modalPadre = dialogo.parentElement;
+                if (modalPadre && modalPadre.id) normalizarDialogo(modalPadre, dialogo);
+            });
+        }
+    }
+
+    function iniciarEstandarizacion() {
+        normalizarModales(document);
+        var observador = new MutationObserver(function (cambios) {
+            cambios.forEach(function (cambio) {
+                cambio.addedNodes.forEach(function (nodo) {
+                    if (nodo.nodeType === 1) normalizarModales(nodo);
+                });
+            });
+        });
+        observador.observe(document.body, { childList: true, subtree: true });
+    }
+
     /* ------------------------------------------------------------------
        API pública: abrir y cerrar
        ------------------------------------------------------------------ */
@@ -143,4 +248,10 @@
     /* Alias cortos para usar desde atributos onclick existentes */
     window.abrirModal = abrir;
     window.cerrarModal = cerrar;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', iniciarEstandarizacion);
+    } else {
+        iniciarEstandarizacion();
+    }
 })();

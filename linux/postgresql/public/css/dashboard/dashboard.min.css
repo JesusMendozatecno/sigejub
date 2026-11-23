@@ -4071,11 +4071,11 @@ body {
     overflow: hidden;
     border: 4px solid var(--border-light);
     position: relative;
-    cursor: pointer;
     background: var(--bg-surface);
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 }
 .avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
 .avatar-wrap .avatar-placeholder { color: #cbd5e1; }
@@ -7415,7 +7415,6 @@ body {
     overflow: hidden;
     border: 4px solid var(--border-light);
     position: relative;
-    cursor: pointer;
     background: var(--bg-surface);
     display: flex;
     align-items: center;

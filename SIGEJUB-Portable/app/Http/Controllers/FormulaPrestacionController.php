@@ -14,9 +14,11 @@ class FormulaPrestacionController extends Controller
         $query = FormulaPrestacion::query();
 
         if ($search = $request->get('search')) {
-            $query->where('nombre', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%")
                   ->orWhere('codigo', 'like', "%{$search}%")
                   ->orWhere('descripcion', 'like', "%{$search}%");
+            });
         }
 
         if ($request->boolean('solo_activos')) {

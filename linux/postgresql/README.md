@@ -80,3 +80,9 @@ También puedes usar `setup.bat` o `inicio.php` como alternativas.
 | `database/migrations` | Migraciones de la base de datos |
 | `resources/views` | Plantillas Blade |
 | `routes/web.php` | Definición de rutas |
+
+## Alcance de esta copia
+
+Este directorio contiene una copia de SIGEJUB lista para usar. La aplicación usa Laravel 12 y PHP 8.2+; el motor de base de datos se configura en `.env` (`DB_CONNECTION`), con MySQL/MariaDB o PostgreSQL según la variante. No ejecutes Composer desde la raíz del repositorio: entra primero en la carpeta de esta copia.
+
+En Expedientes y Prestaciones, el servidor pagina y ordena por nombre, luego apellido e ID. Los encabezados A-Z también usan la inicial del nombre. La búsqueda de expedientes se filtra en el servidor.

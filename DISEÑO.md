@@ -5,6 +5,10 @@
 **Fecha:** Octubre 2026 | **Framework:** Laravel 12.x / PHP 8.2+  
 **Estrategia Frontend:** Vanilla JavaScript Modular (ES6 Nativo - Cero Dependencias npm)  
 
+> **Estado del documento (2026-11-08):** este SDD describe una arquitectura objetivo, no una representación literal de todos los archivos actuales. La aplicación está en Laravel 12 con vistas Blade y JavaScript vanilla; la verificación del árbol `original/` no encontró `PrestacionCalculationService`, `FormulaEvaluationEngine`, `core/api-client.js` ni los módulos `secciones/trabajadores/*.js` descritos abajo. No asumir que esos componentes ya están desplegados.
+
+> **Comportamiento implementado:** Expedientes y Prestaciones se listan en backend por nombre, apellido e ID; sus grupos A-Z se rotulan con la inicial del nombre. La búsqueda de expedientes se aplica antes de paginar.
+
 ---
 
 ## 1. Arquitectura de Alto Nivel

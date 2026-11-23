@@ -1,6 +1,12 @@
-*.log
-.DS_Store
 .env
+*.log
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/public/storage
+/ini
+.DS_Store
 .env.backup
 .env.production
 .phpactor.json
@@ -12,7 +18,6 @@
 /.vscode
 /.zed
 /auth.json
-/public/storage
 /storage/*.key
 /storage/pail
 /vendor

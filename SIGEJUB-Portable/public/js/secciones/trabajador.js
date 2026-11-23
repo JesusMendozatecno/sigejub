@@ -45,7 +45,7 @@
         'nivel-instruccion': 'Nivel de Instrucción',
         'unidad-departamento': 'Unidad / Departamento',
         'tipo-jubilacion': 'Tipo de Jubilación',
-        'tipo-contrato': 'Condición Laboral',
+        'tipo-contrato': 'Categoría',
         'dedicacion': 'Dedicación'
     };
     // Selects que deben cargarse desde los maestros
@@ -58,6 +58,39 @@
         ['tipo-contrato', 'selectCondicionLaboral'],
         ['dedicacion', 'selectDedicacion']
     ];
+
+    function abrirModalRegistroTrabajador(cedula = '') {
+        if (!modal || !form) return;
+        modoEdicionActivo = false;
+        trabajadorSeleccionadoId = null;
+
+        form.reset();
+        habilitarCamposFormulario(true);
+        if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
+
+        SELECTS_CATALOGO.forEach(([tipo, selectId]) => cargarOpcionesCatalogo(tipo, selectId));
+        if (typeof limpiarAntecedentesExternos === 'function') limpiarAntecedentesExternos();
+        if (typeof cargarClausulasTrabajador === 'function') cargarClausulasTrabajador([]);
+
+        const cedulaCoincidente = cedula.trim().toUpperCase().match(/^([VEJPG])-(\d{5,8})$/);
+        if (cedulaCoincidente) {
+            document.getElementById('selectTipoDocumento').value = cedulaCoincidente[1];
+            document.getElementById('inputCedula').value = cedulaCoincidente[2];
+        }
+
+        modalTitle.innerHTML = 'Registrar<br>Nuevo<br>Trabajador';
+        modalDescription.textContent = 'Complete el expediente institucional para iniciar el cálculo de antigüedad.';
+        if (btnHabilitarEdicion) btnHabilitarEdicion.style.display = 'none';
+        if (btnSubmit) {
+            btnSubmit.style.display = 'block';
+            btnSubmit.textContent = 'Registrar Trabajador';
+        }
+        modal.style.display = 'flex';
+    }
+
+    window.abrirRegistroTrabajadorConCedula = function(cedula) {
+        abrirModalRegistroTrabajador(cedula);
+    };
 
     // ============================================
     // INICIALIZACIÓN — Eventos al cargar el DOM
@@ -75,30 +108,7 @@
         if (btnRegistrar) {
             btnRegistrar.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (!modal) return;
-                modoEdicionActivo = false;
-                trabajadorSeleccionadoId = null;
-
-                form.reset();
-                habilitarCamposFormulario(true);  // Todos los campos editables
-                if (typeof toggleActividadUniversitariaFields === 'function') toggleActividadUniversitariaFields();
-
-                // Cargar opciones de catálogos
-                SELECTS_CATALOGO.forEach(([tipo, selectId]) => cargarOpcionesCatalogo(tipo, selectId));
-
-                // Antecedentes en otra institución y cláusulas de convención vacíos
-                if (typeof limpiarAntecedentesExternos === 'function') limpiarAntecedentesExternos();
-                if (typeof cargarClausulasTrabajador === 'function') cargarClausulasTrabajador([]);
-
-                modalTitle.innerHTML = "Registrar<br>Nuevo<br>Trabajador";
-                modalDescription.textContent = "Complete el expediente institucional para iniciar el cálculo de antigüedad.";
-                if (btnHabilitarEdicion) btnHabilitarEdicion.style.display = 'none';
-                if (btnSubmit) {
-                    btnSubmit.style.display = 'block';
-                    btnSubmit.textContent = 'Registrar Trabajador';
-                }
-
-                modal.style.display = 'flex';
+                abrirModalRegistroTrabajador();
             });
         }
 

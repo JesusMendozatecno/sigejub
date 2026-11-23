@@ -82,19 +82,8 @@
                     <p class="chart-subtitle">Volumen de tramitación - {{ date('Y') }}</p>
                 </div>
             </div>
-            <div class="bar-chart" id="barChartSolicitudes">
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>ENE</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>FEB</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>MAR</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>ABR</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>MAY</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>JUN</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>JUL</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>AGO</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>SEP</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>OCT</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>NOV</span></div>
-                <div class="bar-group"><div class="bar" style="height: 10%;"></div><span>DIC</span></div>
+            <div class="inicio-line-chart-wrap">
+                <canvas id="chartSolicitudesPorMes" role="img" aria-label="Solicitudes registradas por mes"></canvas>
             </div>
         </section>
 
@@ -153,6 +142,7 @@
     }
 
     let paginaActividades = 1;
+    let graficoSolicitudesPorMes = null;
 
     function renderPaginacionActividades(data) {
         const cont = document.getElementById('actividadPag');
@@ -248,6 +238,69 @@
         }
     }
 
+    function renderGraficoSolicitudes(porMes) {
+        const canvas = document.getElementById('chartSolicitudesPorMes');
+        if (!canvas || !window.Chart) {
+            console.error('No se pudo cargar la gráfica de solicitudes: Chart.js no está disponible.');
+            return;
+        }
+
+        const valores = Array.from({ length: 12 }, (_, indice) => {
+            const valor = Number(Array.isArray(porMes) ? porMes[indice] : 0);
+            return Number.isFinite(valor) && valor >= 0 ? valor : 0;
+        });
+        const estilos = getComputedStyle(document.documentElement);
+        const colorAcento = estilos.getPropertyValue('--accent').trim() || '#2563eb';
+        const colorCuadricula = estilos.getPropertyValue('--border').trim() || 'rgba(148, 163, 184, .25)';
+        const colorTexto = estilos.getPropertyValue('--text-muted').trim() || '#64748b';
+
+        if (graficoSolicitudesPorMes) graficoSolicitudesPorMes.destroy();
+        graficoSolicitudesPorMes = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'],
+                datasets: [{
+                    label: 'Solicitudes',
+                    data: valores,
+                    borderColor: colorAcento,
+                    backgroundColor: colorAcento,
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: colorAcento,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    tension: 0.35,
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.parsed.y} solicitud${context.parsed.y === 1 ? '' : 'es'}`,
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colorTexto },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, color: colorTexto },
+                        grid: { color: colorCuadricula },
+                    },
+                },
+            },
+        });
+    }
+
     function renderEstadisticasInicio(data) {
         const el = id => document.getElementById(id);
         if (el('inicioTotalTrabajadores')) el('inicioTotalTrabajadores').textContent = data.totalTrab;
@@ -255,22 +308,7 @@
         if (el('inicioAprobadas')) el('inicioAprobadas').textContent = data.totalAprob;
         if (el('inicioRechazadas')) el('inicioRechazadas').textContent = data.totalRech;
 
-        const nombresMeses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-        const barras = document.querySelectorAll('#barChartSolicitudes .bar-group .bar');
-        if (barras.length && Array.isArray(data.porMes)) {
-            const max = Math.max(...data.porMes, 1);
-            data.porMes.forEach((val, i) => {
-                if (barras[i]) {
-                    const pct = Math.max((val / max) * 90, 5);
-                    barras[i].style.height = pct + '%';
-                    if (val > 0) {
-                        barras[i].innerHTML = `<span class="val">${val}</span>`;
-                    } else {
-                        barras[i].innerHTML = '';
-                    }
-                }
-            });
-        }
+        renderGraficoSolicitudes(data.porMes);
 
         const container = document.getElementById('deadlineItems');
         if (container && data.vencimientos) {
@@ -352,7 +390,7 @@
                 case 'actualizada':
                     dot.style.background = '#4ade80';
                     badge.style.background = 'rgba(74,222,128,0.2)';
-                    badge.style.color = '#166534';
+                    badge.style.color = '#000000';
                     estado.textContent = 'Actualizada';
                     break;
                 case 'disponible':

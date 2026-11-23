@@ -71,6 +71,6 @@
             @endforelse
         </tbody>
     </table>
-    <p class="footer">SIGEJUB v1.0 — Documento generado por {{ auth()->user()?->nombre ?? 'Sistema' }}</p>
+    <p class="footer">SIGEJUB — Documento generado por {{ auth()->user()?->nombre ?? 'Sistema' }}</p>
 </body>
 </html>

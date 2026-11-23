@@ -11,173 +11,199 @@
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/cropperjs/cropper.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/modal-layout.css') }}?v={{ substr(md5_file(public_path('css/dashboard/modal-layout.css')), 0, 10) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/table-layout.css') }}?v={{ substr(md5_file(public_path('css/dashboard/table-layout.css')), 0, 10) }}">
     <script defer src="{{ asset('js/cropperjs/cropper.min.js') }}"></script>
     <style>:root {
         --accent: {{ $user->color_acento ?? '#1a365d' }};
+        --accent-dark: color-mix(in srgb, var(--accent) 72%, #000 28%);
+        --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
         /* Color del usuario para la pantalla de carga (independiente del tema). */
         --user-accent: {{ $user->color_acento ?? '#087cf0' }};
-    }</style>
+    }
+</style>
+
+<style id="avatar-crop-circle">
+    /* Recorte circular del avatar */
+        #cropContainer .cropper-bg { background-image: none; background: #0f172a; }
+        #cropModal .cropper-view-box { border-radius: 50%; outline: none; box-shadow: 0 0 0 2px rgba(255,255,255,.9); }
+        #cropModal .cropper-face { border-radius: 50%; background-color: transparent; }
+        #cropModal .cropper-line,
+        #cropModal .cropper-point,
+        #cropModal .cropper-dashed,
+        #cropModal .cropper-center { display: none; }
+        #cropModal .cropper-modal { background: #0b1220; opacity: .62; }
+</style>
 
     <style id="profile-visual-redesign">
-        /* Rediseño visual local de Mi Perfil; no modifica la lógica ni los controles existentes. */
+        /* Rediseño visual de Mi Perfil: solo presentación, sin tocar la lógica. */
+        html:has(.profile-wrapper) { background: color-mix(in srgb, var(--accent, #1a365d) 6%, #f7fafd); }
+
         body:has(.profile-wrapper) {
             min-height: 100vh;
             height: auto;
             overflow-x: hidden;
             overflow-y: auto;
-            position: relative;
-            isolation: isolate;
-            background:
-                radial-gradient(ellipse at 8% 8%, rgba(96,165,250,.17) 0%, rgba(96,165,250,0) 31%),
-                radial-gradient(ellipse at 96% 88%, rgba(56,189,248,.13) 0%, rgba(56,189,248,0) 29%),
-                radial-gradient(circle, rgba(59,130,246,.13) 1.1px, transparent 1.5px) 0 0 / 22px 22px,
-                linear-gradient(135deg, #f8fbff 0%, #edf4fc 52%, #f7faff 100%);
+            background-color: color-mix(in srgb, var(--accent, #1a365d) 6%, #f7fafd);
+            background-image:
+                radial-gradient(ellipse at 6% 4%, color-mix(in srgb, var(--accent, #1a365d) 18%, transparent) 0%, transparent 36%),
+                radial-gradient(ellipse at 97% 94%, color-mix(in srgb, var(--accent, #1a365d) 14%, transparent) 0%, transparent 34%),
+                radial-gradient(circle, color-mix(in srgb, var(--accent, #1a365d) 18%, transparent) 1.1px, transparent 1.6px),
+                linear-gradient(140deg, #f8fbff 0%, color-mix(in srgb, var(--accent, #1a365d) 9%, #eaf2fc) 55%, #f6faff 100%);
+            background-size: auto, auto, 22px 22px, cover;
+            background-attachment: fixed;
             color: #172b4d;
         }
         body:has(.profile-wrapper)::before,
         body:has(.profile-wrapper)::after {
             content: "";
             position: fixed;
-            z-index: -1;
+            z-index: 0;
             pointer-events: none;
             border-radius: 50%;
         }
         body:has(.profile-wrapper)::before {
-            width: 340px; height: 340px;
-            top: -190px; right: -105px;
-            border: 1px solid rgba(59,130,246,.14);
-            box-shadow: 0 0 0 28px rgba(59,130,246,.025), 0 0 0 58px rgba(59,130,246,.02);
+            width: 360px; height: 360px;
+            top: -190px; right: -120px;
+            border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 16%, transparent);
+            box-shadow: 0 0 0 30px color-mix(in srgb, var(--accent, #1a365d) 3%, transparent), 0 0 0 62px color-mix(in srgb, var(--accent, #1a365d) 2%, transparent);
         }
         body:has(.profile-wrapper)::after {
-            width: 270px; height: 270px;
-            left: -155px; bottom: -155px;
-            border: 1px solid rgba(14,165,233,.17);
-            box-shadow: 0 0 0 24px rgba(14,165,233,.035), 0 0 0 50px rgba(14,165,233,.025);
+            width: 280px; height: 280px;
+            left: -160px; bottom: -160px;
+            border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 18%, transparent);
+            box-shadow: 0 0 0 26px color-mix(in srgb, var(--accent, #1a365d) 4%, transparent), 0 0 0 54px color-mix(in srgb, var(--accent, #1a365d) 3%, transparent);
         }
-        .profile-wrapper { position: relative; z-index: 1; width: min(1280px, 100%); max-width: 1280px; margin: 0 auto; padding: 34px 28px 42px; }
-        .profile-header { justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 28px; }
-        .profile-header .flex-center { align-items: center; gap: 16px !important; }
-        .profile-heading-copy h1 { color: #142d52; font-size: clamp(1.65rem, 2.4vw, 2rem); letter-spacing: -.035em; font-weight: 800; line-height: 1.2; }
-        .profile-page-subtitle { margin-top: 7px; color: #71819a; font-size: .94rem; }
-        .btn-back { width: 46px; height: 46px; border-radius: 50%; border: 1px solid #e2eaf5; background: #fff; color: #2563eb; box-shadow: 0 5px 16px rgba(28,61,108,.09); }
-        .btn-back:hover { background: #eff6ff; color: #1d4ed8; transform: translateY(-1px); }
-        .profile-last-access { font-size: .8rem; color: #8190a7 !important; }
-        .profile-layout { grid-template-columns: minmax(265px, 310px) minmax(0, 1fr); gap: 24px; align-items: start; }
-        .profile-sidebar, .profile-content { border: 1px solid rgba(219,230,244,.85); border-radius: 22px; background: #fff; box-shadow: 0 14px 38px rgba(30,64,115,.075); overflow: hidden; }
-        .profile-card { position: relative; padding: 30px 22px 27px; color: #fff; background: linear-gradient(135deg, var(--accent, #2563eb) 0%, color-mix(in srgb, var(--accent, #2563eb) 82%, #fff) 48%, color-mix(in srgb, var(--accent, #2563eb) 62%, #fff) 100%); border: 0; }
+
+        .profile-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1440px;
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 30px clamp(18px, 3vw, 46px) 46px;
+            box-sizing: border-box;
+        }
+
+        .profile-layout {
+            display: grid;
+            grid-template-columns: minmax(268px, 318px) minmax(0, 1fr);
+            gap: 26px;
+            align-items: stretch;
+        }
+
+        .profile-sidebar,
+        .profile-content {
+            border: 1px solid rgba(213,226,242,.9);
+            border-radius: 22px;
+            background: #fff;
+            box-shadow: 0 16px 42px rgba(30,64,115,.08);
+            overflow: hidden;
+        }
+        .profile-sidebar { display: flex; flex-direction: column; }
+
+        .profile-card {
+            position: relative;
+            padding: 32px 22px 26px;
+            color: #fff;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent, #2563eb) 0%, color-mix(in srgb, var(--accent, #2563eb) 82%, #fff) 48%, color-mix(in srgb, var(--accent, #2563eb) 62%, #fff) 100%);
+            border: 0;
+        }
         .profile-card:before { content: ""; position: absolute; width: 190px; height: 190px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; right: -90px; top: -105px; pointer-events: none; }
         .profile-card:after { content: ""; position: absolute; width: 135px; height: 135px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; left: -82px; bottom: -75px; pointer-events: none; }
         .profile-card > * { position: relative; z-index: 1; }
-        .avatar-wrap { width: 112px; height: 112px; margin-bottom: 17px; border: 4px solid rgba(255,255,255,.95); box-shadow: 0 0 0 5px rgba(255,255,255,.16), 0 10px 25px rgba(12,42,100,.22); background: color-mix(in srgb, var(--accent, #2563eb) 78%, #000 22%); }
+        .avatar-wrap { width: 112px; height: 112px; margin: 0 auto 17px; border: 4px solid rgba(255,255,255,.95); box-shadow: 0 0 0 5px rgba(255,255,255,.16), 0 10px 25px rgba(12,42,100,.22); background: color-mix(in srgb, var(--accent, #2563eb) 78%, #000 22%); }
         .avatar-wrap .avatar-placeholder { color: rgba(255,255,255,.92); }
-        .avatar-overlay { background: rgba(15,42,92,.48); }
-        .avatar-actions-btns { flex-wrap: wrap; }
-        .profile-card .avatar-actions-btns .btn-primary { background: rgba(255,255,255,.17) !important; border: 1px solid rgba(255,255,255,.45) !important; color: #fff !important; }
-        .profile-card .avatar-actions-btns .btn-danger { box-shadow: 0 3px 10px rgba(127,29,29,.14); }
-        .profile-name { color: #fff; font-size: 1.18rem; font-weight: 800; overflow-wrap: anywhere; }
-        .profile-email { color: rgba(255,255,255,.78); font-size: .84rem; overflow-wrap: anywhere; }
-        .profile-role { display: inline-flex; align-items: center; margin-top: 8px; padding: 6px 12px; border-radius: 999px; background: #fff0f3; color: #be185d; font-size: .72rem; font-weight: 800; border: 1px solid rgba(255,255,255,.6); }
-        .profile-nav { padding: 16px 14px; }
-        .profile-nav-item { gap: 12px; min-height: 46px; padding: 12px 15px; border-radius: 13px; color: #64748b; font-size: .9rem; font-weight: 600; }
-        .profile-nav-item i { width: 20px; font-size: 1rem; }
-        .profile-nav-item:hover { background: #f3f7ff; color: #2563eb; }
-        .profile-nav-item.active { background: #eaf2ff; color: #2563eb; box-shadow: inset 3px 0 0 #3b82f6; }
-        .profile-nav-item[style*="color:#dc2626"] { color: #dc2626 !important; }
-        .profile-nav-item[style*="color:#dc2626"]:hover { background: #fff1f2; color: #b91c1c !important; }
-        .profile-nav-divider { background: #e9eff7; margin: 10px 10px; }
-        .profile-content { padding: 34px 36px; min-width: 0; min-height: 520px; }
+        .profile-name { color: #fff; font-size: 1.18rem; font-weight: 800; overflow-wrap: anywhere; margin: 0; }
+        .profile-email { color: rgba(255,255,255,.8); font-size: .84rem; overflow-wrap: anywhere; margin: 4px 0 0; }
+        .profile-role { display: inline-flex; align-items: center; margin-top: 10px; padding: 6px 12px; border-radius: 999px; background: #fff0f3; color: #be185d; font-size: .72rem; font-weight: 800; border: 1px solid rgba(255,255,255,.6); }
+        .profile-last-access-line { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 13px 0 0; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.22); color: rgba(255,255,255,.82); font-size: .72rem; font-weight: 600; }
+        .profile-last-access-line i { font-size: .72rem; }
+
+        .profile-nav { display: flex; flex-direction: column; flex: 1 1 auto; padding: 16px 14px 18px; }
+        .profile-nav-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; padding: 12px 15px; border-radius: 13px; color: #64748b; font-size: .9rem; font-weight: 600; text-align: left; border: 0; background: transparent; cursor: pointer; transition: background .16s ease, color .16s ease; }
+        .profile-nav-item i { width: 20px; font-size: 1rem; text-align: center; }
+        .profile-nav-item:hover { background: color-mix(in srgb, var(--accent, #1a365d) 7%, #fff); color: var(--accent, #1a365d); }
+        .profile-nav-item.active { background: color-mix(in srgb, var(--accent, #1a365d) 13%, #fff); color: var(--accent, #1a365d); box-shadow: inset 3px 0 0 var(--accent, #1a365d); }
+        .profile-nav-divider { height: 1px; background: #e9eff7; margin: 10px 10px; }
+        .profile-back-action { margin-top: auto; justify-content: center; gap: 9px; color: var(--accent, #1a365d) !important; background: color-mix(in srgb, var(--accent, #1a365d) 7%, #fff); border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 22%, #fff); font-weight: 750; text-decoration: none; }
+        .profile-back-action:hover { background: color-mix(in srgb, var(--accent, #1a365d) 13%, #fff); color: var(--accent-dark, #1a365d) !important; border-color: color-mix(in srgb, var(--accent, #1a365d) 34%, #fff); }
+
+        .profile-content { padding: 38px clamp(22px, 3vw, 42px); min-width: 0; min-height: 560px; }
         .profile-section-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
-        .profile-section-icon { display: inline-flex; flex: 0 0 48px; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 15px; background: linear-gradient(135deg,#2563eb,#38a0f5); color: #fff; font-size: 1.12rem; box-shadow: 0 7px 15px rgba(37,99,235,.2); }
+        .profile-section-icon { display: inline-flex; flex: 0 0 48px; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 15px; background: linear-gradient(135deg, var(--accent, #1a365d), color-mix(in srgb, var(--accent, #1a365d) 58%, #fff)); color: #fff; font-size: 1.12rem; box-shadow: 0 7px 15px color-mix(in srgb, var(--accent, #1a365d) 28%, transparent); }
         .profile-section-heading .tab-title { margin: 0 0 4px; color: #172f54; font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em; }
         .profile-section-heading .tab-subtitle { margin: 0; color: #8492a8; font-size: .88rem; }
         #formProfile .form-group { margin-bottom: 22px; }
         #formProfile .form-group label { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; color: #4d607b; font-size: .79rem; font-weight: 750; text-transform: none; letter-spacing: .01em; }
-        #formProfile .field-label-icon { width: 15px; color: #4285ee; font-size: .85rem; }
+        #formProfile .field-label-icon { width: 15px; color: var(--accent, #1a365d); font-size: .85rem; }
         #formProfile .form-input { min-height: 47px; padding: 12px 15px; border: 1px solid #e1e9f4; border-radius: 12px; background: #f6f9fd; color: #253a59; font-size: .91rem; box-shadow: inset 0 1px 2px rgba(25,55,95,.015); }
-        #formProfile .form-input:focus { border-color: #77a8fb; background: #fff; box-shadow: 0 0 0 4px rgba(59,130,246,.1); }
+        #formProfile .form-input:focus { border-color: color-mix(in srgb, var(--accent, #1a365d) 45%, #fff); background: #fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent, #1a365d) 16%, transparent); }
         #formProfile .form-input:disabled { opacity: 1; color: #344865; -webkit-text-fill-color: #344865; cursor: default; }
         #formProfile .form-group:first-child { position: relative; }
-        #formProfile .form-group:first-child:after { content: "\f078"; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; right: 16px; bottom: 16px; color: #6c8fca; font-size: .75rem; pointer-events: none; }
+        #formProfile .form-group:first-child:after { content: "\f078"; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; right: 16px; bottom: 16px; color: color-mix(in srgb, var(--accent, #1a365d) 48%, #94a3b8); font-size: .75rem; pointer-events: none; }
         #formProfile .form-group:first-child .form-input { padding-right: 42px; }
         #formProfile .flex.gap-2.mt-3 { display: flex; flex-direction: column; gap: 10px; margin-top: 28px; }
         #formProfile .profile-edit-button, #formProfile .profile-save-button, #formProfile #btnCancelarEditar { width: 100%; min-height: 49px; justify-content: center; border-radius: 12px; font-size: .92rem; font-weight: 750; }
-        #formProfile .profile-edit-button { border: 0; color: #fff; background: linear-gradient(100deg,#2563eb 0%,#3b82f6 55%,#1687ef 100%); box-shadow: 0 8px 18px rgba(37,99,235,.22); }
-        #formProfile .profile-edit-button:hover { filter: brightness(1.04); transform: translateY(-1px); box-shadow: 0 11px 22px rgba(37,99,235,.27); }
+        #formProfile .profile-edit-button { border: 0; color: #fff; background: linear-gradient(100deg, var(--accent, #1a365d) 0%, color-mix(in srgb, var(--accent, #1a365d) 78%, #fff) 55%, color-mix(in srgb, var(--accent, #1a365d) 90%, #fff) 100%); box-shadow: 0 8px 18px color-mix(in srgb, var(--accent, #1a365d) 26%, transparent); }
+        #formProfile .profile-edit-button:hover { filter: brightness(1.04); transform: translateY(-1px); box-shadow: 0 11px 22px color-mix(in srgb, var(--accent, #1a365d) 32%, transparent); }
         #formProfile .profile-save-button { border: 0; background: linear-gradient(100deg,#059669,#10b981); color: #fff; }
         #formProfile #btnCancelarEditar { background: #f1f5f9; color: #475569; border: 1px solid #dbe4ef; }
-        @media (max-width: 900px) {
-            .profile-wrapper { padding: 25px 18px 34px; }
-            .profile-layout { grid-template-columns: minmax(230px, 280px) minmax(0,1fr); gap: 16px; }
-            .profile-content { padding: 27px 24px; }
+
+        @media (max-width: 1024px) {
+            .profile-layout { grid-template-columns: minmax(240px, 290px) minmax(0, 1fr); gap: 18px; }
+            .profile-content { padding: 30px 26px; }
+        }
+        @media (max-width: 860px) {
+            .profile-wrapper { padding: 22px 16px 34px; }
+            .profile-layout { grid-template-columns: 1fr; align-items: start; }
+            .profile-content { min-height: 0; }
+            .profile-back-action { margin-top: 8px; }
         }
         @media (max-width: 700px) {
-            .profile-wrapper { padding: 20px 14px 28px; }
-            .profile-header { align-items: flex-start; }
-            .profile-last-access { display: none; }
-            .profile-layout { grid-template-columns: 1fr; }
-            .profile-card { padding: 25px 18px; }
+            .profile-card { padding: 26px 18px; }
             .profile-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
             .profile-nav-divider { display: none; }
-            .profile-nav form { min-width: 0; }
+            .profile-back-action { grid-column: 1 / -1; margin-top: 4px; }
             .profile-nav-item { padding: 11px 10px; font-size: .82rem; }
-            .profile-content { min-height: 0; padding: 24px 18px; }
             .profile-section-heading { margin-bottom: 24px; }
             #formProfile .grid-2 { grid-template-columns: 1fr; }
         }
         @media (max-width: 420px) {
-            .profile-heading-copy h1 { font-size: 1.45rem; }
-            .profile-page-subtitle { max-width: 250px; font-size: .82rem; }
             .profile-section-icon { flex-basis: 42px; width: 42px; height: 42px; }
             .profile-nav { grid-template-columns: 1fr; }
         }
     </style>
 
+<link rel="stylesheet" href="{{ asset('css/scrollbars.css') }}?v={{ substr(md5_file(public_path('css/scrollbars.css')), 0, 10) }}">
 </head>
 <body>
 @include('partials.loading-overlay')
 <script>document.getElementById('loading-overlay').classList.add('active');</script>
 <div class="profile-wrapper">
-    <div class="profile-header">
-        <div class="flex-center gap-3">
-            <a href="{{ route('dashboard') }}" class="btn-back" title="Volver al dashboard">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div class="profile-heading-copy">
-                <h1>Mi Perfil</h1>
-                <p class="profile-page-subtitle">Gestiona tu información personal y de acceso al sistema</p>
-            </div>
-        </div>
-        <span class="text-muted profile-last-access">Último acceso: {{ $user->ultimo_acceso ? $user->ultimo_acceso->diffForHumans() : 'Primer ingreso' }}</span>
-    </div>
-
     <div class="profile-layout">
         <!-- Sidebar -->
         <div class="profile-sidebar">
             <div class="profile-card">
-                <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()">
+                <div class="avatar-wrap" onclick="document.getElementById('avatarInput').click()" title="Cambiar foto de perfil">
                     @if($user->avatar)
                         <img id="profileAvatarImg" src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar">
                     @else
                         <i class="fas fa-user fa-3x avatar-placeholder" id="profileAvatarPlaceholder"></i>
                     @endif
                     <div class="avatar-overlay"><i class="fas fa-camera"></i></div>
+
                 </div>
+
                 <input type="file" id="avatarInput" hidden accept="image/*" onchange="onAvatarSelect(event)">
-                <div class="avatar-actions-btns" style="display:flex;gap:8px;justify-content:center;margin:12px 0 16px;">
-                    <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('avatarInput').click()" title="Subir nueva foto de perfil" style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;padding:6px 14px;border-radius:8px;">
-                        <i class="fas fa-camera"></i> <span>Cambiar imagen</span>
-                    </button>
-                    @if($user->avatar)
-                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAvatar()" title="Eliminar foto actual" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;border-radius:8px;background:#ef4444;border-color:#ef4444;color:#fff;">
-                        <i class="fas fa-trash-can"></i>
-                    </button>
-                    @endif
-                </div>
                 <h2 class="profile-name">{{ $user->nombre }}</h2>
                 <p class="profile-email">{{ $user->correo }}</p>
                 <span class="profile-role {{ $user->rol === 'superadmin' ? 'role-superadmin' : ($user->rol === 'admin' ? 'role-admin' : 'role-analista') }}">
                     {{ $user->rol === 'admin' ? 'Administrador' : ($user->rol === 'superadmin' ? 'Superadmin' : 'Usuario') }}
                 </span>
+                <p class="profile-last-access-line"><i class="fas fa-clock-rotate-left"></i> Último acceso: {{ $user->ultimo_acceso ? $user->ultimo_acceso->diffForHumans() : 'Primer ingreso' }}</p>
             </div>
             <div class="profile-nav">
                 <button class="profile-nav-item active" data-tab="tab-perfil">
@@ -205,12 +231,9 @@
                 </a>
                 <div class="profile-nav-divider"></div>
                 @endif
-                <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                    @csrf
-                    <button type="submit" class="profile-nav-item" style="color:#dc2626;">
-                        <i class="fas fa-right-from-bracket"></i> Cerrar sesión
-                    </button>
-                </form>
+                <a href="{{ route('dashboard') }}" class="profile-nav-item profile-back-action">
+                    <i class="fas fa-arrow-left"></i> Volver al inicio
+                </a>
             </div>
         </div>
 
@@ -465,9 +488,9 @@
     <div class="modal-box" style="display:flex;flex-direction:column;max-height:90vh;max-width:520px;padding:24px;">
         <div style="flex-shrink:0;">
             <h3 style="margin:0 0 6px;color:var(--text-primary);"><i class="fas fa-crop-simple"></i> Ajustar foto de perfil</h3>
-            <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 16px;">Arrastra para encuadrar y recortar la imagen al área deseada</p>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 16px;">Arrastra la foto para centrarla dentro del círculo y usa la rueda del mouse para acercar o alejar</p>
         </div>
-        <div id="cropContainer" style="max-height:340px;min-height:220px;overflow:hidden;background:#0f172a;border-radius:10px;margin-bottom:16px;"></div>
+        <div id="cropContainer" style="height:340px;max-height:340px;overflow:hidden;background:#0f172a;border-radius:14px;margin-bottom:16px;"></div>
         <div class="modal-actions" style="margin-top:auto;flex-shrink:0;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end;">
             <button type="button" class="btn btn-secondary" onclick="cerrarCrop()" style="padding:10px 18px;border-radius:8px;">
                 <i class="fas fa-xmark"></i> Cancelar

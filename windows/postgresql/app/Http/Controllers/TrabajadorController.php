@@ -72,24 +72,29 @@ class TrabajadorController extends Controller
     }
 
     /**
-     * AUTOCOMPLETE para el buscador de trabajadores en solicitudes
-     * Muestra los últimos 10 registrados, o filtra por búsqueda
+     * Autocomplete de trabajadores por cédula en solicitudes y expedientes.
      */
     public function autocomplete(Request $request)
     {
-        // Mostrar trabajadores sin solicitud activa o con solicitud rechazada
-        $query = Trabajador::query()->whereDoesntHave('solicitudes', function ($q) {
-            $q->whereIn('estado', ['pendiente', 'revision', 'aprobado']);
-        });
-
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where(DB::raw("CONCAT(nombres, ' ', apellidos)"), 'like', "%{$search}%")
-                  ->orWhere('cedula', 'like', "%{$search}%");
+        $query = Trabajador::query();
+        if (!$request->boolean('incluir_con_solicitud')) {
+            $query->whereDoesntHave('solicitudes', function ($q) {
+                $q->whereIn('estado', ['pendiente', 'revision', 'aprobado']);
             });
         }
 
-        $trabajadores = $query->orderBy('created_at', 'desc')
+        if ($search = trim((string) $request->get('search', ''))) {
+            $search = preg_replace('/[^A-Z0-9]/', '', strtoupper($search));
+            if ($search !== '') {
+                $query->whereRaw(
+                    "REPLACE(REPLACE(UPPER(cedula), '-', ''), ' ', '') LIKE ?",
+                    ["%{$search}%"]
+                );
+            }
+        }
+
+        $trabajadores = $query->orderBy('nombres')
+                              ->orderBy('apellidos')
                               ->take(20)
                               ->get(['id', 'nombres', 'apellidos', 'cedula']);
 

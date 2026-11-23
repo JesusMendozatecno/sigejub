@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Expediente extends Model
 {
@@ -19,6 +20,20 @@ class Expediente extends Model
         'notas_admin',
         'carta_aprobacion',
     ];
+
+    /**
+     * Devuelve la ruta de la foto solo si el archivo existe en disco.
+     * Si la ruta quedó guardada pero el archivo se perdió, se responde null
+     * para que la interfaz muestre el avatar y no una imagen rota (403).
+     */
+    public function getFotoCarnetAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        return Storage::disk('public')->exists($value) ? $value : null;
+    }
 
     public function trabajador(): BelongsTo
     {

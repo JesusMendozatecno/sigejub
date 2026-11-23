@@ -11,7 +11,7 @@
     </div>
 </header>
 
-<section class="filters-bar-card" style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+<section class="filters-bar-card workers-filters-card" style="margin-top: 20px;">
     <div class="filter-group">
         <label>BUSCAR TRABAJADOR</label>
         <input type="text" id="buscadorTrabajadores" placeholder="Nombre, apellido o cédula..." autocomplete="off" style="min-width:220px;">
@@ -107,14 +107,13 @@
 <div id="modalTrabajador" class="modal-overlay" style="z-index: 2000;">
     <div class="modal-container">
         <aside class="modal-sidebar">
-            <span class="badge-new">Sigejub v1.0</span>
+            <span class="badge-new">SIGEJUB</span>
             <h1 id="modalTitle">Registrar<br>Nuevo<br>Trabajador</h1>
             <p id="modalDescription">Complete el expediente institucional para iniciar el cálculo de antigüedad y estatus jubilatorio.</p>
             <div class="sidebar-actions">
                 <button type="button" class="btn-sidebar-edit" id="btnHabilitarEdicion" style="display: none;">
                     <i class="fas fa-pen"></i> Editar Expediente
                 </button>
-                <button type="button" class="btn-sidebar-cancel" id="btnCancelar">Descartar</button>
             </div>
         </aside>
 

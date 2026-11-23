@@ -6,11 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIGEJUB - Sistema de Jubilaciones</title>
 
-    <link rel="icon" href="{{ asset('img/descarga (1).png') }}" type="image/png">
-    <link rel="shortcut icon" href="{{ asset('img/imagen_2026-05-19_065531142.ico') }}">
+    <link rel="icon" href="{{ asset('img/logo-dark.svg') }}?v=2" type="image/svg+xml">
+    <link rel="shortcut icon" href="{{ asset('img/logo-dark.svg') }}?v=2" type="image/svg+xml">
     
     <link rel="stylesheet" href="{{ asset('css/dashboard/dashboard.min.css') }}?v={{ substr(md5_file(public_path('css/dashboard/dashboard.min.css')), 0, 10) }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard/secciones.css') }}?v={{ substr(md5_file(public_path('css/dashboard/secciones.css')), 0, 10) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/modal-layout.css') }}?v={{ substr(md5_file(public_path('css/dashboard/modal-layout.css')), 0, 10) }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard/table-layout.css') }}?v={{ substr(md5_file(public_path('css/dashboard/table-layout.css')), 0, 10) }}">
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <script defer src="{{ asset('js/chartjs/chart.umd.min.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -188,6 +190,7 @@
             background: transparent;
         }
     </style>
+<link rel="stylesheet" href="{{ asset('css/scrollbars.css') }}?v={{ substr(md5_file(public_path('css/scrollbars.css')), 0, 10) }}">
 </head>
 <body>
 @include('partials.loading-overlay')
@@ -287,7 +290,7 @@
                 @endif
                 <li class="menu-item" data-target="tasas-cambio"><i class="fas fa-dollar-sign" size="18"></i> Tasa de Cambio</li>
                 @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
-                <li class="menu-item" data-target="cargos-grados"><i class="fas fa-address-card" size="18"></i> Cargos y Grados</li>
+                <li class="menu-item" data-target="cargos-grados"><i class="fas fa-address-card" size="18"></i> Catálogos</li>
                 @endif
                 <li class="menu-item" data-target="reportes"><i class="fas fa-chart-bar" size="18"></i> Reportes</li>
                 @if(in_array(Auth::user()->rol, ['admin', 'superadmin']))
@@ -375,39 +378,18 @@
 @include('partials.toast')
 
 <script>
-/* === Precarga del dashboard al cargar (solo en login→dashboard) === */
+/* === Entrada al dashboard ===
+   Antes se precargaban ~10 peticiones y el overlay esperaba a todas,
+   retrasando la pantalla de inicio. Ahora el overlay se oculta de inmediato
+   y cada sección carga sus datos al abrirse (MutationObserver de cada módulo). */
 (function() {
     var overlay = document.getElementById('loading-overlay');
-    var yaCargo = sessionStorage.getItem('sigejub_dashboard_cargado');
-    if (yaCargo) {
-        if (overlay) overlay.classList.remove('active');
-        return;
+    if (overlay && overlay.classList.contains('active')) {
+        var texto = document.getElementById('loadingText');
+        if (texto) texto.textContent = 'Preparando el sistema...';
+        requestAnimationFrame(function() { ocultarCargando(); });
     }
-    if (!overlay || !overlay.classList.contains('active')) return;
-    document.getElementById('loadingText').textContent = 'Preparando el sistema...';
-    var preloads = [
-        fetch('/actividades').catch(function(){}),
-        fetch('/solicitudes?per_page=1').catch(function(){}),
-        fetch('/trabajadores?per_page=1').catch(function(){}),
-        fetch('/expedientes?per_page=1').catch(function(){}),
-        fetch('/expedientes/listos-aprobacion').catch(function(){}),
-        fetch('/solicitudes/por-mes').catch(function(){}),
-        fetch('/solicitudes/vencimientos').catch(function(){}),
-        fetch('/trabajadores-stats/dashboard').catch(function(){}),
-        fetch('/notificaciones/no-leidas').catch(function(){}),
-    ];
-    // La caja negra solo es visible para admin/superadmin; se omite para el rol usuario.
-    var rolPreload = window.SIGEJUB_ROL || '';
-    if (rolPreload === 'admin' || rolPreload === 'superadmin') {
-        preloads.push(fetch('/caja-negra?per_page=1').catch(function(){}));
-    }
-    Promise.all(preloads).then(function() {
-        sessionStorage.setItem('sigejub_dashboard_cargado', '1');
-        ocultarCargando();
-    }).catch(function() {
-        sessionStorage.setItem('sigejub_dashboard_cargado', '1');
-        ocultarCargando();
-    });
+    sessionStorage.setItem('sigejub_dashboard_cargado', '1');
 })();
 
 /* === Pantalla de carga al salir del dashboard (perfil, etc.) ===

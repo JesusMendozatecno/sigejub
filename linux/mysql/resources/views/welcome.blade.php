@@ -27,6 +27,7 @@
         });
     </script>
     <script src="{{ asset('js/theme-welcome.js') }}" defer></script>
+<link rel="stylesheet" href="{{ asset('css/scrollbars.css') }}?v={{ substr(md5_file(public_path('css/scrollbars.css')), 0, 10) }}">
 </head>
 <body>
 
@@ -140,8 +141,8 @@
                     </div>
                     <div class="pw-feature-card pw-animate">
                         <div class="pw-feature-icon"><i class="fas fa-building-columns"></i></div>
-                        <h3 class="pw-feature-title">Cargos y Grados</h3>
-                        <p class="pw-feature-desc">Administre la estructura organizativa con gestión de cargos, grados jerárquicos y su relación con las prestaciones.</p>
+                        <h3 class="pw-feature-title">Catálogos del sistema</h3>
+                        <p class="pw-feature-desc">Administre cargos, grados, unidades, categorías, dedicaciones y cláusulas de convención.</p>
                     </div>
                 </div>
             </div>

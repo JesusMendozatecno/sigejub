@@ -72,6 +72,6 @@
         </tbody>
     </table>
 
-    <p class="footer">Total de solicitudes: {{ $solicitudes->count() }} | SIGEJUB v1.0</p>
+    <p class="footer">Total de solicitudes: {{ $solicitudes->count() }} | SIGEJUB</p>
 </body>
 </html>

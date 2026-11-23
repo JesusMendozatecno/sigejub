@@ -56,12 +56,8 @@ class NominaExportController extends Controller
             $msg = "Período de la nómina: {$anio}" . ($mes ? ' · ' . $results['mes_nombre'] : '') . '<br>';
             $msg .= "Trabajadores encontrados: {$results['encontrados']}<br>";
             $msg .= "Trabajadores nuevos registrados: {$results['nuevos']}<br>";
-            $msg .= "Trabajadores ya registrados: {$results['ya_existentes']}<br>";
             $msg .= "Trabajadores omitidos: {$results['omitidos']}";
 
-            if ($results['nuevos'] === 0 && $results['encontrados'] > 0) {
-                $msg .= "<br><br><em>No se agregaron registros porque todos los trabajadores ya se encuentran registrados en la Nómina {$anio}.</em>";
-            }
             if (!empty($results['errores'])) {
                 $msg .= '<br>' . count($results['errores']) . " error(es) encontrados.";
             }

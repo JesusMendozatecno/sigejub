@@ -28,3 +28,5 @@ Thumbs.db
 **/public/hot
 # Vistas Blade compiladas: se generan en cada instalacion
 **/storage/framework/views/*.php
+# Respaldos de la BD: datos sensibles, nunca se versionan
+**/storage/app/backups/*.zip

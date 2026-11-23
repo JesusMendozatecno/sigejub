@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('css/register.css') }}">
     <script src="{{ asset('js/theme-welcome.js') }}" defer></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="{{ asset('css/scrollbars.css') }}?v={{ substr(md5_file(public_path('css/scrollbars.css')), 0, 10) }}">
 </head>
 <body>
     @include('partials.loading-overlay')

@@ -16,3 +16,10 @@
 ## Notas
 - Las tarjetas dentro mantienen su funcionalidad de click
 - El header de carpeta es clickeable
+
+## Orden actual de los listados (2026-11-08)
+
+- Expedientes y prestaciones se ordenan en el servidor por nombre y, en caso de empate, por apellido; el ID sirve como último desempate.
+- Los grupos A-Z de ambas vistas usan la inicial del nombre, no la del apellido.
+- Los grupos se forman sobre la página que devuelve el servidor; la paginación sigue siendo independiente.
+- Implementación: `app/Http/Controllers/ExpedienteController.php`, `app/Http/Controllers/PrestacionesController.php` y las funciones `letraGrupoExpediente` / `letraGrupoPrestacion` en las vistas Blade indicadas arriba.

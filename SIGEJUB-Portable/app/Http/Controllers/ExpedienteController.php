@@ -8,16 +8,50 @@ namespace App\Http\Controllers;
 use App\Models\Expediente;
 use App\Models\Trabajador;
 use App\Models\Solicitud;
+use App\Models\ArchivoBd;
 use App\Models\Activity;
 use App\Services\NotificationService;
 use App\Services\ValidationService;
 use App\Services\ImageStorageService;
 use App\Services\ArchivoDbService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ExpedienteController extends Controller
 {
+    private const INICIALES_ALFABETICAS = [
+        'A' => ['A', 'Á', 'À', 'Ä', 'Â'],
+        'B' => ['B'],
+        'C' => ['C'],
+        'D' => ['D'],
+        'E' => ['E', 'É', 'È', 'Ë', 'Ê'],
+        'F' => ['F'],
+        'G' => ['G'],
+        'H' => ['H'],
+        'I' => ['I', 'Í', 'Ì', 'Ï', 'Î'],
+        'J' => ['J'],
+        'K' => ['K'],
+        'L' => ['L'],
+        'M' => ['M'],
+        'N' => ['N', 'Ñ'],
+        'O' => ['O', 'Ó', 'Ò', 'Ö', 'Ô'],
+        'P' => ['P'],
+        'Q' => ['Q'],
+        'R' => ['R'],
+        'S' => ['S'],
+        'T' => ['T'],
+        'U' => ['U', 'Ú', 'Ù', 'Ü', 'Û'],
+        'V' => ['V'],
+        'W' => ['W'],
+        'X' => ['X'],
+        'Y' => ['Y'],
+        'Z' => ['Z'],
+    ];
+
     public const DOCS_REQUERIDOS = [
         'Cédula de Identidad',
         'Oficio de Solicitud',
@@ -29,11 +63,144 @@ class ExpedienteController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'letra' => ['sometimes', 'string', 'regex:/^[A-Za-z#]$/'],
+        ]);
+
         $perPage = min((int) $request->get('per_page', 10), 100);
-        $expedientes = Expediente::with('trabajador', 'solicitud', 'documentos')
-            ->latest()
-            ->paginate($perPage);
-        return response()->json($expedientes);
+
+        $query = Expediente::query()
+            ->leftJoin('trabajadores as t', 'expedientes.trabajador_id', '=', 't.id')
+            ->select('expedientes.*')
+            ->with('trabajador', 'solicitud', 'documentos')
+            ->orderByRaw("LOWER(COALESCE(t.nombres, ''))")
+            ->orderByRaw("LOWER(COALESCE(t.apellidos, ''))")
+            ->orderBy('expedientes.id');
+
+        $this->aplicarFiltrosListado($query, $request);
+
+        $letra = mb_strtoupper(trim((string) $request->get('letra')), 'UTF-8');
+        if ($letra !== '') {
+            $this->aplicarFiltroLetra($query, $letra);
+        }
+
+        return response()->json($query->paginate($perPage));
+    }
+
+    public function letras(Request $request)
+    {
+        $inicialSql = $this->inicialExpedienteSql('t.');
+        $expedientesPorInicial = Expediente::query()
+            ->join('trabajadores as t', 'expedientes.trabajador_id', '=', 't.id')
+            ->selectRaw($inicialSql . ' as inicial');
+
+        $this->aplicarFiltrosListado($expedientesPorInicial, $request);
+
+        $conteos = DB::query()
+            ->fromSub($expedientesPorInicial->toBase(), 'expedientes_por_inicial')
+            ->select('inicial')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('inicial')
+            ->get();
+        $totalesPorLetra = [];
+
+        foreach ($conteos as $conteo) {
+            $letra = $this->normalizarInicial($conteo->inicial);
+            $totalesPorLetra[$letra] = ($totalesPorLetra[$letra] ?? 0) + (int) $conteo->total;
+        }
+
+        uksort($totalesPorLetra, static function ($a, $b) {
+            if ($a === '#') {
+                return $b === '#' ? 0 : 1;
+            }
+            if ($b === '#') {
+                return -1;
+            }
+
+            return strcmp($a, $b);
+        });
+
+        $letras = [];
+        foreach ($totalesPorLetra as $letra => $total) {
+            $letras[] = ['letra' => $letra, 'total' => $total];
+        }
+
+        return response()->json(['letras' => $letras]);
+    }
+
+    private function aplicarFiltrosListado(Builder $query, Request $request): void
+    {
+        // Búsqueda en servidor: antes solo se filtraba la página ya cargada,
+        // por lo que un trabajador en otra página aparecía como "sin resultados".
+        $search = trim((string) $request->get('search', ''));
+        if ($search !== '') {
+            $query->whereHas('trabajador', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nombres', 'like', "%{$search}%")
+                        ->orWhere('apellidos', 'like', "%{$search}%")
+                        ->orWhere('cedula', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Filtro por estado global: 0 = sin iniciar, 50 = en proceso, 100 = completo.
+        $estado = $request->get('estado');
+        if ($estado !== null && $estado !== '') {
+            switch ((string) $estado) {
+                case '0':
+                    $query->where('expedientes.estado_global', 0);
+                    break;
+                case '50':
+                    $query->whereBetween('expedientes.estado_global', [1, 99]);
+                    break;
+                case '100':
+                    $query->where('expedientes.estado_global', 100);
+                    break;
+                default:
+                    if (is_numeric($estado)) {
+                        $query->where('expedientes.estado_global', (int) $estado);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private function aplicarFiltroLetra(Builder $query, string $letra): void
+    {
+        $inicialSql = $this->inicialExpedienteSql();
+        $variantes = self::INICIALES_ALFABETICAS[$letra] ?? null;
+
+        $query->whereHas('trabajador', function ($trabajador) use ($inicialSql, $variantes) {
+            if ($variantes === null) {
+                $alfabeto = array_merge(...array_values(self::INICIALES_ALFABETICAS));
+                $marcadores = implode(',', array_fill(0, count($alfabeto), '?'));
+                $trabajador->whereRaw($inicialSql . ' NOT IN (' . $marcadores . ')', $alfabeto);
+                return;
+            }
+
+            $marcadores = implode(',', array_fill(0, count($variantes), '?'));
+            $trabajador->whereRaw($inicialSql . ' IN (' . $marcadores . ')', $variantes);
+        });
+    }
+
+    private function inicialExpedienteSql(string $prefijo = ''): string
+    {
+        return "UPPER(SUBSTR(COALESCE(NULLIF(TRIM({$prefijo}nombres), ''), NULLIF(TRIM({$prefijo}apellidos), ''), ''), 1, 1))";
+    }
+
+    private function normalizarInicial(?string $inicial): string
+    {
+        $inicial = mb_strtoupper(mb_substr(trim((string) $inicial), 0, 1, 'UTF-8'), 'UTF-8');
+        $inicial = strtr($inicial, [
+            'Á' => 'A', 'À' => 'A', 'Ä' => 'A', 'Â' => 'A',
+            'É' => 'E', 'È' => 'E', 'Ë' => 'E', 'Ê' => 'E',
+            'Í' => 'I', 'Ì' => 'I', 'Ï' => 'I', 'Î' => 'I',
+            'Ñ' => 'N',
+            'Ó' => 'O', 'Ò' => 'O', 'Ö' => 'O', 'Ô' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Ü' => 'U', 'Û' => 'U',
+        ]);
+
+        return preg_match('/^[A-Z]$/', $inicial) ? $inicial : '#';
     }
 
     public function buscarTrabajador(Request $request)
@@ -138,6 +305,139 @@ class ExpedienteController extends Controller
         $expediente = Expediente::with('trabajador', 'solicitud', 'documentos', 'recibos', 'clausulas')
             ->findOrFail($id);
         return response()->json($expediente);
+    }
+
+    public function exportar($id)
+    {
+        $expediente = Expediente::with('trabajador', 'solicitud', 'documentos', 'recibos')
+            ->findOrFail($id);
+        $trabajador = $expediente->trabajador;
+        abort_unless($trabajador, 404, 'El trabajador asociado a este expediente no está disponible.');
+
+        $nombreTrabajador = trim($trabajador->nombres . ' ' . $trabajador->apellidos);
+        $nombreSeguro = Str::slug($nombreTrabajador, '_') ?: 'trabajador';
+        $carpeta = 'Expediente_' . $expediente->id . '_' . $nombreSeguro;
+        $archivoZip = tempnam(sys_get_temp_dir(), 'sigejub_');
+        if ($archivoZip === false) {
+            throw new \RuntimeException('No se pudo preparar la descarga del expediente.');
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($archivoZip, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            @unlink($archivoZip);
+            throw new \RuntimeException('No se pudo crear el archivo ZIP del expediente.');
+        }
+
+        try {
+            $fotoPath = $expediente->getRawOriginal('foto_carnet');
+            $foto = $fotoPath ? $this->contenidoArchivoExpediente($fotoPath) : null;
+            $fotoBase64 = null;
+            if ($foto !== null) {
+                $extensionFoto = strtolower(pathinfo($fotoPath, PATHINFO_EXTENSION)) ?: 'jpg';
+                $mime = match ($extensionFoto) {
+                    'png' => 'image/png',
+                    'webp' => 'image/webp',
+                    default => 'image/jpeg',
+                };
+                $fotoParaPdf = $foto;
+                if ($extensionFoto === 'webp' && function_exists('imagecreatefromstring')) {
+                    $imagen = imagecreatefromstring($foto);
+                    if ($imagen !== false) {
+                        ob_start();
+                        imagepng($imagen);
+                        $png = ob_get_clean();
+                        imagedestroy($imagen);
+                        if (is_string($png)) {
+                            $fotoParaPdf = $png;
+                            $mime = 'image/png';
+                        }
+                    }
+                }
+                $fotoBase64 = 'data:' . $mime . ';base64,' . base64_encode($fotoParaPdf);
+                $zip->addFromString($carpeta . '/Foto carnet.' . $extensionFoto, $foto);
+            }
+
+            $pdfPerfil = Pdf::loadView('pdf.expediente', [
+                'expediente' => $expediente,
+                'trabajador' => $trabajador,
+                'solicitud' => $expediente->solicitud,
+                'foto_base64' => $fotoBase64,
+            ])->setPaper('a4')->output();
+            $zip->addFromString($carpeta . '/Perfil del trabajador.pdf', $pdfPerfil);
+
+            $archivosNoDisponibles = [];
+            foreach ($expediente->documentos as $documento) {
+                if (!$documento->archivo) {
+                    continue;
+                }
+                $contenido = $this->contenidoArchivoExpediente($documento->archivo);
+                if ($contenido === null) {
+                    $archivosNoDisponibles[] = 'Documento: ' . $documento->nombre;
+                    continue;
+                }
+                $extension = strtolower(pathinfo($documento->archivo, PATHINFO_EXTENSION)) ?: 'bin';
+                $nombre = sprintf('%03d_%s.%s', $documento->id, Str::slug($documento->nombre, '_') ?: 'documento', $extension);
+                $zip->addFromString($carpeta . '/Documentos/' . $nombre, $contenido);
+            }
+
+            foreach ($expediente->recibos as $recibo) {
+                if (!$recibo->archivo) {
+                    continue;
+                }
+                $contenido = $this->contenidoArchivoExpediente($recibo->archivo);
+                if ($contenido === null) {
+                    $archivosNoDisponibles[] = 'Recibo de nómina: ' . ($recibo->periodo ?: $recibo->id);
+                    continue;
+                }
+                $extension = strtolower(pathinfo($recibo->archivo, PATHINFO_EXTENSION)) ?: 'bin';
+                $nombre = sprintf('%03d_%s.%s', $recibo->id, Str::slug($recibo->periodo ?: 'recibo', '_'), $extension);
+                $zip->addFromString($carpeta . '/Recibos de nómina/' . $nombre, $contenido);
+            }
+
+            $cartaPath = $expediente->getRawOriginal('carta_aprobacion');
+            if ($cartaPath) {
+                $contenido = $this->contenidoArchivoExpediente($cartaPath);
+                if ($contenido !== null) {
+                    $extension = strtolower(pathinfo($cartaPath, PATHINFO_EXTENSION)) ?: 'bin';
+                    $zip->addFromString($carpeta . '/Carta de aprobación.' . $extension, $contenido);
+                } else {
+                    $archivosNoDisponibles[] = 'Carta de aprobación';
+                }
+            }
+
+            if ($archivosNoDisponibles) {
+                $zip->addFromString(
+                    $carpeta . '/Archivos no disponibles.txt',
+                    "No se pudieron incluir estos archivos porque no están disponibles en el almacenamiento ni en su respaldo:\r\n- "
+                        . implode("\r\n- ", $archivosNoDisponibles)
+                );
+            }
+
+            $zip->close();
+        } catch (\Throwable $error) {
+            $zip->close();
+            @unlink($archivoZip);
+            throw $error;
+        }
+
+        return response()->download(
+            $archivoZip,
+            $carpeta . '.zip',
+            ['Content-Type' => 'application/zip']
+        )->deleteFileAfterSend(true);
+    }
+
+    private function contenidoArchivoExpediente(string $ruta): ?string
+    {
+        $storage = Storage::disk('public');
+        if ($storage->exists($ruta)) {
+            return $storage->get($ruta);
+        }
+
+        return ArchivoBd::where('disco', 'public')
+            ->where('ruta', trim($ruta, '/'))
+            ->first()
+            ?->binario();
     }
 
     /**

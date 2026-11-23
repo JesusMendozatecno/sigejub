@@ -10,10 +10,12 @@
 > `windows/mysql/`, `windows/postgresql/`. **Las rutas de este documento están relativas a `original/`.**
 > Las demás copias contienen los mismos archivos con las mismas rutas relativas.
 
-> **Stack:** PHP / Laravel 11 + Eloquent (ORM) + Blade (plantillas) + JavaScript vanilla (fetch) +
+> **Stack:** PHP 8.2+ / Laravel 12 + Eloquent (ORM) + Blade (plantillas) + JavaScript vanilla (fetch) +
 > CSS plano + MySQL (por defecto, `.env`: `DB_CONNECTION=mysql`, `DB_DATABASE=bd-sigejub`;
 > variantes PostgreSQL en las copias `linux/postgresql` y `windows/postgresql`) +
 > DomPDF (`barryvdh/laravel-dompdf ^3.1` en `composer.json`).
+
+> **Nota de mantenimiento (2026-11-08):** el listado de expedientes y el de prestaciones se ordenan en backend por nombre, apellido e ID. Los encabezados A-Z en las vistas usan la inicial del nombre. El diagrama describe el flujo funcional y las rutas existentes; no implica que todos los servicios opcionales descritos en el repositorio ya estén implementados.
 
 ---
 

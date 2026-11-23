@@ -116,10 +116,8 @@ function inicializarDashboard() {
     }
     if (overlay) overlay.addEventListener('click', closeSidebar);
     document.querySelectorAll('.sidebar-menu .menu-item').forEach(function(item) {
-        // Tooltip para el estado "solo iconos" del menú
-        if (!item.dataset.tooltip) {
-            item.dataset.tooltip = item.textContent.trim();
-        }
+        // En el estado "solo iconos" no se muestran nombres emergentes:
+        // el icono identifica la sección.
         item.addEventListener('click', function() { if (window.innerWidth < 768) closeSidebar(); });
     });
 }

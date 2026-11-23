@@ -45,6 +45,7 @@
             tr:nth-child(even) { background: #f8fafc !important; }
         }
     </style>
+<link rel="stylesheet" href="{{ asset('css/scrollbars.css') }}?v={{ substr(md5_file(public_path('css/scrollbars.css')), 0, 10) }}">
 </head>
 <body>
     <div class="no-print">
@@ -65,7 +66,7 @@
             <div class="ficha-item"><span>Grado</span><strong>{{ $trabajador->grado_nivel ?? '—' }}</strong></div>
             <div class="ficha-item"><span>Cargo actual</span><strong>{{ $trabajador->cargo ?? '—' }}</strong></div>
             <div class="ficha-item"><span>Unidad / Depto.</span><strong>{{ $trabajador->unidad_departamento ?? '—' }}</strong></div>
-            <div class="ficha-item"><span>Condición laboral</span><strong>{{ $condicion ?? $trabajador->tipo_contrato ?? '—' }}</strong></div>
+            <div class="ficha-item"><span>Categoría</span><strong>{{ $condicion ?? $trabajador->tipo_contrato ?? '—' }}</strong></div>
             <div class="ficha-item"><span>Dedicación</span><strong>{{ $trabajador->dedicacion ?? '—' }}</strong></div>
             <div class="ficha-item"><span>Fecha de ingreso</span><strong>{{ $trabajador->fecha_ingreso ? \Carbon\Carbon::parse($trabajador->fecha_ingreso)->format('d/m/Y') : '—' }}</strong></div>
             <div class="ficha-item"><span>Fecha de nacimiento</span><strong>{{ $trabajador->fecha_nacimiento ? \Carbon\Carbon::parse($trabajador->fecha_nacimiento)->format('d/m/Y') : '—' }}</strong></div>

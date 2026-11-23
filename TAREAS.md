@@ -4,6 +4,8 @@
 **Documento de Control de Tareas, Épicas y Criterios de Aceptación**  
 **Fecha:** Octubre 2026 | **Alineación:** SDD Brownfield  
 
+> **Estado real actualizado (2026-11-08):** las épicas de abajo siguen siendo backlog, salvo las mejoras ya aplicadas a ordenamiento y filtros de listas. En las copias del sistema, Expedientes y Prestaciones ordenan por nombre, apellido e ID; sus grupos A-Z se basan en el nombre. Las búsquedas de tasas y fórmulas mantienen juntos sus criterios OR. En `original/` no están todavía `PrestacionCalculationService`, `FormulaEvaluationEngine`, los Form Requests ni los módulos ES6 propuestos. La suite financiera descrita en la Tarea 5.2 tampoco existe aún: la última ejecución disponible en el paquete portable tuvo 3 pruebas pasadas y 7 omitidas por usar SQLite en vez de PostgreSQL.
+
 ---
 
 ## Matriz de Priorización

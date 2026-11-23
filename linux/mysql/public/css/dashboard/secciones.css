@@ -1872,7 +1872,7 @@ body.dark-mode .activity-pagination .hist-pag-dots { color: #64748b; }
 }
 
 .btn-primary-dark {
-    background: #1a365d;
+    background: var(--accent-dark, #1a365d);
     color: white;
     border: none;
     padding: 12px 20px;
@@ -3015,6 +3015,62 @@ body.dark-mode .sidebar.collapsed .menu-item.active:hover i {
     text-align: center;
 }
 
+/* --- Menú plegado: cuadro del item activo perfectamente centrado --- */
+.sidebar.collapsed .sidebar-menu ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0;
+}
+.sidebar.collapsed .menu-item,
+.sidebar.collapsed .menu-item:hover,
+.sidebar.collapsed .menu-item.active,
+.sidebar.collapsed .menu-item.active:hover {
+    box-sizing: border-box;
+    width: 44px !important;
+    max-width: 44px !important;
+    min-width: 44px !important;
+    height: 44px;
+    margin: 4px auto !important;
+    padding: 0 !important;
+    gap: 0;
+    column-gap: 0;
+    row-gap: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.sidebar.collapsed .menu-item i,
+.sidebar.collapsed .menu-item.active i,
+.sidebar.collapsed .menu-item.active:hover i {
+    width: 44px;
+    max-width: 44px;
+    height: 44px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    line-height: 1;
+    text-align: center;
+    transform: none;
+}
+/* Sin nombres emergentes al pasar el mouse sobre el menú plegado:
+   los iconos alcanzan para identificar cada sección. */
+.sidebar.collapsed .menu-item::after,
+.sidebar.collapsed .menu-item:hover::after,
+.sidebar.collapsed .menu-item:focus::after,
+.sidebar.collapsed .menu-item:focus-visible::after {
+    content: none !important;
+    display: none !important;
+    background: none !important;
+    box-shadow: none !important;
+}
+
 /* --- Botones: separación uniforme icono/palabra --- */
 .btn i,
 .btn-primary i,
@@ -3161,129 +3217,277 @@ body.dark-mode .ayuda-manual-card {
     border-color: var(--border);
 }
 
-/* ============================================================
-   CARPETAS ALFABÉTICAS TIPO ARCHIVERO (acordeón)
-   ============================================================ */
-.carpetas-chips {
+/* Inline alphabetical sections for paginated expediente and benefit lists. */
+#expedientesGrid,
+#prestacionesGrid { display: block; }
+
+.grupo-alfabetico { margin-bottom: 20px; }
+.grupo-alfabetico-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 18px;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 10px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    color: var(--text, #0f172a);
+    font-size: 1rem;
+    font-weight: 800;
 }
-
-.carpeta-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border: 1px solid var(--border, #e2e8f0);
-    border-radius: 999px;
-    background: var(--bg-card, #ffffff);
+.grupo-alfabetico-header small {
     color: var(--text-muted, #64748b);
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.grupo-alfabetico-grid { margin-top: 0; }
+body.dark-mode .grupo-alfabetico-header { color: #f1f5f9; border-bottom-color: var(--border); }
+
+/* ============================================================
+   ESTANDARIZACIÓN VISUAL DEL DASHBOARD
+   Fondo, filtros, descripciones, botones de archivo y paneles
+   alfabéticos siguiendo el color de acento del sistema.
+   ============================================================ */
+:root {
+    --sigejub-page: #cbd0d8;
 }
 
-.carpeta-chip:hover { background: #f1f5f9; color: var(--accent); border-color: var(--accent); }
-.carpeta-chip.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+body:not(.dark-mode) .main-content {
+    background: var(--sigejub-page);
+}
 
-.carpeta-chip-count {
+/* Filtros de Trabajadores: el contador queda integrado en laptops. */
+.workers-filters-card {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.55fr) repeat(3, minmax(145px, 1fr)) minmax(180px, 1fr);
+    gap: 15px;
+    align-items: stretch;
+    margin: 20px 0 30px;
+}
+
+.workers-filters-card .filter-group {
+    width: auto;
+    min-width: 0;
+}
+
+.workers-filters-card .filter-group input,
+.workers-filters-card .filter-group select {
+    width: 100%;
+    min-width: 0;
+}
+
+.workers-filters-card .total-badge-card {
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+}
+
+@media (max-width: 1280px) {
+    .workers-filters-card {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .workers-filters-card .filter-group:first-child,
+    .workers-filters-card .total-badge-card {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 900px) {
+    .workers-filters-card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .workers-filters-card {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .workers-filters-card .filter-group:first-child,
+    .workers-filters-card .total-badge-card {
+        grid-column: auto;
+    }
+}
+
+/* Descripciones bajo los títulos de cada sección. */
+.header-info p,
+.section-header p,
+.section-description {
+    color: #0f172a;
+}
+
+body.dark-mode .header-info p,
+body.dark-mode .section-header p,
+body.dark-mode .section-description {
+    color: #cbd5e1;
+}
+
+/* Botón nativo de selección de archivos con el acento del sistema. */
+input[type="file"]::file-selector-button {
+    background: var(--accent, #1a365d);
+    color: #fff;
+    border: 1px solid var(--accent-dark, #0f2340);
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-right: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+input[type="file"]:hover::file-selector-button {
+    background: var(--accent-dark, #0f2340);
+}
+
+body.dark-mode input[type="file"]::file-selector-button {
+    background: var(--accent-dark, #0f2340);
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 60%, #fff);
+}
+
+/* Paneles desplegables por letra en Expedientes. */
+.grupo-alfabetico {
+    margin-bottom: 18px;
+}
+
+.grupo-alfabetico-header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 16px 18px;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 35%, #e2e8f0);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent, #1a365d) 8%, var(--bg-card, #fff));
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+
+.grupo-alfabetico-header:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent, #1a365d);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--accent, #1a365d) 18%, transparent);
+}
+
+.grupo-alfabetico-header[aria-expanded="true"] {
+    border-color: var(--accent-dark, #0f2340);
+    background: color-mix(in srgb, var(--accent, #1a365d) 14%, var(--bg-card, #fff));
+}
+
+.grupo-alfabetico-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 10px;
+}
+
+.grupo-alfabetico-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
+    background: var(--accent, #1a365d);
+    color: #fff;
+}
+
+.grupo-alfabetico-badge {
+    background: color-mix(in srgb, var(--accent, #1a365d) 14%, transparent);
+    color: var(--accent-dark, #0f2340);
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.10);
-    font-size: 0.72rem;
+    padding: 4px 10px;
+    font-size: .72rem;
+    font-weight: 700;
 }
 
-.carpeta-chip.active .carpeta-chip-count { background: rgba(255, 255, 255, 0.28); }
-
-.carpeta-grupo {
-    border: 1px solid var(--border, #e2e8f0);
-    border-radius: 12px;
-    background: var(--bg-card, #ffffff);
-    margin-bottom: 12px;
-    overflow: hidden;
-    transition: box-shadow 0.15s;
-}
-
-.carpeta-grupo.open { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06); }
-
-.carpeta-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    cursor: pointer;
-    user-select: none;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0));
-}
-
-.carpeta-header:hover { background: rgba(0, 0, 0, 0.03); }
-.carpeta-header i.fa-folder,
-.carpeta-header i.fa-folder-open { color: var(--accent, #1e40af); font-size: 1.05rem; }
-
-.carpeta-letra {
+.grupo-alfabetico-letra {
+    font-size: 1.35rem;
     font-weight: 800;
-    font-size: 1.05rem;
-    color: var(--text, #0f172a);
-    min-width: 22px;
+    color: var(--accent-dark, #0f2340);
 }
 
-.carpeta-total {
-    font-size: 0.82rem;
-    color: var(--text-muted, #64748b);
+.grupo-alfabetico-count {
+    color: #475569;
+    font-size: .78rem;
     font-weight: 600;
 }
 
-.carpeta-chevron {
-    margin-left: auto;
-    color: var(--text-muted, #94a3b8);
-    transition: transform 0.2s ease;
+.grupo-alfabetico-panel {
+    padding: 16px 0 0;
 }
 
-.carpeta-grupo.open .carpeta-chevron { transform: rotate(180deg); }
-
-.carpeta-grupo .expedientes-grid,
-.carpeta-grupo .prestaciones-grid-cards {
-    display: none;
-    padding: 0 16px 16px;
-}
-
-.carpeta-grupo.open .expedientes-grid,
-.carpeta-grupo.open .prestaciones-grid-cards { display: grid; }
-
-body.dark-mode .carpeta-grupo { background: var(--bg-card); border-color: var(--border); }
-body.dark-mode .carpeta-header:hover { background: rgba(255, 255, 255, 0.04); }
-body.dark-mode .carpeta-letra { color: #e2e8f0; }
-body.dark-mode .carpeta-chip { background: #1e293b; border-color: #334155; color: #94a3b8; }
-body.dark-mode .carpeta-chip:hover { background: #334155; color: #f1f5f9; }
-
-/* Drilldown carpetas */
-.btn-volver-carpetas {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+.grupo-alfabetico-detail-header {
+    padding: 16px 18px;
+    border-left: 4px solid var(--accent, #1a365d);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent, #1a365d) 6%, var(--bg-card, #fff));
     margin-bottom: 14px;
-    padding: 8px 14px;
-    border: 1px solid var(--border, #e2e8f0);
-    border-radius: 10px;
-    background: var(--bg-card, #ffffff);
-    color: var(--text, #0f172a);
+}
+
+.grupo-alfabetico-detail-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.grupo-alfabetico-detail-header h2 {
+    color: var(--accent-dark, #0f2340);
+    margin: 8px 0 0;
+    font-size: 1.1rem;
+}
+
+body.dark-mode .grupo-alfabetico-header,
+body.dark-mode .grupo-alfabetico-detail-header {
+    background: color-mix(in srgb, var(--accent, #1a365d) 12%, var(--bg-card, #1e293b));
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 45%, #334155);
+}
+
+body.dark-mode .grupo-alfabetico-letra,
+body.dark-mode .grupo-alfabetico-detail-header h2 {
+    color: #f1f5f9;
+}
+
+body.dark-mode .grupo-alfabetico-badge {
+    color: #e2e8f0;
+}
+
+body.dark-mode .grupo-alfabetico-count {
+    color: #cbd5e1;
+}
+
+/* Paginación de años de nómina. */
+.nomina-anios-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.nomina-anios-pagination .pag-btn {
+    min-width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 35%, #cbd5e1);
+    background: var(--bg-card, #fff);
+    color: var(--accent-dark, #0f2340);
     font-weight: 700;
     cursor: pointer;
 }
-.btn-volver-carpetas:hover { background: #f8fafc; }
 
-.carpeta-drilldown { width: 100%; }
-.carpeta-drilldown .carpeta-header { cursor: pointer; }
-.carpeta-grupo.hidden,
-.carpetas-chips.hidden { display: none !important; }
+.nomina-anios-pagination .pag-btn.active,
+.nomina-anios-pagination .pag-btn:hover:not(:disabled) {
+    background: var(--accent-dark, #0f2340);
+    border-color: var(--accent-dark, #0f2340);
+    color: #fff;
+}
 
-body.dark-mode .btn-volver-carpetas { background: #1e293b; border-color: #334155; color: #e2e8f0; }
-body.dark-mode .btn-volver-carpetas:hover { background: #334155; }
+body.dark-mode .nomina-anios-pagination .pag-btn {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-color: #475569;
+}

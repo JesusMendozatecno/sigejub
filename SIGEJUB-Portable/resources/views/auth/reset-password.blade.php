@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ asset('css/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <script src="{{ asset('js/theme-welcome.js') }}" defer></script>
+<link rel="stylesheet" href="{{ asset('css/scrollbars.css') }}?v={{ substr(md5_file(public_path('css/scrollbars.css')), 0, 10) }}">
 </head>
 <body>
     @include('partials.loading-overlay')

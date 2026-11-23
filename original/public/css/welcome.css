@@ -853,13 +853,22 @@ img { max-width: 100%; height: auto; }
     box-shadow: 0 5px 14px rgba(8,120,249,.22);
 }
 .pw-nav-brand-text { font-size: 21px; font-weight: 800; letter-spacing: -.025em; }
+.pw-nav-links a.pw-nav-login,
+.pw-nav-links a.pw-nav-login:visited,
+.pw-nav-links a.pw-nav-login:hover,
+.pw-nav-links a.pw-nav-login:focus-visible,
+.pw-nav-links a.pw-nav-login:active {
+    color: #fff;
+}
 .pw-nav-login {
-    padding: 12px 24px; border-radius: 13px; color: #fff;
-    background: linear-gradient(135deg,#0757a8,#0878f9);
+    padding: 12px 24px; border-radius: 13px;
+    background: linear-gradient(135deg,#064784,#0757a8);
     border-color: rgba(255,255,255,.2); box-shadow: 0 7px 18px rgba(8,93,190,.22);
 }
-.pw-nav-login:hover, .pw-nav-login:focus-visible {
-    color: #fff !important; background: linear-gradient(135deg,#064784,#0667db);
+.pw-nav-links a.pw-nav-login:hover,
+.pw-nav-links a.pw-nav-login:focus-visible,
+.pw-nav-links a.pw-nav-login:active {
+    background: linear-gradient(135deg,#043765,#064784);
 }
 .pw-hero {
     min-height: 760px;

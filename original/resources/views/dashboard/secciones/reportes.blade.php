@@ -30,6 +30,29 @@ body.dark-mode .rep-kpi .kpi-value, body.dark-mode .rep-card-header h3 { color: 
 body.dark-mode .rep-card-header { border-bottom-color: #334155; }
 body.dark-mode .rep-toggle { background: #0f172a; }
 body.dark-mode .rep-toggle button.active { background: #1e293b; color: #93c5fd; }
+
+/* ==== Reporte rápido: Próximos Jubilados ==== */
+.rep-quick { position: relative; margin-top: 20px; padding: 18px 20px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 1px 3px rgba(15,23,42,0.05); }
+.rep-quick-top { display: flex; align-items: flex-start; gap: 14px; }
+.rep-quick-icon { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.02rem; color: var(--accent, #1a365d); background: color-mix(in srgb, var(--accent, #1a365d) 12%, #ffffff); border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 24%, #ffffff); }
+.rep-quick-info h3 { margin: 0; font-size: 0.95rem; font-weight: 800; color: #0f172a; line-height: 1.35; }
+.rep-quick-info p { margin: 4px 0 0; font-size: 0.75rem; line-height: 1.5; color: #64748b; }
+.rep-quick-controls { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0; }
+.rep-quick-field { display: flex; flex-direction: column; gap: 6px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.6px; color: #64748b; }
+.rep-quick-field input { padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 10px; background: #f8fafc; font-size: 0.82rem; font-weight: 600; color: #0f172a; transition: border-color 0.18s, box-shadow 0.18s, background 0.18s; }
+.rep-quick-field input:focus { outline: none; background: #ffffff; border-color: var(--accent, #1a365d); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #1a365d) 18%, transparent); }
+.rep-quick-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; margin-left: auto; padding: 10px 20px; border: 1px solid #15803d; border-radius: 12px; background: linear-gradient(135deg, #15803d, #22c55e); color: #ffffff; font-size: 0.84rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px rgba(21,128,61,0.24); transition: transform 0.18s, box-shadow 0.18s, filter 0.18s; }
+.rep-quick-btn:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 10px 22px rgba(21,128,61,0.32); }
+.rep-quick-btn:active { transform: translateY(0); }
+.rep-quick-btn:focus-visible { outline: 2px solid #15803d; outline-offset: 2px; }
+body.dark-mode .rep-quick { background: #1e293b; border-color: #334155; }
+body.dark-mode .rep-quick-info h3 { color: #f1f5f9; }
+body.dark-mode .rep-quick-info p { color: #94a3b8; }
+body.dark-mode .rep-quick-icon { background: color-mix(in srgb, var(--accent, #93c5fd) 18%, #0f172a); border-color: color-mix(in srgb, var(--accent, #93c5fd) 34%, #1e293b); color: #ffffff; }
+body.dark-mode .rep-quick-controls { border-top-color: #334155; }
+body.dark-mode .rep-quick-field { color: #94a3b8; }
+body.dark-mode .rep-quick-field input { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+body.dark-mode .rep-quick-field input:focus { background: #0b1220; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #38bdf8) 26%, transparent); }
 </style>
 
 <header class="section-header-flex">
@@ -52,21 +75,26 @@ body.dark-mode .rep-toggle button.active { background: #1e293b; color: #93c5fd; 
 </header>
 
 <!-- Reporte R5: Próximos Jubilados -->
-<div style="margin-top:20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-    <div style="font-weight:700;color:#0f172a;font-size:0.92rem;display:flex;align-items:center;gap:8px;">
-        <i class="fas fa-hourglass-half" style="color:#2563eb;"></i> Reporte: Próximos Jubilados
+<div class="rep-quick">
+    <div class="rep-quick-top">
+        <div class="rep-quick-icon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="rep-quick-info">
+            <h3>Reporte: Próximos Jubilados</h3>
+            <p>Muestra a los trabajadores cuya fecha estimada de retiro (60 años de edad o 25 años de servicio, el primer requisito que se cumpla) cae dentro del período consultado.</p>
+        </div>
     </div>
-    <label style="font-size:0.72rem;color:#64748b;font-weight:700;">DESDE
-        <input type="date" id="proxJubDesde" value="{{ now()->format('Y-m-d') }}" style="display:block;margin-top:3px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;">
-    </label>
-    <label style="font-size:0.72rem;color:#64748b;font-weight:700;">HASTA
-        <input type="date" id="proxJubHasta" value="{{ now()->addMonths(24)->format('Y-m-d') }}" style="display:block;margin-top:3px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;">
-    </label>
-    <button class="btn-export-pdf" type="button" onclick="abrirProximosJubilados()" style="margin-top:14px;">
-        <i class="fas fa-print"></i>
-        <span>Abrir Reporte</span>
-    </button>
-    <p style="font-size:0.72rem;color:#64748b;flex-basis:100%;margin:0;">Muestra a los trabajadores cuya fecha estimada de retiro (60 años de edad o 25 años de servicio, el primer requisito que se cumpla) cae dentro del período consultado.</p>
+    <div class="rep-quick-controls">
+        <label class="rep-quick-field">DESDE
+            <input type="date" id="proxJubDesde" value="{{ now()->format('Y-m-d') }}">
+        </label>
+        <label class="rep-quick-field">HASTA
+            <input type="date" id="proxJubHasta" value="{{ now()->addMonths(24)->format('Y-m-d') }}">
+        </label>
+        <button class="rep-quick-btn" type="button" onclick="abrirProximosJubilados()">
+            <i class="fas fa-print"></i>
+            <span>Abrir Reporte</span>
+        </button>
+    </div>
 </div>
 <script>
 function abrirProximosJubilados() {
@@ -184,19 +212,19 @@ async function cargarStats() {
 
         document.getElementById('repTrabajadores').textContent = trab.total || 0;
         document.getElementById('repTrabajadoresDetalle').textContent =
-            (trab.activos || 0) + ' activos · ' + (trab.jubilados || 0) + ' jubilados';
+            (trab.activos || 0) + ' activos · ' + (trab.jubilados || 0) + ' con criterio jubilatorio';
         document.getElementById('repSolicitudes').textContent = sol.total || 0;
         document.getElementById('repSolicitudesDetalle').textContent =
-            (sol.aprobado || 0) + ' aprobadas · ' + (sol.pendiente || 0) + ' pendientes';
+            (sol.aprobado || 0) + ' aprobadas · ' + (sol.pendiente || 0) + ' pendientes · ' + (sol.revision || 0) + ' en revisión';
         document.getElementById('repExpedientes').textContent = exp.total || 0;
         document.getElementById('repExpedientesDetalle').textContent =
             (exp.porcentaje_completos || 0) + '% completos · ' + (exp.sin_solicitud || 0) + ' sin solicitud';
         document.getElementById('repUsuarios').textContent = d.usuarios_activos || 0;
 
         var filas = [
-            ['Trabajadores registrados', trab.total || 0, 'Total en el sistema (activos + jubilados)'],
+            ['Trabajadores registrados', trab.total || 0, 'Total en el sistema (activos + con criterio jubilatorio)'],
             ['Trabajadores activos', trab.activos || 0, 'Personal vigente en nómina'],
-            ['Trabajadores jubilados', trab.jubilados || 0, 'Con proceso de jubilación concluido'],
+            ['Trabajadores con criterio jubilatorio', trab.jubilados || 0, 'Cumplen edad mínima o antigüedad de servicio'],
             ['Solicitudes totales', sol.total || 0, 'Incluye todos los estatus'],
             ['Solicitudes aprobadas', sol.aprobado || 0, 'Aprobadas por el consejo'],
             ['Solicitudes pendientes', (sol.pendiente || 0) + (sol.revision || 0), 'En revisión o esperando aprobación'],
@@ -230,14 +258,22 @@ function pintarGraficos(d) {
     if (chartNominaInstance) chartNominaInstance.destroy();
     var ctxNom = document.getElementById('chartNominaCanvas');
     if (ctxNom) {
+        var nombresTipoNomina = {
+            ADM: 'Administrativo',
+            DOC: 'Docente',
+            OBREROS: 'Obrero',
+            'SIN TIPO': 'Sin tipo'
+        };
+        var coloresNomina = ['#2563eb', '#0ea5e9', '#f59e0b', '#94a3b8', '#7c3aed', '#16a34a'];
+        var tiposNomina = Object.keys(porTipo).sort();
         chartNominaInstance = new Chart(ctxNom, {
             type: 'bar',
             data: {
-                labels: ['Administrativo', 'Docente', 'Obrero', 'Sin tipo'],
+                labels: tiposNomina.map(function(tipo) { return nombresTipoNomina[tipo] || tipo; }),
                 datasets: [{
                     label: 'Trabajadores',
-                    data: [porTipo.ADM || 0, porTipo.DOC || 0, porTipo.OBREROS || 0, porTipo['SIN TIPO'] || 0],
-                    backgroundColor: ['#2563eb', '#0ea5e9', '#f59e0b', '#94a3b8'],
+                    data: tiposNomina.map(function(tipo) { return Number(porTipo[tipo]) || 0; }),
+                    backgroundColor: tiposNomina.map(function(tipo, index) { return coloresNomina[index % coloresNomina.length]; }),
                     borderRadius: 8,
                     maxBarThickness: 64
                 }]
@@ -257,10 +293,10 @@ function pintarGraficos(d) {
         chartSolicitudesInstance = new Chart(ctxSol, {
             type: 'doughnut',
             data: {
-                labels: ['Pendientes', 'Aprobadas', 'Rechazadas'],
+                labels: ['Pendientes', 'En revisión', 'Aprobadas', 'Rechazadas'],
                 datasets: [{
-                    data: [sol.pendiente || 0, sol.aprobado || 0, sol.rechazado || 0],
-                    backgroundColor: ['#f59e0b', '#22c55e', '#ef4444'],
+                    data: [sol.pendiente || 0, sol.revision || 0, sol.aprobado || 0, sol.rechazado || 0],
+                    backgroundColor: ['#f59e0b', '#0ea5e9', '#22c55e', '#ef4444'],
                     borderWidth: 0
                 }]
             },

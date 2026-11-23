@@ -218,7 +218,7 @@ class NominaController extends Controller
                 'total_trabajadores' => $ultimo['total_trabajadores'] ?? 0,
                 'total_general' => $meses->sum('total_general'),
             ];
-        })->values();
+        })->sortByDesc(fn($anio) => (int) $anio['anio'])->values();
 
         return response()->json([
             'anios' => $anios,

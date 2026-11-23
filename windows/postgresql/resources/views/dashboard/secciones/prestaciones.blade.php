@@ -115,6 +115,391 @@ body.dark-mode .resumen-item { border-bottom-color: #334155; }
 body.dark-mode .resumen-item .r-label { color: #94a3b8; }
 body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
 /* Los estilos de la ventana modal en tema oscuro viven en css/dashboard/secciones/modal.css */
+/* ==== Prestaciones: mismas tarjetas oscuras que Expedientes ==== */
+#prestaciones #prestacionesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+    align-items: stretch;
+}
+#prestaciones .grupo-alfabetico { margin: 0; min-width: 0; }
+#prestaciones .grupo-alfabetico-detalle { grid-column: 1 / -1; min-width: 0; }
+
+/* ---- Tarjeta de letra ---- */
+#prestaciones .grupo-alfabetico-header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-height: 0;
+    padding: 20px;
+    overflow: hidden;
+    text-align: left;
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 60%, #7f9cc4);
+    border-radius: 14px;
+    background:
+        radial-gradient(130% 100% at 100% 0%, color-mix(in srgb, var(--accent, #1a365d) 70%, transparent) 0%, transparent 62%),
+        linear-gradient(160deg, #0f1a2b 0%, #15243a 52%, #1a365d 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .20);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+#prestaciones .grupo-alfabetico-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1px);
+    background-size: 15px 15px;
+    opacity: .55;
+    -webkit-mask-image: linear-gradient(155deg, #000 0%, transparent 72%);
+    mask-image: linear-gradient(155deg, #000 0%, transparent 72%);
+}
+#prestaciones .grupo-alfabetico-header:hover,
+#prestaciones .grupo-alfabetico-header:focus-visible {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 18%, #a8c4ea);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, .34);
+    outline: none;
+}
+#prestaciones .grupo-alfabetico-header:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #1a365d) 40%, transparent), 0 18px 34px rgba(15, 23, 42, .34);
+}
+#prestaciones .grupo-alfabetico-card-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+}
+#prestaciones .grupo-alfabetico-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .12);
+    color: #eaf2ff;
+    font-size: 1.15rem;
+}
+#prestaciones .grupo-alfabetico-badge {
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .24);
+    background: rgba(255, 255, 255, .14);
+    color: #eaf2ff;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+#prestaciones .grupo-alfabetico-letra {
+    position: relative;
+    z-index: 1;
+    font-size: 1.5rem;
+    line-height: 1;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: -.5px;
+    color: #fff;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, .45);
+}
+#prestaciones .grupo-alfabetico-count {
+    position: relative;
+    z-index: 1;
+    color: rgba(214, 227, 245, .78);
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+/* ---- Cabecera de la letra abierta ---- */
+#prestaciones .grupo-alfabetico-detail-header {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 55%, #7f9cc4);
+    border-radius: 18px;
+    background:
+        radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--accent, #1a365d) 62%, transparent) 0%, transparent 66%),
+        linear-gradient(140deg, #0f1a2b 0%, #1a365d 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .20);
+}
+#prestaciones .grupo-alfabetico-detail-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+#prestaciones .grupo-alfabetico-detail-header .btn-volver-prestaciones-letras {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    padding: 8px 15px;
+    border: 1px solid rgba(255, 255, 255, .30);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .10);
+    color: #eaf2ff;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+#prestaciones .grupo-alfabetico-detail-header .btn-volver-prestaciones-letras:hover {
+    background: rgba(255, 255, 255, .20);
+    border-color: rgba(255, 255, 255, .45);
+}
+#prestaciones .grupo-alfabetico-detail-header h2 {
+    margin: 10px 0 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: -.5px;
+    color: #fff;
+}
+#prestaciones .grupo-alfabetico-detail-header p {
+    margin: 0;
+    font-size: .8rem;
+    font-weight: 600;
+    color: rgba(214, 227, 245, .78);
+}
+
+/* ---- Tarjetas de trabajador ---- */
+#prestaciones .prestaciones-grid-cards {
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    gap: 16px;
+}
+#prestaciones .prestacion-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--accent, #1a365d) 50%, #6f8fbb);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #17263c 0%, #101a2b 100%);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, .18);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+#prestaciones .prestacion-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 14%, #a8c4ea);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, .32);
+}
+#prestaciones .prestacion-card .pc-foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 132px;
+    border-radius: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--accent, #1a365d) 78%, transparent) 0%, transparent 72%),
+        linear-gradient(160deg, #1a365d 0%, #101a2b 100%);
+}
+#prestaciones .prestacion-card .pc-foto::after { display: none; }
+#prestaciones .prestacion-card .pc-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+}
+#prestaciones .prestacion-card .pc-avatar {
+    width: 62px;
+    height: 62px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .12);
+    color: #dbe8f8;
+    font-size: 1.4rem;
+}
+#prestaciones .prestacion-card .pc-info {
+    flex: 1 1 auto;
+    gap: 4px;
+    padding: 13px 15px 15px;
+}
+#prestaciones .prestacion-card .pc-info strong {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.5em;
+    font-size: .95rem;
+    line-height: 1.3;
+    font-weight: 800;
+    color: #fff;
+}
+#prestaciones .prestacion-card .pc-info .pc-cedula {
+    font-size: .74rem;
+    font-weight: 600;
+    color: rgba(203, 216, 234, .75);
+}
+#prestaciones .prestacion-card .pc-info .pc-row {
+    margin-top: 8px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+#prestaciones .prestacion-card .pc-info .pc-row:last-child {
+    margin-top: auto;
+    padding-top: 10px;
+}
+#prestaciones .prestacion-card .pc-anios,
+#prestaciones .prestacion-card .pc-badge,
+#prestaciones .prestacion-card .pc-monto,
+#prestaciones .prestacion-card .pc-titulo {
+    padding: 4px 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: .63rem;
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    white-space: normal;
+}
+#prestaciones .prestacion-card .pc-anios {
+    color: #bfdbfe;
+    border-color: rgba(147, 197, 253, .45);
+    background: rgba(30, 58, 138, .60);
+}
+#prestaciones .prestacion-card .pc-badge {
+    color: #e2e8f0;
+    border-color: rgba(203, 213, 225, .35);
+    background: rgba(51, 65, 85, .65);
+}
+#prestaciones .prestacion-card .pc-titulo {
+    color: #a7f3d0;
+    border-color: rgba(110, 231, 183, .45);
+    background: rgba(6, 78, 59, .55);
+    text-transform: none;
+    letter-spacing: 0;
+}
+#prestaciones .prestacion-card .pc-monto {
+    color: #bbf7d0;
+    border-color: rgba(74, 222, 128, .45);
+    background: rgba(6, 78, 59, .75);
+}
+#prestaciones #prestacionesPagination {
+    margin-top: 20px;
+    padding-top: 0;
+    border-top: 0;
+}
+#prestaciones #prestacionesPagination:empty { display: none; }
+
+body.dark-mode #prestaciones .grupo-alfabetico-header,
+body.dark-mode #prestaciones .grupo-alfabetico-detail-header,
+body.dark-mode #prestaciones .prestacion-card {
+    border-color: color-mix(in srgb, var(--accent, #1a365d) 55%, #3b4f6d);
+}
+
+/* ==== Modo claro: las mismas tarjetas en tonos claros del sistema ==== */
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-header {
+    border-color: #cddcf0;
+    background:
+        radial-gradient(130% 100% at 100% 0%, rgba(37, 99, 235, .12) 0%, transparent 62%),
+        linear-gradient(160deg, #ffffff 0%, #f5f9ff 55%, #e9f1fb 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-header::before {
+    background-image: radial-gradient(rgba(26, 54, 93, .10) 1px, transparent 1px);
+    opacity: .5;
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-header:hover,
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-header:focus-visible {
+    border-color: #9dbbe4;
+    box-shadow: 0 16px 30px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-header:focus-visible {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .28), 0 16px 30px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-icon {
+    border-color: #cfdff5;
+    background: #eef4fc;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-badge {
+    border-color: #cfdff5;
+    background: #eef4fc;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-letra {
+    color: #1a365d;
+    text-shadow: 0 6px 18px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-count { color: #5b7799; }
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-detail-header {
+    border-color: #cddcf0;
+    background:
+        radial-gradient(120% 100% at 0% 0%, rgba(37, 99, 235, .12) 0%, transparent 66%),
+        linear-gradient(140deg, #ffffff 0%, #eaf1fb 100%);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-detail-header .btn-volver-prestaciones-letras {
+    border-color: #bfd3ee;
+    background: #eef4fc;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-detail-header .btn-volver-prestaciones-letras:hover {
+    background: #dfeafb;
+    border-color: #9dbbe4;
+}
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-detail-header h2 { color: #1a365d; }
+body:not(.dark-mode) #prestaciones .grupo-alfabetico-detail-header p { color: #5b7799; }
+body:not(.dark-mode) #prestaciones .prestacion-card {
+    border-color: #dbe6f5;
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, .07);
+}
+body:not(.dark-mode) #prestaciones .prestacion-card:hover {
+    border-color: #b6cdea;
+    box-shadow: 0 16px 30px rgba(26, 54, 93, .14);
+}
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-foto {
+    background:
+        radial-gradient(120% 100% at 50% 0%, rgba(37, 99, 235, .16) 0%, transparent 72%),
+        linear-gradient(160deg, #e8f0fb 0%, #f7fafe 100%);
+}
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-avatar {
+    border-color: #cfdff5;
+    background: #ffffff;
+    color: #1d4ed8;
+}
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-info strong { color: #0f172a; }
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-info .pc-cedula { color: #5b7799; }
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-anios { color: #1e40af; border-color: #bfdbfe; background: #eff6ff; }
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-badge { color: #334155; border-color: #cbd5e1; background: #f1f5f9; }
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-titulo { color: #166534; border-color: #bbf7d0; background: #dcfce7; }
+body:not(.dark-mode) #prestaciones .prestacion-card .pc-monto { color: #15803d; border-color: #bbf7d0; background: #ecfdf5; }
+
+@media (max-width: 767px) {
+    #prestaciones .prestaciones-grid-cards {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
 </style>
 
 <header class="section-header">
@@ -125,8 +510,7 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
 </header>
 
 <div id="prestaciones-lista">
-    <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:16px;">Trabajadores con solicitud aprobada y expediente registrado</p>
-    <div id="prestacionesCarpetas" class="carpetas-chips"></div>
+    <p class="section-description" style="font-size:0.9rem;margin-bottom:16px;">Trabajadores con solicitud aprobada y expediente registrado</p>
     <div class="prestaciones-grid-cards" id="prestacionesGrid">
         <p class="empty-state">Cargando...</p>
     </div>
@@ -488,46 +872,14 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
         });
     });
 
-    // === AGRUPACIÓN ALFABÉTICA Y PAGINACIÓN ===
-    let prestacionesPaginaActual = 1;
-    let prestacionesTotalPaginas = 1;
-    let prestacionesCache = [];
+    // === CARPETAS ALFABÉTICAS Y PAGINACIÓN (10 por letra) ===
+    let prestacionesGrupos = [];
+    let prestacionLetraAbierta = null;
+    const prestacionPaginaPorLetra = {};
+    const prestacionesPaginasCache = new Map();
+    const prestacionesSolicitudesPorLetra = {};
+    let prestacionesSolicitudResumen = 0;
 
-    // Letra (A-Z) de la carpeta a partir del nombre del trabajador.
-    // Agrupa por la primera letra del APELLIDO (orden alfabético institucional).
-    function letraCarpetaPrestacion(t) {
-        const base = ((t && (t.apellidos || t.nombres)) || '').trim();
-        const ch = base.charAt(0).toUpperCase();
-        if (!ch) return '#';
-        return /[A-ZÁÉÍÓÚÑ]/.test(ch) ? ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '#';
-    }
-
-    function renderPaginacionPrestaciones() {
-        const cont = document.getElementById('prestacionesPagination');
-        if (!cont) return;
-        if (prestacionesTotalPaginas <= 1) { cont.innerHTML = ''; return; }
-        const cur = prestacionesPaginaActual;
-        const last = prestacionesTotalPaginas;
-        let html = '<button class="pag-btn" data-p="' + (cur - 1) + '"' + (cur <= 1 ? ' disabled' : '') + '>&lsaquo;</button>';
-        for (let i = 1; i <= last; i++) {
-            if (i === 1 || i === last || (i >= cur - 2 && i <= cur + 2)) {
-                html += '<button class="pag-btn' + (i === cur ? ' active' : '') + '" data-p="' + i + '">' + i + '</button>';
-            } else if (i === cur - 3 || i === cur + 3) {
-                html += '<span class="pag-info">&hellip;</span>';
-            }
-        }
-        html += '<button class="pag-btn" data-p="' + (cur + 1) + '"' + (cur >= last ? ' disabled' : '') + '>&rsaquo;</button>';
-        html += '<span class="pag-info">' + cur + ' de ' + last + '</span>';
-        cont.innerHTML = html;
-        cont.querySelectorAll('.pag-btn[data-p]').forEach(function(b) {
-            b.addEventListener('click', function() {
-                const p = parseInt(this.dataset.p, 10);
-                if (p >= 1 && p <= last && p !== cur) cargarPrestaciones(p);
-            });
-        });
-    }
-
-    // Construye la tarjeta de un trabajador (id = trabajador_id).
     function tarjetaPrestacion(t) {
         const foto = t.foto_carnet ? '/storage/' + t.foto_carnet : '';
         let montoHtml = '';
@@ -557,121 +909,180 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
             </div>`;
     }
 
-    // Pinta la lista agrupada por carpeta alfabética (vista drilldown).
-    function pintarPrestaciones(items, grid, carpetasCont) {
+
+    // Pinta las tarjetas de una letra abierta.
+    function pintarPrestaciones(items, grid) {
         if (!items || items.length === 0) {
-            if (carpetasCont) { carpetasCont.innerHTML = ''; carpetasCont.classList.remove('hidden'); carpetasCont.style.display = ''; }
-            grid.innerHTML = '<p class="empty-state">No hay prestaciones registradas</p>';
-            const btnVolver = document.getElementById('btnVolverCarpetasPres');
-            if (btnVolver) { btnVolver.classList.add('hidden'); btnVolver.style.display = 'none'; }
+            grid.innerHTML = '<p class="empty-state">No hay trabajadores en esta letra.</p>';
             return;
         }
-        const grupos = {};
-        items.forEach(t => {
-            const letra = letraCarpetaPrestacion(t);
-            (grupos[letra] = grupos[letra] || []).push(t);
-        });
-        const letras = Object.keys(grupos).sort();
-        let htmlGrid = '';
-        let htmlCarpetas = '';
-
-        htmlGrid += '<button type="button" class="btn-volver-carpetas" id="btnVolverCarpetasPres" style="display:none;"><i class="fas fa-arrow-left"></i> Volver a carpetas</button>';
-
-        letras.forEach(letra => {
-            htmlCarpetas += '<button type="button" class="carpeta-chip" data-letra="' + letra + '">' + letra + '<span class="carpeta-chip-count">' + grupos[letra].length + '</span></button>';
-            htmlGrid += '<div class="carpeta-grupo carpeta-drilldown" data-letra="' + letra + '" style="display:none;">';
-            htmlGrid += '<div class="carpeta-header"><i class="fas fa-folder-open"></i><span class="carpeta-letra">' + letra + '</span><span class="carpeta-total">' + grupos[letra].length + ' trabajador' + (grupos[letra].length === 1 ? '' : 'es') + '</span></div>';
-            htmlGrid += '<div class="prestaciones-grid-cards">';
-            grupos[letra].forEach(t => { htmlGrid += tarjetaPrestacion(t); });
-            htmlGrid += '</div></div>';
-        });
-        grid.innerHTML = htmlGrid;
-        if (carpetasCont) carpetasCont.innerHTML = htmlCarpetas;
-
+        grid.innerHTML = items.map(t => tarjetaPrestacion(t)).join('');
         grid.querySelectorAll('.prestacion-card').forEach(card => {
             card.addEventListener('click', function() { abrirDetalle(parseInt(this.dataset.id, 10)); });
         });
-
-        const btnVolver = document.getElementById('btnVolverCarpetasPres');
-
-        function abrirCarpeta(letra) {
-            if (!carpetasCont) return;
-            carpetasCont.classList.add('hidden');
-            carpetasCont.style.display = 'none';
-            grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
-                const activa = g.dataset.letra === letra;
-                g.classList.toggle('carpeta-activa', activa);
-                g.classList.toggle('hidden', !activa);
-                // El grupo nace con display:none en línea; hay que alternarlo
-                // explícitamente o la carpeta nunca se abre (o no se cierra).
-                g.style.display = activa ? '' : 'none';
-            });
-            if (btnVolver) {
-                btnVolver.classList.remove('hidden');
-                btnVolver.onclick = function() {
-                    volverACarpetasPres();
-                };
-            }
-            const sec = document.getElementById('seccion-prestaciones');
-            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-    function volverACarpetasPres() {
-        if (carpetasCont) {
-            carpetasCont.classList.remove('hidden');
-            carpetasCont.style.display = '';
-        }
-        grid.querySelectorAll('.carpeta-grupo').forEach(function(g) {
-            g.classList.remove('carpeta-activa');
-            g.classList.add('hidden');
-            g.style.display = 'none';
-        });
-        const btnVolver = document.getElementById('btnVolverCarpetasPres');
-        if (btnVolver) {
-            btnVolver.classList.add('hidden');
-            btnVolver.style.display = 'none';
-        }
     }
 
-        if (carpetasCont) {
-            carpetasCont.querySelectorAll('.carpeta-chip').forEach(chip => {
-                chip.addEventListener('click', function() {
-                    abrirCarpeta(this.dataset.letra);
-                });
-            });
-        }
-        grid.querySelectorAll('.carpeta-header').forEach(function(header) {
-            const grupo = header.closest('.carpeta-grupo');
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', function(e) {
-                if (e.target.closest('.prestacion-card')) return;
-                abrirCarpeta(grupo.dataset.letra);
-            });
-        });
-    }
-
-    async function cargarPrestaciones(page) {
+    // Pinta las carpetas por letra; al abrir una, su cabecera y su cuadrícula.
+    function renderGruposPrestaciones() {
         const grid = document.getElementById('prestacionesGrid');
-        const carpetasCont = document.getElementById('prestacionesCarpetas');
         if (!grid) return;
-        prestacionesPaginaActual = page || 1;
-        try {
-            const result = await cachedFetch('/prestaciones?v=2&page=' + prestacionesPaginaActual + '&per_page=12', { ttl: 60000 });
-            const raw = result.data;
-            const items = Array.isArray(raw) ? raw : (raw.data || []);
-            prestacionesCache = items;
-            prestacionesTotalPaginas = Array.isArray(raw) ? 1 : (raw.last_page || 1);
-            if (carpetasCont) carpetasCont.innerHTML = '';
-            if (!items.length) {
-                grid.innerHTML = '<p class="empty-state">No hay trabajadores disponibles. Deben tener solicitud aprobada y expediente.</p>';
-                renderPaginacionPrestaciones();
-                return;
+
+        const gruposVisibles = prestacionLetraAbierta
+            ? prestacionesGrupos.filter(grupo => grupo.letra === prestacionLetraAbierta)
+            : prestacionesGrupos;
+
+        grid.innerHTML = gruposVisibles.map(grupo => {
+            const abierta = grupo.letra === prestacionLetraAbierta;
+            const letra = escaparHTML(grupo.letra);
+            const cantidad = Number(grupo.total) || 0;
+            const etiqueta = cantidad === 1 ? 'TRABAJADOR' : 'TRABAJADORES';
+            if (abierta) {
+                return `
+                    <section class="grupo-alfabetico grupo-alfabetico-detalle is-open" data-letra="${letra}">
+                        <div class="grupo-alfabetico-detail-header">
+                            <div class="grupo-alfabetico-detail-top">
+                                <button type="button" class="btn-volver btn-volver-prestaciones-letras">
+                                    <i class="fas fa-arrow-left"></i> Volver a letras
+                                </button>
+                                <span class="grupo-alfabetico-badge">${cantidad} ${etiqueta}</span>
+                            </div>
+                            <h2>Prestaciones ${letra}</h2>
+                            <p>${cantidad} trabajador${cantidad === 1 ? '' : 'es'} con expediente completo</p>
+                        </div>
+                        <div class="grupo-alfabetico-panel">
+                            <div class="prestaciones-grid-cards grupo-alfabetico-grid"><p class="empty-state">Cargando...</p></div>
+                        </div>
+                    </section>
+                `;
             }
-            pintarPrestaciones(items, grid, carpetasCont);
-            renderPaginacionPrestaciones();
+
+            return `
+                <section class="grupo-alfabetico" data-letra="${letra}">
+                    <button type="button" class="grupo-alfabetico-header" aria-expanded="false" data-letra="${letra}">
+                        <span class="grupo-alfabetico-card-top">
+                            <span class="grupo-alfabetico-icon"><i class="fas fa-wallet"></i></span>
+                            <span class="grupo-alfabetico-badge">${cantidad} ${etiqueta}</span>
+                        </span>
+                        <span class="grupo-alfabetico-letra">${letra}</span>
+                        <span class="grupo-alfabetico-count">${cantidad} trabajador${cantidad === 1 ? '' : 'es'}</span>
+                    </button>
+                </section>
+            `;
+        }).join('');
+
+        grid.querySelectorAll('.grupo-alfabetico-header').forEach(boton => {
+            boton.addEventListener('click', function() {
+                prestacionLetraAbierta = this.dataset.letra;
+                renderGruposPrestaciones();
+                cargarPrestacionesLetra(prestacionLetraAbierta, prestacionPaginaPorLetra[prestacionLetraAbierta] || 1);
+            });
+        });
+        grid.querySelector('.btn-volver-prestaciones-letras')?.addEventListener('click', function() {
+            prestacionLetraAbierta = null;
+            renderGruposPrestaciones();
+            renderPaginacionPrestaciones(0, 0);
+        });
+    }
+
+    function renderPaginacionPrestaciones(paginaActual, ultimaPagina) {
+        const cont = document.getElementById('prestacionesPagination');
+        if (!cont) return;
+        if (!prestacionLetraAbierta || !ultimaPagina || ultimaPagina <= 1) {
+            cont.innerHTML = '';
+            return;
+        }
+
+        const paginas = new Set([1, ultimaPagina]);
+        for (let pagina = Math.max(2, paginaActual - 2); pagina <= Math.min(ultimaPagina - 1, paginaActual + 2); pagina++) {
+            paginas.add(pagina);
+        }
+
+        let html = '<button type="button" class="pag-btn" data-p="' + (paginaActual - 1) + '"' + (paginaActual <= 1 ? ' disabled' : '') + '>&lsaquo;</button>';
+        let paginaAnterior = 0;
+        Array.from(paginas).sort((a, b) => a - b).forEach(pagina => {
+            if (paginaAnterior && pagina - paginaAnterior > 1) html += '<span class="pag-info">&hellip;</span>';
+            html += '<button type="button" class="pag-btn' + (pagina === paginaActual ? ' active' : '') + '" data-p="' + pagina + '">' + pagina + '</button>';
+            paginaAnterior = pagina;
+        });
+        html += '<button type="button" class="pag-btn" data-p="' + (paginaActual + 1) + '"' + (paginaActual >= ultimaPagina ? ' disabled' : '') + '>&rsaquo;</button>';
+        html += '<span class="pag-info">' + paginaActual + ' de ' + ultimaPagina + '</span>';
+        cont.innerHTML = html;
+        cont.querySelectorAll('.pag-btn[data-p]').forEach(boton => {
+            boton.addEventListener('click', function() {
+                const pagina = parseInt(this.dataset.p, 10);
+                if (pagina >= 1 && pagina <= ultimaPagina && pagina !== paginaActual) {
+                    cargarPrestacionesLetra(prestacionLetraAbierta, pagina);
+                }
+            });
+        });
+    }
+
+    async function cargarPrestacionesLetra(letra, pagina) {
+        const grid = document.getElementById('prestacionesGrid');
+        const panel = grid?.querySelector('.grupo-alfabetico-detalle .grupo-alfabetico-grid');
+        if (!panel || prestacionLetraAbierta !== letra) return;
+
+        const solicitud = (prestacionesSolicitudesPorLetra[letra] || 0) + 1;
+        prestacionesSolicitudesPorLetra[letra] = solicitud;
+        panel.innerHTML = '<p class="empty-state">Cargando...</p>';
+        const url = '/prestaciones?v=2&letra=' + encodeURIComponent(letra) + '&page=' + pagina + '&per_page=10';
+        try {
+            let raw = prestacionesPaginasCache.get(url);
+            if (!raw) {
+                const result = await cachedFetch(url, { ttl: 60000 });
+                raw = result.data;
+                prestacionesPaginasCache.set(url, raw);
+            }
+            if (prestacionesSolicitudesPorLetra[letra] !== solicitud || prestacionLetraAbierta !== letra) return;
+
+            const items = Array.isArray(raw) ? raw : (raw.data || []);
+            const paginaActual = Number(raw.current_page) || pagina;
+            const ultimaPagina = Number(raw.last_page) || 1;
+            prestacionPaginaPorLetra[letra] = paginaActual;
+            pintarPrestaciones(items, panel);
+            renderPaginacionPrestaciones(paginaActual, ultimaPagina);
         } catch (err) {
             console.error('Error prestaciones:', err);
-            grid.innerHTML = '<p class="empty-state">Error al cargar datos.</p>';
+            if (prestacionesSolicitudesPorLetra[letra] === solicitud && prestacionLetraAbierta === letra) {
+                panel.innerHTML = '<p class="empty-state">Error al cargar datos.</p>';
+            }
+        }
+    }
+
+    // Carga (o recarga) las carpetas por letra.
+    async function cargarPrestaciones() {
+        const grid = document.getElementById('prestacionesGrid');
+        if (!grid) return;
+        const solicitud = ++prestacionesSolicitudResumen;
+        grid.innerHTML = '<p class="empty-state">Cargando...</p>';
+        renderPaginacionPrestaciones(0, 0);
+
+        try {
+            const respuesta = await fetch('/prestaciones/letras', { headers: { 'Accept': 'application/json' } });
+            if (!respuesta.ok) throw new Error('No se pudo cargar la organización de prestaciones.');
+            const raw = await respuesta.json();
+            if (solicitud !== prestacionesSolicitudResumen) return;
+
+            prestacionesGrupos = Array.isArray(raw.letras) ? raw.letras : [];
+            if (!prestacionesGrupos.length) {
+                prestacionLetraAbierta = null;
+                grid.innerHTML = '<p class="empty-state">No hay trabajadores disponibles. Deben tener solicitud aprobada y expediente.</p>';
+                return;
+            }
+
+            const letrasDisponibles = prestacionesGrupos.map(grupo => grupo.letra);
+            if (!prestacionLetraAbierta || !letrasDisponibles.includes(prestacionLetraAbierta)) {
+                prestacionLetraAbierta = null;
+            }
+            renderGruposPrestaciones();
+            if (prestacionLetraAbierta) {
+                cargarPrestacionesLetra(prestacionLetraAbierta, prestacionPaginaPorLetra[prestacionLetraAbierta] || 1);
+            }
+        } catch (err) {
+            console.error('Error prestaciones:', err);
+            if (solicitud === prestacionesSolicitudResumen) {
+                grid.innerHTML = '<p class="empty-state">Error al cargar datos.</p>';
+            }
         }
     }
 
@@ -1135,7 +1546,8 @@ body.dark-mode .resumen-item .r-value { color: #f1f5f9; }
     const seccion = document.getElementById('prestaciones');
     if (seccion) observer.observe(seccion, { attributes: true, attributeFilter: ['class'] });
 
-    document.addEventListener('DOMContentLoaded', function() { cargarPrestaciones(1); });
+    // La lista solo se carga si la sección está visible (o al activarla vía
+    // el observer de arriba); así entrar al dashboard no dispara este viaje.
     if (document.getElementById('prestaciones')?.classList.contains('active')) cargarPrestaciones(1);
 })();
 </script>

@@ -21,10 +21,24 @@ function switchTab(id) {
         sections.forEach(function(s) { s.classList.remove('active'); });
         targetMenu.classList.add('active');
         targetSection.classList.add('active');
+        // Chart.js calcula el tamaño del lienzo al crear el gráfico. Si el
+        // gráfico se creó con la sección oculta, queda en 0x0 y no se ve.
+        // Al mostrar la sección se recalcula el tamaño de sus gráficos.
+        if (window.Chart) {
+            targetSection.querySelectorAll('canvas').forEach(function(cv) {
+                var grafico = Chart.getChart(cv);
+                if (grafico) grafico.resize();
+            });
+        }
         localStorage.setItem('sigejub_active_section', id);
         // Cada vez que se entra a una sección se descarta la caché de las
         // consultas: así las listas no muestran datos desactualizados.
         if (window.limpiarCacheSigejub) window.limpiarCacheSigejub();
+        // El detalle se oculta dentro de la sección; al volver desde otro
+        // módulo hay que restaurar explícitamente la lista de expedientes.
+        if (id === 'expedientes' && typeof window.volverALista === 'function') {
+            window.volverALista();
+        }
     }
 }
 

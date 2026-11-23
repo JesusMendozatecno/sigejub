@@ -114,18 +114,15 @@ class EstadisticasController extends Controller
         $usuariosActivos = User::whereIn('rol', ['admin', 'superadmin', 'usuario', 'operador', 'analista'])->count();
 
         $totalSolicitudes = (int) $solicitudesPorEstado->sum();
+        $solicitudesResueltas = (int) ($solicitudesPorEstado->get('aprobado', 0)
+            + $solicitudesPorEstado->get('rechazado', 0));
 
         return [
             'trabajadores' => [
                 'total' => $totalTrabajadores,
                 'activos' => (int) ($porEstatusTrabajador->activos ?? 0),
                 'jubilados' => (int) ($porEstatusTrabajador->jubilados ?? 0),
-                'por_tipo_nomina' => [
-                    'ADM' => (int) ($porTipoNomina->get('ADM') ?? 0),
-                    'DOC' => (int) ($porTipoNomina->get('DOC') ?? 0),
-                    'OBREROS' => (int) ($porTipoNomina->get('OBREROS') ?? 0),
-                    'SIN TIPO' => (int) ($porTipoNomina->get('SIN TIPO') ?? 0),
-                ],
+                'por_tipo_nomina' => $porTipoNomina->map(fn ($total) => (int) $total)->all(),
             ],
             'solicitudes' => [
                 'total' => $totalSolicitudes,
@@ -136,8 +133,8 @@ class EstadisticasController extends Controller
                 'por_tipo' => $solicitudesPorTipo,
                 'por_mes' => $serieMensual,
                 'por_tipo_mes' => $seriesPorTipo,
-                'tasa_aprobacion' => $totalSolicitudes > 0
-                    ? round(((int) ($solicitudesPorEstado->get('aprobado') ?? 0) / $totalSolicitudes) * 100, 1)
+                'tasa_aprobacion' => $solicitudesResueltas > 0
+                    ? round(((int) ($solicitudesPorEstado->get('aprobado') ?? 0) / $solicitudesResueltas) * 100, 1)
                     : 0,
             ],
             'expedientes' => [

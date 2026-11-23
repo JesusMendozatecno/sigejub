@@ -1,0 +1,110 @@
+/* ==== Scrollbar única de SIGEJUB ====
+   Un solo diseño para todo el sistema: carril transparente, pulgar redondeado
+   con el color de acento del usuario (Personalización > Color principal). */
+/* Se dejan en "auto" las propiedades estándar porque en Chromium desactivan
+   los pseudo-elementos ::-webkit-scrollbar (mostrarían la barra nativa). */
+* {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+}
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--accent, #1a365d) 58%, #cbd5e1);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent, #1a365d);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--accent, #1a365d) 62%, #94a3b8);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--accent, #1a365d) 82%, #fff);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+
+/* ---- Paneles que antes traían su propia barra: mismo diseño ---- */
+body .modal-form-content,
+body .doc-content-scroll,
+body .recent-activity .activity-list,
+body .autocomplete-list,
+body #autocompleteExpediente,
+body .table-wrapper,
+body .table-wrapper-nomina {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+}
+body .modal-form-content::-webkit-scrollbar,
+body .doc-content-scroll::-webkit-scrollbar,
+body .recent-activity .activity-list::-webkit-scrollbar,
+body .autocomplete-list::-webkit-scrollbar,
+body #autocompleteExpediente::-webkit-scrollbar,
+body .table-wrapper::-webkit-scrollbar,
+body .table-wrapper-nomina::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+body .modal-form-content::-webkit-scrollbar-track,
+body .doc-content-scroll::-webkit-scrollbar-track,
+body .recent-activity .activity-list::-webkit-scrollbar-track,
+body .autocomplete-list::-webkit-scrollbar-track,
+body #autocompleteExpediente::-webkit-scrollbar-track,
+body .table-wrapper::-webkit-scrollbar-track,
+body .table-wrapper-nomina::-webkit-scrollbar-track {
+    background: transparent;
+}
+body .modal-form-content::-webkit-scrollbar-thumb,
+body .doc-content-scroll::-webkit-scrollbar-thumb,
+body .recent-activity .activity-list::-webkit-scrollbar-thumb,
+body .autocomplete-list::-webkit-scrollbar-thumb,
+body #autocompleteExpediente::-webkit-scrollbar-thumb,
+body .table-wrapper::-webkit-scrollbar-thumb,
+body .table-wrapper-nomina::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--accent, #1a365d) 58%, #cbd5e1);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+body .modal-form-content::-webkit-scrollbar-thumb:hover,
+body .doc-content-scroll::-webkit-scrollbar-thumb:hover,
+body .recent-activity .activity-list::-webkit-scrollbar-thumb:hover,
+body .autocomplete-list::-webkit-scrollbar-thumb:hover,
+body #autocompleteExpediente::-webkit-scrollbar-thumb:hover,
+body .table-wrapper::-webkit-scrollbar-thumb:hover,
+body .table-wrapper-nomina::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent, #1a365d);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+body.dark-mode .modal-form-content::-webkit-scrollbar-thumb,
+body.dark-mode .doc-content-scroll::-webkit-scrollbar-thumb,
+body.dark-mode .recent-activity .activity-list::-webkit-scrollbar-thumb,
+body.dark-mode .autocomplete-list::-webkit-scrollbar-thumb,
+body.dark-mode #autocompleteExpediente::-webkit-scrollbar-thumb,
+body.dark-mode .table-wrapper::-webkit-scrollbar-thumb,
+body.dark-mode .table-wrapper-nomina::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--accent, #1a365d) 62%, #94a3b8);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}

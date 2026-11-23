@@ -174,3 +174,7 @@ http://localhost/sigejub/inicio.php
 | `SIGEJUB-Installer.exe` / `setup.bat` (Windows) | Instalador gráfico de Windows. |
 | `inicio.php` | Auto-launcher vía Apache. |
 | `build-installer.ps1` (Windows) | Recompila `SIGEJUB-Installer.exe`. |
+
+## Perfil de esta copia
+
+Este archivo está dentro de la carpeta de la copia de SIGEJUB que estás instalando. Ejecuta `composer install`, `php artisan` y las pruebas desde esa carpeta, no desde la raíz del repositorio. Laravel requiere PHP 8.2 o superior. Configura el motor elegido (MySQL/MariaDB o PostgreSQL, según la variante) y las credenciales en el `.env` de esta copia; no asumas que la base de datos configurada en otra carpeta se comparte.

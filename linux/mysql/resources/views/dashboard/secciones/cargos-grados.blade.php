@@ -1,10 +1,11 @@
 <style>
 .cg-tabs{display:flex;gap:4px;margin-bottom:20px;background:#f1f5f9;border-radius:10px;padding:4px;}
 .cg-tab{flex:1;padding:10px 16px;border-radius:8px;border:none;cursor:pointer;font-size:0.82rem;font-weight:600;color:#64748b;background:transparent;transition:all 0.2s;text-align:center;}
-.cg-tab.active{background:white;color:#0f172a;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.cg-tab.active{background:var(--accent-dark,#0f2340);color:#fff;border:1px solid var(--accent-dark,#0f2340);box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 28%,transparent);}
+.cg-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .cg-tab:hover:not(.active){color:#334155;}
 body.dark-mode .cg-tabs{background:#1e293b;}
-body.dark-mode .cg-tab.active{background:#0f172a;color:#f1f5f9;}
+body.dark-mode .cg-tab.active{background:var(--accent-dark,#0f2340);color:#fff;border-color:var(--accent-dark,#0f2340);}
 body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
 .cg-tabs{flex-wrap:wrap;}
 .cg-tab{flex:1 1 auto;min-width:130px;}
@@ -12,8 +13,8 @@ body.dark-mode .cg-tab:hover:not(.active){color:#e2e8f0;}
 
 <header class="section-header">
     <div class="header-info">
-        <h1>Gestión de <span class="text-blue-accent">Cargos y Grados</span></h1>
-        <p>Administre los cargos y grados disponibles para asignar a los trabajadores.</p>
+        <h1>Gestión de <span class="text-blue-accent">Catálogos del sistema</span></h1>
+        <p>Administre cargos, grados, unidades, categorías, dedicaciones y cláusulas de convención.</p>
     </div>
     <div class="header-actions" id="cgHeaderActions" style="display:none;">
         <button type="button" class="btn-primary-dark" id="btnCrearCG">

@@ -2,6 +2,8 @@
 
 > Documento técnico de referencia. Contiene arquitectura, modelos de datos, roles, rutas, convenciones de código y guía de mantenimiento. Está pensado para que otra IA (o un desarrollador) pueda entender y trabajar en el proyecto sin necesidad de explorarlo primero.
 
+> **Copia descrita:** cualquier variante de SIGEJUB (portable o distribución), con motor de datos configurable en `.env`. **Actualizado:** 2026-11-08. Expedientes y Prestaciones se ordenan por nombre, apellido e ID; sus grupos A-Z se basan en el nombre. La búsqueda de expedientes se aplica en el backend antes de paginar.
+
 ---
 
 ## 1. Resumen del negocio
@@ -23,9 +25,9 @@ SIGEJUB es un sistema web de gestión de jubilaciones para una institución univ
 
 | Capa | Tecnología |
 |---|---|
-| Framework | Laravel 11+ (PHP 8.2+, probado en 8.4) |
+| Framework | Laravel 12.x (PHP 8.2+) |
 | Vistas | Blade (`.blade.php`) + CSS/JS vanilla (sin build step) |
-| Base de datos | MySQL 8 (principal) / PostgreSQL 18 (alternativo, puerto 5433) |
+| Base de datos | SQLite, MySQL/MariaDB o PostgreSQL, según `DB_CONNECTION` y la configuración de `.env` |
 | Frontend | HTML5, CSS3 con variables, ES6 (sin framework JS) |
 | Gráficos | Chart.js (incluido en `public/js/vendor` o CDN) |
 | Iconos | Font Awesome 6 |
@@ -112,11 +114,11 @@ C:\xampp\mysql\bin\mysql.exe -u root -e 'USE `bd-sigejub`; SHOW TABLES;'
 
 ### 4.4 Organización de código
 
-- **CSS en archivos separados por capa**, concatenados en un bundle. Ver §7.
+- **CSS organizado por capa** dentro de `dashboard.min.css` (bundle) y `secciones.css`. Ver §7.
 - **JS por sección** en `public/js/secciones/`. Ver §8.
 - **Blade por sección** en `resources/views/dashboard/secciones/`. Ver §9.
 - Comentarios en español, estilo JSDoc breve en funciones públicas.
-- Variables CSS para colores/espaciado en `base.css`. No hardcodear colores en nuevas reglas.
+- Variables CSS para colores/espaciado en el bloque base de `dashboard.min.css`. No hardcodear colores en nuevas reglas.
 
 ---
 
@@ -248,24 +250,20 @@ Estados del flujo: `pendiente` → `en_revision` → `aprobado` | `rechazado`.
 
 ### 7.1 Capas del dashboard
 
-Los estilos se cargan en este orden en `index.blade.php`:
+Solo se cargan dos hojas de estilo locales en `index.blade.php`:
 
 | # | Archivo | Contenido |
 |---|---|---|
-| 1 | `dashboard.min.css` | **Bundle concatenado** de las fuentes base (~4574 líneas). Las fuentes sueltas NO se cargan. |
-| 2 | `dark-mode.css` | Overrides para `body.dark-mode` |
-| 3 | `modern-theme.css` | Overrides para `body.theme-modern` |
-| 4 | `secciones/modal.css` | Estilos de modales |
-| 5 | **`rediseno.css`** | Capa de modernización (añadida después; gana en empates por orden) |
-| 6 | **`responsive.css`** | Breakpoints y adaptaciones (carga **al final**, por lo tanto gana en empates de especificidad igual) |
+| 1 | `dashboard.min.css` | **Bundle concatenado** de todas las capas del dashboard (base, layout, componentes, trabajadores, reportes, caja negra, modal, perfil, dark-mode, rediseno y responsive). Las fuentes sueltas ya no existen: todo vive dentro del bundle, y el bloque responsive va **al final** (gana en empates de especificidad igual). |
+| 2 | `secciones.css` | Estilos específicos de las secciones del dashboard (incluye el bloque `prestaciones.css`). |
 
-En `usuarios/user.blade.php` el orden es: `bundle → dark-mode → modern-theme → modal.css → rediseno → fontawesome → cropper → profile.css` (`profile.css` va al final).
+En `usuarios/user.blade.php`, además de `dashboard.min.css`, se enlazan `modal-layout.css` y `table-layout.css`.
 
 ### 7.2 Marcadores del bundle `dashboard.min.css`
 
-El bundle es concatenado de fuentes individuales. Marcadores de inicio de cada bloque:
+El bundle se generó concatenando fuentes individuales (hoy ya no están sueltas). Marcadores de inicio de cada bloque dentro de `dashboard.min.css`:
 
-| Línea aprox. | Fuente |
+| Línea aprox. | Bloque de origen |
 |---|---|
 | 1 | `base.css` |
 | 238 | `layout.css` |
@@ -278,9 +276,9 @@ El bundle es concatenado de fuentes individuales. Marcadores de inicio de cada b
 | 3768 | `modal.css` |
 | 4048 | `profile.css` |
 
-Hay **dos bloques `:root`** en el bundle. La variable `--accent` se define en `index.blade.php` (no en los archivos externos).
+Hay **dos bloques `:root`** en el bundle. La variable `--accent` se define en `index.blade.php` (no en el bundle).
 
-### 7.3 Variables CSS principales (`base.css`)
+### 7.3 Variables CSS principales (bloque base del bundle)
 
 - `--accent` (desde Blade), `--accent-dark`, `--accent-soft`
 - `--sidebar-collapsed-width: 72px`
@@ -309,7 +307,7 @@ Los modales (`.modal-overlay`, `.modal-tasa`, `.modal-resultado`) quedan **exclu
 
 ### 7.5 Responsive / autoajuste
 
-`responsive.css` breakpoints:
+Breakpoints (bloque responsive del bundle):
 
 | Media query | Cubre |
 |---|---|
@@ -361,8 +359,8 @@ window.Modal = {
 - **Comportamiento:**
   - **Escritorio (≥768px):** alterna `.collapsed` en `.sidebar` → ancho 72px, solo iconos. Persiste en `localStorage['sigejub_sidebar_collapsed']` (`1`/`0`).
   - **Móvil (<768px):** alterna `.open` + overlay (off-canvas).
-- **CSS:** `.sidebar.collapsed` en `rediseno.css`. El texto se oculta con `font-size:0` en `.menu-item` y se restaura el tamaño del `<i>`. Tooltip con `::after { content: attr(data-tooltip) }`.
-- **Importante:** `responsive.css` carga **después** que `rediseno.css`. Para ganarle se usa selector de mayor especificidad: `.top-bar .sidebar-toggle`.
+- **CSS:** `.sidebar.collapsed` en el bloque `rediseno` de `dashboard.min.css`. El texto se oculta con `font-size:0` en `.menu-item` y se restaura el tamaño del `<i>`. Tooltip con `::after { content: attr(data-tooltip) }`.
+- **Importante:** dentro del bundle, el bloque responsive va **después** del bloque rediseno. Para ganarle se usa selector de mayor especificidad: `.top-bar .sidebar-toggle`.
 
 ### 8.4 Notificaciones
 
@@ -372,7 +370,7 @@ window.Modal = {
 - Datos: `GET /notificaciones` → `[{id, titulo, mensaje, leida, created_at, from_user:{nombre}}]`
 - Contador: `GET /notificaciones/no-leidas` → `{count}` (polling cada 30s).
 - Marcar: `PUT /notificaciones/{id}/leer` y `PUT /notificaciones/leer-todas`.
-- En móvil, `responsive.css` lo convierte en panel fixed full-width.
+- En móvil, el bloque responsive lo convierte en panel fixed full-width.
 
 ### 8.5 Trabajador.js — advertencia
 
@@ -589,7 +587,7 @@ Importa trabajadores desde un archivo Excel. Lógica de deduplicación:
 | 1 | Modal de trabajadores no se desplegaba | **Error de sintaxis** en `trabajador.js` (bloque `keydown` duplicado + `if (modalCal)` sin cerrar) que mataba todo el archivo | Corregido + validado con `node --check` |
 | 2 | Conteo de nómina siempre mostraba "+1 omitido" | La cabecera de la planilla contaba como fila | Filtrado de filas vacías en `NominaImportService` |
 | 3 | Total de trabajadores no coincidía (20 vs 19) | Trabajador existente no enlazado a la nómina | `buscarTrabajadorPorCedula()` con normalización |
-| 4 | Menú plegable no funcionaba en escritorio | `.sidebar-toggle { display:none }` en `responsive.css` ganaba por orden de carga | Cambiado a `display:flex` + selector `.top-bar .sidebar-toggle` con mayor especificidad |
+| 4 | Menú plegable no funcionaba en escritorio | `.sidebar-toggle { display:none }` en el bloque responsive (entonces `responsive.css`) ganaba por orden de carga | Cambiado a `display:flex` + selector `.top-bar .sidebar-toggle` con mayor especificidad |
 | 5 | Botón "Guardar foto" del avatar no se veía | `#cropModal` no tenía layout flex ni acción sticky | `.modal-box { display:flex; flex-direction:column }` + `.modal-actions { position:sticky; bottom:0 } |
 | 6 | Scrollbar en gestión de usuarios | La tabla no tenía límite de altura | `max-height:62vh; overflow-y:auto` |
 | 7 | Botón "Ingresar" del welcome con letras invisibles | En tema modern `--pw-primary:#ffffff` → texto blanco sobre fondo blanco translúcido | Tokens dedicados `--pw-btn-*` por tema + `:focus-visible` |
@@ -632,11 +630,11 @@ powershell -ExecutionPolicy Bypass -File "crear-portable.ps1"
 
 ## 18. Guía para una IA que reciba este proyecto
 
-1. **Siempre editar en `original/`.** Las demás carpetas son copias sincronizadas.
+1. **Siempre editar en `SIGEJUB-Portable/`** (fuente canónica) y propagar el cambio a las demás carpetas, que son copias sincronizadas.
 2. **Validar JS con `node --check`**, especialmente `trabajador.js` (un error ahí mata toda una sección).
 3. **No romper el patrón de tarjetas** de `.content-section` (§7.4).
 4. **Usar `var(--accent)`** en lugar de colores hardcodeados para cualquier elemento destacado.
-5. **Respetar el orden de carga de CSS** (§7.1); `responsive.css` va al final y gana en empates.
+5. **Respetar el orden de carga de CSS** (§7.1); dentro del bundle el bloque responsive va al final y gana en empates.
 6. **Los roles se validan en 3 capas:** middleware (rutas), Blade (`@if`), JS (`window.SIGEJUB_ROL`).
 7. **El tema se aplica en cliente**, por lo que no es verificable con curl.
 8. **PowerShell 5.1** tiene muchas limitaciones (§4.3). Leer esa sección antes de escribir comandos.
